@@ -1,6 +1,6 @@
 # IZERO-OptModel
 
-<img src="https://raw.githubusercontent.com/izero-nexus/.github/main/profile/IZERO_Nexus_avatar_transparent.png" width="120" align="right" />
+<img src="https://github.com/IZERO-Nexus/.github/blob/9f6c0c139099d6c1dcb552c0a72aadc1d6ab4f81/IZERO_Nexus_avatar_transparent.png" width="120" align="right" />
 
 **IZERO-OptModel** is the **core optimization engine** of the [IZERO Nexus](https://github.com/izero-nexus) ecosystem.  
 It provides the fundamental modelling framework for **integrated zero-carbon energy systems**, supporting electricity, heat, hydrogen, and storage.
