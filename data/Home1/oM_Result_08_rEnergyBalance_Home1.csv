@@ -1,0 +1,2 @@
+Period,FV_to_EV [KWh],FV_to_BESS [KWh],FV_to_Mkt [KWh],FV_to_Dem [KWh],ENS_to_EV [KWh],ENS_to_BESS [KWh],ENS_to_Dem [KWh],BESS_to_EV [KWh],BESS_to_Mkt [KWh],BESS_to_Dem [KWh],Mkt_to_EV [KWh],Mkt_to_Dem [KWh],Mkt_to_BESS [KWh],EV_to_BESS [KWh],EV_to_Mkt [KWh],EV_to_Dem [KWh]
+period1,0.0,0.0,8155.630061602251,3736.48798088895,0.0,0.0,0.0,0.0,0.0,0.0,0.0,17765.76401911105,0.0,0.0,0.0,0.0

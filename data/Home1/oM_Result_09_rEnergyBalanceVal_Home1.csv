@@ -1,0 +1,2 @@
+Period,FV_to_EV [SEK/KWh],FV_to_BESS [SEK/KWh],FV_to_Mkt [SEK/KWh],FV_to_Dem [SEK/KWh],ENS_to_EV [SEK/KWh],ENS_to_BESS [SEK/KWh],ENS_to_Dem [SEK/KWh],BESS_to_EV [SEK/KWh],BESS_to_Mkt [SEK/KWh],BESS_to_Dem [SEK/KWh],Mkt_to_EV [SEK/KWh],Mkt_to_Dem [SEK/KWh],Mkt_to_BESS [SEK/KWh],EV_to_BESS [SEK/KWh],EV_to_Mkt [SEK/KWh],EV_to_Dem [SEK/KWh]
+period1,,,0.2333497251172056,0.2178684603050496,,,,,,,,1.4204862053637488,,,,

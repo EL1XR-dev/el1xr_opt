@@ -1,0 +1,11 @@
+Period,Scenario,Component,EUR
+period1,sc01,Electricity Consumption Cost,0.0
+period1,sc01,Electricity Emission Cost,0.0
+period1,sc01,Electricity Generation Cost,0.0
+period1,sc01,Electricity Market Cost,23332.908683862377
+period1,sc01,Electricity Reliability Cost,0.0
+period1,sc01,Hydrogen    Consumption Cost,0.0
+period1,sc01,Hydrogen    Generation Cost,0.0
+period1,sc01,Hydrogen    Market Cost,0.0
+period1,sc01,Hydrogen    Reliability Cost,0.0
+period1,sc01,Electricity Peak Cost,0.0

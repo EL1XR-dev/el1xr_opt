@@ -1,0 +1,409 @@
+
+Gurobi 12.0.0 (win64) logging started Fri Jan 10 12:58:47 2025
+
+Set parameter LogFile to value "C:\Users\erikal\OneDrive - RISE\Projects\P115388.AP03DP02.A01_SCALE\EVs\Home1/oM_Home1.log"
+Set parameter Method to value 2
+Set parameter MIPFocus to value 1
+Set parameter Presolve to value 2
+Set parameter RINS to value 100
+Set parameter Crossover to value -1
+Set parameter FeasibilityTol to value 1e-09
+Set parameter MIPGap to value 0.02
+Set parameter Threads to value 13
+Set parameter TimeLimit to value 3600
+Set parameter IterationLimit to value 1800000
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (win64 - Windows 11.0 (22631.2))
+
+CPU model: Intel(R) Core(TM) Ultra 7 155U, instruction set [SSE2|AVX|AVX2]
+Thread count: 12 physical cores, 14 logical processors, using up to 13 threads
+
+Non-default parameters:
+IterationLimit  1800000
+TimeLimit  3600
+FeasibilityTol  1e-09
+MIPGap  0.02
+Method  2
+MIPFocus  1
+RINS  100
+QCPDual  1
+Presolve  2
+Threads  13
+
+Optimize a model with 205310 rows, 200918 columns and 489183 nonzeros
+Model fingerprint: 0xd53d0dea
+Variable types: 192182 continuous, 8736 integer (8736 binary)
+Coefficient statistics:
+  Matrix range     [1e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [2e-04, 1e+04]
+  RHS range        [1e-01, 1e+02]
+Presolve removed 182343 rows and 167393 columns
+Presolve time: 0.25s
+Presolved: 22967 rows, 33525 columns, 77818 nonzeros
+Variable types: 24789 continuous, 8736 integer (8736 binary)
+Performing another presolve...
+Presolve removed 0 rows and 1 columns
+Presolve time: 3.81s
+Root relaxation presolve removed 2749 rows and 0 columns
+Root relaxation presolved: 20218 rows, 33524 columns, 1069570 nonzeros
+
+Root barrier log...
+
+Ordering time: 0.11s
+
+Barrier statistics:
+ Dense cols : 1422
+ AA' NZ     : 1.040e+06
+ Factor NZ  : 2.105e+06 (roughly 40 MB of memory)
+ Factor Ops : 1.660e+09 (less than 1 second per iteration)
+ Threads    : 12
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   1.19906478e+12 -5.16018538e+10  1.71e+05 2.33e-10  3.59e+08     5s
+   1   9.99775210e+11 -7.31681418e+10  1.36e+05 7.40e+05  2.85e+08     5s
+   2   2.17541377e+11 -1.60020927e+11  2.65e+04 2.48e+04  5.74e+07     5s
+   3   1.08268331e+10 -1.14136354e+11  1.31e+03 2.38e+02  3.95e+06     6s
+   4   1.10989602e+09 -6.06460349e+10  1.69e+02 7.56e+01  9.85e+05     6s
+   5   8.53139528e+08 -2.58723576e+10  1.32e+02 2.57e+01  4.61e+05     6s
+   6   7.75039438e+08 -2.49112582e+10  1.20e+02 2.46e+01  4.33e+05     6s
+   7   7.82968087e+07 -3.04841408e+09  9.26e+00 3.76e-01  4.36e+04     6s
+   8   1.75346806e+07 -1.35062970e+08  1.19e-03 1.89e-09  1.80e+03     6s
+   9   3.46569646e+06 -8.70025573e+06  1.10e-05 6.98e-10  1.44e+02     6s
+  10   1.01665860e+05 -1.25663781e+06  7.04e-09 4.38e-10  1.61e+01     6s
+  11   7.35812754e+04 -1.90278321e+05  1.83e-09 1.42e-09  3.12e+00     6s
+  12   5.12892781e+04 -1.43735568e+04  1.17e-09 3.92e-10  7.76e-01     6s
+  13   4.64697250e+04  1.34731074e+04  9.41e-10 3.62e-10  3.90e-01     6s
+  14   3.84651801e+04  2.28903838e+04  5.57e-10 3.30e-10  1.84e-01     6s
+  15   2.88759661e+04  2.67368693e+04  5.27e-11 3.40e-10  2.53e-02     6s
+  16   2.80349902e+04  2.76459766e+04  9.21e-12 3.07e-10  4.60e-03     6s
+  17   2.78508562e+04  2.77760893e+04  1.49e-12 4.54e-10  8.84e-04     6s
+  18   2.78244610e+04  2.78007200e+04  4.73e-13 4.60e-10  2.81e-04     7s
+  19   2.78158477e+04  2.78081229e+04  1.67e-13 9.69e-09  9.13e-05     7s
+  20   2.78119128e+04  2.78106164e+04  1.78e-14 1.13e-05  1.53e-05     7s
+  21   2.78113677e+04  2.78109775e+04  1.78e-14 2.12e-06  4.61e-06     7s
+  22   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  23   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  24   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  25   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  26   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  27   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  28   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  29   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     7s
+  30   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     8s
+  31   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     8s
+  32   2.78111815e+04  2.78110937e+04  1.95e-14 2.64e-07  1.04e-06     8s
+
+Barrier performed 32 iterations in 7.70 seconds (11.19 work units)
+Sub-optimal termination - objective 2.78113677e+04
+
+
+Root crossover log...
+
+    3966 DPushes remaining with DInf 0.0000000e+00                 8s
+       0 DPushes remaining with DInf 0.0000000e+00                 8s
+
+   24362 PPushes remaining with PInf 0.0000000e+00                 8s
+       0 PPushes remaining with PInf 0.0000000e+00                 8s
+
+  Push phase complete: Pinf 0.0000000e+00, Dinf 2.3459013e-13      8s
+
+
+Root simplex log...
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+   27446    2.7811121e+04   0.000000e+00   0.000000e+00      8s
+   27446    2.7811121e+04   0.000000e+00   0.000000e+00      8s
+
+Root relaxation: objective 2.781112e+04, 27446 iterations, 3.35 seconds (5.23 work units)
+Total elapsed time = 7.89s (DegenMoves)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+H    0     0                    27811.120761 27811.1208  0.00%     -    7s
+     0     0 27811.1208    0   26 27811.1208 27811.1208  0.00%     -    7s
+
+Explored 1 nodes (27446 simplex iterations) in 7.96 seconds (11.30 work units)
+Thread count was 13 (of 14 available processors)
+
+Solution count 1: 27811.1 
+
+Optimal solution found (tolerance 2.00e-02)
+Best objective 2.781112076110e+04, best bound 2.781112076110e+04, gap 0.0000%
+
+Gurobi 12.0.0 (win64) logging started Fri Jan 10 12:59:00 2025
+
+Set parameter LogFile to value "C:\Users\erikal\OneDrive - RISE\Projects\P115388.AP03DP02.A01_SCALE\EVs\Home1/oM_Home1.log"
+Set parameter Method to value 2
+Set parameter MIPFocus to value 1
+Set parameter Presolve to value 2
+Set parameter RINS to value 100
+Set parameter Crossover to value -1
+Set parameter FeasibilityTol to value 1e-09
+Set parameter MIPGap to value 0.02
+Set parameter Threads to value 13
+Set parameter TimeLimit to value 3600
+Set parameter IterationLimit to value 1800000
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (win64 - Windows 11.0 (22631.2))
+
+CPU model: Intel(R) Core(TM) Ultra 7 155U, instruction set [SSE2|AVX|AVX2]
+Thread count: 12 physical cores, 14 logical processors, using up to 13 threads
+
+Non-default parameters:
+IterationLimit  1800000
+TimeLimit  3600
+FeasibilityTol  1e-09
+MIPGap  0.02
+Method  2
+MIPFocus  1
+RINS  100
+QCPDual  1
+Presolve  2
+Threads  13
+
+Optimize a model with 205310 rows, 192183 columns and 462975 nonzeros
+Model fingerprint: 0x4c00e531
+Coefficient statistics:
+  Matrix range     [1e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [2e-04, 1e+04]
+  RHS range        [1e-01, 1e+02]
+Presolve removed 187880 rows and 161337 columns
+Presolve time: 0.36s
+Presolved: 17430 rows, 30846 columns, 52620 nonzeros
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ Dense cols : 12
+ AA' NZ     : 2.179e+04
+ Factor NZ  : 6.109e+04 (roughly 20 MB of memory)
+ Factor Ops : 2.360e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   6.56611025e+09 -1.44815751e+10  5.43e+00 3.73e+04  1.21e+06     0s
+   1   1.84610995e+09 -7.88722446e+09  1.61e+00 2.02e+04  2.94e+05     0s
+   2   4.31028603e+08 -1.83385663e+09  3.77e-01 7.45e-08  5.31e+04     0s
+   3   1.68439939e+07 -2.47360447e+08  4.51e-03 3.10e-08  3.90e+03     0s
+   4   1.86515057e+06 -3.34225386e+06  1.20e-14 1.84e-09  7.40e+01     0s
+   5   9.42857607e+04 -1.80546583e+05  1.33e-15 2.90e-10  3.90e+00     0s
+   6   4.99594497e+04 -4.20257983e+04  3.55e-15 2.24e-10  1.31e+00     0s
+   7   4.21597181e+04 -1.47869387e+03  3.11e-15 1.98e-10  6.20e-01     0s
+   8   3.85761016e+04  5.06883950e+03  4.00e-15 1.78e-10  4.76e-01     0s
+   9   3.73352631e+04  1.02473907e+04  3.33e-15 1.85e-10  3.85e-01     0s
+  10   3.45579377e+04  2.18451939e+04  1.15e-14 1.80e-10  1.81e-01     0s
+  11   2.89543125e+04  2.69728850e+04  2.83e-14 2.14e-10  2.81e-02     0s
+  12   2.79611310e+04  2.77027596e+04  6.31e-13 2.42e-10  3.67e-03     0s
+  13   2.78383691e+04  2.77961826e+04  5.18e-13 2.25e-10  5.99e-04     0s
+  14   2.78178879e+04  2.78073204e+04  1.68e-13 1.68e-10  1.50e-04     0s
+  15   2.78127098e+04  2.78101185e+04  3.80e-14 1.32e-10  3.68e-05     0s
+  16   2.78114516e+04  2.78108764e+04  4.71e-14 1.47e-10  8.17e-06     0s
+  17   2.78111821e+04  2.78110688e+04  1.20e-14 1.50e-10  1.61e-06     0s
+  18   2.78111264e+04  2.78111176e+04  1.38e-10 2.03e-10  1.26e-07     0s
+  19   2.78111208e+04  2.78111207e+04  3.67e-11 2.13e-10  1.44e-09     0s
+
+Barrier solved model in 19 iterations and 0.47 seconds (0.85 work units)
+Optimal objective 2.78111208e+04
+
+Crossover log...
+
+      29 DPushes remaining with DInf 0.0000000e+00                 0s
+       0 DPushes remaining with DInf 0.0000000e+00                 0s
+
+    6193 PPushes remaining with PInf 0.0000000e+00                 0s
+       0 PPushes remaining with PInf 0.0000000e+00                 0s
+
+  Push phase complete: Pinf 0.0000000e+00, Dinf 2.8066438e-13      0s
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+    6225    2.7811121e+04   0.000000e+00   0.000000e+00      1s
+
+Solved in 6225 iterations and 0.56 seconds (0.92 work units)
+Optimal objective  2.781112076e+04
+
+Gurobi 12.0.0 (win64) logging started Fri Jan 10 13:28:13 2025
+
+Set parameter LogFile to value "C:\Users\erikal\OneDrive - RISE\Projects\P115388.AP03DP02.A01_SCALE\EVs\Home1/oM_Home1.log"
+Set parameter Method to value 2
+Set parameter MIPFocus to value 1
+Set parameter Presolve to value 2
+Set parameter RINS to value 100
+Set parameter Crossover to value -1
+Set parameter FeasibilityTol to value 1e-09
+Set parameter MIPGap to value 0.02
+Set parameter Threads to value 13
+Set parameter TimeLimit to value 3600
+Set parameter IterationLimit to value 1800000
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (win64 - Windows 11.0 (22631.2))
+
+CPU model: Intel(R) Core(TM) Ultra 7 155U, instruction set [SSE2|AVX|AVX2]
+Thread count: 12 physical cores, 14 logical processors, using up to 13 threads
+
+Non-default parameters:
+IterationLimit  1800000
+TimeLimit  3600
+FeasibilityTol  1e-09
+MIPGap  0.02
+Method  2
+MIPFocus  1
+RINS  100
+QCPDual  1
+Presolve  2
+Threads  13
+
+Optimize a model with 179090 rows, 192170 columns and 410547 nonzeros
+Model fingerprint: 0xb3a72aa1
+Coefficient statistics:
+  Matrix range     [1e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [2e-04, 1e+04]
+  RHS range        [1e-01, 3e+01]
+Presolve removed 176451 rows and 186728 columns
+Presolve time: 0.19s
+Presolved: 2639 rows, 5442 columns, 6577 nonzeros
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.135e+03
+ Factor NZ  : 3.774e+03 (roughly 3 MB of memory)
+ Factor Ops : 6.044e+03 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   2.85742403e+08 -1.41650208e+09  3.86e+00 1.16e+00  7.66e+05     0s
+   1   3.21104978e+07 -7.25887285e+08  4.54e-01 4.66e-10  1.18e+05     0s
+   2   1.18393197e+06 -6.75407878e+07  5.95e-03 1.16e-08  6.65e+03     0s
+   3   1.44487963e+05 -3.04973316e+05  8.88e-16 4.95e-10  4.13e+01     0s
+   4   2.47684522e+04  1.05277076e+04  8.88e-16 2.50e-10  1.31e+00     0s
+   5   2.37261291e+04  1.81225557e+04  8.88e-16 1.88e-10  5.15e-01     0s
+   6   2.34887252e+04  2.12893888e+04  4.44e-16 1.62e-10  2.02e-01     0s
+   7   2.33955382e+04  2.24607809e+04  2.50e-16 1.57e-10  8.59e-02     0s
+   8   2.33645701e+04  2.29361193e+04  4.44e-16 1.29e-10  3.94e-02     0s
+   9   2.33464244e+04  2.31399664e+04  4.44e-16 1.18e-10  1.90e-02     0s
+  10   2.33384477e+04  2.32877132e+04  4.44e-16 1.45e-10  4.66e-03     0s
+  11   2.33352890e+04  2.33262006e+04  4.44e-16 1.58e-10  8.35e-04     0s
+  12   2.33337678e+04  2.33299241e+04  4.44e-16 1.40e-10  3.53e-04     0s
+  13   2.33333302e+04  2.33312205e+04  4.44e-16 1.31e-10  1.94e-04     0s
+  14   2.33330587e+04  2.33322450e+04  3.33e-16 8.98e-11  7.48e-05     0s
+  15   2.33329734e+04  2.33325594e+04  2.22e-16 1.02e-10  3.80e-05     0s
+  16   2.33329192e+04  2.33328127e+04  4.44e-16 1.40e-10  9.78e-06     0s
+  17   2.33329107e+04  2.33328834e+04  4.44e-16 1.55e-10  2.51e-06     0s
+  18   2.33329089e+04  2.33329055e+04  4.44e-16 1.78e-10  3.17e-07     0s
+  19   2.33329087e+04  2.33329086e+04  4.44e-16 1.97e-10  7.59e-09     0s
+  20   2.33329087e+04  2.33329087e+04  4.44e-16 2.16e-10  2.26e-11     0s
+
+Barrier solved model in 20 iterations and 0.22 seconds (0.27 work units)
+Optimal objective 2.33329087e+04
+
+Crossover log...
+
+       1 DPushes remaining with DInf 0.0000000e+00                 0s
+       0 DPushes remaining with DInf 0.0000000e+00                 0s
+
+     480 PPushes remaining with PInf 0.0000000e+00                 0s
+       0 PPushes remaining with PInf 0.0000000e+00                 0s
+
+  Push phase complete: Pinf 0.0000000e+00, Dinf 0.0000000e+00      0s
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+     484    2.3332909e+04   0.000000e+00   0.000000e+00      0s
+
+Solved in 484 iterations and 0.32 seconds (0.33 work units)
+Optimal objective  2.333290868e+04
+
+Gurobi 12.0.0 (win64) logging started Fri Jan 10 13:28:28 2025
+
+Set parameter LogFile to value "C:\Users\erikal\OneDrive - RISE\Projects\P115388.AP03DP02.A01_SCALE\EVs\Home1/oM_Home1.log"
+Set parameter Method to value 2
+Set parameter MIPFocus to value 1
+Set parameter Presolve to value 2
+Set parameter RINS to value 100
+Set parameter Crossover to value -1
+Set parameter FeasibilityTol to value 1e-09
+Set parameter MIPGap to value 0.02
+Set parameter Threads to value 13
+Set parameter TimeLimit to value 3600
+Set parameter IterationLimit to value 1800000
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (win64 - Windows 11.0 (22631.2))
+
+CPU model: Intel(R) Core(TM) Ultra 7 155U, instruction set [SSE2|AVX|AVX2]
+Thread count: 12 physical cores, 14 logical processors, using up to 13 threads
+
+Non-default parameters:
+IterationLimit  1800000
+TimeLimit  3600
+FeasibilityTol  1e-09
+MIPGap  0.02
+Method  2
+MIPFocus  1
+RINS  100
+QCPDual  1
+Presolve  2
+Threads  13
+
+Optimize a model with 179090 rows, 192170 columns and 410547 nonzeros
+Model fingerprint: 0xb3a72aa1
+Coefficient statistics:
+  Matrix range     [1e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [2e-04, 1e+04]
+  RHS range        [1e-01, 3e+01]
+Presolve removed 176451 rows and 186728 columns
+Presolve time: 0.35s
+Presolved: 2639 rows, 5442 columns, 6577 nonzeros
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.135e+03
+ Factor NZ  : 3.774e+03 (roughly 3 MB of memory)
+ Factor Ops : 6.044e+03 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   2.85742403e+08 -1.41650208e+09  3.86e+00 1.16e+00  7.66e+05     0s
+   1   3.21104978e+07 -7.25887285e+08  4.54e-01 4.66e-10  1.18e+05     0s
+   2   1.18393197e+06 -6.75407878e+07  5.95e-03 1.16e-08  6.65e+03     0s
+   3   1.44487963e+05 -3.04973316e+05  8.88e-16 4.95e-10  4.13e+01     0s
+   4   2.47684522e+04  1.05277076e+04  8.88e-16 2.50e-10  1.31e+00     0s
+   5   2.37261291e+04  1.81225557e+04  8.88e-16 1.88e-10  5.15e-01     0s
+   6   2.34887252e+04  2.12893888e+04  4.44e-16 1.62e-10  2.02e-01     0s
+   7   2.33955382e+04  2.24607809e+04  2.50e-16 1.57e-10  8.59e-02     0s
+   8   2.33645701e+04  2.29361193e+04  4.44e-16 1.29e-10  3.94e-02     0s
+   9   2.33464244e+04  2.31399664e+04  4.44e-16 1.18e-10  1.90e-02     0s
+  10   2.33384477e+04  2.32877132e+04  4.44e-16 1.45e-10  4.66e-03     0s
+  11   2.33352890e+04  2.33262006e+04  4.44e-16 1.58e-10  8.35e-04     0s
+  12   2.33337678e+04  2.33299241e+04  4.44e-16 1.40e-10  3.53e-04     0s
+  13   2.33333302e+04  2.33312205e+04  4.44e-16 1.31e-10  1.94e-04     0s
+  14   2.33330587e+04  2.33322450e+04  3.33e-16 8.98e-11  7.48e-05     0s
+  15   2.33329734e+04  2.33325594e+04  2.22e-16 1.02e-10  3.80e-05     0s
+  16   2.33329192e+04  2.33328127e+04  4.44e-16 1.40e-10  9.78e-06     0s
+  17   2.33329107e+04  2.33328834e+04  4.44e-16 1.55e-10  2.51e-06     0s
+  18   2.33329089e+04  2.33329055e+04  4.44e-16 1.78e-10  3.17e-07     0s
+  19   2.33329087e+04  2.33329086e+04  4.44e-16 1.97e-10  7.59e-09     0s
+  20   2.33329087e+04  2.33329087e+04  4.44e-16 2.16e-10  2.26e-11     0s
+
+Barrier solved model in 20 iterations and 0.39 seconds (0.27 work units)
+Optimal objective 2.33329087e+04
+
+Crossover log...
+
+       1 DPushes remaining with DInf 0.0000000e+00                 0s
+       0 DPushes remaining with DInf 0.0000000e+00                 0s
+
+     480 PPushes remaining with PInf 0.0000000e+00                 0s
+       0 PPushes remaining with PInf 0.0000000e+00                 0s
+
+  Push phase complete: Pinf 0.0000000e+00, Dinf 0.0000000e+00      0s
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+     484    2.3332909e+04   0.000000e+00   0.000000e+00      1s
+
+Solved in 484 iterations and 0.57 seconds (0.33 work units)
+Optimal objective  2.333290868e+04

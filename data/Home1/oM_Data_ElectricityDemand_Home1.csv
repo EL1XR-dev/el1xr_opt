@@ -1,0 +1,21 @@
+,Node,Flexible,MaximumPower,InitialPeriod,FinalPeriod,FlexPercent,ShiftedSteps
+EleD_01,Node1,Yes, 1000 , 2020 , 2050 , 0.3 , 2 
+EleD_02,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_03,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_04,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_05,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_06,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_07,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_08,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_09,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_10,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_11,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_12,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_13,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_14,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_15,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_16,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_17,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_18,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_19,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
+EleD_20,Node1,No, 1000 , 2040 , 2050 , 0.3 , 8 
