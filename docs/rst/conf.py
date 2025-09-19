@@ -32,7 +32,7 @@ html_static_path = ["_static"]
 html_theme_options = {
     "logo_only": True,
     "collapse_navigation": True,
-    "navigation_depth": 2,
+    "navigation_depth": 1,
 }
 
 # --- Make imports safe on RTD
