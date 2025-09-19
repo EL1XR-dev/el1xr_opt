@@ -1,18 +1,25 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = ["flit_core>=3.12.0"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.metadata]
-module = "VY4E-OptModel"
+# importable package (must be a valid identifier and match the folder in src/)
+module = "vy4e_optmodel"
+
+# distribution name on PyPI (may contain dashes)
 dist-name = "VY4E-OptModel"
+
 author = "VY4E Team"
 author-email = "erik.alvarez@ri.se"
 home-page = "https://vy4e-optmodel.readthedocs.io/en/latest/index.html"
 classifiers = [
-  "Development Status :: 5 - Production/Stable","Intended Audience :: Science/Research",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
   "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.11",]
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
 requires-python = ">=3.11"
 description-file = "README.rst"
 requires = [
@@ -26,10 +33,15 @@ requires = [
   "psutil>=5.8.0",
   "jsonschema>=4.16.0",
   "streamlit>=1.38.0",
-  "networkx>=3.3",]
+  "networkx>=3.3",
+]
 
+# Console script:
+# left side = command shown to users
+# right side = "package.module:function"
 [tool.flit.scripts]
-VY4E-OptModel = "VY4E-OptModel:main"
+vy4e-optmodel = "vy4e_optmodel.__main__:main"
 
+# Source dist extras (sdist). For wheel, files must live inside the package.
 [tool.flit.sdist]
-include = ["VY4E-OptModel/docs/img/VY4E-OptModel_logo_v3.png"]
+include = ["vy4e_optmodel/docs/img/VY4E-OptModel_logo_v3.png"]
