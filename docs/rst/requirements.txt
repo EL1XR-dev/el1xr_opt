@@ -1,4 +1,6 @@
-urllib3[secure]>=2.2.2
-sphinx>=7.0
-sphinx-book-theme>=1.1.0
-sphinx-copybutton
+sphinx==8.0.2
+sphinx-book-theme>=1.1.3
+pydata-sphinx-theme>=0.15.3
+sphinx-copybutton>=0.5.2
+sphinx-autodoc-typehints>=2.5.0
+

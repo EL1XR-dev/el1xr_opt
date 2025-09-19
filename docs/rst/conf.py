@@ -38,6 +38,24 @@ release = ''
 extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.githubpages',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
+]
+autosummary_generate = True
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+
+autodoc_mock_imports = [
+    "pyomo",
+    "gurobipy",
+    "gurobi",
+    # add any other large/optional deps used only at runtime
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -117,6 +135,9 @@ html_theme_options = {
     'navigation_depth': 1,
     'sticky_navigation': True,
     'style_external_links': True,
+    "repository_url": "https://github.com/VY4E/VY4E-OptModel",
+    "use_repository_button": True,
+    "use_issues_button": True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
