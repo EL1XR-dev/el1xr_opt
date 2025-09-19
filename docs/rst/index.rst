@@ -1,6 +1,6 @@
 .. VY4E-OptModel documentation master file, created by Erik Alvarez
 
-.. image:: ../img/VY4E-OptModel_logo_v2.png
+.. image:: ../img/VY4E-OptModel_logo_v4.png
    :width: 120
    :align: right
 
