@@ -3,8 +3,6 @@ VY4E‑OptModel
 
 *A modular optimization model for power‑system planning & operations*
 
-“Simplicity and Transparency”
-
 What is it?
 -----------
 **VY4E-OptModel** is a Python library for optimization studies in power-system
