@@ -1,5 +1,7 @@
 .. VY4E-OptModel documentation master file, created by Erik Alvarez
 
+VY4E‑OptModel
+=============
 *A modular optimization model for power‑system planning & operations*
 
 “*Simplicity and Transparency*”
