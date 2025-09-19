@@ -16,6 +16,11 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
+import os, sys, pathlib
+ROOT = pathlib.Path(__file__).resolve().parents[2]  # repo root
+sys.path.insert(0, str(ROOT / "src"))               # src/ layout
+
+
 
 
 # -- Project information -----------------------------------------------------
