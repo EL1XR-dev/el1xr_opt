@@ -17,34 +17,40 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 ---
 
 ## 📂 Structure
-- `src/`: Contains the core source code for the optimization model.
-  - `oM_Main.py`: The main script to run the optimization model. It parses command-line arguments and calls the different modules in sequence.
-  - `Modules/`: Contains the different modules of the optimization model.
-    - `oM_InputData.py`: Reads and processes the input data from CSV files, and creates the model's variables.
-    - `oM_ModelFormulation.py`: Defines the objective function and constraints of the optimization problem.
-    - `oM_ProblemSolving.py`: Solves the optimization problem using the selected solver.
-    - `oM_OutputData.py`: Saves the results of the optimization to CSV files.
-- `data/`: Contains sample case studies.
-  - `Home1/`: A sample case study with input data.
-    - `oM_Dict_*.csv`: CSV files that define the sets for the model (e.g., nodes, generators, technologies).
-    - `oM_Data_*.csv`: CSV files that contain the parameters for the model (e.g., demand, generation capacity, costs).
-    - `Master_InputData_Home1.xlsm`: The Excel master file used to generate the CSV data files.
-- `docs/`: Contains documentation and formulation notes.
-  - `ppt/`: Contains a PowerPoint presentation with additional information about the model.
-- `tests/`: Contains validation and regression tests.
+- `src/`: Core source code for the optimization model.
+- `data/`: Sample case studies.
+- `docs/`: Documentation and formulation notes.
+- `tests/`: Validation and regression tests.
 
 ---
 
-## 📦 Installation
+## 📦 Prerequisites
+- **Python 3.12** or higher.
+- A supported solver: **Gurobi, CBC, or CPLEX**. Make sure the solver is installed and accessible in your system's PATH.
+
+---
+
+## 🚀 Installation
+1. Clone the repository:
 ```bash
 git clone https://github.com/VY4E-nexus/VY4E-OptModel.git
 cd VY4E-OptModel
-# Install dependencies (to be specified, e.g. Julia packages or Python venv)
+```
+
+2. Create and activate a virtual environment (recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+```
+
+3. Install the required Python packages:
+```bash
+pip install -r requirements.txt
 ```
 
 ---
 
-## 🚀 Usage
+## Usage
 To run the optimization model, use the `oM_Main.py` script from the `src` directory.
 
 ```bash
@@ -52,20 +58,24 @@ python src/oM_Main.py --case <case_name> --solver <solver_name>
 ```
 
 ### Command-line Arguments
-- `--dir`: The directory containing the case data. Defaults to the current directory.
-- `--case`: The name of the case to run (e.g., `Home1`).
-- `--solver`: The name of the solver to use (e.g., `gurobi`, `cbc`, `cplex`).
-- `--date`: The date for the model run, in "YYYY-MM-DD HH:MM:SS" format. Defaults to the current date and time.
-- `--rawresults`: Whether to save raw results. Can be `True` or `False`. Defaults to `False`.
-- `--plots`: Whether to generate plots. Can be `True` or `False`. Defaults to `False`.
+- `--dir`: Directory containing the case data (defaults to the current directory).
+- `--case`: Name of the case to run (e.g., `Home1`).
+- `--solver`: Solver to use (e.g., `gurobi`, `cbc`, `cplex`).
+- `--date`: Model run date in "YYYY-MM-DD HH:MM:SS" format.
+- `--rawresults`: Save raw results (`True`/`False`).
+- `--plots`: Generate plots (`True`/`False`).
 
 ---
 
-## 🧩 Dependencies
-The model is developed in Python 3.12 and requires the following main libraries:
-- **Pyomo**: For the optimization modeling.
-- **Pandas**: For data manipulation.
-- **Altair, Plotly**: For data visualization.
-- **Gurobipy**: As an interface to the Gurobi solver.
-- **Colour**: For color representation.
-- **Psutil**: For cross-platform lib for process and system monitoring in Python.
+## 🤝 Contributing
+Contributions are welcome! If you want to contribute to VY4E-OptModel, please follow these steps:
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them with a clear message.
+4. Push your changes to your fork.
+5. Create a pull request to the `main` branch of this repository.
+
+---
+
+## 📄 License
+This project is licensed under the terms of the [MIT License](LICENSE).

@@ -1,0 +1,7 @@
+pyomo
+pandas
+altair
+plotly
+gurobipy
+colour
+psutil
