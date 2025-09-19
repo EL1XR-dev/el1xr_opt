@@ -1,16 +1,29 @@
 VY4E‑OptModel
 =============
-*A modular optimization model for power‑system planning & operations*
-
-“Simplicity and Transparency”
 
 .. image:: ../img/VY4E-OptModel_logo_v4.png
    :alt: VY4E‑OptModel
    :align: right
    :width: 88
 
-**VY4E-OptModel** is an open-source model distributed as a Python library, designed to provide optimal planning, operation, and management strategies for multi-vector energy systems. It supports both stand-alone and grid-connected systems in participating in electricity markets, ensuring the seamless integration of new assets and efficient system scheduling.
-It targets distribution planning and operational studies with support for flexibility options (BESS, H2, DSM), multi‑stage/scenario formulations, and solver‑agnostic backends.
+*A modular optimization model for power‑system planning & operations*
+
+“Simplicity and Transparency”
+
+What is it?
+-----------
+**VY4E-OptModel** is a Python library for optimization studies in power-system
+**planning** and **operations**, supporting multi-vector flexibility (BESS, H₂, DSM),
+multi-stage/**scenario** formulations, and multiple solvers via Pyomo.
+
+Key features
+------------
+- **Modular `src/` layout**: ``data``, ``model``, ``optimization``, ``scenarios``,
+  ``solvers``, ``results``.
+- **Flexible time structure**: ``period → scenario → stage`` (hours or representative periods).
+- **Technologies**: batteries, hydrogen subsystems, DSM, and transmission elements.
+- **Solver-agnostic**: Gurobi, HiGHS, or CBC.
+- **Reproducible I/O**: CSV/Parquet data, YAML/JSON settings.
 
 This documentation is organized around **getting started**, **how‑to guides**, **concepts**,
 and **API reference** generated from the source code under ``src/``.
