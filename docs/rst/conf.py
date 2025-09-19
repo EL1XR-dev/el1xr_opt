@@ -93,7 +93,7 @@ html_static_path = []
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-html_theme = 'alabaster'
+html_theme = 'sphinx_book_theme'
 html_sidebars = {
     '**': [
         'about.html',
