@@ -1,0 +1,35 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "VY4E-OptModel"
+dist-name = "VY4E-OptModel"
+author = "VY4E Team"
+author-email = "erik.alvarez@ri.se"
+home-page = "https://ohysem.readthedocs.io/en/latest/index.html"
+classifiers = [
+  "Development Status :: 5 - Production/Stable","Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.11",]
+requires-python = ">=3.11"
+description-file = "README.rst"
+requires = [
+  "pyomo>=6.8.0",
+  "matplotlib>=3.3.4",
+  "numpy>=1.20.1",
+  "pandas>=1.2.3",
+  "plotly>=5.7.0",
+  "colour>=0.1.5",
+  "altair>=5.0.0",
+  "psutil>=5.8.0",
+  "jsonschema>=4.16.0",
+  "streamlit>=1.38.0",
+  "networkx>=3.3",]
+
+[tool.flit.scripts]
+oHySEM = "oHySEM:main"
+
+[tool.flit.sdist]
+include = ["oHySEM/img/oHySEM_v2.png"]
