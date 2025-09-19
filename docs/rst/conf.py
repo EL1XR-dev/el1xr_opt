@@ -121,6 +121,7 @@ html_static_path = []
 #
 # html_sidebars = {}
 html_theme = "sphinx_book_theme"
+html_logo  = '../img/VY4E-OptModel_logo_v6.png'
 html_theme_options = {
     "repository_url": "https://github.com/VY4E/VY4E-OptModel",
     "use_repository_button": True,
