@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath("../../src"))  # <-- adjust if needed
 
 # -- Project information -----------------------------------------------------
 
-project = "VY4E-OptModel"
+project = "OptModel"
 author = "VY4E Team"
 copyright = f"{datetime.now():%Y}, {author}"
 
