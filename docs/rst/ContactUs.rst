@@ -1,24 +1,16 @@
-.. oHySEM documentation master file, created by Erik Alvarez
+.. VY4E-OptModel documentation master file, created by Erik Alvarez
 
 Contact Us
 ==========
 
-.. image:: ../img/Escudo.png
-   :scale: 70%
-   :align: right
+`Erik Alvarez <https://erikfilias.github.io/>`_
 
-.. image:: ../img/logoIIT.gif
-   :scale: 100%
-   :align: right
+erik.alvarez@ri.se
 
-`Andrés Ramos <https://pascua.iit.comillas.edu/aramos/Ramos_CV.htm>`_ 
+RISE - Research Institutes of Sweden
 
-andres.ramos@comillas.edu
+Electric Power System Unit
 
-Universidad Pontificia Comillas
+Sven Hultins Plats 5,
 
-Instituto de Investigación Tecnológica
-
-Alberto Aguilera 23
-
-28015 Madrid, Spain
+412 58 Göteborg, Sweden
