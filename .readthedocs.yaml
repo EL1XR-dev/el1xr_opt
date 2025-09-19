@@ -2,29 +2,30 @@
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
-# Read the Docs configuration file
+# Required
 version: 2
 
+# Set the version of Python and other tools you might need
 build:
-  os: ubuntu-22.04        # ok to keep; 24.04 also works
+  os: ubuntu-22.04
   tools:
     python: "3.11"
-  jobs:
-    post_checkout:
-      - echo "Using .readthedocs.yaml:"
-      - cat .readthedocs.yaml
+    # You can also specify other tool versions:
+    # nodejs: "19"
+    # rust: "1.64"
+    # golang: "1.19"
 
+# Build documentation in the docs/ directory with Sphinx
 sphinx:
-  configuration: docs/rst/conf.py
-  builder: html
-  fail_on_warning: false   # avoids failing on harmless warnings
+   configuration: docs/rst/conf.py
 
-# Build additional formats (RTD will run Sphinx latexpdf for this)
+# If using Sphinx, optionally build your docs in additional formats such as PDF
 formats:
-  - pdf
+   - pdf
 
+# # Optionally declare the Python requirements required to build your docs
 python:
-  install:
+    install:
     - method: pip
       path: .
       extra_requirements:
