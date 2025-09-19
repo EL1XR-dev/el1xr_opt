@@ -33,7 +33,7 @@ from Modules.oM_OutputData       import saving_rawdata, saving_results
 for i in range(0, 117):
     print('-', end="")
 
-print('\nAdaptive Energy Grid Integration System (AEGIS) - Version 1.0.1 - November 04, 2024')
+print('\nGrid Integration System (GIS) - Version 1.0.1 - November 04, 2024')
 print('#### Non-commercial use only ####')
 
 parser = argparse.ArgumentParser(description='Introducing main arguments...')
