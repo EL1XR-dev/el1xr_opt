@@ -1,10 +1,15 @@
-.. VY4E-OptModel documentation master file, created by Erik Alvarez
-
+VY4E‑OptModel
+=============
 *A modular optimization model for power‑system planning & operations*
 
-“*Simplicity and Transparency*”
+“Simplicity and Transparency”
 
-**VY4E** is an open-source model distributed as a Python library, designed to provide optimal planning, operation, and management strategies for multi-vector energy systems. It supports both stand-alone and grid-connected systems in participating in electricity markets, ensuring the seamless integration of new assets and efficient system scheduling.
+.. image:: ../img/VY4E-OptModel_logo_v4.png
+   :alt: VY4E‑OptModel
+   :align: right
+   :width: 88
+
+**VY4E-OptModel** is an open-source model distributed as a Python library, designed to provide optimal planning, operation, and management strategies for multi-vector energy systems. It supports both stand-alone and grid-connected systems in participating in electricity markets, ensuring the seamless integration of new assets and efficient system scheduling.
 It targets distribution planning and operational studies with support for flexibility options (BESS, H2, DSM), multi‑stage/scenario formulations, and solver‑agnostic backends.
 
 This documentation is organized around **getting started**, **how‑to guides**, **concepts**,
