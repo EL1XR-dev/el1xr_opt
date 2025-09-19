@@ -45,11 +45,3 @@ vy4e-optmodel = "vy4e_optmodel.__main__:main"
 # Source dist extras (sdist). For wheel, files must live inside the package.
 [tool.flit.sdist]
 include = ["vy4e_optmodel/docs/img/VY4E-OptModel_logo_v3.png"]
-
-[project.optional-dependencies]
-docs = [
-  "sphinx>=7.2",
-  "sphinx-rtd-theme>=2.0.0",
-  "sphinx-design>=0.6.0",
-  "sphinx-copybutton>=0.5.2",
-]
