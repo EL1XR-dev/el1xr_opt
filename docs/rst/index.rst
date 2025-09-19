@@ -1,4 +1,4 @@
-OptModel
+VY4E-OptModel
 =============
 **Simplicity and Transparency:** *A modular optimization model for power‑system planning & operations*
 
