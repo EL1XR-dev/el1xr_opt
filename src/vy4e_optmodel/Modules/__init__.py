@@ -16,7 +16,7 @@ Open Generation, Storage, and Transmission Operation and Expansion Planning Mode
 """
 __version__ = "1.0.1"
 
-from .oM_InputData        import *
-from .oM_ModelFormulation import *
-from .oM_ProblemSolving   import *
-from .oM_OutputResults    import *
+from Modules.oM_InputData        import *
+from Modules.oM_ModelFormulation import *
+from Modules.oM_ProblemSolving   import *
+from Modules.oM_OutputResults    import *
