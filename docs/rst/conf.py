@@ -101,7 +101,7 @@ html_sidebars = {
         'searchbox.html',
     ]
 }
-html_title = 'version 1.0.14'
+html_title = 'version 1.0.1'
 html_logo  = '../img/VY4E-OptModel_logo_v3.png'
 html_last_updated_fmt = ''
 html_show_sphinx = False
@@ -110,7 +110,12 @@ html_theme_options = {
     'description': 'version 1.0.14',
     'body_max_width' : 'none',
     'page_width': 'auto',
-    'font_family': 'Georgia'
+    'font_family': 'Georgia',
+    'logo_only': True,
+    'collapse_navigation': True,
+    'navigation_depth': 1,
+    'sticky_navigation': True,
+    'style_external_links': True,
 }
 html_js_files = [
     '../custom.js',

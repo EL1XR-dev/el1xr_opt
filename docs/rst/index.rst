@@ -1,11 +1,6 @@
 VY4E‑OptModel
 =============
 
-.. image:: ../img/VY4E-OptModel_logo_v4.png
-   :alt: VY4E‑OptModel
-   :align: right
-   :width: 88
-
 *A modular optimization model for power‑system planning & operations*
 
 “Simplicity and Transparency”
