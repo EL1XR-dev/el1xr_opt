@@ -93,3 +93,38 @@ autodoc_mock_imports = [
 def _safe_mock(names):
     for name in names:
         if name not in sys.modules:
+            sys.modules[name] = types.ModuleType(name)
+
+# Legacy/transition names that autosummary might try to import
+_safe_mock([
+    "vy4e_optmodel.Modules",
+    "Modules",
+    "Modules.oM_ModelFormulation",
+    "Modules.oM_InputData",
+])
+
+# Stub package modules while refactoring (remove when stable/importable)
+try:
+    import vy4e_optmodel  # noqa: F401
+except Exception:
+    _safe_mock([
+        "vy4e_optmodel",
+        "vy4e_optmodel.data",
+        "vy4e_optmodel.model",
+        "vy4e_optmodel.optimization",
+        "vy4e_optmodel.scenarios",
+        "vy4e_optmodel.solvers",
+        "vy4e_optmodel.results",
+        "vy4e_optmodel.cli",
+    ])
+
+# ---------------------------------------------------------------------------
+# UX niceties (only active if sphinx_copybutton is present)
+copybutton_prompt_text = r">>> |\.\.\. |\$ "
+copybutton_prompt_is_regexp = True
+
+# Custom CSS (optional)
+def setup(app):
+    css = os.path.join(os.path.dirname(__file__), "_static", "custom.css")
+    if os.path.exists(css):
+        app.add_css_file("custom.css")
