@@ -78,4 +78,4 @@ Contributions are welcome! If you want to contribute to VY4E-OptModel, please fo
 ---
 
 ## 📄 License
-This project is licensed under the terms of the [MIT License](LICENSE).
+This project is licensed under the terms of the [GNU General Public License v3.0](LICENSE).
