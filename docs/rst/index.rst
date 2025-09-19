@@ -27,7 +27,7 @@ and **API reference** generated from the source code under ``src/``.
    Update the package import path below if your top‑level package differs from
    ``vy4e_optmodel`` (e.g., ``optmodel`` or ``vy4e``).
 
-Contents
+Index
 --------
 
 .. toctree::
