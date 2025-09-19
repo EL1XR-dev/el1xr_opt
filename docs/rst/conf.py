@@ -15,11 +15,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx_design",  # optional, for fancier admonitions
-    "sphinx_copybutton",  # optional, for copy buttons on code blocks
 ]
-copybutton_prompt_text = r">>> |\.\.\. |\$ "
-copybutton_prompt_is_regexp = True
 
 autosummary_generate = True
 napoleon_google_docstring = True
