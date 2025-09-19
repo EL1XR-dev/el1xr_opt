@@ -53,8 +53,8 @@ extensions = [
     "sphinx_autodoc_typehints",
 ]
 autosummary_generate = False
-napoleon_google_docstring = True
-napoleon_numpy_docstring = True
+napoleon_google_docstring = False
+napoleon_numpy_docstring = False
 
 autodoc_mock_imports = [
     "pyomo",
