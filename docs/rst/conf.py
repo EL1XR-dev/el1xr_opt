@@ -21,7 +21,12 @@ napoleon_google_docstring = True
 napoleon_numpy_docstring = True
 
 # --- HTML theme
-html_theme = "sphinx_rtd_theme"
+try:
+    import sphinx_rtd_theme  # noqa: F401
+    html_theme = "sphinx_rtd_theme"
+except Exception:
+    html_theme = "alabaster"  # fallback
+
 html_logo = "_static/logo-rtd-compact.png"  # optional
 html_static_path = ["_static"]
 html_theme_options = {
