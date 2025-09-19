@@ -3,26 +3,38 @@ import os
 import sys
 import types
 
-# --- Import path: point to your src/ package (adjust depth if your conf.py lives elsewhere)
-# If your conf.py is in docs/ or docs/rst/, go up one or two levels accordingly.
+# ---------------------------------------------------------------------------
+# Path setup: make the src/ package importable
+# Adjust the relative path if this conf.py is not at docs/ or docs/rst/
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, os.path.join(ROOT, "src"))   # src/ layout
+sys.path.insert(0, os.path.join(ROOT, "src"))
 
-# --- Project metadata
+# ---------------------------------------------------------------------------
+# Project metadata
 project = "VY4E-OptModel"
 author = "VY4E Team"
 copyright = "2025, VY4E"
+language = "en"
+
+# ---------------------------------------------------------------------------
+# Extensions (load optional ones only if available)
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
-    "sphinx_copybutton",  # optional
 ]
 
+# Optional UX extensions — safe-guarded
+try:
+    import sphinx_copybutton  # noqa: F401
+    extensions.append("sphinx_copybutton")
+except Exception:
+    pass
+
 autosummary_generate = True
-autodoc_typehints = "description"     # nicer type hints
+autodoc_typehints = "description"
 autodoc_default_options = {
     "members": True,
     "undoc-members": False,
@@ -40,74 +52,44 @@ intersphinx_mapping = {
 templates_path = ["_templates"]
 exclude_patterns = []
 source_suffix = {".rst": "restructuredtext"}
-master_doc = "index"
-language = "en"
+master_doc = "index"  # root_doc also works on Sphinx>=5
 
-# --- HTML theme
+# ---------------------------------------------------------------------------
+# HTML / Theme
 try:
     import sphinx_rtd_theme  # noqa: F401
     html_theme = "sphinx_rtd_theme"
 except Exception:
-    html_theme = "alabaster"  # fallback
+    html_theme = "alabaster"  # fallback if theme not installed
 
 html_static_path = ["_static"]
-html_logo = "../img/VY4E-OptModel_logo_v4.png"  # optional
+# Put a tight 88×88 transparent PNG here; RTD serves _static by default
+html_logo = "_static/logo-rtd-compact.png"
+html_favicon = "_static/favicon.png"  # optional
+
 html_theme_options = {
     "logo_only": True,
     "collapse_navigation": True,
-    "navigation_depth": 1,
-    "stycky_navigation": True,
+    "navigation_depth": 1,     # 1 felt too shallow to users
+    "sticky_navigation": True, # <-- fixed typo
     "style_external_links": True,
 }
 
-# Optional: fine-tune sidebar blocks (RTD theme supports this)
+# Optional: explicit sidebar layout (RTD theme default is fine)
 html_sidebars = {
     "**": [
-        "globaltoc.html",            # navigation tree
+        "globaltoc.html",
         "searchbox.html",
-        # "relations.html",          # prev/next links (add if you like)
+        # "relations.html",
     ]
 }
 
-# -- Build robustness on RTD -------------------------------------------------
-# Mock heavy/missing deps to avoid import errors during API doc generation.
+# ---------------------------------------------------------------------------
+# Build robustness on RTD: mock heavy deps and legacy module names
 autodoc_mock_imports = [
     "pyomo", "gurobipy", "numpy", "pandas", "scipy",
 ]
 
-# Stub legacy names if autosummary tries to import them
-def _safe_mock(modnames):
-    for name in modnames:
+def _safe_mock(names):
+    for name in names:
         if name not in sys.modules:
-            sys.modules[name] = types.ModuleType(name)
-
-_safe_mock([
-    "vy4e_optmodel.Modules",
-    "Modules",
-    "Modules.oM_ModelFormulation",
-    "Modules.oM_InputData",
-])
-
-# Optionally stub package modules while refactoring (remove when stable)
-try:
-    import vy4e_optmodel  # noqa: F401
-except Exception:
-    _safe_mock([
-        "vy4e_optmodel",
-        "vy4e_optmodel.data",
-        "vy4e_optmodel.model",
-        "vy4e_optmodel.optimization",
-        "vy4e_optmodel.scenarios",
-        "vy4e_optmodel.solvers",
-        "vy4e_optmodel.results",
-        "vy4e_optmodel.cli",
-    ])
-
-# -- UX niceties -------------------------------------------------------------
-copybutton_prompt_text = r">>> |\.\.\. |\$ "
-copybutton_prompt_is_regexp = True
-
-# Add custom CSS (optional)
-def setup(app):
-    if os.path.exists(os.path.join(os.path.dirname(__file__), "_static", "custom.css")):
-        app.add_css_file("custom.css")
