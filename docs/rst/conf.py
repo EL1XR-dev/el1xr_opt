@@ -21,7 +21,7 @@ from datetime import datetime
 # Example repo layouts:
 #   src/vy4e_optmodel/...    ->  sys.path.insert(0, os.path.abspath("../../src"))
 #   vy4e_optmodel/...        ->  sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(0, os.path.abspath("../../src"))  # <-- adjust if needed
+sys.path.insert(0, os.path.abspath(os.path.join("..", "src")))  # <-- adjust if needed
 
 # -- Project information -----------------------------------------------------
 
@@ -45,6 +45,19 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
 ]
+autosummary_generate = True
+
+# 3) Mock heavy/missing deps + legacy internals to avoid hard imports
+autodoc_mock_imports = [
+    "pyomo", "gurobipy", "numpy", "pandas", "scipy",
+    # add others if needed
+]
+
+# 4) Stub legacy internal modules that are referenced but not present
+sys.modules.setdefault("vy4e_optmodel.Modules", types.ModuleType("vy4e_optmodel.Modules"))
+sys.modules.setdefault("Modules", types.ModuleType("Modules"))
+sys.modules.setdefault("Modules.oM_ModelFormulation", types.ModuleType("Modules.oM_ModelFormulation"))
+sys.modules.setdefault("Modules.oM_InputData", types.ModuleType("Modules.oM_InputData"))
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
