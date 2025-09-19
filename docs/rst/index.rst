@@ -79,11 +79,13 @@ Core package
 .. autosummary::
    :toctree: api
    :recursive:
+
    vy4e_optmodel.oM_Main
    vy4e_optmodel.Modules.oM_InputData
    vy4e_optmodel.Modules.oM_ModelFormulation
    vy4e_optmodel.Modules.oM_OutputData
    vy4e_optmodel.Modules.oM_ProblemSolving
+
 
 
 Indices and tables

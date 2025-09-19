@@ -120,23 +120,14 @@ html_static_path = []
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-html_theme = 'sphinx_book_theme'
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'searchbox.html',
-    ]
-}
-html_title = 'version 1.0.1'
-html_logo  = '../img/VY4E-OptModel_logo_v6.png'
-html_last_updated_fmt = ''
-html_show_sphinx = False
+html_theme = "sphinx_book_theme"
 html_theme_options = {
     "repository_url": "https://github.com/VY4E/VY4E-OptModel",
     "use_repository_button": True,
     "use_issues_button": True,
 }
+# Do NOT set footer_start/footer_end/navbar_*/*extra* items that include "about.html"
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
