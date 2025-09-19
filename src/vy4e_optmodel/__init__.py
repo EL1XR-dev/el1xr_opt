@@ -1,5 +1,5 @@
 """
-Optimized Hybrid Systems for Energy and Market management (oHySEM)
+VY4E-OptModel: An open-source optimization model for the design and operation of hybrid renewable energy systems.
 
 
     Args:
@@ -11,8 +11,8 @@ Optimized Hybrid Systems for Energy and Market management (oHySEM)
         Output results in CSV files that are found in the case folder.
 
     Examples:
-        >>> import oHySEM as oH
-        >>> oH.routine("VPP1", "C:\\Users\\UserName\\Documents\\GitHub\\oHySEM", "glpk")
+        >>> import VY4E-OptModel as oM
+        >>> oM.routine("VPP1", "C:\\Users\\UserName\\Documents\\GitHub\\VY4E-OptModel", "glpk")
 """
 __version__ = "1.0.14"
 
