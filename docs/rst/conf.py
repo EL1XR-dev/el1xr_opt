@@ -16,11 +16,15 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
-import os, sys, pathlib
+import os, sys, pathlib, importlib, types
 ROOT = pathlib.Path(__file__).resolve().parents[2]  # repo root
 sys.path.insert(0, str(ROOT / "src"))               # src/ layout
 
-
+# TEMP shim for bad "import Modules" statements
+try:
+    sys.modules["Modules"] = importlib.import_module("vy4e_optmodel.Modules")
+except Exception:
+    sys.modules.setdefault("Modules", types.ModuleType("Modules"))
 
 
 # -- Project information -----------------------------------------------------
@@ -129,22 +133,10 @@ html_logo  = '../img/VY4E-OptModel_logo_v6.png'
 html_last_updated_fmt = ''
 html_show_sphinx = False
 html_theme_options = {
-    'analytics_id': 'UA-515200-2',  #  Provided by Google in your dashboard
-    # 'description': 'version 1.0.1',
-    'body_max_width' : 'none',
-    'page_width': 'auto',
-    'font_family': 'Georgia',
-    'logo_only': True,
-    'display_version': False,
-    'collapse_navigation': True,
-    'navigation_depth': 1,
-    'sticky_navigation': True,
-    'style_external_links': True,
     "repository_url": "https://github.com/VY4E/VY4E-OptModel",
     "use_repository_button": True,
     "use_issues_button": True,
 }
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".

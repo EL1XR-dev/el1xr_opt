@@ -35,7 +35,8 @@ Index
    getting-started/Quickstart
    getting-started/Projects
    getting-started/Papers
-   getting-started/ContactUS
+   getting-started/ContactUs
+
 
 .. toctree::
    :maxdepth: 2
@@ -78,12 +79,12 @@ Core package
 .. autosummary::
    :toctree: api
    :recursive:
-
    vy4e_optmodel.oM_Main
    vy4e_optmodel.Modules.oM_InputData
    vy4e_optmodel.Modules.oM_ModelFormulation
    vy4e_optmodel.Modules.oM_OutputData
    vy4e_optmodel.Modules.oM_ProblemSolving
+
 
 Indices and tables
 ------------------
