@@ -1,5 +1,9 @@
 .. VY4E-OptModel documentation master file, created by Erik Alvarez
 
+.. image:: ../img/VY4E-OptModel_logo_v4.png
+   :width: 120
+   :align: right
+
 *A modular optimization model for power‑system planning & operations*
 
 “*Simplicity and Transparency*”
@@ -69,14 +73,11 @@ Core package
    :toctree: api
    :recursive:
 
-   vy4e_optmodel
-   vy4e_optmodel.data
-   vy4e_optmodel.model
-   vy4e_optmodel.optimization
-   vy4e_optmodel.scenarios
-   vy4e_optmodel.solvers
-   vy4e_optmodel.results
-   vy4e_optmodel.cli
+   vy4e_optmodel.oM_Main
+   vy4e_optmodel.Modules.oM_InputData
+   vy4e_optmodel.Modules.oM_ModelFormulation
+   vy4e_optmodel.Modules.oM_OutputData
+   vy4e_optmodel.Modules.oM_ProblemSolving
 
 Indices and tables
 ------------------
