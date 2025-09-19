@@ -1,6 +1,6 @@
 # VY4E-OptModel
 
-<img src="https://github.com/VY4E-Nexus/.github/blob/9f6c0c139099d6c1dcb552c0a72aadc1d6ab4f81/VY4E_Nexus_avatar_transparent.png" width="120" align="right" />
+<img src="https://github.com/VY4E/.github/blob/5ba9bebbace99b7224e5568a16aa3f2fa88f19cc/VY4E_avatar_transparent_v2.png" width="120" align="right" />
 
 **VY4E-OptModel** is the **core optimization engine** of the [VY4E](https://github.com/VY4E) ecosystem.  
 It provides the fundamental modelling framework for **integrated zero-carbon energy systems**, supporting electricity, heat, hydrogen, and storage.
