@@ -20,7 +20,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Simplicity and Transparency'
+project = 'VY4E'
 copyright = '2025, VY4E'
 author = 'VY4E Team: Erik F. Alvarez'
 
