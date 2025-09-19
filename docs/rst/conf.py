@@ -13,10 +13,15 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('..'))
+import os
+import sys
 from datetime import datetime
+
+# If your code is in a src/ layout, keep the next line. Otherwise, point to your package root.
+# Example repo layouts:
+#   src/vy4e_optmodel/...    ->  sys.path.insert(0, os.path.abspath("../../src"))
+#   vy4e_optmodel/...        ->  sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, os.path.abspath("../../src"))  # <-- adjust if needed
 
 # -- Project information -----------------------------------------------------
 
@@ -24,10 +29,9 @@ project = "VY4E-OptModel"
 author = "VY4E Team"
 copyright = f"{datetime.now():%Y}, {author}"
 
-# The short X.Y version
-version = 'version 1.0.1'
-# The full version, including alpha/beta/rc tags
-release = ''
+# Keep version/release consistent; use env var fallback for RTD or set manually.
+version = os.environ.get("READTHEDOCS_VERSION", "0.0.0")
+release = version
 
 
 # -- General configuration ---------------------------------------------------
