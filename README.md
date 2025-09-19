@@ -1,8 +1,8 @@
-# IZERO-OptModel
+# VY4E-OptModel
 
-<img src="https://github.com/IZERO-Nexus/.github/blob/9f6c0c139099d6c1dcb552c0a72aadc1d6ab4f81/IZERO_Nexus_avatar_transparent.png" width="120" align="right" />
+<img src="https://github.com/VY4E-Nexus/.github/blob/9f6c0c139099d6c1dcb552c0a72aadc1d6ab4f81/VY4E_Nexus_avatar_transparent.png" width="120" align="right" />
 
-**IZERO-OptModel** is the **core optimization engine** of the [IZERO Nexus](https://github.com/izero-nexus) ecosystem.  
+**VY4E-OptModel** is the **core optimization engine** of the [VY4E Nexus](https://github.com/VY4E-nexus) ecosystem.  
 It provides the fundamental modelling framework for **integrated zero-carbon energy systems**, supporting electricity, heat, hydrogen, and storage.
 
 ---
@@ -12,7 +12,7 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 - Compatible with **deterministic, stochastic, and equilibrium** approaches
 - Flexible temporal structure: hours, days, representative periods
 - Built on **[JuMP](https://jump.dev)/Pyomo** (depending on module choice)
-- Interfaces with `izero-data` (datasets) and `izero-examples` (notebooks)
+- Interfaces with `VY4E-data` (datasets) and `VY4E-examples` (notebooks)
 
 ---
 
@@ -37,8 +37,8 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 
 ## 📦 Installation
 ```bash
-git clone https://github.com/izero-nexus/IZERO-OptModel.git
-cd IZERO-OptModel
+git clone https://github.com/VY4E-nexus/VY4E-OptModel.git
+cd VY4E-OptModel
 # Install dependencies (to be specified, e.g. Julia packages or Python venv)
 ```
 
