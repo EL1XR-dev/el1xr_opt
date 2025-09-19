@@ -28,7 +28,7 @@ try:
 except Exception:
     html_theme = "alabaster"  # fallback
 
-html_logo = "_static/logo-rtd-compact.png"  # optional
+html_logo = "../img/VY4E-OptModel_logo_v4.png"  # optional
 html_static_path = ["_static"]
 html_theme_options = {
     "logo_only": True,
