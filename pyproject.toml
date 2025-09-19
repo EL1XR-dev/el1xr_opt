@@ -7,7 +7,7 @@ module = "VY4E-OptModel"
 dist-name = "VY4E-OptModel"
 author = "VY4E Team"
 author-email = "erik.alvarez@ri.se"
-home-page = "https://ohysem.readthedocs.io/en/latest/index.html"
+home-page = "https://vy4e-optmodel.readthedocs.io/en/latest/index.html"
 classifiers = [
   "Development Status :: 5 - Production/Stable","Intended Audience :: Science/Research",
   "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
@@ -29,7 +29,7 @@ requires = [
   "networkx>=3.3",]
 
 [tool.flit.scripts]
-oHySEM = "oHySEM:main"
+VY4E-OptModel = "VY4E-OptModel:main"
 
 [tool.flit.sdist]
-include = ["oHySEM/img/oHySEM_v2.png"]
+include = ["VY4E-OptModel/docs/img/VY4E-OptModel_logo_v3.png"]
