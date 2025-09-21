@@ -35,6 +35,7 @@ requires = [
   "streamlit>=1.38.0",
   "networkx>=3.3",
   "ausankey>=1.5.0",
+  "amplpy>=0.15.0",
 ]
 
 # Console script:
