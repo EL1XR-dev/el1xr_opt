@@ -18,5 +18,5 @@ __version__ = "1.0.1"
 
 from . import oM_InputData
 from . import oM_ModelFormulation
-from . import oM_OutputResults
+from . import oM_OutputData
 from . import oM_ProblemSolving
