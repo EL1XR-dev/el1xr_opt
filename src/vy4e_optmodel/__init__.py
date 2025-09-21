@@ -14,6 +14,6 @@ VY4E-OptModel: An open-source optimization model for the design and operation of
         >>> import VY4E-OptModel as oM
         >>> oM.routine("VPP1", "C:\\Users\\UserName\\Documents\\GitHub\\VY4E-OptModel", "glpk")
 """
-__version__ = "1.0.15rc6"
+__version__ = "1.0.15rc7"
 
 from .oM_Main import main
