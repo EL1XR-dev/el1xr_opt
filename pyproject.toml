@@ -42,7 +42,7 @@ requires = [
 # left side = command shown to users
 # right side = "package.module:function"
 [tool.flit.scripts]
-vy4e-optmodel = "vy4e_optmodel.__main__:main"
+vy4e-optmodel = "vy4e_optmodel:main"
 
 # Source dist extras (sdist). For wheel, files must live inside the package.
 [tool.flit.sdist]
