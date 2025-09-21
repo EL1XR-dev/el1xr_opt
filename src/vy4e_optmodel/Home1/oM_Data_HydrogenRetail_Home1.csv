@@ -1,0 +1,2 @@
+,Node,Buy,Sell,InitialPeriod,FinalPeriod,MaximumEnergyBuy,MinimumEnergyBuy,MaximumEnergySell,MinimumEnergySell,BuyingRatio,SellingRatio,elcertifikat,paslag,moms,netavgift,Tariff
+HydR_01,Node1,No,No, 2040 , 2050 , 0 , 0 , 0 , 0 ,,,,,,,

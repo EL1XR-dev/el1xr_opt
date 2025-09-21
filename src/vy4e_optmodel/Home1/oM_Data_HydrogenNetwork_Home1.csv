@@ -1,0 +1,2 @@
+,,,Type,Switching,InitialPeriod,FinalPeriod,Length,SecurityFactor,TTC,TTCBck,FixedChargeRate,FixedInvestmentCost,BinaryInvestment,InvestmentLo,InvestmentUp
+Node1,Node2,p1,,, 2040 , 2050 ,, 0.67 , 1000 ,,,,,,

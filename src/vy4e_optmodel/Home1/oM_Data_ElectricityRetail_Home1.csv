@@ -1,0 +1,2 @@
+,Node,Buy,Sell,InitialPeriod,FinalPeriod,MaximumEnergyBuy,MinimumEnergyBuy,MaximumEnergySell,MinimumEnergySell,BuyingRatio,SellingRatio,elcertifikat,paslag,moms,netavgift,Tariff,MaxBuy,MaxSell
+EleR_01,Node1,Yes,Yes, 2020 , 2050 , 100 , 0 , 100 , 0 , 1 , 0.8 , 0.2 , 0.445 , 0.25 , 0.25 , 0 , 17 , 17 
