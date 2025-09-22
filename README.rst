@@ -1,7 +1,7 @@
 VY4E-OptModel
 =============
 
-.. image:: https://github.com/VY4E/.github/blob/f702b41f95871fa4c76195a16e9fb8572e3285d4/VY4E_avatar_transparent_v6.png
+.. image:: https://raw.githubusercontent.com/VY4E/.github/f702b41f95871fa4c76195a16e9fb8572e3285d4/VY4E_avatar_transparent_v6.png
    :width: 120
    :align: right
 
