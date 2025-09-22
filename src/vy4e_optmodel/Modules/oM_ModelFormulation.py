@@ -823,7 +823,7 @@ def create_constraints(model, optmodel):
     optmodel.__setattr__('eHydMinDownTime', Constraint(optmodel.psnhgt, rule=eHydMinDownTime, doc='minimum down time [h]'))
 
     # print if the constraints object len is greater than 0
-    if len(optmodel.eEleMinUpTime) > 0 or len(optmodel.eleMinDownTime) > 0 or len(optmodel.eHydMinUpTime) > 0 or len(optmodel.eHydMinDownTime) > 0:
+    if len(optmodel.eEleMinUpTime) > 0 or len(optmodel.eEleMinDownTime) > 0 or len(optmodel.eHydMinUpTime) > 0 or len(optmodel.eHydMinDownTime) > 0:
         print('--- Declaring the minimum up and down time:                            {} seconds'.format(round(time.time() - StartTime)))
     StartTime = time.time() # to compute elapsed time
 
