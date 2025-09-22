@@ -11,13 +11,17 @@ import os
 import time
 import datetime
 import altair as alt
+import numpy as np
 import pandas as pd
-import ausankey as sky
+# import ausankey as sky
 import matplotlib.pyplot as plt
 # import altair_saver
 from collections import defaultdict
 from pyomo.environ import Var, Param, Constraint
-
+try:
+    import ausankey as sky
+except Exception:
+    sky = None
 
 def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
 
@@ -437,227 +441,247 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     OutputResults.columns.names = [None, None]
     OutputResults.to_csv(_path+'/oM_Result_07_rEleOutputSummary_'+CaseName+'.csv', index=True, sep=',')
 
+    # ---- Index & small helpers --------------------------------------------------
+    I_psn = pd.MultiIndex.from_tuples(model.psn)
+    idx_p = pd.Index(model.p)
+    dur = {(p, sc, n): float(model.Par['pDuration'][p, sc, n]) for (p, sc, n) in model.psn}
 
-    # %% outputting the state of charge of the battery energy storage system
-    TotalEnergyIn  = pd.Series(data=[sum(optmodel.vEleTotalOutput   [p,sc,n,eg ]()*model.Par['pDuration'][p,sc,n] for eg  in model.eg ) + sum((sum(optmodel.vEleBuy [p,sc,n,er]() for er in model.er if (nd,er) in model.n2er) + sum(optmodel.vENS      [p,sc,n,ed]() for ed in model.ed if (nd,ed) in model.n2ed))*model.Par['pDuration'][p,sc,n] for nd in model.nd) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn)).fillna(1e-05)
-    TotalEnergyIn  = TotalEnergyIn.where(TotalEnergyIn   > 0.0, other=1e-05)
-    TotalEnergyOut = pd.Series(data=[sum(optmodel.vEleTotalCharge   [p,sc,n,egs]()*model.Par['pDuration'][p,sc,n] for egs in model.egs) + sum((sum(optmodel.vEleSell[p,sc,n,er]() for er in model.er if (nd,er) in model.n2er) + sum(optmodel.vEleDemand[p,sc,n,ed]() for ed in model.ed if (nd,ed) in model.n2ed))*model.Par['pDuration'][p,sc,n] for nd in model.nd) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn)).fillna(1e-05)
-    TotalEnergyOut = TotalEnergyOut.where(TotalEnergyOut > 0.0, other=1e-05)
+    def v(x):
+        try:
+            return float(value(x))
+        except:
+            return 0.0
 
-    ShareGenIn     = pd.Series(data=[(   optmodel.vEleTotalOutput   [p,sc,n,eg ]()*model.Par['pDuration'][p,sc,n])/TotalEnergyIn [p,sc,n]  for p,sc,n,eg  in model.psneg ], index=pd.MultiIndex.from_tuples(model.psneg ))
-    ShareGenIn     = ShareGenIn.where(   ShareGenIn      > 0.0, other=0.0  )
-    ShareMarketIn  = pd.Series(data=[((  optmodel.vEleBuy           [p,sc,n,er ]()*model.Par['pDuration'][p,sc,n])/TotalEnergyIn [p,sc,n]) for p,sc,n,er  in model.psner ], index=pd.MultiIndex.from_tuples(model.psner ))
-    ShareMarketIn  = ShareMarketIn.where(ShareMarketIn   > 0.0, other=0.0  )
-    ShareENSIn     = pd.Series(data=[((  optmodel.vENS              [p,sc,n,ed ]()*model.Par['pDuration'][p,sc,n])/TotalEnergyIn [p,sc,n]) for p,sc,n,ed  in model.psned ], index=pd.MultiIndex.from_tuples(model.psned ))
+    def has(name):
+        return hasattr(optmodel, name) and len(getattr(optmodel, name)) > 0
 
-    ShareGenOut    = pd.Series(data=[sum(((optmodel.vEleTotalCharge [p,sc,n,egs]()*model.Par['pDuration'][p,sc,n])/TotalEnergyOut[p,sc,n]) for egs in model.egs if egs in model.eg) for p,sc,n,nd,eg in sPNNDEG], index=pd.Index(sPNNDEG)).to_frame(name='EleSpillage').reset_index().pivot_table(index=['level_0', 'level_1', 'level_2', 'level_4'], values='EleSpillage', aggfunc='sum').reset_index().set_index(['level_0', 'level_1', 'level_2', 'level_4'])['EleSpillage']
-    ShareDemOut    = pd.Series(data=[    ((optmodel.vEleDemand      [p,sc,n,ed ]()*model.Par['pDuration'][p,sc,n])/TotalEnergyOut[p,sc,n])                                          for p,sc,n,nd,ed in sPNNDED], index=pd.Index(sPNNDED)).to_frame(name='EleDemand').reset_index().pivot_table(index=['level_0', 'level_1', 'level_2', 'level_4'], values='EleDemand', aggfunc='sum').reset_index().set_index(['level_0', 'level_1', 'level_2', 'level_4'])['EleDemand']
-    ShareMarketOut = pd.Series(data=[    ((optmodel.vEleSell        [p,sc,n,er ]()*model.Par['pDuration'][p,sc,n])/TotalEnergyOut[p,sc,n])                                          for p,sc,n,nd,er in sPNNDER], index=pd.Index(sPNNDER)).to_frame(name='EleSell').reset_index().pivot_table(index=['level_0', 'level_1', 'level_2', 'level_4'], values='EleSell', aggfunc='sum').reset_index().set_index(['level_0', 'level_1', 'level_2', 'level_4'])['EleSell']
+    def re_psn(s):
+        return s.reindex(I_psn, fill_value=0.0)
 
-    def get_series_with_fallback(dataframe, label):
-        if label in dataframe.index.get_level_values(-1):  # Adjust -1 for correct index level
-            return dataframe.loc[:, :, :, label]
-        else:
-            # Create a zero-filled series with the same MultiIndex structure but only for the specified level
-            zero_filled = dataframe.loc[:, :, :, dataframe.index.levels[-1][0]].copy() * 0  # Copy the structure
-            zero_filled.index = zero_filled.index.set_levels([label if level == dataframe.index.levels[-1][0] else level
-                                                              for level in zero_filled.index.levels[-1]], level=-1)
-            return zero_filled
+    def pos_guard(s):
+        return s.where(s > 0.0, 1e-5)  # avoid 0-div
 
-    ShareGenInBESS  = sum(get_series_with_fallback(ShareGenIn, label) for label in [i for i in model.egg if "BESS" in i])
-    ShareGenInFV    = sum(get_series_with_fallback(ShareGenIn, label) for label in [i for i in model.egg if "Solar" in i])
-    ShareGenInEV    = sum(get_series_with_fallback(ShareGenIn, label) for label in [i for i in model.egg if "EV" in i])
-    ShareENSIn      = sum(get_series_with_fallback(ShareENSIn, label) for label in [i for i in model.edd if "EleD" in i])
-    ShareMarketIn   = sum(get_series_with_fallback(ShareMarketIn, label) for label in [i for i in model.err if "EleR" in i])
+    # Availability (avoid nested loops over nodes)
+    n2er_any = {er for (nd, er) in getattr(model, "n2er", set())}
+    n2ed_any = {ed for (nd, ed) in getattr(model, "n2ed", set())}
 
-    ShareGenOutBESS  = sum(get_series_with_fallback(ShareGenOut, label) for label in [i for i in model.egg if "BESS" in i])
-    ShareGenOutEV    = sum(get_series_with_fallback(ShareGenOut, label) for label in [i for i in model.egg if "EV" in i])
-    ShareMarketOut   = sum(get_series_with_fallback(ShareMarketOut, label) for label in [i for i in model.err if "EleR" in i])
-    ShareDemOut      = sum(get_series_with_fallback(ShareDemOut, label) for label in [i for i in model.edd if "EleD" in i])
+    # ---- Totals -----------------------------------------------------------------
+    def total_in():
+        acc = defaultdict(float)
+        if has("vEleTotalOutput"):
+            for (p, sc, n, eg), var in optmodel.vEleTotalOutput.items():
+                acc[(p, sc, n)] += optmodel.vEleTotalOutput[p,sc,n,eg]() * dur[(p, sc, n)]
+        if has("vEleBuy"):
+            for (p, sc, n, er), var in optmodel.vEleBuy.items():
+                if er in n2er_any:
+                    acc[(p, sc, n)] += optmodel.vEleBuy[p,sc,n,er]() * dur[(p, sc, n)]
+        if has("vENS"):
+            for (p, sc, n, ed), var in optmodel.vENS.items():
+                if ed in n2ed_any:
+                    acc[(p, sc, n)] += optmodel.vENS[p,sc,n,ed]() * dur[(p, sc, n)]
+        return pos_guard(re_psn(pd.Series(acc, dtype=float)))
 
-    FVtoEV          = pd.Series(data=[(ShareGenInFV[p,sc,n]     * ShareGenOutEV  [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    FVtoBESS        = pd.Series(data=[(ShareGenInFV[p,sc,n]     * ShareGenOutBESS[p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    FVtoMkt         = pd.Series(data=[(ShareGenInFV[p,sc,n]     * ShareMarketOut [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    FVtoDem         = pd.Series(data=[(ShareGenInFV[p,sc,n]     * ShareDemOut    [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    def total_out():
+        acc = defaultdict(float)
+        if has("vEleTotalCharge"):
+            for (p, sc, n, egs), var in optmodel.vEleTotalCharge.items():
+                acc[(p, sc, n)] += optmodel.vEleTotalCharge[p,sc,n,egs]() * dur[(p, sc, n)]
+        if has("vEleSell"):
+            for (p, sc, n, er), var in optmodel.vEleSell.items():
+                if er in n2er_any:
+                    acc[(p, sc, n)] += optmodel.vEleSell[p,sc,n,er]() * dur[(p, sc, n)]
+        if has("vEleDemand"):
+            for (p, sc, n, ed), var in optmodel.vEleDemand.items():
+                if ed in n2ed_any:
+                    acc[(p, sc, n)] += optmodel.vEleDemand[p,sc,n,ed]() * dur[(p, sc, n)]
+        return pos_guard(re_psn(pd.Series(acc, dtype=float)))
 
-    ENStoEV         = pd.Series(data=[(ShareENSIn  [p,sc,n]     * ShareGenOutEV  [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    ENStoBESS       = pd.Series(data=[(ShareENSIn  [p,sc,n]     * ShareGenOutBESS[p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    ENStoDem        = pd.Series(data=[(ShareENSIn  [p,sc,n]     * ShareDemOut    [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    TEI, TEO = total_in(), total_out()
 
-    BESStoEV        = pd.Series(data=[(ShareGenInBESS[p,sc,n]   * ShareGenOutEV  [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    BESStoMkt       = pd.Series(data=[(ShareGenInBESS[p,sc,n]   * ShareMarketOut [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    BESStoDem       = pd.Series(data=[(ShareGenInBESS[p,sc,n]   * ShareDemOut    [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    # ---- Shares In/Out (robust to missing techs) --------------------------------
+    def share_gen_in(tags):
+        num = defaultdict(float)
+        if has("vEleTotalOutput") and hasattr(model, "egg"):
+            wanted = {eg for eg in model.egg if any(t in str(eg) for t in tags)}
+            if wanted:
+                for (p, sc, n, eg), var in optmodel.vEleTotalOutput.items():
+                    if eg in wanted:
+                        num[(p, sc, n)] += optmodel.vEleTotalOutput[p,sc,n,eg]() * dur[(p, sc, n)]
+        return (re_psn(pd.Series(num, dtype=float)) / TEI).clip(lower=0.0)
 
-    EVtoBESS        = pd.Series(data=[(ShareGenInEV[p,sc,n]     * ShareGenOutBESS[p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    EVtoMkt         = pd.Series(data=[(ShareGenInEV[p,sc,n]     * ShareMarketOut [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    EVtoDem         = pd.Series(data=[(ShareGenInEV[p,sc,n]     * ShareDemOut    [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    def share_market_in():
+        num = defaultdict(float)
+        if has("vEleBuy"):
+            for (p, sc, n, er), var in optmodel.vEleBuy.items():
+                num[(p, sc, n)] += optmodel.vEleBuy[p,sc,n,er]() * dur[(p, sc, n)]
+        return (re_psn(pd.Series(num, dtype=float)) / TEI).clip(lower=0.0)
 
-    MkttoEV         = pd.Series(data=[(ShareMarketIn [p,sc,n]   * ShareGenOutEV  [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    MkttoDem        = pd.Series(data=[(ShareMarketIn [p,sc,n]   * ShareDemOut    [p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    MkttoBESS       = pd.Series(data=[(ShareMarketIn [p,sc,n]   * ShareGenOutBESS[p,sc,n] * TotalEnergyIn[p,sc,n] * (1/model.factor1)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    def share_ens():
+        num = defaultdict(float)
+        if has("vENS"):
+            for (p, sc, n, ed), var in optmodel.vENS.items():
+                num[(p, sc, n)] += optmodel.vENS[p,sc,n,ed]() * dur[(p, sc, n)]
+        return (re_psn(pd.Series(num, dtype=float)) / TEI).clip(lower=0.0)
 
-    SellPrice = pd.Series(data=[(sum(  model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er]                                                                                                                                                 *1e0 for er in model.er)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    BuyCost   = pd.Series(data=[(sum(((model.Par['pVarEnergyCost' ][er][p,sc,n] * model.Par['pEleRetBuyingRatio' ][er] + model.Par['pEleRetelcertifikat'][er] + model.Par['pEleRetpaslag'][er]) * (1+model.Par['pEleRetmoms'][er]) + model.Par['pEleRetnetavgift'][er])*1e0 for er in model.er)) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    AvgPrice  = (SellPrice + BuyCost)/2
+    def share_to_storage(tags):
+        num = defaultdict(float)
+        if has("vEleTotalCharge") and hasattr(model, "egs"):
+            wanted = {e for e in model.egs if any(t in str(e) for t in tags)}
+            if wanted:
+                for (p, sc, n, egs), var in optmodel.vEleTotalCharge.items():
+                    if egs in wanted:
+                        num[(p, sc, n)] += optmodel.vEleTotalCharge[p,sc,n,egs]() * dur[(p, sc, n)]
+        return (re_psn(pd.Series(num, dtype=float)) / TEO).clip(lower=0.0)
 
-    FVtoEV_Val      = pd.Series(data=[(FVtoEV   [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    FVtoBESS_Val    = pd.Series(data=[(FVtoBESS [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    FVtoMkt_Val     = pd.Series(data=[(FVtoMkt  [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    FVtoDem_Val     = pd.Series(data=[(FVtoDem  [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    def share_market_out():
+        num = defaultdict(float)
+        if has("vEleSell"):
+            for (p, sc, n, er), var in optmodel.vEleSell.items():
+                num[(p, sc, n)] += optmodel.vEleSell[p,sc,n,er]() * dur[(p, sc, n)]
+        return (re_psn(pd.Series(num, dtype=float)) / TEO).clip(lower=0.0)
 
-    ENStoEV_Val     = pd.Series(data=[(ENStoEV  [p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    ENStoBESS_Val   = pd.Series(data=[(ENStoBESS[p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    ENStoDem_Val    = pd.Series(data=[(ENStoDem [p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    def share_dem_out():
+        num = defaultdict(float)
+        if has("vEleDemand"):
+            for (p, sc, n, ed), var in optmodel.vEleDemand.items():
+                num[(p, sc, n)] += optmodel.vEleDemand[p,sc,n,ed]() * dur[(p, sc, n)]
+        return (re_psn(pd.Series(num, dtype=float)) / TEO).clip(lower=0.0)
 
-    BESStoEV_Val    = pd.Series(data=[(BESStoEV [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    BESStoMkt_Val   = pd.Series(data=[(BESStoMkt[p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    BESStoDem_Val   = pd.Series(data=[(BESStoDem[p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    ShareGenInFV = share_gen_in(["Solar"])  # FV
+    ShareGenInBESS = share_gen_in(["BESS"])
+    ShareGenInEV = share_gen_in(["EV"])
+    ShareMarketIn = share_market_in()
+    ShareENSIn = share_ens()
 
-    MkttoEV_Val     = pd.Series(data=[(MkttoEV  [p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    MkttoDem_Val    = pd.Series(data=[(MkttoDem [p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    MkttoBESS_Val   = pd.Series(data=[(MkttoBESS[p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    ShareGenOutBESS = share_to_storage(["BESS"])
+    ShareGenOutEV = share_to_storage(["EV"])
+    ShareMarketOut = share_market_out()
+    ShareDemOut = share_dem_out()
 
-    EVtoBESS_Val    = pd.Series(data=[(EVtoBESS [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    EVtoMkt_Val     = pd.Series(data=[(EVtoMkt  [p,sc,n] * 1e0 * SellPrice[p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    EVtoDem_Val     = pd.Series(data=[(EVtoDem  [p,sc,n] * 1e0 * BuyCost  [p,sc,n]) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
+    # ---- Flows (kWh at (p,sc,n)) -----------------------------------------------
+    f1 = float(getattr(model, "factor1", 1.0))
+    flow = lambda src, dst: (src * dst * TEI) * (1.0 / f1)
 
-    FVtoEVp         = pd.Series(data=[ FVtoEV.  loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    FVtoBESSp       = pd.Series(data=[ FVtoBESS.loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    FVtoMktp        = pd.Series(data=[ FVtoMkt. loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    FVtoDemp        = pd.Series(data=[ FVtoDem. loc[p].sum() for p in model.p], index=pd.Index(model.p))
+    FVtoEV = flow(ShareGenInFV, ShareGenOutEV)
+    FVtoBESS = flow(ShareGenInFV, ShareGenOutBESS)
+    FVtoMkt = flow(ShareGenInFV, ShareMarketOut)
+    FVtoDem = flow(ShareGenInFV, ShareDemOut)
 
-    ENStoEVp        = pd.Series(data=[ENStoEV.  loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    ENStoBESSp      = pd.Series(data=[ENStoBESS.loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    ENStoDemp       = pd.Series(data=[ENStoDem. loc[p].sum() for p in model.p], index=pd.Index(model.p))
+    ENStoEV = flow(ShareENSIn, ShareGenOutEV)
+    ENStoBESS = flow(ShareENSIn, ShareGenOutBESS)
+    ENStoDem = flow(ShareENSIn, ShareDemOut)
 
-    BESStoEVp       = pd.Series(data=[BESStoEV. loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    BESStoMktp      = pd.Series(data=[BESStoMkt.loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    BESStoDemp      = pd.Series(data=[BESStoDem.loc[p].sum() for p in model.p], index=pd.Index(model.p))
+    BESStoEV = flow(ShareGenInBESS, ShareGenOutEV)
+    BESStoMkt = flow(ShareGenInBESS, ShareMarketOut)
+    BESStoDem = flow(ShareGenInBESS, ShareDemOut)
 
-    MkttoEVp        = pd.Series(data=[MkttoEV.  loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    MkttoDemp       = pd.Series(data=[MkttoDem. loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    MkttoBESSp      = pd.Series(data=[MkttoBESS.loc[p].sum() for p in model.p], index=pd.Index(model.p))
+    EVtoBESS = flow(ShareGenInEV, ShareGenOutBESS)
+    EVtoMkt = flow(ShareGenInEV, ShareMarketOut)
+    EVtoDem = flow(ShareGenInEV, ShareDemOut)
 
-    EVtoBESSp       = pd.Series(data=[EVtoBESS. loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    EVtoMktp        = pd.Series(data=[EVtoMkt.  loc[p].sum() for p in model.p], index=pd.Index(model.p))
-    EVtoDemp        = pd.Series(data=[EVtoDem.  loc[p].sum() for p in model.p], index=pd.Index(model.p))
+    MkttoEV = flow(ShareMarketIn, ShareGenOutEV)
+    MkttoDem = flow(ShareMarketIn, ShareDemOut)
+    MkttoBESS = flow(ShareMarketIn, ShareGenOutBESS)
 
-    FVtoEV_Valp     = pd.Series(data=[ FVtoEV_Val.  loc[p].sum() for p in model.p], index=pd.Index(model.p)) / FVtoEVp
-    FVtoBESS_Valp   = pd.Series(data=[ FVtoBESS_Val.loc[p].sum() for p in model.p], index=pd.Index(model.p)) / FVtoBESSp
-    FVtoMkt_Valp    = pd.Series(data=[ FVtoMkt_Val. loc[p].sum() for p in model.p], index=pd.Index(model.p)) / FVtoMktp
-    FVtoDem_Valp    = pd.Series(data=[ FVtoDem_Val. loc[p].sum() for p in model.p], index=pd.Index(model.p)) / FVtoDemp
+    # ---- Aggregate to Period (p) -----------------------------------------------
+    def sum_by_p(s):
+        if s.empty: return pd.Series(0.0, index=idx_p)
+        g = s.to_frame("v").reset_index().groupby("level_0")["v"].sum()
+        return g.reindex(idx_p, fill_value=0.0)
 
-    ENStoEV_Valp    = pd.Series(data=[ENStoEV_Val.  loc[p].sum() for p in model.p], index=pd.Index(model.p)) / ENStoEVp
-    ENStoBESS_Valp  = pd.Series(data=[ENStoBESS_Val.loc[p].sum() for p in model.p], index=pd.Index(model.p)) / ENStoBESSp
-    ENStoDem_Valp   = pd.Series(data=[ENStoDem_Val. loc[p].sum() for p in model.p], index=pd.Index(model.p)) / ENStoDemp
+    flows = {
+        "FV_to_EV [KWh]": FVtoEV, "FV_to_BESS [KWh]": FVtoBESS, "FV_to_Mkt [KWh]": FVtoMkt, "FV_to_Dem [KWh]": FVtoDem,
+        "ENS_to_EV [KWh]": ENStoEV, "ENS_to_BESS [KWh]": ENStoBESS, "ENS_to_Dem [KWh]": ENStoDem,
+        "BESS_to_EV [KWh]": BESStoEV, "BESS_to_Mkt [KWh]": BESStoMkt, "BESS_to_Dem [KWh]": BESStoDem,
+        "EV_to_BESS [KWh]": EVtoBESS, "EV_to_Mkt [KWh]": EVtoMkt, "EV_to_Dem [KWh]": EVtoDem,
+        "Mkt_to_EV [KWh]": MkttoEV, "Mkt_to_Dem [KWh]": MkttoDem, "Mkt_to_BESS [KWh]": MkttoBESS,
+    }
+    dfEnergyBalance = pd.DataFrame({"Period": idx_p})
+    for name, s in flows.items():
+        dfEnergyBalance[name] = sum_by_p(s).values
 
-    BESStoEV_Valp   = pd.Series(data=[BESStoEV_Val. loc[p].sum() for p in model.p], index=pd.Index(model.p)) / BESStoEVp
-    BESStoMkt_Valp  = pd.Series(data=[BESStoMkt_Val.loc[p].sum() for p in model.p], index=pd.Index(model.p)) / BESStoMktp
-    BESStoDem_Valp  = pd.Series(data=[BESStoDem_Val.loc[p].sum() for p in model.p], index=pd.Index(model.p)) / BESStoDemp
+    # ===== Sankey: always save a figure (even if all flows are zero) =============
+    ALLOWED = {"SolarPV", "Market", "EV", "ENS", "BESS", "Demand"}
 
-    MkttoEV_Valp    = pd.Series(data=[MkttoEV_Val.  loc[p].sum() for p in model.p], index=pd.Index(model.p)) / MkttoEVp
-    MkttoDem_Valp   = pd.Series(data=[MkttoDem_Val. loc[p].sum() for p in model.p], index=pd.Index(model.p)) / MkttoDemp
-    MkttoBESS_Valp  = pd.Series(data=[MkttoBESS_Val.loc[p].sum() for p in model.p], index=pd.Index(model.p)) / MkttoBESSp
+    def _normalize(df):
+        if "Period" not in df.columns: raise ValueError("dfEnergyBalance needs 'Period'")
+        m = df.melt(id_vars="Period", var_name="Component", value_name="flow_value")
+        # strip units and normalize names
+        m["Component"] = m["Component"].str.replace(r"\s*\[.*\]$", "", regex=True)
+        m["Component"] = (m["Component"]
+                          .str.replace("FV", "SolarPV", regex=False)
+                          .str.replace("Mkt", "Market", regex=False)
+                          .str.replace("Dem", "Demand", regex=False))
+        # extract edges
+        split = m["Component"].str.extract(r"^(?P<Source>[^_]+)_to_(?P<Target>.+)$")
+        m = pd.concat([m, split], axis=1).dropna(subset=["Source", "Target"])
+        # keep allowed that actually appear (if any)
+        present = set(m["Source"]).union(m["Target"])
+        allowed_present = ALLOWED & present
+        if allowed_present:
+            m = m[m["Source"].isin(allowed_present) & m["Target"].isin(allowed_present)]
+        return m
 
-    EVtoBESS_Valp   = pd.Series(data=[EVtoBESS_Val. loc[p].sum() for p in model.p], index=pd.Index(model.p)) / EVtoBESSp
-    EVtoMkt_Valp    = pd.Series(data=[EVtoMkt_Val.  loc[p].sum() for p in model.p], index=pd.Index(model.p)) / EVtoMktp
-    EVtoDem_Valp    = pd.Series(data=[EVtoDem_Val.  loc[p].sum() for p in model.p], index=pd.Index(model.p)) / EVtoDemp
+    def _percentify(m):
+        if m.empty:
+            m = m.copy()
+            m["Source_%"] = 0.0;
+            m["Target_%"] = 0.0
+            return m
+        g_src = m.groupby(["Period", "Source"])["flow_value"].transform("sum").replace(0, np.nan)
+        g_tgt = m.groupby(["Period", "Target"])["flow_value"].transform("sum").replace(0, np.nan)
+        m = m.assign(**{"Source_%": (m["flow_value"] / g_src * 100).fillna(0.0),
+                        "Target_%": (m["flow_value"] / g_tgt * 100).fillna(0.0)})
+        return m
 
-    dfEnergyBalance    = pd.DataFrame({'Period': FVtoEVp.index, 'FV_to_EV [KWh]': FVtoEVp.values, 'FV_to_BESS [KWh]': FVtoBESSp.values, 'FV_to_Mkt [KWh]': FVtoMktp.values, 'FV_to_Dem [KWh]': FVtoDemp.values, 'ENS_to_EV [KWh]': ENStoEVp.values, 'ENS_to_BESS [KWh]': ENStoBESSp.values, 'ENS_to_Dem [KWh]': ENStoDemp.values, 'BESS_to_EV [KWh]': BESStoEVp.values, 'BESS_to_Mkt [KWh]': BESStoMktp.values, 'BESS_to_Dem [KWh]': BESStoDemp.values, 'Mkt_to_EV [KWh]': MkttoEVp.values, 'Mkt_to_Dem [KWh]': MkttoDemp.values, 'Mkt_to_BESS [KWh]': MkttoBESSp.values, 'EV_to_BESS [KWh]': EVtoBESSp.values, 'EV_to_Mkt [KWh]': EVtoMktp.values, 'EV_to_Dem [KWh]': EVtoDemp.values})
-    dfEnergyBalanceVal = pd.DataFrame({'Period': FVtoEV_Valp.index, 'FV_to_EV [SEK/KWh]': FVtoEV_Valp.values, 'FV_to_BESS [SEK/KWh]': FVtoBESS_Valp.values, 'FV_to_Mkt [SEK/KWh]': FVtoMkt_Valp.values, 'FV_to_Dem [SEK/KWh]': FVtoDem_Valp.values, 'ENS_to_EV [SEK/KWh]': ENStoEV_Valp.values, 'ENS_to_BESS [SEK/KWh]': ENStoBESS_Valp.values, 'ENS_to_Dem [SEK/KWh]': ENStoDem_Valp.values, 'BESS_to_EV [SEK/KWh]': BESStoEV_Valp.values, 'BESS_to_Mkt [SEK/KWh]': BESStoMkt_Valp.values, 'BESS_to_Dem [SEK/KWh]': BESStoDem_Valp.values, 'Mkt_to_EV [SEK/KWh]': MkttoEV_Valp.values, 'Mkt_to_Dem [SEK/KWh]': MkttoDem_Valp.values, 'Mkt_to_BESS [SEK/KWh]': MkttoBESS_Valp.values, 'EV_to_BESS [SEK/KWh]': EVtoBESS_Valp.values, 'EV_to_Mkt [SEK/KWh]': EVtoMkt_Valp.values, 'EV_to_Dem [SEK/KWh]': EVtoDem_Valp.values})
-    dfEnergyBalance.to_csv(_path + '/oM_Result_08_rEnergyBalance_' + CaseName + '.csv', sep=',', header=True, index=False)
-    dfEnergyBalanceVal.to_csv(_path + '/oM_Result_09_rEnergyBalanceVal_' + CaseName + '.csv', sep=',', header=True, index=False)
+    def save_sankey_always(dfEnergyBalance, out_dir, case_name, mode="percent", prefix="oM_Plot_rSankey"):
+        os.makedirs(out_dir, exist_ok=True)
+        m = _normalize(dfEnergyBalance)
+        # Plot per period, always save a PNG
+        for per in dfEnergyBalance["Period"]:
+            d = m[m["Period"] == per]
+            outfile = os.path.join(out_dir, f"{prefix}_{case_name}_{per}.png")
+            if sky is None:
+                # Fallback: save a placeholder
+                plt.figure(figsize=(6, 4))
+                plt.title(f"Case: {case_name}, Period: {per}\n(ausankey not available)")
+                plt.text(0.5, 0.5, "Install 'ausankey' to draw Sankey", ha='center', va='center')
+                plt.axis('off');
+                plt.savefig(outfile, dpi=150, bbox_inches="tight");
+                plt.close()
+                print(f"Sankey placeholder saved: {outfile}")
+                continue
 
-    print('Outputting the shares of energy balance  ... ', round(time.time() - StartTime), 's')
-    StartTime = time.time()
+            d = d[d["flow_value"].fillna(0) > 0]
+            if d.empty:
+                # Save an empty-note figure for this period
+                plt.figure(figsize=(6, 4))
+                plt.title(f"Case: {case_name}, Period: {per}")
+                plt.text(0.5, 0.5, "No non-zero flows", ha='center', va='center')
+                plt.axis('off');
+                plt.savefig(outfile, dpi=150, bbox_inches="tight");
+                plt.close()
+                print(f"Sankey (no flows) saved: {outfile}")
+                continue
 
-    dfSankey = dfEnergyBalance.set_index(['Period']).stack().reset_index()
-    dfSankey[['Component', 'Unit']] = dfSankey['level_1'].str.split(' ', expand=True)
+            if mode == "percent":
+                d = _percentify(d)
+                vals1, vals2, unit = d["Source_%"], d["Target_%"], "%"
+            else:
+                vals1, vals2, unit = d["flow_value"], d["flow_value"], "KWh"
 
-    # replace FV by SolarPV, Mkt by Market, and Dem by Demand in the strings of rows of the column Component
-    dfSankey['Component'] = dfSankey['Component'].str.replace('FV', 'SolarPV')
-    dfSankey['Component'] = dfSankey['Component'].str.replace('Mkt', 'Market')
-    dfSankey['Component'] = dfSankey['Component'].str.replace('Dem', 'Demand')
+            sankey_data = pd.DataFrame({"Stage1": d["Source"], "Value1": vals1,
+                                        "Stage2": d["Target"], "Value2": vals2})
+            plt.figure(figsize=(7, 5))
+            sky.sankey(sankey_data, sort="top", titles=["Source", "Target"], valign="center")
+            plt.title(f"Case: {case_name}, Period: {per} ({unit})")
+            plt.savefig(outfile, format="png", dpi=150, bbox_inches="tight");
+            plt.close()
+            print(f"Sankey saved: {outfile}")
 
-    # split the column Component
-    dfSankey[['Source', 'C2', 'Target']] = dfSankey['Component'].str.split('_', expand=True)
-
-    dfSankey = dfSankey[['Period', 'Source', 'Target', 0]].set_index(['Period', 'Source', 'Target'])
-
-    # sum values in column flow_value and have Source as index
-    source_sum = dfSankey.reset_index().pivot_table(index=['Period', 'Source'], values=0, aggfunc='sum')
-
-    # sum values in column flow_value and have Target as index
-    target_sum = dfSankey.reset_index().pivot_table(index=['Period', 'Target'], values=0, aggfunc='sum')
-
-    # add column Source %, Target %, using values of column flow_value. Source % is the value divided by the sum of the values of the column flow_value for the same case, period and target. Target % is the value divided by the sum of the values of the columm source have the same value in the row.
-    dfSankey['Source_%'] = 0
-    dfSankey['Target_%'] = 0
-
-    # Ensure no division by zero or NaN in source_sum
-    dfSankey['Source_%'] = dfSankey.apply(
-        lambda row: (row[0] / source_sum.loc[(row.name[0], row.name[1])][0] * 100)
-        if source_sum.loc[(row.name[0], row.name[1])][0] != 0 else 0,
-        axis=1
-    )
-    # Ensure no division by zero or NaN in target_sum
-    dfSankey['Target_%'] = dfSankey.apply(
-        lambda row: (row[0] / target_sum.loc[(row.name[0], row.name[2])][0] * 100)
-        if target_sum.loc[(row.name[0], row.name[2])][0] != 0 else 0,
-        axis=1
-    )
-
-    dfSankey.fillna(0, inplace=True)
-
-    dfSankey = dfSankey.reset_index()
-
-    dfSankey['flow_value'] = dfSankey[0]
-    data = dfSankey.copy()
-
-    # Remove zero-flow rows
-    data = data[data['flow_value'] > 0]
-
-    # Function to sort strings in a column
-    def sort_strings(column):
-        return column.apply(lambda x: ', '.join(sorted(x.split(', '))))
-
-    # Apply the function to the specified columns
-    data['Source'] = sort_strings(data['Source'])
-    data['Target'] = sort_strings(data['Target'])
-
-    # Function to create Sankey diagram for each unique case in level_0
-    def create_sankey_for_case(case_data, case_name):
-        # Convert data to ausankey's required structure
-        sankey_data = pd.DataFrame({
-            "Stage1": case_data["Source"],
-            "Value1": case_data["Source_%"],
-            # "Value1": case_data["flow_value"],
-            "Stage2": case_data["Target"],
-            "Value2": case_data["Target_%"],
-            # "Value2": case_data["flow_value"],
-            # "Stage3": case_data["Target"]  # Repeat the target to fill in for a 3-stage view
-        })
-
-        # Plot Sankey diagram for each case
-        # plt.figure(figsize=(5, 3))
-        plt.figure()
-        sky.sankey(
-            sankey_data,
-            sort="top",
-            titles=["Source", "Target"],
-            valign="center"
-        )
-        plt.title(f"Case: {CaseName}, values in %")
-        # save the plot
-        plt.savefig(os.path.join(_path, 'oM_Plot_rSankey_' + CaseName + '.png'), format='png')
-        # plt.show()
-        # close plt
-        plt.close()
-    #
-    # Generate Sankey diagrams for each unique value in 'level_0'
-    for case in data['Period'].unique():
-        case_data = data[data['Period'] == case]
-        create_sankey_for_case(case_data, case)
+    # --- Save CSVs & plots -------------------------------------------------------
+    dfEnergyBalance.to_csv(os.path.join(_path, f"oM_Result_08_rEnergyBalance_{CaseName}.csv"), index=False)
+    save_sankey_always(dfEnergyBalance, out_dir=_path, case_name=CaseName, mode="percent")
 
     print('Outputting the Sankey diagrams           ... ', round(time.time() - StartTime), 's')
     StartTime = time.time()
