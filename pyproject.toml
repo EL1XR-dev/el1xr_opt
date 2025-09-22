@@ -1,17 +1,15 @@
 [build-system]
-requires = ["flit_core>=3.12.0"]
+requires = ["flit_core>=3.12.0,<4"]
 build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-# importable package (must be a valid identifier and match the folder in src/)
-module = "vy4e_optmodel"
-
-# distribution name on PyPI (may contain dashes)
-dist-name = "VY4E-OptModel"
-
-author = "VY4E Team"
-author-email = "erik.alvarez@ri.se"
-home-page = "https://vy4e-optmodel.readthedocs.io/en/latest/index.html"
+[project]
+name = "VY4E-OptModel"                       # distribution name on PyPI
+version = "1.0.15"                           # update as you release
+description = "An open-source optimization model for the design and operation of hybrid renewable energy systems."
+readme = { file = "README.rst", content-type = "text/x-rst" }
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "VY4E Team", email = "erik.alvarez@ri.se" }]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Science/Research",
@@ -20,9 +18,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.11"
-description-file = "README.rst"
-requires = [
+dependencies = [
   "pyomo>=6.8.0",
   "matplotlib>=3.3.4",
   "numpy>=1.20.1",
@@ -38,12 +34,18 @@ requires = [
   "amplpy>=0.15.0",
 ]
 
-# Console script:
-# left side = command shown to users
-# right side = "package.module:function"
-[tool.flit.scripts]
+[project.scripts]
 vy4e-optmodel = "vy4e_optmodel.oM_Main:main"
 
-# Source dist extras (sdist). For wheel, files must live inside the package.
+[project.urls]
+Homepage = "https://vy4e-optmodel.readthedocs.io/en/latest/index.html"
+Repository = "https://github.com/VY4E/VY4E-OptModel"
+Issues = "https://github.com/VY4E/VY4E-OptModel/issues"
+
+# Tell Flit which importable module corresponds to this project
+[tool.flit.module]
+name = "vy4e_optmodel"
+
+# Extra files to include in the sdist (wheel only packages files inside src/)
 [tool.flit.sdist]
 include = ["vy4e_optmodel/docs/img/VY4E-OptModel_logo_v6.png"]
