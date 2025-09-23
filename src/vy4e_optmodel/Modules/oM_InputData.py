@@ -13,6 +13,7 @@ import time                                         # count clock time
 import pandas            as pd
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, PositiveIntegers, NonNegativeReals, Reals, Any, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
+from .asset_processor import AssetProcessor
 
 def data_processing(DirName, CaseName, DateModel, model):
     # %% Read the input data
@@ -158,46 +159,11 @@ def data_processing(DirName, CaseName, DateModel, model):
         for i in range(parameters_dict['pParTimeStep']-2,-1,-1):
             parameters_dict['pDuration'].iloc[[range(i, len(model.nn), parameters_dict['pParTimeStep'])]] = 0
 
-    # generation indicators
-    EleGeneration_ind = data_frames['dfElectricityGeneration'].columns.to_list()
-    HydGeneration_ind = data_frames['dfHydrogenGeneration'].columns.to_list()
-    idx_gen_factoring  = ['MaximumPower', 'MinimumPower', 'StandByPower', 'MaximumCharge', 'MinimumCharge', 'OMVariableCost', 'ProductionFunction', 'MaxCompressorConsumption',
-                      'RampUp', 'RampDown', 'CO2EmissionRate', 'MaxOutflowsProd', 'MinOutflowsProd', 'MaxInflowsCons', 'MinInflowsCons', 'OutflowsRampDown', 'OutflowsRampUp']
-    # demand indicators
-    EleDemand_ind = data_frames['dfElectricityDemand'].columns.to_list()
-    HydDemand_ind = data_frames['dfHydrogenDemand'].columns.to_list()
-    idx_dem_factoring = ['MaximumPower']
-
-    # retail indicators
-    EleRetail_ind = data_frames['dfElectricityRetail'].columns.to_list()
-    HydRetail_ind = data_frames['dfHydrogenRetail'].columns.to_list()
-    idx_retail_factoring = ['MaximumEnergyBuy', 'MinimumEnergyBuy', 'MaximumEnergySell', 'MinimumEnergySell']
-
-    def update_parameters(indices, factoring_indices, data_key, prefix):
-        for idx in indices:
-            if idx in factoring_indices:
-                parameters_dict[f'{prefix}{idx}'] = data_frames[data_key][idx] * factor1
-            else:
-                parameters_dict[f'{prefix}{idx}'] = data_frames[data_key][idx]
-
-    # Update electricity-related parameters
-    update_parameters(EleGeneration_ind, idx_gen_factoring, 'dfElectricityGeneration', 'pEleGen')
-    update_parameters(EleDemand_ind, idx_dem_factoring, 'dfElectricityDemand', 'pEleDem')
-    update_parameters(EleRetail_ind, idx_retail_factoring, 'dfElectricityRetail', 'pEleRet')
-
-    # Update hydrogen-related parameters
-    update_parameters(HydGeneration_ind, idx_gen_factoring, 'dfHydrogenGeneration', 'pHydGen')
-    update_parameters(HydDemand_ind, idx_dem_factoring, 'dfHydrogenDemand', 'pHydDem')
-    update_parameters(HydRetail_ind, idx_retail_factoring, 'dfHydrogenRetail', 'pHydRet')
-
-    for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost'] + parameters_dict[f'p{sector[0:3]}GenOMVariableCost'] * model.factor1  # linear   term variable cost             [MEUR/GWh]
-        parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * model.factor2 * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                        # constant term variable cost             [MEUR/h]
-        parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] * model.factor1 * parameters_dict[f'pParCO2Cost']                                                                                      # CO2 emission cost                       [MEUR/GWh]
-        parameters_dict[f'p{sector[0:3]}GenStartUpCost'       ] = parameters_dict[f'p{sector[0:3]}GenStartUpCost'         ] * model.factor2                                                                                                                        # generation startup cost                 [MEUR]
-        parameters_dict[f'p{sector[0:3]}GenShutDownCost'      ] = parameters_dict[f'p{sector[0:3]}GenShutDownCost'        ] * model.factor2                                                                                                                        # generation shutdown cost                [MEUR]
-        parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
-        parameters_dict[f'p{sector[0:3]}GenRetireCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedRetirementCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed retirement cost        [MEUR]                                                                           # H2 outflows ramp down rate              [tonH2]
+    # Asset-specific processing
+    asset_types = ['Ele', 'Hyd']
+    for asset_type in asset_types:
+        processor = AssetProcessor(asset_type, model, data_frames, parameters_dict)
+        processor.process_assets()
 
     parameters_dict['pNodeLat'                 ] = data_frames['dfNodeLocation']['Latitude'          ]                                                                                                                                                             # node latitude                           [º]
     parameters_dict['pNodeLon'                 ] = data_frames['dfNodeLocation']['Longitude'         ]                                                                                                                                                             # node longitude                          [º]
@@ -846,111 +812,35 @@ def data_processing(DirName, CaseName, DateModel, model):
 
     return model
 
-def create_variables(model, optmodel):
+from .asset_processor import AssetProcessor
 
-    #
+def create_variables(model, optmodel):
     print('-- Defining the variables')
-    #%% start time
     StartTime = time.time()
 
-    # model.Peaks   = Set(initialize=[ i for i in range(1,4,1)]) # number of selected peaks hours
     if model.Par['pParNumberPowerPeaks'] == 0:
-        model.Peaks   = RangeSet(1)
+        model.Peaks = RangeSet(1)
     else:
-        model.Peaks   = RangeSet(model.Par['pParNumberPowerPeaks']) # number of selected peaks hours
+        model.Peaks = RangeSet(model.Par['pParNumberPowerPeaks'])
 
-    #%% total variables
-    setattr(optmodel, 'vTotalSCost',             Var(                      within=            Reals, doc='total system                         cost [MEUR]'))
+    setattr(optmodel, 'vTotalSCost', Var(within=Reals, doc='total system cost [MEUR]'))
+    setattr(optmodel, 'vTotalECost', Var(model.psn, within=Reals, doc='total system emission cost [MEUR]'))
 
-    setattr(optmodel, 'vTotalEleMCost',          Var(model.psn,   within=             Reals, doc='total variable electricity market    cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydMCost',          Var(model.psn,   within=             Reals, doc='total variable hydrogen    market    cost [MEUR]'))
-    setattr(optmodel, 'vTotalEleGCost',          Var(model.psn,   within=             Reals, doc='total variable electricity prod      cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydGCost',          Var(model.psn,   within=             Reals, doc='total variable hydrogen    prod      cost [MEUR]'))
-    setattr(optmodel, 'vTotalEleCCost',          Var(model.psn,   within=             Reals, doc='total variable electricity cons      cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydCCost',          Var(model.psn,   within=             Reals, doc='total variable hydrogen    cons      cost [MEUR]'))
-    setattr(optmodel, 'vTotalECost',             Var(model.psn,   within=             Reals, doc='total system   emission              cost [MEUR]'))
-    setattr(optmodel, 'vTotalEleRCost',          Var(model.psn,   within=             Reals, doc='total system electricity reliability cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydRCost',          Var(model.psn,   within=             Reals, doc='total system hydrogen    reliability cost [MEUR]'))
-    setattr(optmodel, 'vTotalEleTradeCost',      Var(model.psn,   within=             Reals, doc='total energy buy                     cost [MEUR]'))
-    setattr(optmodel, 'vTotalEleTradeProfit',    Var(model.psn,   within=             Reals, doc='total energy sell                  profit [MEUR]'))
-    setattr(optmodel, 'vTotalHydTradeCost',      Var(model.psn,   within=             Reals, doc='total hydrogen buy                   cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydTradeProfit',    Var(model.psn,   within=             Reals, doc='total hydrogen sell                profit [MEUR]'))
-    setattr(optmodel, 'vTotalElePeakCost',       Var(model.ps ,   within=             Reals, doc='total electricity peak               cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydPeakCost',       Var(model.ps ,   within=             Reals, doc='total hydrogen    peak               cost [MEUR]'))
+    asset_types = ['Ele', 'Hyd']
+    for asset_type in asset_types:
+        setattr(optmodel, f'vTotal{asset_type}MCost', Var(model.psn, within=Reals, doc=f'total variable {asset_type.lower()} market cost [MEUR]'))
+        setattr(optmodel, f'vTotal{asset_type}GCost', Var(model.psn, within=Reals, doc=f'total variable {asset_type.lower()} prod cost [MEUR]'))
+        setattr(optmodel, f'vTotal{asset_type}CCost', Var(model.psn, within=Reals, doc=f'total variable {asset_type.lower()} cons cost [MEUR]'))
+        setattr(optmodel, f'vTotal{asset_type}RCost', Var(model.psn, within=Reals, doc=f'total system {asset_type.lower()} reliability cost [MEUR]'))
+        setattr(optmodel, f'vTotal{asset_type}TradeCost', Var(model.psn, within=Reals, doc=f'total energy buy cost [MEUR]'))
+        setattr(optmodel, f'vTotal{asset_type}TradeProfit', Var(model.psn, within=Reals, doc=f'total energy sell profit [MEUR]'))
+        setattr(optmodel, f'vTotal{asset_type}PeakCost', Var(model.ps, within=Reals, doc=f'total {asset_type.lower()} peak cost [MEUR]'))
+        setattr(optmodel, f'v{asset_type}Peak', Var(model.psm, getattr(model, f'{asset_type.lower()}r'), model.Peaks, within=PositiveReals, doc=f'{asset_type.lower()} peak'))
 
-    setattr(optmodel, 'vElePeak',                Var(model.psm, model.er, model.Peaks, within=PositiveReals, doc='electricity peak            [GW]'))
-    # setattr(optmodel, 'vElePeakBuyAux',          Var(model.psner,         model.Peaks, within=PositiveReals, doc='electricity peak buy        [GW]'))
-    setattr(optmodel, 'vHydPeak',                Var(model.psm, model.hr, model.Peaks, within=PositiveReals, doc='hydrogen    peak           [tH2]'))
-    # setattr(optmodel, 'vHydPeakBuyAux',          Var(model.psnhr,         model.Peaks, within=PositiveReals, doc='hydrogen    peak buy       [tH2]'))
+        processor = AssetProcessor(asset_type, model, None, model.Par)
+        processor.create_variables(optmodel)
 
-    # Define continuous variables
-    setattr(optmodel, 'vEleBuy',                 Var(model.psner,   within=NonNegativeReals, doc='energy buy                                  [GW]'))
-    setattr(optmodel, 'vEleSell',                Var(model.psner,   within=NonNegativeReals, doc='energy sell                                 [GW]'))
-    setattr(optmodel, 'vEleDemand',              Var(model.psned,   within=NonNegativeReals, doc='electricity demand                          [GW]'))
-    setattr(optmodel, 'vENS',                    Var(model.psned,   within=NonNegativeReals, doc='energy demand                               [GW]'))
-    setattr(optmodel, 'vEleTotalOutput',         Var(model.psneg,   within=NonNegativeReals, doc='total electricity output of the unit        [GW]'))
-    setattr(optmodel, 'vEleTotalOutput2ndBlock', Var(model.psnegnr, within=NonNegativeReals, doc='second block of the unit                    [GW]'))
-    setattr(optmodel, 'vEleTotalCharge',         Var(model.psneh,   within=NonNegativeReals, doc='ESS total charge power                      [GW]'))
-    setattr(optmodel, 'vEleTotalCharge2ndBlock', Var(model.psneh,   within=NonNegativeReals, doc='ESS       charge power                      [GW]'))
-    setattr(optmodel, 'vEleEnergyInflows',       Var(model.psnegs,  within=NonNegativeReals, doc='unscheduled inflows  of all ESS units      [GWh]'))
-    setattr(optmodel, 'vEleEnergyOutflows',      Var(model.psnegs,  within=NonNegativeReals, doc='scheduled   outflows of all ESS units      [GWh]'))
-    setattr(optmodel, 'vEleInventory',           Var(model.psnegs,  within=NonNegativeReals, doc='ESS inventory                              [GWh]'))
-    setattr(optmodel, 'vEleSpillage',            Var(model.psnegs,  within=NonNegativeReals, doc='ESS spillage                               [GWh]'))
-
-    setattr(optmodel, 'vHydBuy',                 Var(model.psnhr,   within=NonNegativeReals, doc='hydrogen buy        in node                [tH2]'))
-    setattr(optmodel, 'vHydSell',                Var(model.psnhr,   within=NonNegativeReals, doc='hydrogen sell       in node                [tH2]'))
-    setattr(optmodel, 'vHydDemand',              Var(model.psnhd,   within=NonNegativeReals, doc='hydrogen demand                            [tH2]'))
-    setattr(optmodel, 'vHNS',                    Var(model.psnhd,   within=NonNegativeReals, doc='hydrogen demand                            [tH2]'))
-    setattr(optmodel, 'vHydTotalOutput',         Var(model.psnhg,   within=NonNegativeReals, doc='total hydrogen output of the unit          [tH2]'))
-    setattr(optmodel, 'vHydTotalOutput2ndBlock', Var(model.psnhg,   within=NonNegativeReals, doc='second block of the unit                   [tH2]'))
-    setattr(optmodel, 'vHydTotalCharge',         Var(model.psnhe,   within=NonNegativeReals, doc='H2S total charge power                     [tH2]'))
-    setattr(optmodel, 'vHydTotalCharge2ndBlock', Var(model.psnhe,   within=NonNegativeReals, doc='H2S       charge power                     [tH2]'))
-    setattr(optmodel, 'vHydEnergyInflows',       Var(model.psnhgs,  within=NonNegativeReals, doc='unscheduled inflows  of all H2S units      [tH2]'))
-    setattr(optmodel, 'vHydEnergyOutflows',      Var(model.psnhgs,  within=NonNegativeReals, doc='scheduled   outflows of all H2S units      [tH2]'))
-    setattr(optmodel, 'vHydInventory',           Var(model.psnhgs,  within=NonNegativeReals, doc='H2S inventory                              [tH2]'))
-    setattr(optmodel, 'vHydSpillage',            Var(model.psnhgs,  within=NonNegativeReals, doc='H2S spillage                               [tH2]'))
-
-    setattr(optmodel, 'vEleNetFlow',             Var(model.psnela,  within=           Reals, doc='electricity net flow                        [GW]'))
-    setattr(optmodel, 'vHydNetFlow',             Var(model.psnhpa,  within=           Reals, doc='hydrogen    net flow                       [tH2]'))
-    setattr(optmodel, 'vEleNetTheta',            Var(model.psnnd,   within=           Reals, doc='electricity net theta                       [GW]'))
-
-    if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
-        setattr(optmodel, 'vEleDemFlex',          Var(model.psned,  within=           Reals, doc='flexible electricity demand                 [GW]'))
-
-    print('--- Defining the continuous variables:                                 {} seconds'.format(round(time.time() - StartTime)))
-
-    # Define binary variables
-    if model.Par['pOptIndBinGenOperat'] == 0:
-        setattr(optmodel, 'vEleGenCommitment',   Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary commitment           '))
-        setattr(optmodel, 'vEleGenStartUp',      Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary start-up             '))
-        setattr(optmodel, 'vEleGenShutDown',     Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
-        setattr(optmodel, 'vEleStorOperat',      Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
-        setattr(optmodel, 'vElePeakHourInd',     Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
-        setattr(optmodel, 'vHydGenCommitment',   Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary commitment           '))
-        setattr(optmodel, 'vHydGenStartUp',      Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary start-up             '))
-        setattr(optmodel, 'vHydGenShutDown',     Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
-        setattr(optmodel, 'vHydStorOperat',      Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
-        setattr(optmodel, 'vHydPeakHourInd',     Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
-    else:
-        setattr(optmodel, 'vEleGenCommitment',   Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary commitment           '))
-        setattr(optmodel, 'vEleGenStartUp',      Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary start-up             '))
-        setattr(optmodel, 'vEleGenShutDown',     Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary shut-down            '))
-        setattr(optmodel, 'vEleStorOperat',      Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
-        setattr(optmodel, 'vElePeakHourInd',     Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
-        setattr(optmodel, 'vHydGenCommitment',   Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary commitment           '))
-        setattr(optmodel, 'vHydGenStartUp',      Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary start-up             '))
-        setattr(optmodel, 'vHydGenShutDown',     Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary shut-down            '))
-        setattr(optmodel, 'vHydStorOperat',      Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
-        setattr(optmodel, 'vHydPeakHourInd',     Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
-
-    if model.Par['pOptIndBinNetOperat'] == 0:
-        setattr(optmodel, 'vEleNetCommit',       Var(model.psnela,  within=UnitInterval, initialize=0, doc='network binary operation              '))
-        setattr(optmodel, 'vHydNetCommit',       Var(model.psnela,  within=UnitInterval, initialize=0, doc='network binary operation              '))
-    else:
-        setattr(optmodel, 'vEleNetCommit',       Var(model.psnela,  within=Binary,       initialize=0, doc='network binary operation              '))
-        setattr(optmodel, 'vHydNetCommit',       Var(model.psnela,  within=Binary,       initialize=0, doc='network binary operation              '))
-
-    print('--- Defining the binary variables:                                     {} seconds'.format(round(time.time() - StartTime)))
+    print('--- Defining the variables:                                     {} seconds'.format(round(time.time() - StartTime)))
 
     # Precompute the bounds
     # psn
