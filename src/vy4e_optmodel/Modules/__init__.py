@@ -14,7 +14,7 @@ Open Generation, Storage, and Transmission Operation and Expansion Planning Mode
         >>> import vy4e_optmodel as oM
         >>> oM.routine("9n", "C:\\Users\\UserName\\Documents\\GitHub\\vy4e_optmodel", "glpk")
 """
-__version__ = "1.0.16rc1"
+# __version__ = "1.0.16rc1"
 
 from . import oM_InputData
 from . import oM_ModelFormulation
