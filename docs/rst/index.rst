@@ -24,55 +24,6 @@ and **API reference** generated from the source code under ``src/``.
    Update the package import path below if your top‑level package differs from
    ``el1xr_opt`` (e.g., ``optmodel`` or ``el1xr``).
 
-Index
---------
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Get started
-
-   getting-started/Installation
-   getting-started/Quickstart
-   getting-started/Projects
-   getting-started/Papers
-   getting-started/ContactUs
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: User guide
-
-   user-guide/project-structure
-   user-guide/data-and-io
-   user-guide/scenarios-and-stages
-   user-guide/solvers-and-settings
-   user-guide/examples
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Concepts
-
-   concepts/model-sets
-   concepts/decision-variables
-   concepts/objective-and-costs
-   concepts/constraints
-   concepts/results-and-postprocessing
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Developer
-
-   developer/contributing
-   developer/coding-style
-   developer/testing
-   developer/changelog
-
-API reference
--------------
-The sections below are rendered automatically from the Python modules in ``src/``.
-If you change the package name, make the same change to the ``:toctree:`` entries
-or to the value of ``automodule``/``autosummary`` directives.
-
 Core package
 ~~~~~~~~~~~~
 
@@ -87,10 +38,3 @@ Core package
    el1xr_opt.Modules.oM_ProblemSolving
 
 
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
