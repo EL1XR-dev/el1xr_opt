@@ -1,5 +1,5 @@
 """
-Open Generation, Storage, and Transmission Operation and Expansion Planning Model with RES and ESS (openTEPES)
+el1xr_opt: An open-source optimization model for the design and operation of hybrid renewable energy systems.
 
 
     Args:
@@ -11,8 +11,8 @@ Open Generation, Storage, and Transmission Operation and Expansion Planning Mode
         Output results in CSV files that are found in the case folder.
 
     Examples:
-        >>> import vy4e_optmodel as oM
-        >>> oM.routine("9n", "C:\\Users\\UserName\\Documents\\GitHub\\vy4e_optmodel", "glpk")
+        >>> import el1xr_opt as eo
+        >>> eo.routine("9n", "C:\\Users\\UserName\\Documents\\GitHub\\el1xr_opt", "glpk")
 """
 # __version__ = "1.0.16rc1"
 
