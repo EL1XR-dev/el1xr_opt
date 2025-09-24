@@ -1,10 +1,10 @@
-VY4E-OptModel
+el1xr_opt
 =============
 **Simplicity and Transparency:** *A modular optimization model for power‑system planning & operations*
 
 What is it?
 -----------
-**VY4E-OptModel** is a Python library for optimization studies in power-system
+**el1xr_opt** is a Python library for optimization studies in power-system
 **planning** and **operations**, supporting multi-vector flexibility (BESS, H₂, DSM),
 multi-stage/**scenario** formulations, and multiple solvers via Pyomo.
 
@@ -22,7 +22,7 @@ and **API reference** generated from the source code under ``src/``.
 
 .. note::
    Update the package import path below if your top‑level package differs from
-   ``vy4e_optmodel`` (e.g., ``optmodel`` or ``vy4e``).
+   ``el1xr_opt`` (e.g., ``optmodel`` or ``el1xr``).
 
 Index
 --------
@@ -80,11 +80,11 @@ Core package
    :toctree: api
    :recursive:
 
-   vy4e_optmodel.oM_Main
-   vy4e_optmodel.Modules.oM_InputData
-   vy4e_optmodel.Modules.oM_ModelFormulation
-   vy4e_optmodel.Modules.oM_OutputData
-   vy4e_optmodel.Modules.oM_ProblemSolving
+   el1xr_opt.oM_Main
+   el1xr_opt.Modules.oM_InputData
+   el1xr_opt.Modules.oM_ModelFormulation
+   el1xr_opt.Modules.oM_OutputData
+   el1xr_opt.Modules.oM_ProblemSolving
 
 
 
