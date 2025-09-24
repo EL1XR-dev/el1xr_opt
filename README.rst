@@ -1,12 +1,12 @@
-VY4E-OptModel
+el1xr_opt
 =============
 
-.. image:: https://raw.githubusercontent.com/VY4E/.github/f702b41f95871fa4c76195a16e9fb8572e3285d4/VY4E_avatar_transparent_v6.png
+.. image:: https://raw.githubusercontent.com/EL1XR-dev/.github/f702b41f95871fa4c76195a16e9fb8572e3285d4/EL1XR_avatar_transparent_v6.png
    :width: 120
    :align: right
-   :alt: VY4E logo
+   :alt: EL1XR logo
 
-**VY4E-OptModel** is the **core optimization engine** of the `VY4E <https://github.com/VY4E>`_ ecosystem.
+**el1xr_opt** is the **core optimization engine** of the `EL1XR-dev <https://github.com/EL1XR-dev>`_.
 It provides the fundamental modelling framework for **integrated zero-carbon energy systems**, supporting electricity, heat, hydrogen, and storage.
 
 ----
@@ -18,14 +18,14 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 - Compatible with **deterministic, stochastic, and equilibrium** approaches
 - Flexible temporal structure: hours, days, representative periods
 - Built on `JuMP <https://jump.dev>`_ / Pyomo (depending on module choice)
-- Interfaces with ``VY4E-data`` (datasets) and ``VY4E-examples`` (notebooks)
+- Interfaces with ``EL1XR-data`` (datasets) and ``EL1XR-examples`` (notebooks)
 
 ----
 
 📂 Structure
 ------------
 
-- ``src/``: Core source code for the optimization model.
+- ``src/``: Core source code for the optimisation model.
 - ``data/``: Sample case studies.
 - ``docs/``: Documentation and formulation notes.
 - ``tests/``: Validation and regression tests.
@@ -47,8 +47,8 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 
 .. code-block:: bash
 
-   git clone https://github.com/VY4E-nexus/VY4E-OptModel.git
-   cd VY4E-OptModel
+   git clone https://github.com/EL1XR-nexus/EL1XR-OptModel.git
+   cd EL1XR-OptModel
 
 2. Create and activate a virtual environment (recommended):
 
@@ -68,7 +68,7 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 Usage
 -----
 
-To run the optimization model, use the ``oM_Main.py`` script from the ``src`` directory.
+To run the optimisation model, use the ``oM_Main.py`` script from the ``src`` directory.
 
 .. code-block:: bash
 
@@ -88,7 +88,7 @@ To run the optimization model, use the ``oM_Main.py`` script from the ``src`` di
 🤝 Contributing
 ---------------
 
-Contributions are welcome! If you want to contribute to VY4E-OptModel, please follow these steps:
+Contributions are welcome! If you want to contribute to **el1xr_opt**, please follow these steps:
 
 1. Fork the repository.
 2. Create a new branch for your feature or bug fix.
