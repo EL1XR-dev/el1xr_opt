@@ -47,8 +47,8 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 
 .. code-block:: bash
 
-   git clone https://github.com/EL1XR-nexus/EL1XR-OptModel.git
-   cd EL1XR-OptModel
+   git clone https://github.com/EL1XR-dev/el1xr_opt.git
+   cd el1xr_opt
 
 2. Create and activate a virtual environment (recommended):
 
