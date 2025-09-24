@@ -4,8 +4,8 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "el1xr_opt"                       # distribution name on PyPI
-version = "1.0.3"                           # update as you release
-description = "An open-source optimization model for the design and operation of hybrid renewable energy systems."
+version = "1.0.4"                           # update as you release
+description = "An open-source optimization model for the design and operation of hybrid renewable energy systems with automatic solver setup"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -35,7 +35,8 @@ dependencies = [
 ]
 
 [project.scripts]
-vy4e-optmodel = "el1xr_opt.oM_Main:main"
+el1xr-run = "el1xr_opt.oM_Main:main"
+el1xr-install-solvers = "el1xr_opt.solver_setup:ensure_ampl_solvers"
 
 [project.urls]
 Homepage = "https://el1xr_opt.readthedocs.io/en/latest/index.html"
