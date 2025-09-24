@@ -1,13 +1,12 @@
 el1xr_opt
-=============
+=========
 
 .. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/el1xr_opt_logo_v6.png
    :width: 120
    :align: right
    :alt: EL1XR logo
 
-**el1xr_opt** is the **core optimization engine** of the `EL1XR-dev <https://github.com/EL1XR-dev>`_.
-It provides the fundamental modelling framework for **integrated zero-carbon energy systems**, supporting electricity, heat, hydrogen, and storage.
+**el1xr_opt** is the core optimization engine of the `EL1XR-dev` ecosystem. It provides a powerful and flexible modelling framework for designing and analyzing integrated, zero-carbon energy systems, with support for electricity, heat, hydrogen, and energy storage technologies.
 
 ----
 
@@ -17,7 +16,7 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 - Modular formulation for multi-vector energy systems
 - Compatible with **deterministic, stochastic, and equilibrium** approaches
 - Flexible temporal structure: hours, days, representative periods
-- Built on `JuMP <https://jump.dev>`_ / Pyomo (depending on module choice)
+- Built on `Pyomo <https://pyomo.readthedocs.io/en/stable/>`_
 - Interfaces with ``EL1XR-data`` (datasets) and ``EL1XR-examples`` (notebooks)
 
 ----
@@ -43,6 +42,20 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 🚀 Installation
 ---------------
 
+There are two ways to install **el1xr_opt**:
+
+**Option 1: Install from PyPI (Recommended)**
+
+You can install the latest stable release from PyPI:
+
+.. code-block:: bash
+
+   pip install el1xr_opt
+
+**Option 2: Install from Source (for Developers)**
+
+If you want to work with the latest development version or contribute to the project, you can install it from the source:
+
 1. Clone the repository:
 
 .. code-block:: bash
@@ -65,23 +78,36 @@ It provides the fundamental modelling framework for **integrated zero-carbon ene
 
 ----
 
-Usage
------
+⚡ Quick Example
+----------------
 
-To run the optimisation model, use the ``oM_Main.py`` script from the ``src`` directory.
+Run the included `Home1` example case with the following command from the root directory:
 
 .. code-block:: bash
 
-   python src/oM_Main.py --case <case_name> --solver <solver_name>
+   python src/el1xr_opt/oM_Main.py --dir data --case Home1 --solver gurobi
+
+This will run the optimization and save the results in the `data/Home1` directory.
+
+----
+
+Usage
+-----
+
+To run the optimisation model, use the ``oM_Main.py`` script from the ``src`` directory. If you run the script without arguments, it will prompt you for them interactively.
+
+.. code-block:: bash
+
+   python src/el1xr_opt/oM_Main.py --case <case_name> --solver <solver_name>
 
 **Command-line Arguments**
 
-- ``--dir``: Directory containing the case data (defaults to the current directory).
-- ``--case``: Name of the case to run (e.g., ``Home1``).
-- ``--solver``: Solver to use (e.g., ``gurobi``, ``cbc``, ``cplex``).
-- ``--date``: Model run date in "YYYY-MM-DD HH:MM:SS" format.
-- ``--rawresults``: Save raw results (``True``/``False``).
-- ``--plots``: Generate plots (``True``/``False``).
+- ``--dir``: Directory containing the case data. For the sample cases, this would be `data`.
+- ``--case``: Name of the case to run (e.g., ``Home1``). Defaults to `Home1`.
+- ``--solver``: Solver to use (e.g., ``gurobi``, ``cbc``, ``cplex``). Defaults to `gurobi`.
+- ``--date``: Model run date in "YYYY-MM-DD HH:MM:SS" format. Defaults to the current time.
+- ``rawresults``: Save raw results (`True`/`False`). Defaults to `False`.
+- ``--plots``: Generate plots (`True`/`False`). Defaults to `False`.
 
 ----
 
