@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))               # src/ layout
 
 # TEMP shim for bad "import Modules" statements
 try:
-    sys.modules["Modules"] = importlib.import_module("vy4e_optmodel.Modules")
+    sys.modules["Modules"] = importlib.import_module("el1xr_opt.Modules")
 except Exception:
     sys.modules.setdefault("Modules", types.ModuleType("Modules"))
 
@@ -30,8 +30,8 @@ except Exception:
 # -- Project information -----------------------------------------------------
 
 project = ''
-copyright = '2025, VY4E'
-author = 'VY4E Team: Erik F. Alvarez'
+copyright = '2025, EL1XR-dev'
+author = 'EL1XR-dev Team: Erik F. Alvarez'
 
 # The short X.Y version
 version = 'version 1.0.1'
@@ -121,9 +121,9 @@ html_static_path = []
 #
 # html_sidebars = {}
 html_theme = "sphinx_book_theme"
-html_logo  = '../img/VY4E-OptModel_logo_v6.png'
+html_logo  = '../img/el1xr_opt_logo_v6.png'
 html_theme_options = {
-    "repository_url": "https://github.com/VY4E/VY4E-OptModel",
+    "repository_url": "https://github.com/EL1XR-dev/el1xr_opt",
     "use_repository_button": True,
     "use_issues_button": True,
 }
