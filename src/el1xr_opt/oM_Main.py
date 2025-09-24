@@ -23,12 +23,10 @@ from   pyomo.dataportal  import DataPortal
 from   collections       import defaultdict
 from   colour            import Color
 
-from Modules.oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
-# importing modules
-from Modules.oM_InputData        import data_processing, create_variables
-from Modules.oM_ModelFormulation import create_objective_function
-from Modules.oM_ProblemSolving   import solving_model
-from Modules.oM_OutputData       import saving_rawdata, saving_results
+from .Modules.oM_InputData        import data_processing, create_variables
+from .Modules.oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
+from .Modules.oM_ProblemSolving   import solving_model
+from .Modules.oM_OutputData       import saving_rawdata, saving_results
 
 for i in range(0, 117):
     print('-', end="")
