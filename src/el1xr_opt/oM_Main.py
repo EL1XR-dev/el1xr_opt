@@ -31,7 +31,7 @@ from .Modules.oM_OutputData       import saving_rawdata, saving_results
 for i in range(0, 117):
     print('-', end="")
 
-print('\nGrid Integration System (GIS) - Version 1.0.1 - November 04, 2024')
+print('\nElectricity for Low-carbon Integration and eXchange of Resources (EL1XR) - Version 1.0.1 - Sep 25, 2025')
 print('#### Non-commercial use only ####')
 
 parser = argparse.ArgumentParser(description='Introducing main arguments...')
@@ -44,7 +44,7 @@ parser.add_argument('--plots', type=str, default=None)
 
 default_DirName    = os.path.dirname(__file__)
 default_CaseName   = 'Home1'                              # To select the case
-default_SolverName = 'gurobi'
+default_SolverName = 'highs'
 default_date       = datetime.datetime.now().replace(second=0, microsecond=0)
 default_rawresults = 'False'
 default_plots      = 'False'
