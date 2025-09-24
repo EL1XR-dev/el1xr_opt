@@ -1,5 +1,5 @@
 """
-VY4E-OptModel: An open-source optimization model for the design and operation of hybrid renewable energy systems.
+el1xr_opt: An open-source optimization model for the design and operation of hybrid renewable energy systems.
 
 
     Args:
@@ -11,8 +11,8 @@ VY4E-OptModel: An open-source optimization model for the design and operation of
         Output results in CSV files that are found in the case folder.
 
     Examples:
-        >>> import VY4E-OptModel as oM
-        >>> oM.routine("VPP1", "C:\\Users\\UserName\\Documents\\GitHub\\VY4E-OptModel", "glpk")
+        >>> import el1xr_opt as eo
+        >>> eo.routine("VPP1", "C:\\Users\\UserName\\Documents\\GitHub\\el1xr_opt", "glpk")
 """
 # __version__ = "1.0.16rc1"
 
