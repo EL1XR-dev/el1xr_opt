@@ -62,7 +62,3 @@ def main():
     )
 
     return model
-
-if __name__ == "__main__":
-    ensure_ampl_solvers()
-    main()
