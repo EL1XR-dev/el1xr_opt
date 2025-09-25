@@ -35,8 +35,8 @@ dependencies = [
 ]
 
 [project.scripts]
-oM_Main = "el1xr_opt:main"
-el1xr-install-solvers = "el1xr_opt.OM_SolverSetup:ensure_ampl_solvers"
+el1xr-opt = "el1xr_opt.oM_Main:main"
+el1xr-install-solvers = "el1xr_opt.oM_SolverSetup:ensure_ampl_solvers"
 
 [project.urls]
 Homepage = "https://el1xr_opt.readthedocs.io/en/latest/index.html"
