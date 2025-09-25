@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import logging
 
-from src.el1xr_opt.oM_Main import main
+from src.el1xr_opt.oM_Sequence import oM_run
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -21,18 +21,19 @@ def setup_test_case(case_name):
     Returns the data required for running el1xr_opt.
     """
     data = dict(
-        DirName=os.path.abspath(
+        dir=os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
         ),
-        CaseName=case_name,
-        SolverName="gurobi",  # You can change the solver here
-        pIndLogConsole=0,
-        pIndOutputResults=0,
+        case=case_name,
+        solver="gurobi",  # You can change the solver here
+        date= datetime.datetime.now().replace(second=0, microsecond=0),
+        rawresults="False",
+        plots="False",
     )
 
     print("Setting up test case...")
     # Added print for console feedback
-    duration_csv = os.path.join(data["DirName"], data["CaseName"], f"oM_Data_Duration_{data['CaseName']}.csv")
+    duration_csv = os.path.join(data["dir"], data["case"], f"oM_Data_Duration_{data['case']}.csv")
     #RESEnergy_csv = os.path.join(data["DirName"], data["CaseName"], f"oM_Data_RESEnergy_{data['CaseName']}.csv")
     #stage_csv = os.path.join(data["DirName"], data["CaseName"], f"oM_Data_Stage_{data['CaseName']}.csv")
 
@@ -85,17 +86,7 @@ def test_el1xr_opt_run():
     for case_name in CASE_NAMES:
         print(f'Running test for {case_name}...')
         for case_data in setup_test_case(case_name):
-            sys.argv = [
-                "oM_Main.py",
-                "--dir", case_data["DirName"],
-                "--case", case_data["CaseName"],
-                "--solver", case_data["SolverName"],
-                "--date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "--rawresults", "False",
-                "--plots", "False",
-            ]
-            print(f'Arguments set: {sys.argv}')  # Added print for console feedback
-            model = main()
+            model = oM_run(**case_data)
 
             assert model is not None, f"{case_name} failed: model is None."
             logger.info(f"{case_name} passed. Total system cost: {model.eTotalSCost}")

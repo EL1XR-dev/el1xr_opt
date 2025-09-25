@@ -1,4 +1,4 @@
-# src/el1xr_opt/solver_setup.py
+# src/el1xr_opt/oM_SolverSetup.py
 import os
 import warnings
 
