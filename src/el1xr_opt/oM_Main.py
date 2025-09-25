@@ -1,8 +1,6 @@
-import argparse
-
 from .oM_Sequence import oM_run
 
-def main():
+def main(parser):
     args = parser.parse_args()
     if args.dir is None:
         args.dir = default_DirName
