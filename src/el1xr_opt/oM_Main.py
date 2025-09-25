@@ -1,7 +1,18 @@
+import datetime
+import os
+
 from .oM_Sequence import oM_run
 
 def main(parser):
     args = parser.parse_args()
+
+    default_DirName = os.path.dirname(__file__)
+    default_CaseName = 'Home1'  # To select the case
+    default_SolverName = 'highs'
+    default_date = datetime.datetime.now().replace(second=0, microsecond=0)
+    default_rawresults = 'False'
+    default_plots = 'False'
+
     if args.dir is None:
         args.dir = default_DirName
     if args.case is None:
