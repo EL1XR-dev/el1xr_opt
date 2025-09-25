@@ -35,7 +35,7 @@ dependencies = [
 ]
 
 [project.scripts]
-el1xr-run = "el1xr_opt.oM_Main:main"
+oM_Main = "el1xr_opt:main"
 el1xr-install-solvers = "el1xr_opt.solver_setup:ensure_ampl_solvers"
 
 [project.urls]
