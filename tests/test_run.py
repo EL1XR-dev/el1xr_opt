@@ -5,7 +5,7 @@ import pyomo.environ as pyo
 import numpy as np
 import pandas as pd
 
-from src.el1xr_opt.oM_Sequence import oM_run
+from el1xr_opt.oM_Sequence import oM_run
 
 # === Fixture definition ===
 @pytest.fixture
