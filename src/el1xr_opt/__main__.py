@@ -29,4 +29,4 @@ default_plots      = 'False'
 
 if __name__ == "__main__":
     ensure_ampl_solvers()
-    main()
+    main(parser)
