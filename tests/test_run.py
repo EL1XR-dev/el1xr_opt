@@ -25,7 +25,7 @@ def case_720h_system(request):
         ),
         case=case_name,
         solver="highs",  # You can change the solver here
-        date= datetime.datetime.now().replace(second=0, microsecond=0),
+        date=datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="False",
         plots="False",
     )
