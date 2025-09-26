@@ -35,7 +35,7 @@ dependencies = [
 ]
 
 [project.scripts]
-el1xr_run = "el1xr_opt:main"
+el1xr-run = "el1xr_opt.el1xr_opt:main"
 el1xr-install-solvers = "el1xr_opt.Modules.oM_SolverSetup:ensure_ampl_solvers"
 
 [project.urls]
@@ -43,9 +43,9 @@ Homepage = "https://el1xr_opt.readthedocs.io/en/latest/index.html"
 Repository = "https://github.com/EL1XR-dev/el1xr_opt"
 Issues = "https://github.com/EL1XR-dev/el1xr_opt/issues"
 
-## Tell Flit which importable module corresponds to this project
-#[tool.flit.module]
-#name = "el1xr_opt"
+# Tell Flit which importable module corresponds to this project
+[tool.flit.module]
+name = "el1xr_opt"
 
 # Extra files to include in the sdist (wheel only packages files inside src/)
 [tool.flit.sdist]
