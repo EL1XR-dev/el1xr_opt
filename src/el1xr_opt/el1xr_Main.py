@@ -52,7 +52,10 @@ default_plots      = 'False'
 def main():
     initial_time = time.time()
     args = parser.parse_args()
-    # args.dir = default_DirName
+
+    # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.
+    ensure_ampl_solvers(["highs"], quiet=True)
+
     # %% Model declaration
     oAEGIS = ConcreteModel('Adaptive Energy Grid Integration System (AEGIS)  - Version 1.0.1 - November 04, 2024')
 
