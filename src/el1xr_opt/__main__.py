@@ -1,5 +1,5 @@
 # __main__.py
-from .el1xr_opt import main
+from .el1xr_Main import main
 from .Modules.oM_SolverSetup import ensure_ampl_solvers
 
 if __name__ == "__main__":
