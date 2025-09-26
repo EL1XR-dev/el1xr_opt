@@ -4,7 +4,7 @@ import datetime
 import os
 import time
 # import pkg_resources
-from .Modules.oM_Sequence import execution_sequence
+from .Modules.oM_Sequence import routine
 from .Modules.oM_SolverSetup import ensure_ampl_solvers
 
 print('\033[1;32mElectricity for Low-carbon Integration and eXchange of Resources (EL1XR) - Version 1.0.1 - Sep 25, 2025\033[0m')
@@ -63,7 +63,7 @@ def main():
     import sys
     print(sys.argv)
     print(args)
-    model = execution_sequence(args.dir, args.case, args.solver, args.date, args.rawresult, args.plots)
+    model = routine(args.dir, args.case, args.solver, args.date, args.rawresult, args.plots)
     # Computing the elapsed time
     ElapsedTime = round(time.time() - StartTime)
     print('Total time                             ...  {} s'.format(ElapsedTime))
