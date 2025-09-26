@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 # ---------- AMPL module helpers ----------
 def _ampl_module_available(name: str) -> bool:
     try:
-        from ampltools.modules import modules
+        from amplpy import modules
         modules.find(name)  # raises if missing
         return True
     except Exception:
@@ -16,7 +16,7 @@ def _ampl_module_available(name: str) -> bool:
 
 def _install_ampl_module(name: str) -> bool:
     try:
-        from ampltools.modules import modules
+        from amplpy import modules
         if hasattr(modules, "install"):
             modules.install(name)  # may raise
             modules.find(name)
@@ -25,7 +25,7 @@ def _install_ampl_module(name: str) -> bool:
         pass
     try:
         # installing ampl module via subprocess and consider --upgrade
-        subprocess.run([sys.executable, "-m", "pip", "install", "amplpy", "--upgrade", ],)
+        # subprocess.run([sys.executable, "-m", "pip", "install", "amplpy", "--upgrade", ],)
         subprocess.run([sys.executable, "-m", "amplpy.modules", "install", name],
                        check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return _ampl_module_available(name)
@@ -53,7 +53,7 @@ def pick_solver(preferred: Optional[str], *, allow_fallback: bool = False):
 
     # AMPL module
     if _ampl_module_available(name):
-        from ampltools.modules import modules
+        from amplpy import modules
         exe = modules.find(name)
         return {"factory": name + "nl", "solve_io": "nl", "executable": exe, "resolved": name + " (AMPL module)"}
 
