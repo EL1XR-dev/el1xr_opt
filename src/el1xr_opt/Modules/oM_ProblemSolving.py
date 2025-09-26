@@ -54,7 +54,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
         resolved = "gams"
     else:
         # New robust path: AMPL module -> Appsi HiGHS -> CBC/GLPK
-        cfg = pick_solver(SolverName)
+        cfg = pick_solver(SolverName, allow_fallback=False)
         if cfg["solve_io"] == "nl":
             Solver = SolverFactory(cfg["factory"], executable=cfg["executable"], solve_io="nl")
         else:
