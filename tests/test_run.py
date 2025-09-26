@@ -15,6 +15,9 @@ def case_720h_system(request):
     Fixture to temporarily modify the input files of a given case
     to simulate a 720-hours system and restore the originals afterward.
     """
+    print(f'Setting up test case: {request.param}')
+    print(f'Current working directory: {os.getcwd()}')
+    print(f'File location: {os.path.abspath(__file__)}')
     case_name = request.param
     data = dict(
         dir=os.path.abspath(
@@ -30,9 +33,6 @@ def case_720h_system(request):
     # File paths
     duration_csv = os.path.join(
         data['dir'], data['case'], f"oT_Data_Duration_{case_name}.csv"
-    )
-    stage_csv = os.path.join(
-        data['dir'], data['case'], f"oT_Data_Stage_{case_name}.csv"
     )
 
     # Backup original data
