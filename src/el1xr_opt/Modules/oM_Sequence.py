@@ -26,7 +26,7 @@ from .oM_ModelFormulation import create_objective_function, create_objective_fun
 from .oM_ProblemSolving   import solving_model
 from .oM_OutputData       import saving_rawdata, saving_results
 
-def execution_sequence(dir, case, solver, date, rawresults, plots):
+def routine(dir, case, solver, date, rawresults, plots):
     initial_time = time.time()
 
     # %% Model declaration
