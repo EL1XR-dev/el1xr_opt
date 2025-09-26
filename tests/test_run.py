@@ -32,7 +32,7 @@ def case_720h_system(request):
 
     # File paths
     duration_csv = os.path.join(
-        data['dir'], data['case'], f"oT_Data_Duration_{case_name}.csv"
+        data['dir'], data['case'], f"oM_Data_Duration_{case_name}.csv"
     )
 
     # Backup original data
