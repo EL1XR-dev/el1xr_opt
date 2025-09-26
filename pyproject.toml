@@ -3,9 +3,9 @@ requires = ["flit_core>=3.12.0,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "el1xr_opt"                       # distribution name on PyPI
-version = "1.0.1"                           # update as you release
-description = "An open-source optimization model for the design and operation of hybrid renewable energy systems."
+name = "el1xr_opt"                             # distribution name on PyPI
+version = "1.0.6"                           # update as you release
+description = "An open-source optimization model for the design and operation of hybrid renewable energy systems with automatic solver setup"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -35,7 +35,8 @@ dependencies = [
 ]
 
 [project.scripts]
-vy4e-optmodel = "el1xr_opt.oM_Main:main"
+el1xr-run = "el1xr_opt.el1xr_Main:main"
+el1xr-install-solvers = "el1xr_opt.Modules.oM_SolverSetup:ensure_ampl_solvers"
 
 [project.urls]
 Homepage = "https://el1xr_opt.readthedocs.io/en/latest/index.html"
@@ -48,4 +49,4 @@ name = "el1xr_opt"
 
 # Extra files to include in the sdist (wheel only packages files inside src/)
 [tool.flit.sdist]
-include = ["el1xr_opt/docs/img/VY4E-OptModel_logo_v6.png"]
+include = ["el1xr_opt/docs/img/el1xr_opt_logo_v6.png"]

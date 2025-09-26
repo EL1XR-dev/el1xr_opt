@@ -446,12 +446,6 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     idx_p = pd.Index(model.p)
     dur = {(p, sc, n): float(model.Par['pDuration'][p, sc, n]) for (p, sc, n) in model.psn}
 
-    def v(x):
-        try:
-            return float(value(x))
-        except:
-            return 0.0
-
     def has(name):
         return hasattr(optmodel, name) and len(getattr(optmodel, name)) > 0
 

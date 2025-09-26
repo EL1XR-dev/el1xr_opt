@@ -1,4 +1,5 @@
-from .oM_Main import main
+# __main__.py
+from .el1xr_Main import main
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
