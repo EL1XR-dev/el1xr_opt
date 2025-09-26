@@ -35,7 +35,7 @@ dependencies = [
 ]
 
 [project.scripts]
-el1xr-opt = "el1xr_opt:main"
+el1xr_run = "el1xr_opt:main"
 el1xr-install-solvers = "el1xr_opt.Modules.oM_SolverSetup:ensure_ampl_solvers"
 
 [project.urls]
@@ -49,4 +49,4 @@ Issues = "https://github.com/EL1XR-dev/el1xr_opt/issues"
 
 # Extra files to include in the sdist (wheel only packages files inside src/)
 [tool.flit.sdist]
-include = ["el1xr_opt/docs/img/VY4E-OptModel_logo_v6.png"]
+include = ["el1xr_opt/docs/img/el1xr_opt_logo_v6.png"]

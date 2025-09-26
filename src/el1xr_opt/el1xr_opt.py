@@ -46,10 +46,10 @@ def main():
         args.date = input('Date (YYYY-MM-DD) (Default {}): '.format(DATE))
         if args.date == '':
             args.date = DATE
-    if args.rawresult is None:
-        args.rawresult = input('Would you like to write all the results? (Default {}): '.format(RAWR))
-        if args.rawresult == '':
-            args.rawresult = RAWR
+    if args.rawresults is None:
+        args.rawresults = input('Would you like to write all the results? (Default {}): '.format(RAWR))
+        if args.rawresults == '':
+            args.rawresults = RAWR
     if args.plots is None:
         args.plots = input('Would you like to write the plots? (Default {}): '.format(PLOTS))
         if args.plots == '':
