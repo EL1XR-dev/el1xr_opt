@@ -1,18 +1,18 @@
-.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml/badge.svg
-   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml
-   :alt: Test passing
-
-.. image:: https://app.codacy.com/project/badge/Grade/2b804a25f68749498c5207dcdd05ed67
-   :target: https://app.codacy.com/gh/EL1XR-dev/el1xr_opt/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
-   :alt: Codacy Badge
-
 .. image:: https://img.shields.io/pypi/pyversions/el1xr_opt.svg
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Python version
 
+.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml/badge.svg
+   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml
+   :alt: Test passing
+
 .. image:: https://readthedocs.org/projects/el1xr-opt/badge/?version=latest
    :target: https://el1xr-opt.readthedocs.io/en/latest/
    :alt: Docs passing
+
+.. image:: https://app.codacy.com/project/badge/Grade/2b804a25f68749498c5207dcdd05ed67
+   :target: https://app.codacy.com/gh/EL1XR-dev/el1xr_opt/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
+   :alt: Codacy Badge
 
 .. image:: https://img.shields.io/pypi/dm/el1xr_opt.svg
    :target: https://pypi.org/project/el1xr_opt/
