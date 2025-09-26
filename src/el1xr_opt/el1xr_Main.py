@@ -58,7 +58,7 @@ def main():
     ensure_ampl_solvers(["highs"], quiet=True)
 
     # %% Model declaration
-    oAEGIS = ConcreteModel('Adaptive Energy Grid Integration System (AEGIS)  - Version 1.0.1 - November 04, 2024')
+    oAEGIS = ConcreteModel('Electricity for Low-carbon Integration and eXchange of Resources (EL1XR) - Version 1.0.1 - Sep 25, 2025')
 
     if args.dir == "":
         args.dir = default_DirName
