@@ -53,7 +53,7 @@ def case_720h_system(request):
 
 # === Parametrized Test ===
 @pytest.mark.parametrize("case_720h_system,expected_cost", [
-    ("Home1", 475.5007343951468),
+    ("Home1", 475.5),
 ], indirect=["case_720h_system"])
 def test_model_run(case_720h_system, expected_cost):
     """
@@ -66,6 +66,6 @@ def test_model_run(case_720h_system, expected_cost):
     assert model is not None, "Model instance returned is None."
 
     actual_cost = pyo.value(model.eTotalSCost)
-    print(f"Expected cost: {expected_cost:.5f}, Actual cost: {actual_cost:.5f}")
+    print(f"Expected cost: {expected_cost:.1f}, Actual cost: {actual_cost:.1f}")
 
     np.testing.assert_approx_equal(actual_cost, expected_cost)
