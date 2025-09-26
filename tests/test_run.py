@@ -24,7 +24,7 @@ def case_720h_system(request):
             os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
         ),
         case=case_name,
-        solver="gurobi",  # You can change the solver here
+        solver="highs",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="False",
         plots="False",
