@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           conda install glpk cartopy
-          pip install el1xr_opt
+          pip install el1xr_opt==1.0.6
           pip install highspy
       - name: Lint with flake8
         run: |
