@@ -1,3 +1,12 @@
+el1xr_opt
+=========
+
+.. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/el1xr_opt_logo_v6.png
+   :width: 120
+   :align: right
+   :alt: EL1XR logo
+
+
 .. image:: https://img.shields.io/pypi/pyversions/el1xr_opt.svg
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Python version
@@ -17,14 +26,6 @@
 .. image:: https://img.shields.io/pypi/dm/el1xr_opt.svg
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Downloads
-
-el1xr_opt
-=========
-
-.. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/el1xr_opt_logo_v6.png
-   :width: 120
-   :align: right
-   :alt: EL1XR logo
 
 **el1xr_opt** is the core optimization engine of the `EL1XR-dev` ecosystem. It provides a powerful and flexible modelling framework for designing and analyzing integrated, zero-carbon energy systems, with support for electricity, heat, hydrogen, and energy storage technologies.
 
