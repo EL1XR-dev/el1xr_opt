@@ -10,7 +10,7 @@ import time          # count clock time
 import os
 import psutil        # access the number of CPUs
 from pyomo.environ import Var, Suffix, SolverFactory
-from .oM_SolverSetup import pick_solver
+from .oM_SolverSetup import pick_solver, ensure_ampl_solvers
 
 
 def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
@@ -53,13 +53,18 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
         Solver = SolverFactory("gams")
         resolved = "gams"
     else:
-        # New robust path: AMPL module -> Appsi HiGHS -> CBC/GLPK
-        cfg = pick_solver(SolverName, allow_fallback=False)
-        if cfg["solve_io"] == "nl":
-            Solver = SolverFactory(cfg["factory"], executable=cfg["executable"], solve_io="nl")
+        if SolverName == "highs":
+            # New robust path: AMPL module -> Appsi HiGHS -> CBC/GLPK
+            cfg = pick_solver(SolverName, allow_fallback=False)
+            if cfg["solve_io"] == "nl":
+                Solver = SolverFactory(cfg["factory"], executable=cfg["executable"], solve_io="nl")
+            else:
+                Solver = SolverFactory(cfg["factory"])
+            resolved = str(cfg["resolved"])
         else:
-            Solver = SolverFactory(cfg["factory"])
-        resolved = str(cfg["resolved"])
+            # Other solvers via Pyomo's SolverFactory (e.g., 'gurobi', 'cbc', 'glpk')
+            Solver = SolverFactory(SolverName)
+            resolved = SolverName
         print(f"Using solver: {resolved}")
 
     # ---- Optional: write LP/MPS if requested ----
