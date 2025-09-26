@@ -12,7 +12,7 @@ el1xr_opt: An open-source optimization model for the design and operation of hyb
 
     Examples:
         >>> import el1xr_opt as eo
-        >>> eo.routine("9n", "C:\\Users\\UserName\\Documents\\GitHub\\el1xr_opt", "glpk")
+        >>> eo.routine("Home1", "C:\\Users\\UserName\\Documents\\GitHub\\el1xr_opt", "glpk")
 """
 # __version__ = "1.0.16rc1"
 
