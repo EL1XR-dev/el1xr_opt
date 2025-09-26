@@ -25,7 +25,7 @@ from .oM_InputData        import data_processing, create_variables
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .oM_ProblemSolving   import solving_model
 from .oM_OutputData       import saving_rawdata, saving_results
-from .oM_SolverSetup      import ensure_ampl_solvers 
+from .oM_SolverSetup      import ensure_ampl_solvers
 
 def routine(dir, case, solver, date, rawresults, plots):
     initial_time = time.time()
