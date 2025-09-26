@@ -27,6 +27,7 @@ from .Modules.oM_InputData        import data_processing, create_variables
 from .Modules.oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .Modules.oM_ProblemSolving   import solving_model
 from .Modules.oM_OutputData       import saving_rawdata, saving_results
+from .Modules.oM_SolverSetup      import ensure_ampl_solvers
 
 for i in range(0, 117):
     print('-', end="")
