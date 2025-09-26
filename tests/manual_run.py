@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import logging
 
-from src.el1xr_opt.oM_Sequence import oM_run
+from src.el1xr_opt.Modules.oM_Sequence import routine
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +25,7 @@ def setup_test_case(case_name):
             os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
         ),
         case=case_name,
-        solver="gurobi",  # You can change the solver here
+        solver="highs",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="False",
         plots="False",
@@ -86,7 +86,7 @@ def test_el1xr_opt_run():
     for case_name in CASE_NAMES:
         print(f'Running test for {case_name}...')
         for case_data in setup_test_case(case_name):
-            model = oM_run(**case_data)
+            model = routine(**case_data)
 
             assert model is not None, f"{case_name} failed: model is None."
             logger.info(f"{case_name} passed. Total system cost: {model.eTotalSCost}")
