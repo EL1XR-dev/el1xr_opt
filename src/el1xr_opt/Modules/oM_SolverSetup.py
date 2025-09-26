@@ -24,6 +24,8 @@ def _install_ampl_module(name: str) -> bool:
     except Exception:
         pass
     try:
+        # installing ampl module via subprocess and consider --upgrade
+        subprocess.run([sys.executable, "-m", "pip", "install", "amplpy", "--upgrade", ],)
         subprocess.run([sys.executable, "-m", "amplpy.modules", "install", name],
                        check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return _ampl_module_available(name)
