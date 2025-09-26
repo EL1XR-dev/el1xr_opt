@@ -4,8 +4,7 @@ import pytest
 import pyomo.environ as pyo
 import numpy as np
 import pandas as pd
-
-from el1xr_opt.oM_Sequence import oM_run
+from src.el1xr_opt.Modules.oM_Sequence import routine
 
 # === Fixture definition ===
 @pytest.fixture
@@ -60,7 +59,7 @@ def test_model_run(case_720h_system, expected_cost):
     Asserts that total system cost matches expected value.
     """
     print("Running test case:", case_720h_system['case'])
-    model = oM_run(**case_720h_system)
+    model = routine(**case_720h_system)
 
     assert model is not None, "Model instance returned is None."
 
