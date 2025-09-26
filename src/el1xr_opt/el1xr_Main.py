@@ -27,7 +27,6 @@ from .Modules.oM_InputData        import data_processing, create_variables
 from .Modules.oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .Modules.oM_ProblemSolving   import solving_model
 from .Modules.oM_OutputData       import saving_rawdata, saving_results
-from .Modules.oM_SolverSetup      import ensure_ampl_solvers
 
 for i in range(0, 117):
     print('-', end="")
@@ -53,9 +52,6 @@ default_plots      = 'False'
 def main():
     initial_time = time.time()
     args = parser.parse_args()
-
-    # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.
-    ensure_ampl_solvers(["highs"], quiet=True)
 
     # %% Model declaration
     oAEGIS = ConcreteModel('Electricity for Low-carbon Integration and eXchange of Resources (EL1XR) - Version 1.0.1 - Sep 25, 2025')
