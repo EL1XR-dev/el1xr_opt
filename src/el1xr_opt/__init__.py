@@ -16,4 +16,4 @@ el1xr_opt: An open-source optimization model for the design and operation of hyb
 """
 # __version__ = "1.0.16rc1"
 
-from .el1xr_opt import main
+from .el1xr_Main import main
