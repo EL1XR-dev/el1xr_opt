@@ -23,10 +23,7 @@ from   pyomo.dataportal  import DataPortal
 from   collections       import defaultdict
 from   colour            import Color
 
-from .Modules.oM_InputData        import data_processing, create_variables
-from .Modules.oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
-from .Modules.oM_ProblemSolving   import solving_model
-from .Modules.oM_OutputData       import saving_rawdata, saving_results
+from .Modules.oM_Sequence import routine
 
 for i in range(0, 117):
     print('-', end="")
@@ -105,51 +102,8 @@ def main():
         print('-', end="")
     print('\n')
 
-    # reading and processing the data
-    #
-    print('- Initializing the model\n')
-    model = data_processing(args.dir, args.case, args.date, oAEGIS)
-    print('- Total time for reading and processing the data:                      {} seconds\n'.format(round(time.time() - initial_time)))
-    start_time = time.time()
-    # defining the variables
-    model = create_variables(model, model)
-    print('- Total time for defining the variables:                               {} seconds\n'.format(round(time.time() - start_time  )))
-    start_time = time.time()
-    # defining the objective function
-    model = create_objective_function(model, model)
-    print('- Total time for defining the objective function:                      {} seconds\n'.format(round(time.time() - start_time  )))
-    start_time = time.time()
-    # defining components of the day-ahead objective function
-    model = create_objective_function_components(model, model)
-    print('- Total time for defining the objective function:                      {} seconds\n'.format(round(time.time() - start_time  )))
-    start_time = time.time()
-    # defining the constraints
-    model = create_constraints(model, model)
-    print('- Total time for defining the constraints:                             {} seconds\n'.format(round(time.time() - start_time  )))
-    start_time = time.time()
-    # solving the model
-    pWrittingLPFile = 0
-    model = solving_model( args.dir, args.case, args.solver, model, pWrittingLPFile)
-    print('- Total time for solving the model:                                    {} seconds\n'.format(round(time.time() - start_time  )))
-    start_time = time.time()
-    # outputting the results
-    # model = saving_rawdata(args.dir, args.case, args.solver, model, model)
-    # print('- Total time for outputting the raw data:                              {} seconds\n'.format(round(time.time() - start_time  )))
-    # start_time = time.time()
-    # outputting the results
-    model = saving_results(args.dir, args.case, args.date, model, model)
-    print('- Total time for outputting the results:                               {} seconds\n'.format(round(time.time() - start_time  )))
-    for i in range(0, 117):
-        print('-', end="")
-    print('\n')
-    elapsed_time = round(time.time() - initial_time)
-    print('Elapsed time: {} seconds'.format(elapsed_time))
-    path_to_write_time = os.path.join(args.dir,args.case,"oM_Result_rExecutionTime_"+args.case+".txt")
-    with open(path_to_write_time, 'w') as f:
-         f.write(str(elapsed_time))
-    for i in range(0, 117):
-        print('-', end="")
-    print('\n')
+    # %% model call
+    model = routine(args.dir, args.case, args.solver, args.date, args.rawresults, args.plots)
 
     return model
 
