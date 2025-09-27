@@ -30,11 +30,12 @@ from .oM_SolverSetup      import ensure_ampl_solvers
 def routine(dir, case, solver, date, rawresults, plots):
     initial_time = time.time()
 
-    # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.
-    ensure_ampl_solvers(["highs"], quiet=True)
-
     # %% Model declaration
     oModel = ConcreteModel('el1xr_opt  - Version 1.0.4 - Sep 25, 2025')
+
+    # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.
+    ensure_ampl_solvers(["highs"], quiet=True)
+    print(f'- Using solver: {solver}\n')
 
     # reading and processing the data
     #
