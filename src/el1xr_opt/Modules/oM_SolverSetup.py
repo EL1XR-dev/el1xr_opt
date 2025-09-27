@@ -33,6 +33,7 @@ def _install_ampl_module(name: str) -> bool:
         return False
 
 def ensure_ampl_solvers(targets: Iterable[str] = ("highs",), quiet: bool = False) -> Dict[str, bool]:
+    print(f'- Ensuring AMPL solver modules {", ".join(targets)} are installed...\n')
     out: Dict[str, bool] = {}
     for s in targets:
         out[s] = _ampl_module_available(s) or _install_ampl_module(s)
