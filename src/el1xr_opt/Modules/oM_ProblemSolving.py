@@ -10,7 +10,7 @@ import time          # count clock time
 import os
 import psutil        # access the number of CPUs
 from pyomo.environ import Var, Suffix, SolverFactory
-from .oM_SolverSetup import pick_solver, ensure_ampl_solvers
+from .oM_SolverSetup import pick_solver
 
 
 def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
