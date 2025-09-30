@@ -141,9 +141,9 @@ def data_processing(DirName, CaseName, DateModel, model):
 
     # Extract and cast operating reserve parameters for RM and RT markets
     for ind in model.reserves_prefixes:
-        parameters_dict[f'pOperatingReservePrice_{ind}'     ] = data_frames[f'dfOperatingReservePrice'     ][ind] * factor1
-        parameters_dict[f'pOperatingReserveRequire_{ind}'   ] = data_frames[f'dfOperatingReserveRequire'   ][ind] * factor1
-        parameters_dict[f'pOperatingReserveActivation_{ind}'] = data_frames[f'dfOperatingReserveActivation'][ind]
+        parameters_dict[f'pOperatingReservePrice_{ind}'     ] = data_frames['dfOperatingReservePrice'     ][ind] * factor1
+        parameters_dict[f'pOperatingReserveRequire_{ind}'   ] = data_frames['dfOperatingReserveRequire'   ][ind] * factor1
+        parameters_dict[f'pOperatingReserveActivation_{ind}'] = data_frames['dfOperatingReserveActivation'][ind]
 
     # compute the Demand as the mean over the time step load levels and assign it to active load levels.
     # Idem for operating reserve, variable max power, variable min and max storage capacity and inflows and outflows
@@ -199,7 +199,7 @@ def data_processing(DirName, CaseName, DateModel, model):
     for sector in ['Ele', 'Hyd']:
         parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost'] + parameters_dict[f'p{sector[0:3]}GenOMVariableCost'] * model.factor1  # linear   term variable cost             [MEUR/GWh]
         parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * model.factor2 * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                        # constant term variable cost             [MEUR/h]
-        parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] * model.factor1 * parameters_dict[f'pParCO2Cost']                                                                                      # CO2 emission cost                       [MEUR/GWh]
+        parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] * model.factor1 * parameters_dict[ 'pParCO2Cost']                                                                                      # CO2 emission cost                       [MEUR/GWh]
         parameters_dict[f'p{sector[0:3]}GenStartUpCost'       ] = parameters_dict[f'p{sector[0:3]}GenStartUpCost'         ] * model.factor2                                                                                                                        # generation startup cost                 [MEUR]
         parameters_dict[f'p{sector[0:3]}GenShutDownCost'      ] = parameters_dict[f'p{sector[0:3]}GenShutDownCost'        ] * model.factor2                                                                                                                        # generation shutdown cost                [MEUR]
         parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
@@ -512,20 +512,20 @@ def data_processing(DirName, CaseName, DateModel, model):
     # minimum and maximum variable power, charge, and storage capacity
     dict_sector = {'Ele': model.eg, 'Hyd': model.hg}
     for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector}MinPower'   ] = parameters_dict[f'pVarMinGeneration'  ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinimumPower'   ])
-        parameters_dict[f'p{sector}MaxPower'   ] = parameters_dict[f'pVarMaxGeneration'  ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaximumPower'   ])
-        parameters_dict[f'p{sector}MinCharge'  ] = parameters_dict[f'pVarMinConsumption' ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinimumCharge'  ])
-        parameters_dict[f'p{sector}MaxCharge'  ] = parameters_dict[f'pVarMaxConsumption' ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaximumCharge'  ])
-        parameters_dict[f'p{sector}MinStorage' ] = parameters_dict[f'pVarMinStorage'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinimumStorage' ])
-        parameters_dict[f'p{sector}MaxStorage' ] = parameters_dict[f'pVarMaxStorage'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaximumStorage' ])
-        parameters_dict[f'p{sector}MinInflows' ] = parameters_dict[f'pVarMinInflows'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinInflowsCons' ])
-        parameters_dict[f'p{sector}MaxInflows' ] = parameters_dict[f'pVarMaxInflows'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaxInflowsCons' ])
-        parameters_dict[f'p{sector}MinOutflows'] = parameters_dict[f'pVarMinOutflows'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinOutflowsProd'])
-        parameters_dict[f'p{sector}MaxOutflows'] = parameters_dict[f'pVarMaxOutflows'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaxOutflowsProd'])
-        parameters_dict[f'p{sector}MinFuelCost'] = parameters_dict[f'pVarMinFuelCost'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenLinearVarCost'  ])
-        parameters_dict[f'p{sector}MaxFuelCost'] = parameters_dict[f'pVarMaxFuelCost'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenLinearVarCost'  ])
-        parameters_dict[f'p{sector}MinCO2Cost' ] = parameters_dict[f'pVarMinEmissionCost'][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenCO2EmissionCost'])
-        parameters_dict[f'p{sector}MaxCO2Cost' ] = parameters_dict[f'pVarMaxEmissionCost'][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenCO2EmissionCost'])
+        parameters_dict[f'p{sector}MinPower'   ] = parameters_dict['pVarMinGeneration'  ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinimumPower'   ])
+        parameters_dict[f'p{sector}MaxPower'   ] = parameters_dict['pVarMaxGeneration'  ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaximumPower'   ])
+        parameters_dict[f'p{sector}MinCharge'  ] = parameters_dict['pVarMinConsumption' ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinimumCharge'  ])
+        parameters_dict[f'p{sector}MaxCharge'  ] = parameters_dict['pVarMaxConsumption' ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaximumCharge'  ])
+        parameters_dict[f'p{sector}MinStorage' ] = parameters_dict['pVarMinStorage'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinimumStorage' ])
+        parameters_dict[f'p{sector}MaxStorage' ] = parameters_dict['pVarMaxStorage'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaximumStorage' ])
+        parameters_dict[f'p{sector}MinInflows' ] = parameters_dict['pVarMinInflows'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinInflowsCons' ])
+        parameters_dict[f'p{sector}MaxInflows' ] = parameters_dict['pVarMaxInflows'     ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaxInflowsCons' ])
+        parameters_dict[f'p{sector}MinOutflows'] = parameters_dict['pVarMinOutflows'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMinOutflowsProd'])
+        parameters_dict[f'p{sector}MaxOutflows'] = parameters_dict['pVarMaxOutflows'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenMaxOutflowsProd'])
+        parameters_dict[f'p{sector}MinFuelCost'] = parameters_dict['pVarMinFuelCost'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenLinearVarCost'  ])
+        parameters_dict[f'p{sector}MaxFuelCost'] = parameters_dict['pVarMaxFuelCost'    ][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenLinearVarCost'  ])
+        parameters_dict[f'p{sector}MinCO2Cost' ] = parameters_dict['pVarMinEmissionCost'][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenCO2EmissionCost'])
+        parameters_dict[f'p{sector}MaxCO2Cost' ] = parameters_dict['pVarMaxEmissionCost'][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenCO2EmissionCost'])
 
     # parameters_dict['pMaxEnergyBuy' ] = parameters_dict['pVarEnergyCost' ].replace(0.0, parameters_dict['pEleRetMaximumEnergyBuy' ])
     # parameters_dict['pMinEnergyBuy' ] = parameters_dict['pVarEnergyCost' ].replace(0.0, parameters_dict['pEleRetMinimumEnergyBuy' ])
@@ -1252,10 +1252,10 @@ def create_variables(model, optmodel):
 
     # detecting infeasibility: total min ESS output greater than total inflows, total max ESS charge lower than total outflows
     for es in model.egs:
-        if sum(model.Par['pEleMinPower'][es][idx] for idx in model.psn) - sum(model.Par[f'pEleMaxInflows'][es][idx] for idx in model.psn) > 0.0:
+        if sum(model.Par['pEleMinPower'][es][idx] for idx in model.psn) - sum(model.Par['pEleMaxInflows'][es][idx] for idx in model.psn) > 0.0:
             print('### Total minimum output greater than total inflows for Electricity ESS unit ', es)
             assert(0==1)
-        if sum(model.Par['pEleMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par[f'pEleMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
+        if sum(model.Par['pEleMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par['pEleMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
             print('### Total maximum charge lower than total outflows for Electricity ESS unit ', es)
             assert(0==1)
 
