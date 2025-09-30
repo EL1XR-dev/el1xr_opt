@@ -796,8 +796,8 @@ def data_processing(DirName, CaseName, DateModel, model):
         pEpsilon_capacity = pGenerationPeak * 1e-5
         pCostPeak         = parameters_dict[f'p{sector}GenLinearTerm'].max()
         pEpsilon_cost     = pCostPeak * model.factor1
-        pPricePeak        = parameters_dict['pVarEnergyPrice'][retail].max()         # electricity price
-        pEpsilon_price    = pPricePeak * model.factor1
+        # pPricePeak        = parameters_dict['pVarEnergyPrice'][retail].max()         # electricity price
+        # pEpsilon_price    = pPricePeak * model.factor1
 
         # values < 1e-5 times the maximum generation are converted to 0 for all elements in parameters_dict
         for idx in ['MinPower', 'MaxPower', 'MinCharge', 'MaxCharge', 'MinStorage', 'MaxStorage', 'MinInflows', 'MaxInflows', 'MinOutflows', 'MaxOutflows', 'MinFuelCost', 'MaxFuelCost', 'MinCO2Cost', 'MaxCO2Cost']:
