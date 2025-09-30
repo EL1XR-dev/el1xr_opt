@@ -31,7 +31,7 @@ def routine(dir, case, solver, date, rawresults, plots):
     initial_time = time.time()
 
     # %% Model declaration
-    oModel = ConcreteModel('el1xr_opt  - Version 1.0.4 - Sep 25, 2025')
+    oModel = ConcreteModel('el1xr_opt  - Optimisation Model')
 
     # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.
     ensure_ampl_solvers(["highs"], quiet=True)
