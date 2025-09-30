@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging
 import sys
-import subprocess
+# import subprocess
 from typing import Iterable, Dict, Optional
 
 log = logging.getLogger(__name__)
