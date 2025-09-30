@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CASE_NAMES = ["Home1"]  # Add more case names as needed
-EXPECTED_COSTS = {"Home1": 475.4938571171714}
+EXPECTED_COSTS = {"Home1": 417.8402972105073}
 
 def setup_test_case(case_name):
     """
@@ -25,7 +25,7 @@ def setup_test_case(case_name):
             os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
         ),
         case=case_name,
-        solver="highs",  # You can change the solver here
+        solver="gurobi",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="False",
         plots="False",
