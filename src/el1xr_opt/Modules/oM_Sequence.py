@@ -12,10 +12,8 @@ import time                                         # count clock time
 import psutil                                       # access the number of CPUs
 import altair            as alt
 import pandas            as pd
-import plotly.io         as pio
-import plotly.graph_objs as go
 from pyomo.core.kernel.parameter import parameter
-from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, PositiveIntegers, NonNegativeReals, Reals, Any, Constraint, ConcreteModel, Objective, minimize, Suffix, DataPortal
+from   pyomo.environ     import ConcreteModel
 from   pyomo.opt         import SolverFactory
 from   pyomo.dataportal  import DataPortal
 from   collections       import defaultdict
@@ -24,7 +22,7 @@ from   colour            import Color
 from .oM_InputData        import data_processing, create_variables
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .oM_ProblemSolving   import solving_model
-from .oM_OutputData       import saving_rawdata, saving_results
+from .oM_OutputData       import saving_results
 from .oM_SolverSetup      import ensure_ampl_solvers
 
 def routine(dir, case, solver, date, rawresults, plots):

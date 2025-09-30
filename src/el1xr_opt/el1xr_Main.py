@@ -10,10 +10,7 @@ import datetime
 import os
 import time                                         # count clock time
 import psutil                                       # access the number of CPUs
-import altair            as alt
 import pandas            as pd
-import plotly.io         as pio
-import plotly.graph_objs as go
 from pyomo.core.kernel.parameter import parameter
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, PositiveIntegers, NonNegativeReals, Reals, Any, Constraint, ConcreteModel, Objective, minimize, Suffix, DataPortal
 from   pyomo.opt         import SolverFactory

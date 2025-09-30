@@ -155,9 +155,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
 
     sPNND   = [(p,sc,n,nd)    for p,sc,n,nd    in model.psn*model.nd                      ]
     sPNNDGT = [(p,sc,n,nd,gt) for p,sc,n,nd,gt in sPNND*model.gt                          ]
-    sPNNDEG = [(p,sc,n,nd,eg) for p,sc,n,nd,eg in sPNND*model.eg if (nd,eg ) in model.n2eg]
-    sPNNDED = [(p,sc,n,nd,ed) for p,sc,n,nd,ed in sPNND*model.ed if (nd, ed) in model.n2ed]
-    sPNNDER = [(p,sc,n,nd,er) for p,sc,n,nd,er in sPNND*model.er if (nd, er) in model.n2er]
+    # sPNNDEG = [(p,sc,n,nd,eg) for p,sc,n,nd,eg in sPNND*model.eg if (nd,eg ) in model.n2eg]
+    # sPNNDED = [(p,sc,n,nd,ed) for p,sc,n,nd,ed in sPNND*model.ed if (nd, ed) in model.n2ed]
+    # sPNNDER = [(p,sc,n,nd,er) for p,sc,n,nd,er in sPNND*model.er if (nd, er) in model.n2er]
 
     OutputResults1     = pd.Series(data=[ sum(optmodel.vEleTotalOutput          [p,sc,n,eg      ]() * model.Par['pDuration'][p,sc,n] for eg  in model.eg  if (nd,eg ) in model.n2eg and (gt,eg ) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='GenerationEle'     ).reset_index().pivot_table(index=['level_0','level_1','level_2','level_3'], columns='level_4', values='GenerationEle'     , aggfunc='sum')
     # OutputResults1     = pd.Series(data=[ sum(optmodel.vEleTotalOutput          [p,sc,n,eg      ]() * model.Par['pDuration'][p,sc,n] for eg  in model.eg  if (nd,eg ) in model.n2eg and (gt,eg ) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='GenerationEle'     ).reset_index().groupby(['level_0','level_1','level_2','level_3'])[['GenerationEle']].sum().reset_index().rename(columns={'GenerationEle': 'GenerationEle'})
