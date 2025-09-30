@@ -1235,10 +1235,10 @@ def create_variables(model, optmodel):
 
     # fixing electricity buys in hours when electricity cost is equal o greater than 1000
     for idx in model.psner + model.psnhr:
-        if model.Par[f'pVarEnergyCost'][idx[-1]][idx[:(len(idx)-1)]] >= 1000.0:
+        if model.Par['pVarEnergyCost'][idx[-1]][idx[:(len(idx)-1)]] >= 1000.0:
             optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Buy')[idx].fix(0.0)
             nFixedVariables += 1
-        if model.Par[f'pVarEnergyPrice'][idx[-1]][idx[:(len(idx)-1)]] <= 0:
+        if model.Par['pVarEnergyPrice'][idx[-1]][idx[:(len(idx)-1)]] <= 0:
             optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Sell')[idx].fix(0.0)
             nFixedVariables += 1
 
@@ -1246,30 +1246,30 @@ def create_variables(model, optmodel):
 
     # detecting infeasibility: total min ESS output greater than total inflows, total max ESS charge lower than total outflows
     for es in model.egs:
-        if sum(model.Par[f'pEleMinPower'][es][idx] for idx in model.psn) - sum(model.Par[f'pEleMaxInflows'][es][idx] for idx in model.psn) > 0.0:
+        if sum(model.Par['pEleMinPower'][es][idx] for idx in model.psn) - sum(model.Par[f'pEleMaxInflows'][es][idx] for idx in model.psn) > 0.0:
             print('### Total minimum output greater than total inflows for Electricity ESS unit ', es)
             assert(0==1)
-        if sum(model.Par[f'pEleMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par[f'pEleMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
+        if sum(model.Par['pEleMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par[f'pEleMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
             print('### Total maximum charge lower than total outflows for Electricity ESS unit ', es)
             assert(0==1)
 
     for es in model.hgs:
-        if sum(model.Par[f'pHydMinPower'][es][idx] for idx in model.psn) - sum(model.Par[f'pHydMaxInflows'][es][idx] for idx in model.psn) > 0.0:
+        if sum(model.Par['pHydMinPower'][es][idx] for idx in model.psn) - sum(model.Par[f'pHydMaxInflows'][es][idx] for idx in model.psn) > 0.0:
             print('### Total minimum output greater than total inflows for Hydrogen ESS unit ', es)
             assert(0==1)
-        if sum(model.Par[f'pHydMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par[f'pHydMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
+        if sum(model.Par['pHydMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par[f'pHydMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
             print('### Total maximum charge lower than total outflows for Hydrogen ESS unit ', es)
             assert(0==1)
 
     # detecting inventory infeasibility
     for idx in model.psnegs:
-        if model.Par[f'pEleMaxCharge'][idx[-1]][idx[:(len(idx)-1)]] + model.Par[f'pEleMaxPower'][idx[-1]][idx[:(len(idx)-1)]] > 0.0:
+        if model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-1)]] + model.Par[f'pEleMaxPower'][idx[-1]][idx[:(len(idx)-1)]] > 0.0:
             if model.n.ord(idx[-2]) == model.Par['pEleCycleTimeStep'][idx[-1]]:
                 if model.Par[f'pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par[f'pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par[f'pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par[f'pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par[f'pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
             elif model.n.ord(idx[-2]) > model.Par['pEleCycleTimeStep'][idx[-1]]:
-                if model.Par[f'pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par[f'pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par[f'pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par[f'pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par[f'pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                if model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par[f'pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par[f'pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par[f'pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par[f'pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
 
