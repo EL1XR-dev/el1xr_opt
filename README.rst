@@ -15,8 +15,8 @@ el1xr_opt
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Python version
 
-.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml/badge.svg
-   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml
+.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml/badge.svg
+   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml
    :alt: Test passing
    :width: 150
 
