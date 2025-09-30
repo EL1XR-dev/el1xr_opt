@@ -17,7 +17,7 @@ def create_objective_function(model, optmodel):
     print('-- Declaring objective function')
 
     # tolerance to consider avoid division by 0
-    pEpsilon = 1e-6
+    # pEpsilon = 1e-6
 
     # defining the objective function
     def eTotalSCost(optmodel):
