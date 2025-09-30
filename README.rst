@@ -18,6 +18,7 @@ el1xr_opt
 .. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml/badge.svg
    :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml
    :alt: Test passing
+   :width: 150
 
 .. image:: https://readthedocs.org/projects/el1xr-opt/badge/?version=latest
    :target: https://el1xr-opt.readthedocs.io/en/latest/
