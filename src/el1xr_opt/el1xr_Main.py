@@ -14,9 +14,7 @@ import pandas            as pd
 from pyomo.core.kernel.parameter import parameter
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, PositiveIntegers, NonNegativeReals, Reals, Any, Constraint, ConcreteModel, Objective, minimize, Suffix, DataPortal
 from   pyomo.opt         import SolverFactory
-from   pyomo.dataportal  import DataPortal
 from   collections       import defaultdict
-from   colour            import Color
 
 from .Modules.oM_Sequence import routine
 
