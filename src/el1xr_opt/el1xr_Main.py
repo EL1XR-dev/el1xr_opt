@@ -9,8 +9,6 @@ import argparse
 import datetime
 import os
 import psutil                                       # access the number of CPUs
-import pandas            as pd
-from   collections       import defaultdict
 
 from .Modules.oM_Sequence import routine
 
