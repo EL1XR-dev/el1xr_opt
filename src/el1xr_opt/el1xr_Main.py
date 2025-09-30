@@ -28,7 +28,7 @@ from .Modules.oM_Sequence import routine
 for i in range(0, 117):
     print('-', end="")
 
-print('\nElectricity for Low-carbon Integration and eXchange of Resources (EL1XR) - Version 1.0.1 - Sep 25, 2025')
+print('\nElectricity for Low-carbon Integration and eXchange of Resources (EL1XR)')
 print('#### Non-commercial use only ####')
 
 parser = argparse.ArgumentParser(description='Introducing main arguments...')
