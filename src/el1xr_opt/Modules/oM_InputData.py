@@ -238,7 +238,7 @@ def data_processing(DirName, CaseName, DateModel, model):
         parameters_dict[f'p{net[0:3]}GenInvestmentUp'] = parameters_dict[f'p{net[0:3]}GenInvestmentUp'].where(parameters_dict[f'p{net[0:3]}GenInvestmentUp'] > 0.0, other=1.0)
 
     # minimum up- and downtime converted to an integer number of time steps
-    parameters_dict[f'pEleNetSwOnTime' ] = round(parameters_dict[f'pEleNetSwOnTime' ] / parameters_dict['pParTimeStep']).astype('int')
+    parameters_dict['pEleNetSwOnTime' ] = round(parameters_dict['pEleNetSwOnTime' ] / parameters_dict['pParTimeStep']).astype('int')
 
     transforming_time = round(time.time() - start_time)
     print('--- Transforming the dataframes:                                       {} seconds'.format(transforming_time))
@@ -1192,11 +1192,11 @@ def create_variables(model, optmodel):
     # fixing the ENS in nodes with no electricity and hydrogen demand in market
     for idx in model.psned:
         if model.Par[f'pVarMaxDemand'][idx[-1]][idx[:(len(idx)-1)]] == 0.0:
-            optmodel.__getattribute__(f'vENS')[idx].fix(0.0)
+            optmodel.__getattribute__('vENS')[idx].fix(0.0)
             nFixedVariables += 1
     for idx in model.psnhd:
         if model.Par[f'pVarMaxDemand'][idx[-1]][idx[:(len(idx)-1)]] == 0.0:
-            optmodel.__getattribute__(f'vHNS')[idx].fix(0.0)
+            optmodel.__getattribute__('vHNS')[idx].fix(0.0)
             nFixedVariables += 1
 
     # remove power plants and lines not installed in this period
