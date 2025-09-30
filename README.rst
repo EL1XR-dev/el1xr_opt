@@ -143,7 +143,7 @@ For example:
 
 .. code-block:: bash
 
-   python -m el1xr_opt --dir data --case Home1 --solver highs --date '2025-09-30 20:26:00' --rawresults No --plots No
+   python -m el1xr_opt --dir data --case Home1 --solver highs --date "2025-09-30 20:26:00" --rawresults No --plots No
 
 **Command-line Arguments**
 
