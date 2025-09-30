@@ -8,7 +8,6 @@
 import argparse
 import datetime
 import os
-import time                                         # count clock time
 import psutil                                       # access the number of CPUs
 import pandas            as pd
 from pyomo.core.kernel.parameter import parameter
@@ -40,11 +39,7 @@ default_rawresults = 'False'
 default_plots      = 'False'
 
 def main():
-    initial_time = time.time()
     args = parser.parse_args()
-
-    # %% Model declaration
-    oAEGIS = ConcreteModel('Electricity for Low-carbon Integration and eXchange of Resources (EL1XR) - Version 1.0.1 - Sep 25, 2025')
 
     if args.dir == "":
         args.dir = default_DirName
