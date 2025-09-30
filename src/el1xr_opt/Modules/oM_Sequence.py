@@ -8,7 +8,6 @@
 import os
 import time                                         # count clock time
 from   pyomo.environ     import ConcreteModel
-from   collections       import defaultdict
 
 from .oM_InputData        import data_processing, create_variables
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
