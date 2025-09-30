@@ -126,14 +126,14 @@ Run the included `Home1` example case with the following command from the root d
 
    el1xr-run --case Home1 --solver highs
 
-This will run the optimization and save the results in the `src/el1xr_opt/Home1/Results` directory.
+This will run the optimisation and save the results in the `src/el1xr_opt/Home1/Results` directory.
 
 ----
 
 Usage
 -----
 
-To run the optimisation model, use the ``el1xr-run`` command. If you run the script without arguments, it will prompt you for them interactively.
+To run the optimisation model, use the ``el1xr-run`` command. If you run the script without arguments, it will prompt you for them interactively. Moreover, the model can be executed with explicit information as follows:
 
 .. code-block:: bash
 
