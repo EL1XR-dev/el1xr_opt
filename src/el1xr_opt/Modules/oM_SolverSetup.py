@@ -5,6 +5,15 @@ from typing import Iterable, Dict, Optional
 
 log = logging.getLogger(__name__)
 
+# Supported solvers (extend carefully)
+_SUPPORTED_SOLVERS = {"highs", "cbc"}
+
+# Pre-built, static commands per solver
+_CMD = {
+    "highs":  [sys.executable, "-m", "amplpy.modules", "install", "highs"],
+    "cbc":    [sys.executable, "-m", "amplpy.modules", "install", "cbc"],
+}
+
 # ---------- AMPL module helpers ----------
 def _ampl_module_available(name: str) -> bool:
     try:
@@ -15,6 +24,12 @@ def _ampl_module_available(name: str) -> bool:
         return False
 
 def _install_ampl_module(name: str) -> bool:
+    solver = name.lower()
+    if solver not in _SUPPORTED_SOLVERS:
+        raise ValueError(
+            f"Unsupported solver '{solver}'. Allowed: {sorted(_SUPPORTED_SOLVERS)}"
+        )
+    # Try Python API first (safer than subprocess)
     try:
         from amplpy import modules
         if hasattr(modules, "install"):
@@ -23,11 +38,16 @@ def _install_ampl_module(name: str) -> bool:
             return True
     except Exception:
         pass
+
+    # Fallback: subprocess with static command
     try:
         # installing ampl module via subprocess and consider --upgrade
-        # subprocess.run([sys.executable, "-m", "pip", "install", "amplpy", "--upgrade", ],)
-        subprocess.run([sys.executable, "-m", "amplpy.modules", "install", name],
-                       check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        subprocess.run(_CMD[solver],
+                       check=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.STDOUT)
+        # subprocess.run([sys.executable, "-m", "amplpy.modules", "install", name],
+        #                check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return _ampl_module_available(name)
     except Exception:
         return False
@@ -36,7 +56,15 @@ def ensure_ampl_solvers(targets: Iterable[str] = ("highs",), quiet: bool = False
     print(f'- Ensuring AMPL solver modules {", ".join(targets)} are installed...\n')
     out: Dict[str, bool] = {}
     for s in targets:
-        out[s] = _ampl_module_available(s) or _install_ampl_module(s)
+        s = s.lower()
+        try:
+            out[s] = _ampl_module_available(s) or _install_ampl_module(s)
+        except ValueError as e:
+            out[s] = False
+            if not quiet:
+                log.warning(str(e))
+            continue
+
         if not quiet and not out[s]:
             log.warning("AMPL module '%s' not available. Try: %s -m amplpy.modules install %s",
                         s, sys.executable, s)
@@ -51,6 +79,11 @@ def pick_solver(preferred: Optional[str], *, allow_fallback: bool = False):
       - If allow_fallback=True, you *may* add other strategies here.
     """
     name = (preferred or "highs").lower()
+
+    if name not in _SUPPORTED_SOLVERS:
+        raise ValueError(
+            f"Unsupported solver '{name}'. Allowed: {sorted(_SUPPORTED_SOLVERS)}"
+        )
 
     # AMPL module
     if _ampl_module_available(name):
