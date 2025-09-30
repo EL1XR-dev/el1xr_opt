@@ -1,6 +1,5 @@
 import datetime
 import os
-import sys
 import pyomo.environ as pyo
 import numpy as np
 import pandas as pd
