@@ -139,7 +139,9 @@ To run the optimisation model, use the ``el1xr-run`` command. If you run the scr
 
    python -m el1xr_opt --dir <folder_parent_case> --case <case_folder_name> --solver  <solver_name> --date <date_string> --rawresults <'Yes'-or-'No'> --plots <'Yes'-or-'No'>
 
-   For example:
+For example:
+
+.. code-block:: bash
 
    python -m el1xr_opt --dir data --case Home1 --solver highs --date '2025-09-30 20:26:00' --rawresults No --plots No
 
