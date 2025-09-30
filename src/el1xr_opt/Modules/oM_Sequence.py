@@ -15,7 +15,6 @@ import pandas            as pd
 from pyomo.core.kernel.parameter import parameter
 from   pyomo.environ     import ConcreteModel
 from   pyomo.opt         import SolverFactory
-from   pyomo.dataportal  import DataPortal
 from   collections       import defaultdict
 from   colour            import Color
 
