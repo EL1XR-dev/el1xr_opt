@@ -80,6 +80,11 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.retail_frames_suffixes = ['VarEnergyCost', 'VarEnergyPrice']
 
     # Apply the condition to each specified column
+    for keys, df in data_frames.items():
+        if [1 for suffix in model.gen_frames_suffixes if suffix in keys]:
+            data_frames[keys] = df.where(df > 0.0, 0.0)
+
+    # Apply the condition to each specified column
     for column in model.gen_frames_suffixes:
         data_frames[f'df{column}'] = data_frames[f'df{column}'].where(data_frames[f'df{column}'] > 0.0)
 
@@ -118,20 +123,21 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.ehd = model.edd | model.hdd
     # Extract and cast nodal parameters
     for suffix in model.demand_frames_suffixes:
-        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'][model.ehd] * factor1
+        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehd, fill_value=0.0) * factor1
 
     # Merging sets gg and hh
     model.ehg = model.egg | model.hgg
     # Extract and cast generation parameters
     for suffix in model.gen_frames_suffixes:
         # print(suffix)
-        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'][model.ehg] * factor1
+        # parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'][model.ehg] * factor1
+        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehg, fill_value=0.0) * factor1
 
     # Merging sets gg and hh
     model.ehr = model.err | model.hrr
     # Extract and cast retail parameters
     for suffix in model.retail_frames_suffixes:
-        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'][model.ehr] * factor1
+        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehr, fill_value=0.0) * factor1
 
     # Extract and cast operating reserve parameters for RM and RT markets
     for ind in model.reserves_prefixes:

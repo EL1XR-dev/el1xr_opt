@@ -1,0 +1,3 @@
+,Node,Flexible,MaximumPower,InitialPeriod,FinalPeriod,FlexPercent,ShiftedSteps
+EleD_01,Node2,No, 100 , 2020 , 2050 , 0.3 , 2 
+EleD_02,Node3,No, 100 , 2020 , 2050 , 0.3 , 2 
