@@ -11,7 +11,7 @@ import os
 import math
 import time                                         # count clock time
 import pandas            as pd
-from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, PositiveIntegers, NonNegativeReals, Reals, Any, PositiveReals, RangeSet
+from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, Any, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
 
 def data_processing(DirName, CaseName, DateModel, model):
@@ -787,10 +787,10 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.negso        = [(n,egs)  for n,egs  in model.n * model.egs  if model.n.ord(n) %     parameters_dict['pEleOutflowsTimeStep'][egs] == 0]
 
     for sector in ['Ele', 'Hyd']:
-        if sector == 'Ele':
-            retail = model.er
-        else:
-            retail = model.hr
+        # if sector == 'Ele':
+        #     retail = model.er
+        # else:
+        #     retail = model.hr
         # small values are converted to 0
         pGenerationPeak   = parameters_dict[f'p{sector}MaxPower'].sum(axis=1).max()
         pEpsilon_capacity = pGenerationPeak * 1e-5
@@ -969,7 +969,7 @@ def create_variables(model, optmodel):
                  optmodel.vTotalECost, optmodel.vTotalEleTradeCost, optmodel.vTotalEleTradeProfit,
                  optmodel.vTotalHydTradeCost, optmodel.vTotalHydTradeProfit, optmodel.vTotalElePeakCost, optmodel.vTotalHydPeakCost]
 
-    ed_vars = [optmodel.vENS]
+    # ed_vars = [optmodel.vENS]
 
     # Set bounds for each variable
     # Objective function
@@ -1191,11 +1191,11 @@ def create_variables(model, optmodel):
 
     # fixing the ENS in nodes with no electricity and hydrogen demand in market
     for idx in model.psned:
-        if model.Par[f'pVarMaxDemand'][idx[-1]][idx[:(len(idx)-1)]] == 0.0:
+        if model.Par['pVarMaxDemand'][idx[-1]][idx[:(len(idx)-1)]] == 0.0:
             optmodel.__getattribute__('vENS')[idx].fix(0.0)
             nFixedVariables += 1
     for idx in model.psnhd:
-        if model.Par[f'pVarMaxDemand'][idx[-1]][idx[:(len(idx)-1)]] == 0.0:
+        if model.Par['pVarMaxDemand'][idx[-1]][idx[:(len(idx)-1)]] == 0.0:
             optmodel.__getattribute__('vHNS')[idx].fix(0.0)
             nFixedVariables += 1
 
@@ -1269,13 +1269,13 @@ def create_variables(model, optmodel):
 
     # detecting inventory infeasibility
     for idx in model.psnegs:
-        if model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-1)]] + model.Par[f'pEleMaxPower'][idx[-1]][idx[:(len(idx)-1)]] > 0.0:
+        if model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-1)]] + model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx)-1)]] > 0.0:
             if model.n.ord(idx[-2]) == model.Par['pEleCycleTimeStep'][idx[-1]]:
-                if model.Par[f'pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par[f'pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par[f'pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par[f'pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par[f'pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                if model.Par[f'pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
             elif model.n.ord(idx[-2]) > model.Par['pEleCycleTimeStep'][idx[-1]]:
-                if model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par[f'pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par[f'pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par[f'pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par[f'pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                if model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
 
