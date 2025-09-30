@@ -8,7 +8,6 @@
 import argparse
 import datetime
 import os
-import psutil                                       # access the number of CPUs
 
 from .Modules.oM_Sequence import routine
 
