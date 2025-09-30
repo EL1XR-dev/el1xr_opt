@@ -6,10 +6,8 @@
 
 # Importing Libraries
 import argparse
-import csv
 import datetime
 import os
-import math
 import time                                         # count clock time
 import psutil                                       # access the number of CPUs
 import altair            as alt
