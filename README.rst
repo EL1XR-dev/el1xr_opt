@@ -19,9 +19,9 @@ el1xr_opt
    :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml   
    :alt: GitHub Actions Workflow Status
 
-.. image:: https://readthedocs.org/projects/el1xr-opt/badge/?version=latest
+.. image:: https://img.shields.io/readthedocs/el1xr_opt
    :target: https://el1xr-opt.readthedocs.io/en/latest/
-   :alt: Docs passing
+   :alt: Read the Docs
 
 .. image:: https://app.codacy.com/project/badge/Grade/2b804a25f68749498c5207dcdd05ed67
    :target: https://app.codacy.com/gh/EL1XR-dev/el1xr_opt/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
