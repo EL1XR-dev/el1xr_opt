@@ -589,14 +589,14 @@ def data_processing(DirName, CaseName, DateModel, model):
         parameters_dict[f'p{sector}MaxOutflows'     ] = parameters_dict[f'p{sector}MaxOutflows'     ].loc[model.psn]
         parameters_dict[f'p{sector}InitialInventory'] = parameters_dict[f'p{sector}InitialInventory'].loc[model.psn]
 
-    parameters_dict[f'pVarMaxDemand'     ] = parameters_dict[f'pVarMaxDemand'     ].loc[model.psn]
-    parameters_dict[f'pVarMinDemand'     ] = parameters_dict[f'pVarMinDemand'     ].loc[model.psn]
-    parameters_dict[f'pVarEnergyCost'    ] = parameters_dict[f'pVarEnergyCost'    ].loc[model.psn]
-    parameters_dict[f'pVarEnergyPrice'   ] = parameters_dict[f'pVarEnergyPrice'   ].loc[model.psn]
-    parameters_dict[f'pVarMinInflows'    ] = parameters_dict[f'pVarMinInflows'    ].loc[model.psn]
-    parameters_dict[f'pVarMaxInflows'    ] = parameters_dict[f'pVarMaxInflows'    ].loc[model.psn]
-    parameters_dict[f'pVarMinOutflows'   ] = parameters_dict[f'pVarMinOutflows'   ].loc[model.psn]
-    parameters_dict[f'pVarMaxOutflows'   ] = parameters_dict[f'pVarMaxOutflows'   ].loc[model.psn]
+    parameters_dict['pVarMaxDemand'     ] = parameters_dict['pVarMaxDemand'     ].loc[model.psn]
+    parameters_dict['pVarMinDemand'     ] = parameters_dict['pVarMinDemand'     ].loc[model.psn]
+    parameters_dict['pVarEnergyCost'    ] = parameters_dict['pVarEnergyCost'    ].loc[model.psn]
+    parameters_dict['pVarEnergyPrice'   ] = parameters_dict['pVarEnergyPrice'   ].loc[model.psn]
+    parameters_dict['pVarMinInflows'    ] = parameters_dict['pVarMinInflows'    ].loc[model.psn]
+    parameters_dict['pVarMaxInflows'    ] = parameters_dict['pVarMaxInflows'    ].loc[model.psn]
+    parameters_dict['pVarMinOutflows'   ] = parameters_dict['pVarMinOutflows'   ].loc[model.psn]
+    parameters_dict['pVarMaxOutflows'   ] = parameters_dict['pVarMaxOutflows'   ].loc[model.psn]
 
     for idx in model.reserves_prefixes:
         parameters_dict[f'pOperatingReservePrice_{idx}'     ] = parameters_dict[f'pOperatingReservePrice_{idx}'     ].loc[model.psn]
@@ -1110,7 +1110,7 @@ def create_variables(model, optmodel):
 
     # assign the minimum power for the RES units
     for idx in model.psnegr:
-        optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}TotalOutput')[idx].setlb(model.Par[f'pEleMinPower'][idx[-1]][idx[:(len(idx)-1)]])
+        optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}TotalOutput')[idx].setlb(model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-1)]])
 
     # relax binary condition in unit generation, startup and shutdown decisions
     for idx in model.psnegt:
