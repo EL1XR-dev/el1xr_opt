@@ -73,11 +73,11 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Date = datetime.datetime.strptime(Date, "%Y-%m-%d %H:%M:%S")
 
     # splitting the Date into year, month, and day
-    year = Date.year
-    month = Date.month
-    day = Date.day
-    hour = Date.hour
-    minute = Date.minute
+    # year = Date.year
+    # month = Date.month
+    # day = Date.day
+    # hour = Date.hour
+    # minute = Date.minute
 
     hour_of_year = f't{((Date.timetuple().tm_yday-1) * 24 + Date.timetuple().tm_hour):04d}'
 
