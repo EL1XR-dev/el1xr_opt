@@ -15,8 +15,8 @@ el1xr_opt
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Python version
 
-.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml/badge.svg
-   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/python-package-conda.yml
+.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/gitHub-test.yml/badge.svg
+   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/gitHub-test.yml
    :alt: Test passing
 
 .. image:: https://readthedocs.org/projects/el1xr-opt/badge/?version=latest
@@ -27,8 +27,8 @@ el1xr_opt
    :target: https://app.codacy.com/gh/EL1XR-dev/el1xr_opt/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
    :alt: Codacy Badge
 
-.. image:: https://img.shields.io/pypi/dm/el1xr_opt.svg
-   :target: https://pypi.org/project/el1xr_opt/
+.. image:: https://img.shields.io/pepy/dt/el1xr_opt.svg
+   :target: https://pepy.tech/project/el1xr_opt
    :alt: Downloads
 
 **Electricity for Low-carbon Integration and eXchange of Resources (EL1XR)**
