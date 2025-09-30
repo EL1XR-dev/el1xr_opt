@@ -37,28 +37,28 @@ def _install_ampl_module(name: str) -> bool:
     except Exception:
         pass
 
-    # Fallback: subprocess with STATIC commands (no variables in the argv list)
-    try:
-        if solver == "highs":
-            argv = [sys.executable, "-m", "amplpy.modules", "install", "highs"]
-        elif solver == "cbc":
-            argv = [sys.executable, "-m", "amplpy.modules", "install", "cbc"]
-        else:
-            # Defensive—should never reach here due to whitelist check above
-            raise ValueError(
-                f"Unsupported solver '{solver}'. Allowed: {sorted(_SUPPORTED_SOLVERS)}"
-            )
-
-        subprocess.run(
-            argv,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=False,        # be explicit for linters
-        )
-        return _ampl_module_available(solver)
-    except Exception:
-        return False
+    # # Fallback: subprocess with STATIC commands (no variables in the argv list)
+    # try:
+    #     if solver == "highs":
+    #         argv = [sys.executable, "-m", "amplpy.modules", "install", "highs"]
+    #     elif solver == "cbc":
+    #         argv = [sys.executable, "-m", "amplpy.modules", "install", "cbc"]
+    #     else:
+    #         # Defensive—should never reach here due to whitelist check above
+    #         raise ValueError(
+    #             f"Unsupported solver '{solver}'. Allowed: {sorted(_SUPPORTED_SOLVERS)}"
+    #         )
+    #
+    #     subprocess.run(
+    #         argv,
+    #         check=True,
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.STDOUT,
+    #         shell=False,        # be explicit for linters
+    #     )
+    #     return _ampl_module_available(solver)
+    # except Exception:
+    #     return False
 
 
 def ensure_ampl_solvers(
