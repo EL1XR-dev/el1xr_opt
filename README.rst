@@ -61,8 +61,8 @@ el1xr_opt
 📦 Prerequisites
 ----------------
 
-- **Python 3.12** or higher.
-- A supported solver: **Gurobi, CBC, or CPLEX**. Make sure the solver is installed and accessible in your system's PATH.
+- **Python 3.11** or higher.
+- A supported solver: **HiGHS, Gurobi, CBC, or CPLEX**. The recommended solvers can be installed automatically using the command below.
 
 ----
 
@@ -73,11 +73,17 @@ There are two ways to install **el1xr_opt**:
 
 **Option 1: Install from PyPI (Recommended)**
 
-You can install the latest stable release from PyPI:
+1. Install the package from PyPI:
 
 .. code-block:: bash
 
    pip install el1xr_opt
+
+2. Install the required solvers:
+
+.. code-block:: bash
+
+   el1xr-install-solvers
 
 **Option 2: Install from Source (for Developers)**
 
@@ -97,11 +103,17 @@ If you want to work with the latest development version or contribute to the pro
    python -m venv venv
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 
-3. Install the required Python packages:
+3. Install the package in editable mode, which also installs the necessary dependencies:
 
 .. code-block:: bash
 
-   pip install -r requirements.txt
+   pip install -e .
+
+4. Install the required solvers:
+
+.. code-block:: bash
+
+   el1xr-install-solvers
 
 ----
 
@@ -112,26 +124,26 @@ Run the included `Home1` example case with the following command from the root d
 
 .. code-block:: bash
 
-   python src/el1xr_opt/oM_Main.py --dir data --case Home1 --solver gurobi
+   el1xr-run --case Home1 --solver highs
 
-This will run the optimization and save the results in the `data/Home1` directory.
+This will run the optimization and save the results in the `src/el1xr_opt/Home1/Results` directory.
 
 ----
 
 Usage
 -----
 
-To run the optimisation model, use the ``oM_Main.py`` script from the ``src`` directory. If you run the script without arguments, it will prompt you for them interactively.
+To run the optimisation model, use the ``el1xr-run`` command. If you run the script without arguments, it will prompt you for them interactively.
 
 .. code-block:: bash
 
-   python src/el1xr_opt/oM_Main.py --case <case_name> --solver <solver_name>
+   el1xr-run --case <case_name> --solver <solver_name>
 
 **Command-line Arguments**
 
-- ``--dir``: Directory containing the case data. For the sample cases, this would be `data`.
+- ``--dir``: Directory containing the case data. For the sample cases, this would be `src/el1xr_opt`.
 - ``--case``: Name of the case to run (e.g., ``Home1``). Defaults to `Home1`.
-- ``--solver``: Solver to use (e.g., ``gurobi``, ``cbc``, ``cplex``). Defaults to `gurobi`.
+- ``--solver``: Solver to use (e.g., ``highs``, ``gurobi``, ``cbc``, ``cplex``). Defaults to `highs`.
 - ``--date``: Model run date in "YYYY-MM-DD HH:MM:SS" format. Defaults to the current time.
 - ``--rawresults``: Save raw results (`True`/`False`). Defaults to `False`.
 - ``--plots``: Generate plots (`True`/`False`). Defaults to `False`.
