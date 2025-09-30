@@ -15,10 +15,9 @@ el1xr_opt
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Python version
 
-.. image:: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml/badge.svg
-   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml
-   :alt: Test passing
-   :width: 150
+.. image:: https://img.shields.io/github/actions/workflow/status/EL1XR-dev/el1xr_opt/conda-build.yml
+   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml   
+   :alt: GitHub Actions Workflow Status
 
 .. image:: https://readthedocs.org/projects/el1xr-opt/badge/?version=latest
    :target: https://el1xr-opt.readthedocs.io/en/latest/
