@@ -11,7 +11,7 @@ import os
 import math
 import time                                         # count clock time
 import pandas            as pd
-from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, Any, PositiveReals, RangeSet
+from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
 
 def data_processing(DirName, CaseName, DateModel, model):
@@ -1260,10 +1260,10 @@ def create_variables(model, optmodel):
             assert(0==1)
 
     for es in model.hgs:
-        if sum(model.Par['pHydMinPower'][es][idx] for idx in model.psn) - sum(model.Par[f'pHydMaxInflows'][es][idx] for idx in model.psn) > 0.0:
+        if sum(model.Par['pHydMinPower'][es][idx] for idx in model.psn) - sum(model.Par['pHydMaxInflows'][es][idx] for idx in model.psn) > 0.0:
             print('### Total minimum output greater than total inflows for Hydrogen ESS unit ', es)
             assert(0==1)
-        if sum(model.Par['pHydMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par[f'pHydMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
+        if sum(model.Par['pHydMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par['pHydMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
             print('### Total maximum charge lower than total outflows for Hydrogen ESS unit ', es)
             assert(0==1)
 
@@ -1271,7 +1271,7 @@ def create_variables(model, optmodel):
     for idx in model.psnegs:
         if model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-1)]] + model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx)-1)]] > 0.0:
             if model.n.ord(idx[-2]) == model.Par['pEleCycleTimeStep'][idx[-1]]:
-                if model.Par[f'pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                if model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
             elif model.n.ord(idx[-2]) > model.Par['pEleCycleTimeStep'][idx[-1]]:
