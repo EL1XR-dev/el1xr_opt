@@ -1,4 +1,4 @@
-.. VY4E-OptModel documentation master file, created by Erik Alvarez
+.. el1xr_opt documentation file, created by Erik Alvarez
 
 Contact Us
 ==========
