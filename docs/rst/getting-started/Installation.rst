@@ -3,17 +3,15 @@ Installation
 
 Requirements
 ------------
-- Python >= 3.10
+- Python >= 3.11
 - A MILP/MINLP solver (e.g., Gurobi, HiGHS, CBC)
-- Sphinx (for docs)
 
-Install (editable) with the recommended `src/` layout::
+Install (editable) with the recommended `el1xr_opt/` layout::
 
-    git clone https://github.com/VY4E/VY4E-OptModel.git
-    cd VY4E-OptModel
+    git clone https://github.com/EL1XR-dev/el1xr_opt.git
+    cd el1xr_opt
     pip install -e .[dev]
 
-Optional extras::
+Alternatively, install from PyPI::
 
-    pip install .[docs]   # build documentation
-    pip install .[plot]   # plotting and post-processing
+    pip install el1xr_opt
