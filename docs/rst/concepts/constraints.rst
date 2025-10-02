@@ -50,9 +50,16 @@ These constraints model the rules for interacting with external markets.
 
 7. Electric Vehicle (EV) Modeling
 ---------------------------------
-Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). In addition to the standard energy storage constraints, they are subject to unique logic:
+Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). They are subject to standard storage dynamics but with unique constraints and economic drivers that reflect their dual role as both a transportation tool and a potential grid asset.
 
-*   ``eEleMinEnergyStartUp``: This constraint ensures that an EV must have a minimum state of charge *before* its availability can change (i.e., before it can be driven away and become unavailable to the grid). This realistically models a user's need for a sufficiently charged vehicle before starting a trip.
-*   **Driving Consumption**: The energy consumed by driving is represented by the ``vEleEnergyOutflows`` variable for an EV. This outflow from the battery can be modeled in two ways:
-    *   **Fixed Consumption**: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., `pEleMinOutflows` and `pEleMaxOutflows`), the driving consumption for a period can be treated as a fixed, pre-defined value.
-    *   **Variable Consumption**: If the upper and lower bounds are different, the model can dynamically optimize the driving consumption within that range, for instance, to model flexible driving patterns.
+**Key Modeling Concepts:**
+
+*   **Fixed Nodal Connection**: Each EV is assumed to have a fixed charging point at a specific node (`nd`). All its interactions with the grid (charging and vehicle-to-grid discharging) occur at this single location. This means the EV's charging load (`vEleTotalCharge`) is directly added to the demand side of that node's ``eEleBalance`` constraint, while any discharging (`vEleTotalOutput`) is added to the supply side.
+
+*   **Minimum Starting Charge**: The ``eEleMinEnergyStartUp`` constraint enforces a realistic user behavior: an EV must have a minimum state of charge *before* it can be considered "available" to leave its charging station (i.e., before its availability for grid services can change). This ensures the model doesn't fully drain the battery for grid purposes if the user needs it for a trip.
+
+*   **Driving Consumption (`vEleEnergyOutflows`)**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
+    *   **Fixed Consumption**: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., `pEleMinOutflows` and `pEleMaxOutflows`), driving patterns can be treated as a fixed, pre-defined schedule. This is useful for modeling commuters with predictable travel needs.
+    *   **Variable Consumption**: Setting different upper and lower bounds allows the model to optimize the driving schedule. This can represent flexible travel plans, uncertain trip lengths, or scenarios where the timing of a trip is part of the optimization problem.
+
+*   **Economic-Driven Charging (Tariff Response)**: The model does not have a direct constraint forcing EVs to charge at certain times. Instead, charging behavior is an *emergent property* driven by the objective to minimize costs. The `vTotalElePeakCost` component of the objective function penalizes high monthly power peaks from the grid. Since EV charging contributes to the total load at a node, the model will naturally schedule charging (`vEleTotalCharge`) during off-peak hours to avoid setting a new, expensive peak. This interaction between the nodal balance, the `eElePeak...` tariff constraints, and the objective function creates an economically rational "smart charging" behavior.
