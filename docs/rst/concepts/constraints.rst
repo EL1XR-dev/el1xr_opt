@@ -47,3 +47,9 @@ These constraints model the rules for interacting with external markets.
 ------------------------------------------
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
 *   **Unserved Energy**: While not a constraint itself, the model allows for unserved energy through slack variables (``vENS``, ``vHNS``). The bounds on these variables (0 to total demand) combined with their high penalty cost in the objective function act as a soft constraint to meet demand whenever possible.
+
+7. Electric Vehicle (EV) Modeling
+---------------------------------
+Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). In addition to the standard energy storage constraints, they are subject to unique logic:
+
+*   ``eEleMinEnergyStartUp``: This constraint ensures that an EV must have a minimum state of charge *before* its availability can change (i.e., before it can be driven away and become unavailable to the grid). This realistically models a user's need for a sufficiently charged vehicle before starting a trip.
