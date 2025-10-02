@@ -18,24 +18,6 @@ SoC          State of Charge
 VRE          Variable Renewable Energy
 ===========  ====================================================================
 
-============  =======================================================================================================================
-**Index**     **Description**
-============  =======================================================================================================================
-:math:`p`     Period (e.g., year.)
-:math:`ω`     Scenario (e.g., solar generation, spot prices, etc.)
-:math:`nd`    Node
-:math:`n`     Load level
-:math:`\nu`   Duration of the time step for the load levels (e.g., 0.25 h for 15 min load levels, 0.5 h for half an hour load levels)
-:math:`eg`    Electricity unit (thermal or hydro unit or ESS)
-:math:`et`    Electricity thermal unit
-:math:`es`    Electricity energy storage system (eESS)
-:math:`hg`    Hydrogen unit (e.g., electrolyzer, hydrogen tank)
-:math:`hz`    Hydrogen electrolyzer
-:math:`hs`    Hydrogen energy storage system (e.g., hydrogen tank)
-:math:`R_i`   Reserve market number :math:`i` (secondary and tertiary)
-:math:`k`     Segment of production function piecewise approximation
-============  =======================================================================================================================
-
 The optimization model is built upon a series of indexed sets that define its dimensions, including time, space, and technology. These sets are used by Pyomo to create variables and constraints efficiently. Understanding these sets is crucial for interpreting the model's structure and preparing input data.
 
 The core sets are defined in the ``model`` object and are accessible throughout the formulation scripts (e.g., in ``oM_ModelFormulation.py``).
