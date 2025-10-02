@@ -24,7 +24,26 @@ except Exception:
     sky = None
 
 def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
+    """
+    Save raw optimization model data to CSV files.
 
+    This function iterates through all active variables, parameters, and constraints
+    in the optimization model and saves their data to separate CSV files.
+
+    - Variables are saved with their values, lower bounds, and upper bounds.
+    - Parameters are saved with their values.
+    - Constraints are saved with their dual values.
+
+    Args:
+        DirName (str): The directory where the result files will be saved.
+        CaseName (str): The name of the case, used for subdirectory and file naming.
+        SolverName (str): The name of the solver used.
+        model: The optimization model object.
+        optmodel: The concrete optimization model instance.
+
+    Returns:
+        model: The original optimization model object.
+    """
     _path = os.path.join(DirName, CaseName)
     StartTime = time.time()
 
@@ -67,6 +86,32 @@ def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
     return model
 
 def saving_results(DirName, CaseName, Date, model, optmodel):
+    """
+    Save processed optimization results to CSV files and generate plots.
+
+    This function processes the results from the optimization model to generate
+    a series of CSV files and Altair plots for analysis. It covers:
+
+    - Total costs (hourly and general)
+    - Electricity balance (generation, consumption, flows)
+    - Net and original electricity demand
+    - State of energy for storage systems
+    - Fixed availability of assets
+    - A summary of all key output metrics
+
+    It also generates Sankey diagrams and duration curves for various metrics.
+
+    Args:
+        DirName (str): The directory where the result files will be saved.
+        CaseName (str): The name of the case, used for subdirectory and file naming.
+        Date (str or datetime): The starting date for the results, used to calculate
+                                time-series data.
+        model: The optimization model object.
+        optmodel: The concrete optimization model instance.
+
+    Returns:
+        model: The original optimization model object.
+    """
     # %% outputting the results
     # make a condition if Date is a string
     if isinstance(Date, str):
