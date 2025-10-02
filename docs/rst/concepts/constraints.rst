@@ -53,3 +53,6 @@ These constraints model the rules for interacting with external markets.
 Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). In addition to the standard energy storage constraints, they are subject to unique logic:
 
 *   ``eEleMinEnergyStartUp``: This constraint ensures that an EV must have a minimum state of charge *before* its availability can change (i.e., before it can be driven away and become unavailable to the grid). This realistically models a user's need for a sufficiently charged vehicle before starting a trip.
+*   **Driving Consumption**: The energy consumed by driving is represented by the ``vEleEnergyOutflows`` variable for an EV. This outflow from the battery can be modeled in two ways:
+    *   **Fixed Consumption**: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., `pEleMinOutflows` and `pEleMaxOutflows`), the driving consumption for a period can be treated as a fixed, pre-defined value.
+    *   **Variable Consumption**: If the upper and lower bounds are different, the model can dynamically optimize the driving consumption within that range, for instance, to model flexible driving patterns.
