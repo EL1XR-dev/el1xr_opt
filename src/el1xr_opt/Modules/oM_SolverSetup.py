@@ -12,6 +12,14 @@ _SUPPORTED_SOLVERS = {"highs", "cbc"}
 
 # ---------- AMPL module helpers ----------
 def _ampl_module_available(name: str) -> bool:
+    """Check if an AMPL solver module is available in the current environment.
+
+    Args:
+        name: The short name of the solver (e.g., "highs", "cbc").
+
+    Returns:
+        True if the module is found, False otherwise.
+    """
     try:
         from amplpy import modules
         modules.find(name)  # raises if missing
@@ -21,6 +29,17 @@ def _ampl_module_available(name: str) -> bool:
 
 
 def _install_ampl_module(name: str) -> bool:
+    """Attempt to install an AMPL solver module using the amplpy Python API.
+
+    Args:
+        name: The short name of the solver (e.g., "highs", "cbc").
+
+    Returns:
+        True if the installation succeeded, False otherwise.
+
+    Raises:
+        ValueError: If the requested solver is not in the supported list.
+    """
     solver = name.lower()
     if solver not in _SUPPORTED_SOLVERS:
         raise ValueError(
@@ -65,6 +84,16 @@ def ensure_ampl_solvers(
     targets: Iterable[str] = ("highs",),
     quiet: bool = False
 ) -> Dict[str, bool]:
+    """Check for and automatically install a list of AMPL solver modules if missing.
+
+    Args:
+        targets: An iterable of solver names to check/install (e.g., ["highs", "cbc"]).
+        quiet: If True, suppress warnings about failed installations.
+
+    Returns:
+        A dictionary mapping each solver name to a boolean indicating its availability
+        after the check/installation process.
+    """
     try:
         printable = ", ".join(list(targets))
     except Exception:
@@ -92,11 +121,31 @@ def ensure_ampl_solvers(
 
 # ---------- Unified solver selection ----------
 def pick_solver(preferred: Optional[str], *, allow_fallback: bool = False):
-    """
-    Strict by default:
-      - Use AMPL '<solver>nl' if available.
-      - If not available and allow_fallback=False -> raise.
-      - If allow_fallback=True, you *may* add other strategies here.
+    """Select and configure a solver, prioritizing AMPL modules for performance.
+
+    This function provides a standardized way to select a solver. It checks for the
+    availability of a high-performance AMPL module first. If the preferred solver's
+    module is found, it configures Pyomo to use it via the 'nl' interface.
+
+    The selection is strict by default: if the AMPL module is not available, the
+    function will raise a ``RuntimeError`` unless ``allow_fallback`` is True.
+
+    Args:
+        preferred: The desired solver's name (e.g., "highs"). Defaults to "highs"
+                   if None.
+        allow_fallback: If True, the function can be extended to support other
+                        solver configurations (e.g., Pyomo's built-in appsi solvers)
+                        when the AMPL module is unavailable. Currently, this will
+                        still result in an error if the module is not found.
+
+    Returns:
+        A dictionary containing the solver configuration for Pyomo's ``SolverFactory``,
+        including the factory name, I/O method, and executable path.
+
+    Raises:
+        ValueError: If the ``preferred`` solver is not in the supported list.
+        RuntimeError: If the corresponding AMPL module is not found and
+                      ``allow_fallback`` is False.
     """
     name = (preferred or "highs").lower()
 
