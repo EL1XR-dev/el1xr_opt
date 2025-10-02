@@ -14,27 +14,34 @@ from .oM_SolverSetup import pick_solver
 
 
 def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
-    """
-    Solve the Pyomo model using a robust solver selection:
+    """Solves a Pyomo optimization model with a selected solver and handles post-processing.
 
-      - If AMPL module for the requested solver exists (e.g., 'highs'),
-        use the fast *.nl route.
-      - Otherwise fall back to Pyomo's Appsi HiGHS (pure Python),
-        or CBC/GLPK on PATH.
-      - Keep GAMS/CPLEX branch as in the original logic.
+    This function orchestrates the model solving process. It first selects a solver
+    based on availability, prioritizing high-performance AMPL modules (like HiGHS)
+    for speed. If the requested solver is not available as an AMPL module, it may
+    fall back to other configurations depending on the setup in ``oM_SolverSetup``.
 
-    Parameters
-    ----------
-    DirName : str
-        Base directory of the case.
-    CaseName : str
-        Case folder name.
-    SolverName : str
-        Requested solver name (e.g., 'highs', 'gurobi', 'cbc', 'gams', 'cplex').
-    optmodel : ConcreteModel
-        Pyomo model instance.
-    pWriteLP : str | bool
-        Whether to write LP/MPS (original code uses 'Yes'/'No').
+    The process includes:
+    1.  **Solver Selection**: Chooses and configures the solver (e.g., HiGHS, GAMS, CPLEX).
+    2.  **LP File Generation**: Optionally writes the model to an LP file for debugging.
+    3.  **Initial Solve**: Solves the optimization problem.
+    4.  **Post-processing for Duals**: If the model contains binary or integer variables,
+        it fixes them to their optimal values and re-solves the now-continuous problem.
+        This is a common technique to obtain meaningful dual values (shadow prices)
+        for all constraints in a mixed-integer problem.
+    5.  **Results Logging**: Prints the objective function value and total solving time.
+
+    Args:
+        DirName (str): The base directory where case-related files are stored.
+        CaseName (str): The specific name of the case folder.
+        SolverName (str): The name of the desired solver (e.g., 'highs', 'gurobi', 'cbc', 'gams', 'cplex').
+        optmodel (pyomo.environ.ConcreteModel): The Pyomo model instance to be solved.
+        pWriteLP (str or bool): If 'Yes' or True, writes the model formulation to an
+            LP file.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The solved Pyomo model instance, with variable
+        values, objective function, and duals populated.
     """
     StartTime = time.time()
     _path = os.path.join(DirName, CaseName)
