@@ -1,5 +1,3 @@
-.. el1xr_opt documentation file, created by Erik Alvarez
-
 Contact Us
 ==========
 

@@ -1,5 +1,3 @@
-.. el1xr_opt documentation master file, created by Erik Alvarez
-
 Research Projects
 =================
 
