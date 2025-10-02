@@ -3,14 +3,15 @@ Data & I/O
 
 Data formats
 ------------
-- CSV/Parquet tables with multi-index (period, scenario, stage)
-- YAML/JSON for settings and metadata
+The model is data-driven, with all inputs defined in a collection of CSV files
+located in a dedicated case directory. These files define the model's sets (e.g.,
+periods, technologies, nodes) and parameters (e.g., costs, capacities, efficiencies).
 
 Loaders
 -------
-.. autofunction:: vy4e_optmodel.data.load_case
+.. autofunction:: el1xr_opt.Modules.oM_LoadCase.load_case
 
 Writers
 -------
-.. automodule:: vy4e_optmodel.results
-    :members:
+.. automodule:: el1xr_opt.Modules.oM_OutputData
+    :members: saving_rawdata, saving_results
