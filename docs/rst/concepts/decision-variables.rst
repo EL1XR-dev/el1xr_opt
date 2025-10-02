@@ -8,7 +8,7 @@ The main variables are indexed by the :doc:`model sets <model-sets>`, primarily 
 Key Variable Categories
 -----------------------
 
-### 1. Cost and Objective Function Variables
+1. Cost and Objective Function Variables
 
 These are high-level variables used to structure the objective function.
 
@@ -18,7 +18,7 @@ These are high-level variables used to structure the objective function.
 *   ``vTotalECost``: Total cost of CO2 emissions.
 *   ``vTotalEleRCost``, ``vTotalHydRCost``: Total reliability costs (i.e., cost of unserved energy).
 
-### 2. Market and Trading Variables
+2. Market and Trading Variables
 
 These variables represent interactions with external energy markets.
 
@@ -26,7 +26,7 @@ These variables represent interactions with external energy markets.
 *   ``vHydBuy`` / ``vHydSell``: Hydrogen purchased from or sold to the hydrogen market [tH2].
 *   ``vElePeak``: The peak electricity demand within a billing period (e.g., a month), used to calculate capacity-based tariffs [GW].
 
-### 3. Generation and Dispatch Variables
+3. Generation and Dispatch Variables
 
 These variables control the output of production units.
 
@@ -34,7 +34,7 @@ These variables control the output of production units.
 *   ``vHydTotalOutput``: The total output of a hydrogen production unit [tH2].
 *   ``vEleTotalOutput2ndBlock`` / ``vHydTotalOutput2ndBlock``: The output of a generator above its minimum stable level. This is used to model piecewise linear production costs.
 
-### 4. Energy Storage Variables
+4. Energy Storage Variables
 
 These variables manage the state and operation of energy storage assets like batteries and hydrogen tanks.
 
@@ -43,7 +43,7 @@ These variables manage the state and operation of energy storage assets like bat
 *   ``vEleSpillage`` / ``vHydSpillage``: Energy that is discarded because the storage is full and cannot accept more input [GWh or tH2].
 *   ``vEleEnergyInflows`` / ``vEleEnergyOutflows``: Unscheduled or scheduled energy transfers, typically used for assets like hydroelectric reservoirs.
 
-### 5. Network and Flow Variables
+5. Network and Flow Variables
 
 These variables describe the movement of energy through the electricity and hydrogen grids.
 
@@ -51,7 +51,7 @@ These variables describe the movement of energy through the electricity and hydr
 *   ``vHydNetFlow``: The flow of hydrogen in a specific pipeline [tH2].
 *   ``vEleNetTheta``: The voltage angle at a node in the electricity grid, used for DC power flow calculations.
 
-### 6. Unit Commitment Variables (Binary)
+6. Unit Commitment Variables (Binary)
 
 These are binary (0 or 1) variables that model on/off decisions for dispatchable assets.
 
@@ -60,7 +60,7 @@ These are binary (0 or 1) variables that model on/off decisions for dispatchable
 *   ``vEleStorOperat`` / ``vHydStorOperat``: A binary variable to prevent simultaneous charging and discharging of a storage unit.
 *   ``vEleNetCommit``: Indicates if a transmission line is switched on (1) or off (0).
 
-### 7. Demand and Reliability Variables
+7. Demand and Reliability Variables
 
 *   ``vEleDemand`` / ``vHydDemand``: The amount of demand being served. For flexible loads, this can be a variable.
 *   ``vEleDemFlex``: The amount of demand shifted in time for flexible loads [GW].
