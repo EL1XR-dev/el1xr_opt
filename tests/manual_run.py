@@ -80,7 +80,7 @@ def modify_and_save_csv(df, column_name, start_row, file_path, idx):
 
 def test_el1xr_opt_run():
     """
-    Test function for running openTEPES with the modified test case.
+    Test function for running the model with the modified test case.
     Asserts the run was successful.
     """
     print("Starting the el1xr_opt run...")  # Added print for console feedback
