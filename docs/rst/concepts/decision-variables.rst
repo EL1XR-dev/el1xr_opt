@@ -9,6 +9,7 @@ Key Variable Categories
 -----------------------
 
 1. Cost and Objective Function Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These are high-level variables used to structure the objective function.
 
