@@ -4,7 +4,7 @@ import datetime
 from typing import Optional, Dict, Union
 
 def load_case(
-    dir: Optional[str] = None,
+    directory: Optional[str] = None,
     case: Optional[str] = None,
     date: Optional[Union[str, datetime.datetime]] = None,
     solver: str = "highs",
@@ -30,7 +30,7 @@ def load_case(
     """
 
     # Set defaults
-    dir_name = dir or os.path.abspath(
+    dir_name = directory or os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../site-packages/el1xr_opt")
     )
     case_name = case or "Grid1"
