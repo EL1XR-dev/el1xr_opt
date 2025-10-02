@@ -19,8 +19,8 @@ These constraints model the physical limitations of generation and storage asset
 *   **Output and Charge Limits**: Constraints like ``eEleMaxOutput2ndBlock`` and ``eEleMaxESSCharge2ndBlock`` ensure that generators and storage units operate within their rated power capacities.
 *   **Ramping Limits**: A series of constraints (e.g., ``eEleMaxRampUpOutput``, ``eEleMaxRampDwCharge``) limit how quickly the output or charging rate of an asset can change from one timestep to the next.
 *   **Unit Commitment Logic**: For dispatchable assets, these constraints model the on/off decisions.
-    *   ``eEleCommitmentStartupShutdown``: Links the commitment status of a unit to its start-up and shut-down decisions.
-    *   ``eEleMinUpTime`` / ``eEleMinDownTime``: Enforce that once a unit is turned on (or off), it must remain in that state for a minimum number of hours.
+*   ``eEleCommitmentStartupShutdown``: Links the commitment status of a unit to its start-up and shut-down decisions.
+*   ``eEleMinUpTime`` / ``eEleMinDownTime``: Enforce that once a unit is turned on (or off), it must remain in that state for a minimum number of hours.
 
 3. Energy Storage Dynamics
 --------------------------
@@ -59,10 +59,12 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 *   **Minimum Starting Charge**: The ``eEleMinEnergyStartUp`` constraint enforces a realistic user behavior: an EV must have a minimum state of charge *before* it can be considered "available" to leave its charging station (i.e., before its availability for grid services can change). This ensures the model doesn't fully drain the battery for grid purposes if the user needs it for a trip.
 
 *   **Driving Consumption (``vEleEnergyOutflows``)**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
+
     *   **Fixed Consumption**: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., ``pEleMinOutflows`` and ``pEleMaxOutflows``), driving patterns can be treated as a fixed, pre-defined schedule. This is useful for modeling commuters with predictable travel needs.
     *   **Variable Consumption**: Setting different upper and lower bounds allows the model to optimize the driving schedule. This can represent flexible travel plans, uncertain trip lengths, or scenarios where the timing of a trip is part of the optimization problem.
 
 *   **Economic-Driven Charging (Tariff Response)**: The model does not use direct constraints to force EV charging at specific times. Instead, charging behavior is an *emergent property* driven by the objective to minimize total costs. This optimization is influenced by two main types of tariffs:
+
     *   **Volumetric Tariffs**: The total cost of purchasing energy from the grid (``vTotalEleTradeCost``) includes not just the wholesale energy price but also volumetric network fees (e.g., ``pEleRetnetavgift``). This means the model is incentivized to charge when the *all-in price per MWh* is lowest.
     *   **Capacity Tariffs**: The ``vTotalElePeakCost`` component of the objective function penalizes high monthly power peaks from the grid.
 
