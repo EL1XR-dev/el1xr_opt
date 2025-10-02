@@ -7,5 +7,5 @@ The model has being used in this research project:
   `M. Persson <https://www.ri.se/sv/person/mattias-persson>`_
 
 .. image:: /../img/SCALE_project_logo.png
-   :scale: 10%
+   :scale: 30%
    :align: center

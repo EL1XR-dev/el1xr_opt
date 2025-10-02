@@ -83,3 +83,14 @@ Example with type hints:
            The formatted greeting message.
        """
        return f"Hello, {name}!"
+
+Pyomo Model Naming Conventions
+------------------------------
+
+To ensure clarity and consistency within the `Pyomo` model, we follow a specific naming convention for model components:
+
+- **Parameters**: Names should start with the prefix ``p_``. For example, ``p_demand``.
+- **Variables**: Names should start with the prefix ``v_``. For example, ``v_generation``.
+- **Constraints**: Names should start with the prefix ``e_``. For example, ``e_balance``.
+
+This convention makes it easier to identify the type of a model component just by its name.

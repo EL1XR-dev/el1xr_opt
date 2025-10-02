@@ -1,0 +1,21 @@
+/* Make the logo fill the sidebar width and remove extra padding */
+.wy-side-nav-search a.logo,
+.wy-side-nav-search .logo {        /* RTD 1.x/2.x selectors */
+  padding: 0 !important;
+  margin: 0 0 8px 0 !important;    /* small gap below the logo */
+  display: block;
+}
+
+.wy-side-nav-search a.logo img,
+.wy-side-nav-search .logo img {
+  width: 100% !important;          /* fill full sidebar width */
+  max-width: none !important;
+  height: auto !important;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Optional: tighten search box spacing under the logo */
+.wy-side-nav-search {
+  padding: 12px 12px 8px 12px;     /* default is a bit larger */
+}
