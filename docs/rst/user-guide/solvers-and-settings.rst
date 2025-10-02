@@ -3,11 +3,10 @@ Solvers & settings
 
 Supported solvers
 -----------------
-- Gurobi
 - HiGHS
 - CBC
 
 Configuration
 -------------
-.. automodule:: vy4e_optmodel.solvers
+.. automodule:: el1xr_opt.Modules.oM_SolverSetup
     :members:
