@@ -1,6 +1,41 @@
 Model Sets
 ==========
 
+Acronyms
+--------
+
+===========  ====================================================================
+**Acronym**  **Description**
+===========  ====================================================================
+BESS         Battery Energy Storage System
+DA           Day-Ahead Market
+ESS          Energy Storage System (includes BESS and HESS)
+H-VPP        Hydrogen-based Virtual Power Plant
+HESS         Hydrogen Energy Storage System
+ID           Intraday Markets
+RT           Real Time Market
+SoC          State of Charge
+VRE          Variable Renewable Energy
+===========  ====================================================================
+
+============  =======================================================================================================================
+**Index**     **Description**
+============  =======================================================================================================================
+:math:`p`     Period (e.g., year.)
+:math:`ω`     Scenario (e.g., solar generation, spot prices, etc.)
+:math:`nd`    Node
+:math:`n`     Load level
+:math:`\nu`   Duration of the time step for the load levels (e.g., 0.25 h for 15 min load levels, 0.5 h for half an hour load levels)
+:math:`eg`    Electricity unit (thermal or hydro unit or ESS)
+:math:`et`    Electricity thermal unit
+:math:`es`    Electricity energy storage system (eESS)
+:math:`hg`    Hydrogen unit (e.g., electrolyzer, hydrogen tank)
+:math:`hz`    Hydrogen electrolyzer
+:math:`hs`    Hydrogen energy storage system (e.g., hydrogen tank)
+:math:`R_i`   Reserve market number :math:`i` (secondary and tertiary)
+:math:`k`     Segment of production function piecewise approximation
+============  =======================================================================================================================
+
 The optimization model is built upon a series of indexed sets that define its dimensions, including time, space, and technology. These sets are used by Pyomo to create variables and constraints efficiently. Understanding these sets is crucial for interpreting the model's structure and preparing input data.
 
 The core sets are defined in the ``model`` object and are accessible throughout the formulation scripts (e.g., in ``oM_ModelFormulation.py``).
@@ -19,6 +54,15 @@ These are often used in combination:
 *   ``model.ps``: A combined set of ``(period, scenario)``.
 *   ``model.psn``: A combined set of ``(period, scenario, timestep)``, representing every unique time point in the model.
 
+============  =======================================================================================================================
+**Index**     **Description**
+============  =======================================================================================================================
+:math:`p`     Period (e.g., year.)
+:math:`ω`     Scenario (e.g., solar generation, spot prices, etc.)
+:math:`n`     Time step (e.g., hours or sub-hourly intervals)
+:math:`\nu`   Duration of the time step (e.g., 0.25 h for 15 min, 0.5 h for half an hour)
+============  =======================================================================================================================
+
 Spatial Representation
 ----------------------
 
@@ -27,6 +71,12 @@ The spatial dimension defines the physical layout of the energy system.
 *   ``model.nd``: **Nodes**. Represents distinct locations or buses in the energy network. All assets (generators, demands, storage) are assigned to a node.
 *   ``model.ela``: **Electricity Arcs**. Defines the connections (transmission lines) in the electricity grid, represented as ``(node_from, node_to, circuit_id)``.
 *   ``model.hpa``: **Hydrogen Arcs**. Defines the connections (pipelines) in the hydrogen network.
+
+============  =======================================================================================================================
+**Index**     **Description**
+============  =======================================================================================================================
+:math:`nd`    Node or bus bar in the network
+============  =======================================================================================================================
 
 Technology and Asset Sets
 -------------------------
@@ -49,6 +99,17 @@ General Technology Subsets
 *   **Energy Conversion**:
     *   ``model.e2h``: Technologies that convert **electricity to hydrogen** (e.g., electrolyzers). This is a subset of ``hg``.
     *   ``model.h2e``: Technologies that convert **hydrogen to electricity** (e.g., fuel cells). This is a subset of ``eg``.
+
+============  =======================================================================================================================
+**Index**     **Description**
+============  =======================================================================================================================
+:math:`eg`    Electricity unit (thermal or hydro unit or ESS)
+:math:`et`    Electricity thermal unit
+:math:`es`    Electricity energy storage system (eESS)
+:math:`hg`    Hydrogen unit (e.g., electrolyzer, hydrogen tank)
+:math:`hz`    Hydrogen electrolyzer
+:math:`hs`    Hydrogen energy storage system (e.g., hydrogen tank)
+============  =======================================================================================================================
 
 Demand and Retail
 ~~~~~~~~~~~~~~~~~
