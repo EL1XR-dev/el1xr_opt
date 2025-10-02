@@ -20,6 +20,7 @@ These are high-level variables used to structure the objective function.
 *   ``vTotalEleRCost``, ``vTotalHydRCost``: Total reliability costs (i.e., cost of unserved energy).
 
 2. Market and Trading Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These variables represent interactions with external energy markets.
 
@@ -28,6 +29,7 @@ These variables represent interactions with external energy markets.
 *   ``vElePeak``: The peak electricity demand within a billing period (e.g., a month), used to calculate capacity-based tariffs [GW].
 
 3. Generation and Dispatch Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These variables control the output of production units.
 
@@ -36,6 +38,7 @@ These variables control the output of production units.
 *   ``vEleTotalOutput2ndBlock`` / ``vHydTotalOutput2ndBlock``: The output of a generator above its minimum stable level. This is used to model piecewise linear production costs.
 
 4. Energy Storage Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These variables manage the state and operation of energy storage assets like batteries and hydrogen tanks.
 
@@ -45,6 +48,7 @@ These variables manage the state and operation of energy storage assets like bat
 *   ``vEleEnergyInflows`` / ``vEleEnergyOutflows``: Unscheduled or scheduled energy transfers, typically used for assets like hydroelectric reservoirs.
 
 5. Network and Flow Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These variables describe the movement of energy through the electricity and hydrogen grids.
 
@@ -53,6 +57,7 @@ These variables describe the movement of energy through the electricity and hydr
 *   ``vEleNetTheta``: The voltage angle at a node in the electricity grid, used for DC power flow calculations.
 
 6. Unit Commitment Variables (Binary)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These are binary (0 or 1) variables that model on/off decisions for dispatchable assets.
 
@@ -62,6 +67,7 @@ These are binary (0 or 1) variables that model on/off decisions for dispatchable
 *   ``vEleNetCommit``: Indicates if a transmission line is switched on (1) or off (0).
 
 7. Demand and Reliability Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *   ``vEleDemand`` / ``vHydDemand``: The amount of demand being served. For flexible loads, this can be a variable.
 *   ``vEleDemFlex``: The amount of demand shifted in time for flexible loads [GW].
