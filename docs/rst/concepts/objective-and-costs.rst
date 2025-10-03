@@ -27,7 +27,7 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 Where:
 
-- **DiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where :math:`r` is the annual discount rate (``pParDiscountRate``) and :math:`t_p` is the time in hours from the start of the horizon to the start of period `p`. It is used to convert future costs into present value, accounting for the time value of money.
+- **DiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where :math:`r` is the annual discount rate (``pParDiscountRate``) and :math:`t_p` is the time in hours from the start of the horizon to the start of period :math:`p`. It is used to convert future costs into present value, accounting for the time value of money.
 - **vTotalEleMCost**, **vTotalHydMCost** are the total market costs for electricity and hydrogen, respectively.
 - **vTotalEleGCost**, **vTotalHydGCost** are the total generation costs for electricity and hydrogen, respectively.
 - **vTotalECost** is the total emission cost.
@@ -38,13 +38,15 @@ Where:
 Key Cost Components
 -------------------
 
-The total operational cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
+The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-1.  **Market Costs (`vTotalEleMCost`, `vTotalHydMCost`)**
+1.  **Market Costs (``vTotalEleMCost``, ``vTotalHydMCost``)**
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
     *   Cost components: ``vTotalEleTradeCost``, ``vTotalHydTradeCost``
     *   Revenue components: ``vTotalEleTradeProfit``, ``vTotalHydTradeProfit``
+
+
 
 2.  **Generation Costs (`vTotalEleGCost`, `vTotalHydGCost`)**
     This is the operational cost of running the generation and production assets. It typically includes:
