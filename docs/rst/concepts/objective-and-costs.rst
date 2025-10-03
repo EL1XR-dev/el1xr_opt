@@ -13,7 +13,7 @@ They are written in **uppercase** letters.
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`DUR_n`                                  Duration of each load level                                          h         «``pDuration``»
 :math:`factor1`                                Unit conversion factor (1,000)                                       -         «``factor1``»
-:math:`\Γ`                                     Annual discount rate                                                 %         «``pParDiscountRate``»
+:math:`Γ`                                      Annual discount factor                                               %         «``pParDiscountRate``»
 :math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pElectricityCost``, ``pElectricityPrice``»
 :math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
 :math:`UP^{SR}_{n},  DP^{SR}_{n}`              Price of :math:`SR` upward and downward secondary reserve            €/MW      «``pOperatingReservePrice_Up_SR``, ``pOperatingReservePrice_Down_SR``»
@@ -32,7 +32,16 @@ They are written in **lowercase** letters.
 **Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\alpha`                                 Total cost                                                           €         «``vTotalSCost``»
-
+:math:`c^{EM}_{p,sc}`                          Total cost of electricity market transactions                        €         «``vTotalEleMCost``»
+:math:`c^{HM}_{p,sc}`                          Total cost of hydrogen market transactions                           €         «``vTotalHydMCost``»
+:math:`c^{EG}_{p,sc}`                          Total generation cost of electricity                                 €         «``vTotalEleGCost``»
+:math:`c^{HG}_{p,sc}`                          Total generation cost of hydrogen                                    €         «``vTotalHydGCost``»
+:math:`c^{E}_{p,sc}`                           Total emission cost                                                  €         «``vTotalECost``»
+:math:`c^{EC}_{p,sc}`                          Total consumption cost of electricity                               €         «``vTotalEleCCost``»
+:math:`c^{HC}_{p,sc}`                          Total consumption cost of hydrogen                                  €         «``vTotalHydCCost``»
+:math:`c^{ER}_{p,sc}`                          Total reliability cost of electricity                                €         «``vTotalEleRCost``»
+:math:`c^{HR}_{p,sc}`                          Total reliability cost of hydrogen                                   €         «``vTotalHydRCost``»
+:math:`c^{EP}_{p,sc}`                          Total power peak cost of electricity                                 €         «``vTotalElePeakCost``»
 =============================================  ===================================================================  ========  ===========================================================================
 
 
@@ -51,17 +60,17 @@ Total system cost in [Cost-unit] («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \text{vTotalSCost} = \sum_{p \in P, sc \in SC} \text{pDiscountFactor}_{p} \times (
-   & \text{vTotalEleMCost}_{p,sc} + \text{vTotalHydMCost}_{p,sc} + \\
-   & \text{vTotalEleGCost}_{p,sc} + \text{vTotalHydGCost}_{p,sc} + \\
-   & \text{vTotalECost}_{p,sc} + \\
-   & \text{vTotalEleCCost}_{p,sc} + \text{vTotalHydCCost}_{p,sc} + \\
-   & \text{vTotalEleRCost}_{p,sc} + \text{vTotalHydRCost}_{p,sc} + \\
-   & \text{vTotalElePeakCost}_{p,sc})
+   \alpha = \sum_{p \in P, sc \in SC} Γ_{p} \times (
+   & c^{EM}_{p,sc} + c^{HM}_{p,sc} + \\
+   & c^{EG}_{p,sc} + c^{HG}_{p,sc} + \\
+   & c^{E}_{p,sc} + \\
+   & c^{EC}_{p,sc} + c^{HC}_{p,sc} + \\
+   & c^{ER}_{p,sc} + c^{HR}_{p,sc} + \\
+   & c^{EP}_{p,sc})
 
 Where:
 
-- **DiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where :math:`r` is the annual discount rate (``pParDiscountRate``) and :math:`t_p` is the time in hours from the start of the horizon to the start of period :math:`p`. It is used to convert future costs into present value, accounting for the time value of money.
+- **pDiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where :math:`r` is the annual discount rate (``pParDiscountRate``) and :math:`t_p` is the time in hours from the start of the horizon to the start of period :math:`p`. It is used to convert future costs into present value, accounting for the time value of money.
 - **vTotalEleMCost**, **vTotalHydMCost** are the total market costs for electricity and hydrogen, respectively.
 - **vTotalEleGCost**, **vTotalHydGCost** are the total generation costs for electricity and hydrogen, respectively.
 - **vTotalECost** is the total emission cost.
