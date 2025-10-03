@@ -3,16 +3,19 @@ Objective Function & Costs
 
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
 
-The main objective function is defined by the Pyomo constraint ``eTotalTCost``, which minimizes the variable ``vTotalSCost``.
+The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost``.
 
 Total System Cost (``vTotalSCost``)
 ---------------------------------
 
 The total system cost is the sum of all discounted costs across every period (`p`) and scenario (`sc`) in the model horizon. The objective function can be expressed conceptually as:
 
-Objective Function [Cost-unit] («``eTotalMCost``»)
+Objective Function [Cost-unit] («``eTotalSCost``»)
+
 .. math::
-   \min vTotalSCost
+   \min \text{vTotalSCost}
+
+And the
 
 :math:`vTotalSCost «``eTotalMCost``»= \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times \text{vTotalEleMCost}_{p,sc}`
 
