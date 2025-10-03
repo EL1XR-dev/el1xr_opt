@@ -96,11 +96,8 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           em^{C}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times ((CEB_{p,sc,n,er} \times M^{EF}_{er} + \\
-           & M^{EF}_{er} \times F1 + \\
-           & M^{ES}_{er} \times F1) \times \\
-           & (1 + M^{ER}_{er} \times F1) + \\
-           & M^{EN}_{er} \times F1) \times eb_{p,sc,n,er}
+           em^{C}_{p,sc,n} = &\sum_{er \in ER} DUR_{p,sc,n} \times ((CEB_{p,sc,n,er} \times M^{EF}_{er} + \\
+           & M^{EF}_{er} \times F1 + M^{ES}_{er} \times F1) \times (1 + M^{ER}_{er} \times F1) + M^{EN}_{er} \times F1) \times eb_{p,sc,n,er}
 
     #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
