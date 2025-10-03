@@ -11,8 +11,6 @@ They are written in **uppercase** letters.
 =============================================  ===================================================================  ========  ===========================================================================
 **Demand**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`ED_{nnd}`                               Electricity demand                                                   GW        «``pElectricityDemand``»
-:math:`HD_{nnd}`                               Hydrogen demand                                                      kgH2      «``pHydrogenDemand``»
 :math:`DUR_n`                                  Duration of each load level                                          h         «``pDuration``»
 :math:`factor1`                                Unit conversion factor (1,000)                                       -         «``factor1``»
 :math:`\Rho`                                   Annual discount rate                                                %         «``pParDiscountRate``»
