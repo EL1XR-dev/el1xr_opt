@@ -10,18 +10,33 @@ Total System Cost (``vTotalSCost``)
 
 The total system cost is the sum of all discounted costs across every period (`p`) and scenario (`sc`) in the model horizon. The objective function can be expressed conceptually as:
 
-Objective Function [Cost-unit] («``eTotalSCost``»)
+Total system cost in [Cost-unit] («``eTotalSCost``»)
 
 .. math::
    \min \text{vTotalSCost}
 
-And the
+And the total cost is the sum of all operational costs, discounted to present value:
 
-:math:`vTotalSCost «``eTotalMCost``»= \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times \text{vTotalEleMCost}_{p,sc}`
+:math:`\text{vTotalSCost} = \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times
+        \text{vTotalEleMCost}_{p,sc} +
+        \text{vTotalHydMCost}_{p,sc} +
+        \text{vTotalEleGCost}_{p,sc} +
+        \text{vTotalHydGCost}_{p,sc} +
+        \text{vTotalECost}_{p,sc} +
+        \text{vTotalEleCCost}_{p,sc} +`
+        \text{vTotalHydCCost}_{p,sc} +
+        \text{vTotalEleRCost}_{p,sc} +
+        \text{vTotalHydRCost}_{p,sc} +
+        \text{vTotalElePeakCost}_{p,sc}`
 
 Where:
-- **OperationalCosts** include all costs related to running the system, such as fuel, maintenance, market purchases, and emissions.
-- **DiscountFactor** brings future costs back to their present value, accounting for the time value of money.
+- **DiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where `r` is the annual discount rate (`pParDiscountRate`) and `t_p` is the time in hours from the start of the horizon to the start of period `p`. It is used to convert future costs into present value, accounting for the time value of money.
+- **vTotalEleMCost**, **vTotalHydMCost** are the total market costs for electricity and hydrogen, respectively.
+- **vTotalEleGCost**, **vTotalHydGCost** are the total generation costs for electricity and hydrogen, respectively.
+- **vTotalECost** is the total emission cost.
+- **vTotalEleCCost**, **vTotalHydCCost** are the total consumption costs for electricity and hydrogen, respectively.
+- **vTotalEleRCost**, **vTotalHydRCost** are the total reliability costs for electricity and hydrogen, respectively.
+- **vTotalElePeakCost** is the total power peak cost for electricity.
 
 Key Cost Components
 -------------------
