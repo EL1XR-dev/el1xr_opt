@@ -47,8 +47,10 @@ The total cost is broken down into several components, each represented by a spe
     *   Revenue components: ``vTotalEleTradeProfit``, ``vTotalHydTradeProfit``
 
     #.  **Electricity Purchase** (``vTotalEleTradeCost``): The cost incurred from purchasing electricity from the market.
+
         #. :math:`\text{vTotalEleTradeCost} = \sum_{t \in T, n \in N_{EleTrade}}`
            :math:`\text{pEleTradeCost}_{t,n} \times \text{vEleTrade}_{t,n}`
+
     #.  **Electricity Sales (`vTotalEleTradeProfit`)**: The revenue generated from selling electricity to the market.
     #.  **Hydrogen Purchase (`vTotalHydTradeCost`)**: The cost incurred from purchasing hydrogen from the market.
     #.  **Hydrogen Sales (`vTotalHydTradeProfit`)**: The revenue generated from selling hydrogen to the market.
