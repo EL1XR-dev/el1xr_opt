@@ -15,7 +15,7 @@ Total system cost in [Cost-unit] («``eTotalSCost``»)
 .. math::
    \min \text{vTotalSCost}
 
-And the total cost is the sum of all operational costs, discounted to present value:
+And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 :math:`\text{vTotalSCost} = \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times`
 :math:`\text{vTotalEleMCost}_{p,sc} + \text{vTotalHydMCost}_{p,sc} +`
@@ -40,13 +40,13 @@ Key Cost Components
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-1.  **Market Costs (``vTotalEleMCost``, ``vTotalHydMCost``)**
+1.  **Market Costs** (``vTotalEleMCost``, ``vTotalHydMCost``)
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
     *   Cost components: ``vTotalEleTradeCost``, ``vTotalHydTradeCost``
     *   Revenue components: ``vTotalEleTradeProfit``, ``vTotalHydTradeProfit``
 
-    1.  **Electricity Purchase (`vTotalEleTradeCost`)**: The cost incurred from purchasing electricity from the market.
+    1.  **Electricity Purchase** (``vTotalEleTradeCost``): The cost incurred from purchasing electricity from the market.
         1. :math:`\text{vTotalEleTradeCost} = \sum_{t \in T, n \in N_{EleTrade}}`
            :math:`\text{pEleTradeCost}_{t,n} \times \text{vEleTrade}_{t,n}`
     2.  **Electricity Sales (`vTotalEleTradeProfit`)**: The revenue generated from selling electricity to the market.
