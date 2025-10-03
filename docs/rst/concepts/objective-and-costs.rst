@@ -11,8 +11,8 @@ They are written in **uppercase** letters.
 =============================================  ===================================================================  ========  ===========================================================================
 **Symbol**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`DUR_n`                                  Duration of each load level                                          h         «``pDuration``»
-:math:`factor1`                                Unit conversion factor (1,000)                                       -         «``factor1``»
+:math:`DUR_{p,sc,n}`                           Duration of each load level                                          h         «``pDuration``»
+:math:`F1`                                     Unit conversion factor (1,000)                                       -         «``factor1``»
 :math:`Γ`                                      Annual discount factor                                               %         «``pParDiscountRate``»
 :math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pElectricityCost``, ``pElectricityPrice``»
 :math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
@@ -42,10 +42,10 @@ They are written in **lowercase** letters.
 :math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                      €         «``vTotalEleRCost``»
 :math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                         €         «``vTotalHydRCost``»
 :math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                       €         «``vTotalElePeakCost``»
-:math:`m^{C}_{p,sc,n}`                         Cost of electricity market transactions (purchasing)                 €         «``vTotalEleTradeCost``»
-:math:`m^{P}_{p,sc,n}`                         Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
-:math:`h^{C}_{p,sc,n}`                         Cost of hydrogen market transactions (purchasing)                    €         «``vTotalHydTradeCost``»
-:math:`h^{P}_{p,sc,n}`                         Profit of hydrogen market transactions (sales)                       €         «``vTotalHydTradeProfit``»
+:math:`em^{C}_{p,sc,n}`                        Cost of electricity market transactions (purchasing)                 €         «``vTotalEleTradeCost``»
+:math:`em^{P}_{p,sc,n}`                        Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
+:math:`hm^{C}_{p,sc,n}`                        Cost of hydrogen market transactions (purchasing)                    €         «``vTotalHydTradeCost``»
+:math:`hm^{P}_{p,sc,n}`                        Profit of hydrogen market transactions (sales)                       €         «``vTotalHydTradeProfit``»
 =============================================  ===================================================================  ========  ===========================================================================
 
 
@@ -71,17 +71,17 @@ Key Cost Components
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-#.  **Market Costs** (``c^{EM}``, ``c^{HM}``)
+#.  **Market Costs** (``eTotalEleMCost``, ``eTotalHydMCost``)
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
-    *   Cost components: ``vTotalEleTradeCost``, ``vTotalHydTradeCost``
-    *   Revenue components: ``vTotalEleTradeProfit``, ``vTotalHydTradeProfit``
+    *   Cost components: ``em^{C}_{p,sc,n}``, ``hm^{C}_{p,sc,n}``
+    *   Revenue components: ``em^{P}_{p,sc,n}``, ``hm^{P}_{p,sc,n}``
 
-    #.  **Electricity Purchase** (``vTotalEleTradeCost``): The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
+    #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           \text{vTotalEleTradeCost}_{p,sc,n} =
-           & \sum_{er \in ER} \text{pDuration}_{p,sc,n} \times (\\
+           em^{C}_{p,sc,n} =
+           & \sum_{er \in ER} DUR_{p,sc,n} \times (\\
            & (\text{pVarEnergyCost}_{er,p,sc,n} \times \text{pEleRetBuyingRatio}_{er} + \\
            & \text{pEleRetelcertifikat}_{er} \times \text{factor1} + \\
            & \text{pEleRetpaslag}_{er} \times \text{factor1}) \times \\
