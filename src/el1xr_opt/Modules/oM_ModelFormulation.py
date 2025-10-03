@@ -25,7 +25,17 @@ def create_objective_function(model, optmodel):
     optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [MEUR]'))
 
     def eTotalTCost(optmodel):
-        return optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.__getattribute__('vTotalEleMCost')[idx] + optmodel.__getattribute__('vTotalHydMCost')[idx] + optmodel.__getattribute__('vTotalEleGCost')[idx] + optmodel.__getattribute__('vTotalHydGCost')[idx] + optmodel.__getattribute__('vTotalECost')[idx] + optmodel.__getattribute__('vTotalEleCCost')[idx] + optmodel.__getattribute__('vTotalHydCCost')[idx] + optmodel.__getattribute__('vTotalEleRCost')[idx] + optmodel.__getattribute__('vTotalHydRCost')[idx]) for idx in model.psn) + sum(optmodel.__getattribute__('vTotalElePeakCost')[idx] for idx in model.ps)
+        return (optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]]
+                                           * (optmodel.__getattribute__('vTotalEleMCost')[idx]
+                                              + optmodel.__getattribute__('vTotalHydMCost')[idx]
+                                              + optmodel.__getattribute__('vTotalEleGCost')[idx]
+                                              + optmodel.__getattribute__('vTotalHydGCost')[idx]
+                                              + optmodel.__getattribute__('vTotalECost')[idx]
+                                              + optmodel.__getattribute__('vTotalEleCCost')[idx]
+                                              + optmodel.__getattribute__('vTotalHydCCost')[idx]
+                                              + optmodel.__getattribute__('vTotalEleRCost')[idx]
+                                              + optmodel.__getattribute__('vTotalHydRCost')[idx]) for idx in model.psn)
+                                      + sum(optmodel.__getattribute__('vTotalElePeakCost')[idx] for idx in model.ps))
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [MEUR]'))
 
     print('--- Declaring the totals components of the ObjFunc:                    {} seconds'.format(round(time.time() - StartTime)))
