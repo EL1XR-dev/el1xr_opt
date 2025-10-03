@@ -50,9 +50,8 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase** (``vTotalEleTradeCost``): The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           \text{vTotalEleTradeCost}_{p,sc,n} = \sum_{er \in ER}
-            \text{pDuration}_{p,sc,n} \times (
-           & (\text{pVarEnergyCost}_{er,p,sc,n} \times \\
+           \text{vTotalEleTradeCost}_{p,sc,n} =
+           & \sum_{er \in ER} \text{pDuration}_{p,sc,n} \times ((\text{pVarEnergyCost}_{er,p,sc,n} \times \\
            & \text{pEleRetBuyingRatio}_{er} + \\
            & \text{pEleRetelcertifikat}_{er} \times \text{factor1} + \text{pEleRetpaslag}_{er} \times \\
            & \text{factor1}) \times (1 + \text{pEleRetmoms}_{er} \times \text{factor1}) + \\
