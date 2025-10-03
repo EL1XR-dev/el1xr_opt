@@ -31,7 +31,7 @@ They are written in **lowercase** letters.
 =============================================  ===================================================================  ========  ===========================================================================
 **Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`\alpha`                                 Total cost                                                           €         «``vTotalSCost``»
+:math:`\alpha`                                 Total system cost                                                           €         «``vTotalSCost``»
 :math:`c^{EM}_{p,sc}`                          Cost of electricity market transactions                        €         «``vTotalEleMCost``»
 :math:`c^{HM}_{p,sc}`                          Cost of hydrogen market transactions                           €         «``vTotalHydMCost``»
 :math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                 €         «``vTotalEleGCost``»
@@ -47,8 +47,8 @@ They are written in **lowercase** letters.
 
 The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost``.
 
-Total System Cost :math:`\alpha`
----------------------------------
+Total System Cost
+-----------------
 
 The total system cost is the sum of all discounted costs across every period (:math:`p`) and scenario (:math:`sc`) in the model horizon. The objective function can be expressed conceptually as:
 
@@ -67,7 +67,7 @@ Key Cost Components
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-#.  **Market Costs** (``vTotalEleMCost``, ``vTotalHydMCost``)
+#.  **Market Costs** (``c^{EM}``, ``c^{HM}``)
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
     *   Cost components: ``vTotalEleTradeCost``, ``vTotalHydTradeCost``
