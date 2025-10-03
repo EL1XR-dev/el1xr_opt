@@ -3,6 +3,41 @@ Objective Function & Costs
 
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
 
+Parameters
+----------
+
+They are written in **uppercase** letters.
+
+=============================================  ===================================================================  ========  ===========================================================================
+**Demand**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
+---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
+:math:`ED_{nnd}`                               Electricity demand                                                   GW        «``pElectricityDemand``»
+:math:`HD_{nnd}`                               Hydrogen demand                                                      kgH2      «``pHydrogenDemand``»
+:math:`DUR_n`                                  Duration of each load level                                          h         «``pDuration``»
+:math:`factor1`                                Unit conversion factor (1,000)                                       -         «``factor1``»
+:math:`\Rho`                                   Annual discount rate                                                %         «``pParDiscountRate``»
+:math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pElectricityCost``, ``pElectricityPrice``»
+:math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
+:math:`UP^{SR}_{n},  DP^{SR}_{n}`              Price of :math:`SR` upward and downward secondary reserve            €/MW      «``pOperatingReservePrice_Up_SR``, ``pOperatingReservePrice_Down_SR``»
+:math:`UR^{SR}_{n},  DR^{SR}_{n}`              Requirement for :math:`SR` upward and downward secondary reserve     €/MW      «``pOperatingReserveRequire_Up_SR``, ``pOperatingReserveRequire_Down_SR``»
+:math:`UEI^{TR}_{n}, DEI^{TR}_{n}`             Expected income of :math:`TR` upward and downward tertiary reserve   €/MW      «``pOperatingReservePrice_Up_TR``, ``pOperatingReservePrice_Down_TR``»
+:math:`CENS`                                   Cost of electricity not served. Value of Lost Load (VoLL)            €/MWh     «``pParENSCost``»
+:math:`CHNS`                                   Cost of hydrogen not served.                                         €/tH2     «``pParHNSCost``»
+=============================================  ===================================================================  ========  ===========================================================================
+
+Variables
+----------
+
+They are written in **lowercase** letters.
+
+=============================================  ===================================================================  ========  ===========================================================================
+**Demand**                                     **Description**                                                      **Unit**  **oHySEM.py**
+---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
+:math:`\alpha`                                 Total cost                                                           €         «``vTotalSCost``»
+
+=============================================  ===================================================================  ========  ===========================================================================
+
+
 The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost``.
 
 Total System Cost (``vTotalSCost``)
@@ -13,7 +48,7 @@ The total system cost is the sum of all discounted costs across every period (:m
 Total system cost in [Cost-unit] («``eTotalSCost``»)
 
 .. math::
-   \min \text{vTotalSCost}
+   \min \alpha
 
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
