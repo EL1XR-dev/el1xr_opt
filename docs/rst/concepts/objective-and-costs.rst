@@ -31,17 +31,17 @@ They are written in **lowercase** letters.
 =============================================  ===================================================================  ========  ===========================================================================
 **Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`\alpha`                                 Total system cost                                                           €         «``vTotalSCost``»
-:math:`c^{EM}_{p,sc}`                          Cost of electricity market transactions                        €         «``vTotalEleMCost``»
-:math:`c^{HM}_{p,sc}`                          Cost of hydrogen market transactions                           €         «``vTotalHydMCost``»
-:math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                 €         «``vTotalEleGCost``»
-:math:`c^{HG}_{p,sc}`                          Generation cost of hydrogen                                    €         «``vTotalHydGCost``»
-:math:`c^{E}_{p,sc}`                           Emission cost                                                  €         «``vTotalECost``»
-:math:`c^{EC}_{p,sc}`                          Consumption cost of electricity                                €         «``vTotalEleCCost``»
-:math:`c^{HC}_{p,sc}`                          Consumption cost of hydrogen                                   €         «``vTotalHydCCost``»
-:math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                €         «``vTotalEleRCost``»
-:math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                   €         «``vTotalHydRCost``»
-:math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                 €         «``vTotalElePeakCost``»
+:math:`\alpha`                                 Total system cost                                                    €         «``vTotalSCost``»
+:math:`c^{EM}_{p,sc}`                          Cost of electricity market transactions                              €         «``vTotalEleMCost``»
+:math:`c^{HM}_{p,sc}`                          Cost of hydrogen market transactions                                 €         «``vTotalHydMCost``»
+:math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                       €         «``vTotalEleGCost``»
+:math:`c^{HG}_{p,sc}`                          Generation cost of hydrogen                                          €         «``vTotalHydGCost``»
+:math:`c^{E}_{p,sc}`                           Emission cost                                                        €         «``vTotalECost``»
+:math:`c^{EC}_{p,sc}`                          Consumption cost of electricity                                      €         «``vTotalEleCCost``»
+:math:`c^{HC}_{p,sc}`                          Consumption cost of hydrogen                                         €         «``vTotalHydCCost``»
+:math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                      €         «``vTotalEleRCost``»
+:math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                         €         «``vTotalHydRCost``»
+:math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                       €         «``vTotalElePeakCost``»
 =============================================  ===================================================================  ========  ===========================================================================
 
 
