@@ -32,8 +32,8 @@ They are written in **lowercase** letters.
 **Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\alpha`                                 Total system cost                                                    €         «``vTotalSCost``»
-:math:`c^{EM}_{p,sc}`                          Cost of electricity market transactions                              €         «``vTotalEleMCost``»
-:math:`c^{HM}_{p,sc}`                          Cost of hydrogen market transactions                                 €         «``vTotalHydMCost``»
+:math:`c^{EM}_{p,sc}`                          Net cost of electricity market transactions                          €         «``vTotalEleMCost``»
+:math:`c^{HM}_{p,sc}`                          Net cost of hydrogen market transactions                             €         «``vTotalHydMCost``»
 :math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                       €         «``vTotalEleGCost``»
 :math:`c^{HG}_{p,sc}`                          Generation cost of hydrogen                                          €         «``vTotalHydGCost``»
 :math:`c^{E}_{p,sc}`                           Emission cost                                                        €         «``vTotalECost``»
@@ -42,6 +42,10 @@ They are written in **lowercase** letters.
 :math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                      €         «``vTotalEleRCost``»
 :math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                         €         «``vTotalHydRCost``»
 :math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                       €         «``vTotalElePeakCost``»
+:math:`m^{C}_{p,sc,n}`                         Cost of electricity market transactions (purchasing)                 €         «``vTotalEleTradeCost``»
+:math:`m^{P}_{p,sc,n}`                         Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
+:math:`h^{C}_{p,sc,n}`                         Cost of hydrogen market transactions (purchasing)                  €         «``vTotalHydTradeCost``»
+:math:`h^{P}_{p,sc,n}`                         Profit of hydrogen market transactions (sales)                     €
 =============================================  ===================================================================  ========  ===========================================================================
 
 
