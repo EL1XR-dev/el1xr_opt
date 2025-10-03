@@ -51,7 +51,7 @@ The total cost is broken down into several components, each represented by a spe
         :math:`\text{vTotalEleTradeCost} = \sum_{t \in T, n \in N_{EleTrade}}`
         :math:`\text{pEleTradeCost}_{t,n} \times \text{vEleTrade}_{t,n}`
 
-    #.  **Electricity Sales (`vTotalEleTradeProfit`)**: The revenue generated from selling electricity to the market.
+    #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market.
 
         :math:`\text{vTotalEleTradeProfit} = \sum_{t \in T, n \in N_{EleTrade}}`
         :math:`\text{pEleTradeProfit}_{t,n} \times \text{vEleTrade}_{t,n}`
