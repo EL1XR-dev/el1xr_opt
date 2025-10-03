@@ -14,8 +14,15 @@ They are written in **uppercase** letters.
 :math:`DUR_{p,sc,n}`                           Duration of each load level                                          h         «``pDuration``»
 :math:`F1`                                     Unit conversion factor (1,000)                                       -         «``factor1``»
 :math:`Γ`                                      Annual discount factor                                               %         «``pParDiscountRate``»
-:math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pElectricityCost``, ``pElectricityPrice``»
+:math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pVarEnergyCost``, ``pElectricityPrice``»
 :math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
+:math:`R^{EB}_{er}`                            Electricity buying ratio for electricity market region               -         «``pEleRetBuyingRatio``»
+:math:`R^{ES}_{er}`                            Electricity selling ratio for electricity market region              -         «``pEleRetSellingRatio``»
+:math:`M^{EF}_{er}`                            Electricity certificate fee for electricity market region            €/MWh     «``pEleRetelcertifikat``»
+:math:`M^{ES}_{er}`                            Electricity pass-through fee for electricity market region           €/MWh     «``pEleRetpaslag``»
+:math:`M^{ER}_{er}`                            Electricity tax (moms) for electricity market region                 -         «``pEleRetmoms```
+:math:`M^{EN}_{er}`                            Electricity network fee for electricity market region                €/MWh     «``pEleRetnetavgift``»
+:math:`M^{EP}_{er}`                            Tariff for electricity market region                                 €/MW      «``pEleRetTariff``»
 :math:`UP^{SR}_{n},  DP^{SR}_{n}`              Price of :math:`SR` upward and downward secondary reserve            €/MW      «``pOperatingReservePrice_Up_SR``, ``pOperatingReservePrice_Down_SR``»
 :math:`UR^{SR}_{n},  DR^{SR}_{n}`              Requirement for :math:`SR` upward and downward secondary reserve     €/MW      «``pOperatingReserveRequire_Up_SR``, ``pOperatingReserveRequire_Down_SR``»
 :math:`UEI^{TR}_{n}, DEI^{TR}_{n}`             Expected income of :math:`TR` upward and downward tertiary reserve   €/MW      «``pOperatingReservePrice_Up_TR``, ``pOperatingReservePrice_Down_TR``»
@@ -46,6 +53,15 @@ They are written in **lowercase** letters.
 :math:`em^{P}_{p,sc,n}`                        Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
 :math:`hm^{C}_{p,sc,n}`                        Cost of hydrogen market transactions (purchasing)                    €         «``vTotalHydTradeCost``»
 :math:`hm^{P}_{p,sc,n}`                        Profit of hydrogen market transactions (sales)                       €         «``vTotalHydTradeProfit``»
+:math:`eb_{p,sc,n,er}`                         Electricity bought from the market                                   MWh       «``vEleBuy``»
+:math:`es_{p,sc,n,er}`                         Electricity sold to the market                                       MWh       «``vEleSell``»
+:math:`h^{B}_{p,sc,n,hr}`                      Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
+:math:`h^{S}_{p,sc,n,hr}`                      Hydrogen sold to the market                                          kgH2      «``vHydSell``»
+:math:`eg_{p,sc,n,eg}`                         Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
+:math:`hg_{p,sc,n,hg}`                         Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
+:math:`ens_{p,sc,n,ed}`                        Electricity not served                                               MWh       «``vENS``»
+:math:`hns_{p,sc,n,hd}`                        Hydrogen not served                                                  kgH2      «``vHNS``»
+:math:`peak_{p,sc,m,er,peak}`                  Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
 =============================================  ===================================================================  ========  ===========================================================================
 
 
@@ -80,13 +96,11 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           em^{C}_{p,sc,n} =
-           & \sum_{er \in ER} DUR_{p,sc,n} \times (\\
-           & (\text{pVarEnergyCost}_{er,p,sc,n} \times \text{pEleRetBuyingRatio}_{er} + \\
-           & \text{pEleRetelcertifikat}_{er} \times \text{factor1} + \\
-           & \text{pEleRetpaslag}_{er} \times \text{factor1}) \times \\
-           & (1 + \text{pEleRetmoms}_{er} \times \text{factor1}) + \\
-           & \text{pEleRetnetavgift}_{er} \times \text{factor1}) \times \text{vEleBuy}_{p,sc,n,er}
+           em^{C}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times ((CEB_{p,sc,n,er} \times M^{EF}_{er} + \\
+           & M^{EF}_{er} \times F1 + \\
+           & M^{ES}_{er} \times F1) \times \\
+           & (1 + M^{ER}_{er} \times F1) + \\
+           & M^{EN}_{er} \times F1) \times eb_{p,sc,n,er}
 
     #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
