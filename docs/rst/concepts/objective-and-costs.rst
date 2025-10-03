@@ -18,13 +18,13 @@ Total system cost in [Cost-unit] («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \text{vTotalSCost} = \sum_{p \in P, sc \in SC, n \in N} \text{pDiscountFactor}_{p} \times (
-   & \text{vTotalEleMCost}_{p,sc,n} + \text{vTotalHydMCost}_{p,sc,n} + \\
-   & \text{vTotalEleGCost}_{p,sc,n} + \text{vTotalHydGCost}_{p,sc,n} + \\
-   & \text{vTotalECost}_{p,sc,n} + \\
-   & \text{vTotalEleCCost}_{p,sc,n} + \text{vTotalHydCCost}_{p,sc,n} + \\
-   & \text{vTotalEleRCost}_{p,sc,n} + \text{vTotalHydRCost}_{p,sc,n}) + \\
-   & \sum_{p \in P, sc \in SC} \text{vTotalElePeakCost}_{p,sc}
+   \text{vTotalSCost} = \sum_{p \in P, sc \in SC} \text{pDiscountFactor}_{p} \times (
+   & \text{vTotalEleMCost}_{p,sc} + \text{vTotalHydMCost}_{p,sc} + \\
+   & \text{vTotalEleGCost}_{p,sc} + \text{vTotalHydGCost}_{p,sc} + \\
+   & \text{vTotalECost}_{p,sc} + \\
+   & \text{vTotalEleCCost}_{p,sc} + \text{vTotalHydCCost}_{p,sc} + \\
+   & \text{vTotalEleRCost}_{p,sc} + \text{vTotalHydRCost}_{p,sc} + \\
+   & \text{vTotalElePeakCost}_{p,sc})
 
 Where:
 
