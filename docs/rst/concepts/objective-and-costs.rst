@@ -9,11 +9,11 @@ Parameters
 They are written in **uppercase** letters.
 
 =============================================  ===================================================================  ========  ===========================================================================
-**Demand**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
+**Symbol**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`DUR_n`                                  Duration of each load level                                          h         «``pDuration``»
 :math:`factor1`                                Unit conversion factor (1,000)                                       -         «``factor1``»
-:math:`\Rho`                                   Annual discount rate                                                %         «``pParDiscountRate``»
+:math:`\Rho`                                   Annual discount rate                                                 %         «``pParDiscountRate``»
 :math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pElectricityCost``, ``pElectricityPrice``»
 :math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
 :math:`UP^{SR}_{n},  DP^{SR}_{n}`              Price of :math:`SR` upward and downward secondary reserve            €/MW      «``pOperatingReservePrice_Up_SR``, ``pOperatingReservePrice_Down_SR``»
@@ -29,7 +29,7 @@ Variables
 They are written in **lowercase** letters.
 
 =============================================  ===================================================================  ========  ===========================================================================
-**Demand**                                     **Description**                                                      **Unit**  **oHySEM.py**
+**Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\alpha`                                 Total cost                                                           €         «``vTotalSCost``»
 
@@ -38,7 +38,7 @@ They are written in **lowercase** letters.
 
 The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost``.
 
-Total System Cost (``vTotalSCost``)
+Total System Cost :math:`\alpha`
 ---------------------------------
 
 The total system cost is the sum of all discounted costs across every period (:math:`p`) and scenario (:math:`sc`) in the model horizon. The objective function can be expressed conceptually as:
