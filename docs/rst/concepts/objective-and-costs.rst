@@ -37,8 +37,8 @@ They are written in **lowercase** letters.
 :math:`c^{EG}_{p,sc}`                          Total generation cost of electricity                                 €         «``vTotalEleGCost``»
 :math:`c^{HG}_{p,sc}`                          Total generation cost of hydrogen                                    €         «``vTotalHydGCost``»
 :math:`c^{E}_{p,sc}`                           Total emission cost                                                  €         «``vTotalECost``»
-:math:`c^{EC}_{p,sc}`                          Total consumption cost of electricity                               €         «``vTotalEleCCost``»
-:math:`c^{HC}_{p,sc}`                          Total consumption cost of hydrogen                                  €         «``vTotalHydCCost``»
+:math:`c^{EC}_{p,sc}`                          Total consumption cost of electricity                                €         «``vTotalEleCCost``»
+:math:`c^{HC}_{p,sc}`                          Total consumption cost of hydrogen                                   €         «``vTotalHydCCost``»
 :math:`c^{ER}_{p,sc}`                          Total reliability cost of electricity                                €         «``vTotalEleRCost``»
 :math:`c^{HR}_{p,sc}`                          Total reliability cost of hydrogen                                   €         «``vTotalHydRCost``»
 :math:`c^{EP}_{p,sc}`                          Total power peak cost of electricity                                 €         «``vTotalElePeakCost``»
