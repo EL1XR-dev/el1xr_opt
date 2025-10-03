@@ -29,7 +29,7 @@ Variables
 They are written in **lowercase** letters.
 
 =============================================  ===================================================================  ========  ===========================================================================
-**Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
+**Symbol**                                     **Description**                                                      **Unit**  **oM_ModelFormulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\alpha`                                 Total system cost                                                    €         «``vTotalSCost``»
 :math:`c^{EM}_{p,sc}`                          Net cost of electricity market transactions                          €         «``vTotalEleMCost``»
@@ -44,8 +44,8 @@ They are written in **lowercase** letters.
 :math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                       €         «``vTotalElePeakCost``»
 :math:`m^{C}_{p,sc,n}`                         Cost of electricity market transactions (purchasing)                 €         «``vTotalEleTradeCost``»
 :math:`m^{P}_{p,sc,n}`                         Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
-:math:`h^{C}_{p,sc,n}`                         Cost of hydrogen market transactions (purchasing)                  €         «``vTotalHydTradeCost``»
-:math:`h^{P}_{p,sc,n}`                         Profit of hydrogen market transactions (sales)                     €
+:math:`h^{C}_{p,sc,n}`                         Cost of hydrogen market transactions (purchasing)                    €         «``vTotalHydTradeCost``»
+:math:`h^{P}_{p,sc,n}`                         Profit of hydrogen market transactions (sales)                       €         «``vTotalHydTradeProfit``»
 =============================================  ===================================================================  ========  ===========================================================================
 
 
