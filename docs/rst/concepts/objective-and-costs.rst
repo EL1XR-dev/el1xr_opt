@@ -32,16 +32,16 @@ They are written in **lowercase** letters.
 **Symbol**                                     **Description**                                                      **Unit**  **oHySEM.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\alpha`                                 Total cost                                                           €         «``vTotalSCost``»
-:math:`c^{EM}_{p,sc}`                          Total cost of electricity market transactions                        €         «``vTotalEleMCost``»
-:math:`c^{HM}_{p,sc}`                          Total cost of hydrogen market transactions                           €         «``vTotalHydMCost``»
-:math:`c^{EG}_{p,sc}`                          Total generation cost of electricity                                 €         «``vTotalEleGCost``»
-:math:`c^{HG}_{p,sc}`                          Total generation cost of hydrogen                                    €         «``vTotalHydGCost``»
-:math:`c^{E}_{p,sc}`                           Total emission cost                                                  €         «``vTotalECost``»
-:math:`c^{EC}_{p,sc}`                          Total consumption cost of electricity                                €         «``vTotalEleCCost``»
-:math:`c^{HC}_{p,sc}`                          Total consumption cost of hydrogen                                   €         «``vTotalHydCCost``»
-:math:`c^{ER}_{p,sc}`                          Total reliability cost of electricity                                €         «``vTotalEleRCost``»
-:math:`c^{HR}_{p,sc}`                          Total reliability cost of hydrogen                                   €         «``vTotalHydRCost``»
-:math:`c^{EP}_{p,sc}`                          Total power peak cost of electricity                                 €         «``vTotalElePeakCost``»
+:math:`c^{EM}_{p,sc}`                          Cost of electricity market transactions                        €         «``vTotalEleMCost``»
+:math:`c^{HM}_{p,sc}`                          Cost of hydrogen market transactions                           €         «``vTotalHydMCost``»
+:math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                 €         «``vTotalEleGCost``»
+:math:`c^{HG}_{p,sc}`                          Generation cost of hydrogen                                    €         «``vTotalHydGCost``»
+:math:`c^{E}_{p,sc}`                           Emission cost                                                  €         «``vTotalECost``»
+:math:`c^{EC}_{p,sc}`                          Consumption cost of electricity                                €         «``vTotalEleCCost``»
+:math:`c^{HC}_{p,sc}`                          Consumption cost of hydrogen                                   €         «``vTotalHydCCost``»
+:math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                €         «``vTotalEleRCost``»
+:math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                   €         «``vTotalHydRCost``»
+:math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                 €         «``vTotalElePeakCost``»
 =============================================  ===================================================================  ========  ===========================================================================
 
 
@@ -61,16 +61,6 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 .. math::
    \alpha = \sum_{p \in P, sc \in SC} Γ_{p} \times (c^{EM}_{p,sc} + c^{HM}_{p,sc} + c^{EG}_{p,sc} + c^{HG}_{p,sc} + c^{E}_{p,sc} + c^{EC}_{p,sc} + c^{HC}_{p,sc} + c^{ER}_{p,sc} + c^{HR}_{p,sc} + c^{EP}_{p,sc})
-
-Where:
-
-- **pDiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where :math:`r` is the annual discount rate (``pParDiscountRate``) and :math:`t_p` is the time in hours from the start of the horizon to the start of period :math:`p`. It is used to convert future costs into present value, accounting for the time value of money.
-- **vTotalEleMCost**, **vTotalHydMCost** are the total market costs for electricity and hydrogen, respectively.
-- **vTotalEleGCost**, **vTotalHydGCost** are the total generation costs for electricity and hydrogen, respectively.
-- **vTotalECost** is the total emission cost.
-- **vTotalEleCCost**, **vTotalHydCCost** are the total consumption costs for electricity and hydrogen, respectively.
-- **vTotalEleRCost**, **vTotalHydRCost** are the total reliability costs for electricity and hydrogen, respectively.
-- **vTotalElePeakCost** is the total power peak cost for electricity.
 
 Key Cost Components
 -------------------
