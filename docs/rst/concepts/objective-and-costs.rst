@@ -60,10 +60,7 @@ Total system cost in [Cost-unit] («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{p \in P, sc \in SC} Γ_{p} \times (
-   & c^{EM}_{p,sc} + c^{HM}_{p,sc} + \\
-   & c^{EG}_{p,sc} + c^{HG}_{p,sc} + \\
-   & c^{E}_{p,sc} + \\
+   \alpha = \sum_{p \in P, sc \in SC} Γ_{p} \times (c^{EM}_{p,sc} + c^{HM}_{p,sc} + c^{EG}_{p,sc} + c^{HG}_{p,sc} + c^{E}_{p,sc} + \\
    & c^{EC}_{p,sc} + c^{HC}_{p,sc} + \\
    & c^{ER}_{p,sc} + c^{HR}_{p,sc} + \\
    & c^{EP}_{p,sc})
