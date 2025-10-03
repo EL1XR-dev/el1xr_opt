@@ -13,7 +13,7 @@ They are written in **uppercase** letters.
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`DUR_n`                                  Duration of each load level                                          h         «``pDuration``»
 :math:`factor1`                                Unit conversion factor (1,000)                                       -         «``factor1``»
-:math:`\rho`                                   Annual discount rate                                                 %         «``pParDiscountRate``»
+:math:`\Γ`                                     Annual discount rate                                                 %         «``pParDiscountRate``»
 :math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pElectricityCost``, ``pElectricityPrice``»
 :math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
 :math:`UP^{SR}_{n},  DP^{SR}_{n}`              Price of :math:`SR` upward and downward secondary reserve            €/MW      «``pOperatingReservePrice_Up_SR``, ``pOperatingReservePrice_Down_SR``»
