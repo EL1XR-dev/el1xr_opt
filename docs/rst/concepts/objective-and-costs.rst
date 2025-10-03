@@ -11,8 +11,9 @@ Total System Cost (`vTotalSCost`)
 The total system cost is the sum of all discounted costs across every period (`p`) and scenario (`sc`) in the model horizon. The objective function can be expressed conceptually as:
 
 .. math::
+   \min vTotalSCost
 
-   \min \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times \text{OperationalCosts}_{p,sc}
+:math:`vTotalSCost = \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times \text{vTotalEleMCost}_{p,sc}`
 
 Where:
 - **OperationalCosts** include all costs related to running the system, such as fuel, maintenance, market purchases, and emissions.
