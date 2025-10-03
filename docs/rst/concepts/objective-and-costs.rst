@@ -18,12 +18,12 @@ Total system cost in [Cost-unit] («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value:
 
 :math:`\text{vTotalSCost} = \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times`
-:math:`                     \text{vTotalEleMCost}_{p,sc} + \text{vTotalHydMCost}_{p,sc} +`
-:math:`                     \text{vTotalEleGCost}_{p,sc} + \text{vTotalHydGCost}_{p,sc} +`
-:math:`                     \text{vTotalECost}_{p,sc} +`
-:math:`                     \text{vTotalEleCCost}_{p,sc} + \text{vTotalHydCCost}_{p,sc} +`
-:math:`                     \text{vTotalEleRCost}_{p,sc} + \text{vTotalHydRCost}_{p,sc} +`
-:math:`                     \text{vTotalElePeakCost}_{p,sc}`
+:math:`\text{vTotalEleMCost}_{p,sc} + \text{vTotalHydMCost}_{p,sc} +`
+:math:`\text{vTotalEleGCost}_{p,sc} + \text{vTotalHydGCost}_{p,sc} +`
+:math:`\text{vTotalECost}_{p,sc} +`
+:math:`\text{vTotalEleCCost}_{p,sc} + \text{vTotalHydCCost}_{p,sc} +`
+:math:`\text{vTotalEleRCost}_{p,sc} + \text{vTotalHydRCost}_{p,sc} +`
+:math:`\text{vTotalElePeakCost}_{p,sc}`
 
 Where:
 
