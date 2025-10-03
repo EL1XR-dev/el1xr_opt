@@ -27,7 +27,7 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 Where:
 
-- **DiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where `r` is the annual discount rate (``pParDiscountRate``) and `t_p` is the time in hours from the start of the horizon to the start of period `p`. It is used to convert future costs into present value, accounting for the time value of money.
+- **DiscountFactor** is defined as :math:`\frac{1}{(1 + r)^{(t_p / 8760)}}`, where :math:`r` is the annual discount rate (``pParDiscountRate``) and :math:`t_p` is the time in hours from the start of the horizon to the start of period `p`. It is used to convert future costs into present value, accounting for the time value of money.
 - **vTotalEleMCost**, **vTotalHydMCost** are the total market costs for electricity and hydrogen, respectively.
 - **vTotalEleGCost**, **vTotalHydGCost** are the total generation costs for electricity and hydrogen, respectively.
 - **vTotalECost** is the total emission cost.
