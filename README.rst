@@ -40,6 +40,7 @@ el1xr_opt
 🚀 Features
 -----------
 
+- `Documentation <https://el1xr-opt.readthedocs.io/en/latest/>`_ via ReadTheDocs.
 - Modular formulation for multi-vector energy systems
 - Compatible with **deterministic, stochastic, and equilibrium** approaches
 - Flexible temporal structure: hours, days, representative periods
