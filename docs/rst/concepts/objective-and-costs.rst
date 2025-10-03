@@ -5,15 +5,16 @@ The core purpose of the optimization model is to minimize the total system cost 
 
 The main objective function is defined by the Pyomo constraint ``eTotalTCost``, which minimizes the variable ``vTotalSCost``.
 
-Total System Cost (`vTotalSCost`)
+Total System Cost (``vTotalSCost``)
 ---------------------------------
 
 The total system cost is the sum of all discounted costs across every period (`p`) and scenario (`sc`) in the model horizon. The objective function can be expressed conceptually as:
 
+Objective Function [Cost-unit] («``eTotalMCost``»)
 .. math::
    \min vTotalSCost
 
-:math:`vTotalSCost = \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times \text{vTotalEleMCost}_{p,sc}`
+:math:`vTotalSCost «``eTotalMCost``»= \sum_{p \in P, sc \in SC} \text{DiscountFactor}_{p} \times \text{vTotalEleMCost}_{p,sc}`
 
 Where:
 - **OperationalCosts** include all costs related to running the system, such as fuel, maintenance, market purchases, and emissions.
