@@ -14,8 +14,8 @@ They are written in **uppercase** letters.
 :math:`DUR_{p,sc,n}`                           Duration of each load level                                          h         «``pDuration``»
 :math:`F1`                                     Unit conversion factor (1,000)                                       -         «``factor1``»
 :math:`Γ`                                      Annual discount factor                                               %         «``pParDiscountRate``»
-:math:`CEB_{nnd},    PES^{DA}_{nnd}`           Cost/price of electricity bought/sold                                €/MWh     «``pVarEnergyCost``, ``pElectricityPrice``»
-:math:`CHB_{nnd},    PHS^{DA}_{nnd}`           Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
+:math:`CEB_{p,sc,n,er}, PES_{p,sc,n,er}`       Cost/price of electricity bought/sold                                €/MWh     «``pVarEnergyCost``, ``pElectricityPrice``»
+:math:`CHB_{p,sc,n,er}, PHS_{p,sc,n,er}`       Cost/price of hydrogen bought/sold                                   €/kgH2    «``pHydrogenCost``, ``pHydrogenPrice``»
 :math:`R^{EB}_{er}`                            Electricity buying ratio for electricity market region               -         «``pEleRetBuyingRatio``»
 :math:`R^{ES}_{er}`                            Electricity selling ratio for electricity market region              -         «``pEleRetSellingRatio``»
 :math:`M^{EF}_{er}`                            Electricity certificate fee for electricity market region            €/MWh     «``pEleRetelcertifikat``»
@@ -96,13 +96,13 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           em^{C}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (&(CEB_{p,sc,n,er} \times M^{EF}_{er} + M^{EF}_{er} \times F1 + M^{ES}_{er} \times F1) \times \\
+           em^{C}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (&(CEB_{p,sc,n,er} \times R^{EB}_{er} + M^{EF}_{er} \times F1 + M^{ES}_{er} \times F1) \times \\
            & (1 + M^{ER}_{er} \times F1) + M^{EN}_{er} \times F1) \times eb_{p,sc,n,er}
 
     #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
         .. math::
-           \text{vTotalEleTradeProfit}_{p,sc,n} = \sum_{er \in ER} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyPrice}_{er,p,sc,n} \times \text{pEleRetSellingRatio}_{er} \times \text{vEleSell}_{p,sc,n,er})
+           em^{P}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (PES_{p,sc,n,er} \times R^{ES}_{er} \times es_{p,sc,n,er})
 
     #.  **Hydrogen Purchase** (``vTotalHydTradeCost``): The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
