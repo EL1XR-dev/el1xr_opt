@@ -48,37 +48,40 @@ Key Cost Components
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-**Market Costs**
-~~~~~~~~~~~~~~~~
+Market Costs
+~~~~~~~~~~~~
 (``eTotalEleMCost``, ``eTotalHydMCost``)
 
-    This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
+This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
-    *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
-    *   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
+*   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
+*   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
 
-    #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
+#.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
-        .. math::
-           \elemarketcostbuy_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} (&(\pelebuyprice_{p,sc,n,er} \pelemarketbuyingratio_{er} + \pelemarketcertrevenue_{er} \pfactorone + \pelemarketpassthrough_{er} \pfactorone) \\
-           & (1 + \pelemarketmoms_{er} \pfactorone) + \pelemarketnetfee_{er} \pfactorone) \velemarketbuy_{p,sc,n,er}
+    .. math::
+       \elemarketcostbuy_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} (&(\pelebuyprice_{p,sc,n,er} \pelemarketbuyingratio_{er} + \pelemarketcertrevenue_{er} \pfactorone + \pelemarketpassthrough_{er} \pfactorone) \\
+       & (1 + \pelemarketmoms_{er} \pfactorone) + \pelemarketnetfee_{er} \pfactorone) \velemarketbuy_{p,sc,n,er}
 
-    #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
+#.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
-        .. math::
-           em^{P}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (PES_{p,sc,n,er} \times R^{ES}_{er} \times es_{p,sc,n,er})
+    .. math::
+       em^{P}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (PES_{p,sc,n,er} \times R^{ES}_{er} \times es_{p,sc,n,er})
 
-    #.  **Hydrogen Purchase** (``vTotalHydTradeCost``): The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
+#.  **Hydrogen Purchase** (``vTotalHydTradeCost``): The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
-        .. math::
-           \text{vTotalHydTradeCost}_{p,sc,n} = \sum_{hr \in HR} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyCost}_{hr,p,sc,n} \times \text{vHydBuy}_{p,sc,n,hr})
+    .. math::
+       \text{vTotalHydTradeCost}_{p,sc,n} = \sum_{hr \in HR} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyCost}_{hr,p,sc,n} \times \text{vHydBuy}_{p,sc,n,hr})
 
-    #.  **Hydrogen Sales** (``vTotalHydTradeProfit``): The revenue generated from selling hydrogen to the market, as defined by ``eTotalHydTradeProfit``.
+#.  **Hydrogen Sales** (``vTotalHydTradeProfit``): The revenue generated from selling hydrogen to the market, as defined by ``eTotalHydTradeProfit``.
 
-        .. math::
-           \text{vTotalHydTradeProfit}_{p,sc,n} = \sum_{hr \in HR} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyPrice}_{hr,p,sc,n} \times \text{vHydSell}_{p,sc,n,hr})
+    .. math::
+       \text{vTotalHydTradeProfit}_{p,sc,n} = \sum_{hr \in HR} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyPrice}_{hr,p,sc,n} \times \text{vHydSell}_{p,sc,n,hr})
 
-#.  **Generation Costs (`vTotalEleGCost`, `vTotalHydGCost`)**
+Generation Costs
+~~~~~~~~~~~~~~~~
+(`vTotalEleGCost`, `vTotalHydGCost`)
+
     This is the operational cost of running the generation and production assets. It typically includes:
     *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
     *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
@@ -104,13 +107,19 @@ The total cost is broken down into several components, each represented by a spe
        & \text{pHydGenStartUpCost}_{hgt} \times \text{vHydGenStartUp}_{p,sc,n,hgt} + \\
        & \text{pHydGenShutDownCost}_{hgt} \times \text{vHydGenShutDown}_{p,sc,n,hgt})
 
-#.  **Emission Costs (`vTotalECost`)**
+Emission Costs
+~~~~~~~~~~~~~~
+(`vTotalECost`)
+
     This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
 
     .. math::
        \text{vTotalECost}_{p,sc,n} = \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times \text{pGenCO2EmissionCost}_{egt} \times \text{vEleTotalOutput}_{p,sc,n,egt}
 
-#.  **Consumption Costs (`vTotalEleCCost`, `vTotalHydCCost`)**
+Consumption Costs
+~~~~~~~~~~~~~~~~~
+(`vTotalEleCCost`, `vTotalHydCCost`)
+
     This represents the costs associated with operating energy consumers within the system, most notably the cost of power used to charge energy storage devices. These are defined by ``eTotalEleCCost`` and ``eTotalHydCCost``.
 
     .. math::
@@ -119,7 +128,10 @@ The total cost is broken down into several components, each represented by a spe
     .. math::
        \text{vTotalHydCCost}_{p,sc,n} = \sum_{hgs \in HGS} \text{pDuration}_{p,sc,n} \times \text{pHydGenLinearTerm}_{hgs} \times \text{vHydTotalCharge}_{p,sc,n,hgs}
 
-#.  **Reliability Costs (`vTotalEleRCost`, `vTotalHydRCost`)**
+Reliability Costs
+~~~~~~~~~~~~~~~~~
+(`vTotalEleRCost`, `vTotalHydRCost`)
+
     This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (``pParENSCost`` or ``pParHNSCost``), ensuring the model prioritizes meeting demand. The associated constraints are ``eTotalEleRCost`` and ``eTotalHydRCost``.
     *   Associated variables: ``vENS`` (Energy Not Supplied), ``vHNS`` (Hydrogen Not Supplied).
 
@@ -129,7 +141,10 @@ The total cost is broken down into several components, each represented by a spe
     .. math::
        \text{vTotalHydRCost}_{p,sc,n} = \sum_{hd \in HD} \text{pDuration}_{p,sc,n} \times \text{pParHNSCost} \times \text{vHNS}_{p,sc,n,hd}
 
-#.  **Peak Demand Costs (`vTotalElePeakCost`)**
+Electricity Peak Demand Costs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(`vTotalElePeakCost`)
+
     This component models capacity-based tariffs, where costs are determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs. The formulation is defined by ``eTotalElePeakCost``.
 
     .. math::
