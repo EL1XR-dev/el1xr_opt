@@ -10,7 +10,7 @@ Total System Cost
 
 The total system cost is the sum of all discounted costs across every period (:math:`p`) and scenario (:math:`sc`) in the model horizon. The objective function can be expressed conceptually as:
 
-Total system cost in [Cost-unit] («``eTotalSCost``»)
+Total system cost («``eTotalSCost``»)
 
 .. math::
    \min \alpha
