@@ -48,8 +48,10 @@ Key Cost Components
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-**Market Costs** (``eTotalEleMCost``, ``eTotalHydMCost``)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Market Costs**
+~~~~~~~~~~~~~~~~
+(``eTotalEleMCost``, ``eTotalHydMCost``)
+
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
     *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
@@ -58,8 +60,8 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           \elemarketcostbuy_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (&(CEB_{p,sc,n,er} \times R^{EB}_{er} + M^{EF}_{er} \times F1 + M^{ES}_{er} \times F1) \times \\
-           & (1 + M^{ER}_{er} \times F1) + M^{EN}_{er} \times F1) \times eb_{p,sc,n,er}
+           \elemarketcostbuy_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} \times (&(\pelebuyprice_{p,sc,n,er} \times \pelemarketbuyingratio_{er} + \pelemarketcertrevenue_{er} \times \pfactor1 + \pelemarketpassthrough_{er} \times \pfactor1) \times \\
+           & (1 + \pelemarketmoms_{er} \times \pfactor1) + \pelemarketnetfee_{er} \times \pfactor1) \times \velemarketbuy_{p,sc,n,er}
 
     #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 

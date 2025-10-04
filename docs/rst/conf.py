@@ -334,6 +334,14 @@ mathjax3_config = {
             "pfactor4": r"F4",                                  # Generic factor 4
 
             "pdiscountrate": r"\Gamma",                         # Discount rate
+            "ptimestepduration": r"DUR",                        # Time step duration (hours)
+            "pintervalduration": r"\Delta u",                   # Time step interval duration (hours)
+            "nintervals": r"N^{u}",                             # Number of time step intervals
+            "nperiods": r"N^{p}",                               # Number of periods
+            "nweeks": r"N^{w}",                                 # Number of weeks in a year
+            "nmonths": r"N^{m}",                                # Number of months in a year
+            "ndays": r"N^{d}",                                  # Number of days in a week
+            "nhours": r"N^{h}",                                 # Number of hours in a day
 
             # --- Prices (use uppercase Pi for market prices) ---
             "pelespotprice": r"\Pi^{e}",                        # Electrical spot price
@@ -346,6 +354,13 @@ mathjax3_config = {
             "phydimportprice": r"\Pi^{imp,h}",                  # Hydrogen import price
             "peleexportprice": r"\Pi^{exp,e}",                  # Electrical export price
             "phydexportprice": r"\Pi^{exp,h}",                  # Hydrogen export price
+            "pelemarketbuyingratio": r"R^{b,e}",                # Electrical market buying ratio
+            "pelemarketsellingratio": r"R^{s,e}",               # Electrical market selling ratio
+            "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
+            "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
+            "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
+            "pelemarketnetfee": r"M^{net,e}",                   # Electrical network fee
+            "pelemarkettariff": r"M^{tariff,e}",                # Electrical tariff
 
             # --- Demand ---
             "peledemand": r"D^{e}",                             # Electrical demand
@@ -416,6 +431,16 @@ mathjax3_config = {
             # =======================================================
             #                       VARIABLES
             # =======================================================
+            # symbols in lowercase to distinguish from parameters
+            "velemarketbuy": r"b^{e}",                          # Electrical market buying
+            "vhydmarketbuy": r"b^{h}",                          # Hydrogen market buying
+            "velemarketsell": r"s^{e}",                         # Electrical market selling
+            "vhydmarketsell": r"s^{h}",                         # Hydrogen market selling
+            "veleimport": r"imp^{e}",                           # Electrical import
+            "vhydimport": r"imp^{h}",                           # Hydrogen import
+            "veleexport": r"exp^{e}",                           # Electrical export
+            "vhydexport": r"exp^{h}",                           # Hydrogen export
+
             "vproduction": r"p",                                # Generation
             "veleproduction": r"ep",                            # Electrical generation
             "vhydproduction": r"hp",                            # Hydrogen production
