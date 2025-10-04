@@ -328,10 +328,10 @@ mathjax3_config = {
             "LROcost": r"C^{LRO}",
 
             # === PARAMETERS ===
-            "pfactor1": r"F1",                                  # Generic factor 1
-            "pfactor2": r"F2",                                  # Generic factor 2
-            "pfactor3": r"F3",                                  # Generic factor 3
-            "pfactor4": r"F4",                                  # Generic factor 4
+            "pfactorone": r"F1",                                # Generic factor 1
+            "pfactortwo": r"F2",                                # Generic factor 2
+            "pfactorthr": r"F3",                                # Generic factor 3
+            "pfactorfou": r"F4",                                # Generic factor 4
 
             "pdiscountrate": r"\Gamma",                         # Discount rate
             "ptimestepduration": r"DUR",                        # Time step duration (hours)

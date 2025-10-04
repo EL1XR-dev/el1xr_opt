@@ -7,7 +7,7 @@ They are written in **uppercase** letters.
 **Symbol**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\ptimestepduration_{p,sc,n}`            Duration of each time step                                           h         «``pDuration``»
-:math:`\pfactor1`                              Unit conversion factor (1,000)                                       -         «``factor1``»
+:math:`\pfactorone`                            Unit conversion factor (1,000)                                       -         «``factor1``»
 :math:`\pdiscountrate_{p}`                     Annual discount factor                                               %         «``pParDiscountRate``»
 :math:`\pelebuyprice_{p,sc,n,er}`              Cost of electricity bought                                           €/MWh     «``pVarEnergyCost``»
 :math:`\pelesellprice_{p,sc,n,er}`             Price of electricity sold                                            €/MWh     «``pVarEnergyPrice``»
