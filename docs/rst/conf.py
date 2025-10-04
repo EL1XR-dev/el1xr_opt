@@ -131,3 +131,22 @@ html_static_path = ['_static']
 html_js_files = [
     '../custom.js',
 ]
+
+mathjax_config = {
+    "TeX": {
+        "Macros": {
+            # zero-arg macro
+            "cost": r"C^{\mathrm{op}}",
+            # one-arg macro  \load{i} -> P^{L}_{i}
+            "load": [r"P^{\mathrm{L}}_{#1}", 1],
+            # two-arg macro  \flow{i}{t} -> f_{i,t}
+            "flow": [r"f_{#1,#2}", 2],
+            # three-arg macro  \inj{i}{t}{s} -> p_{i,t}^{G,s}
+            "inj": [r"p_{#1,#2}^{G,#3}", 3],
+            # four-arg macro  \sumgen{i}{t}{s}{G} -> \sum_{i} p_{i,t}^{G,s}
+            "sumgen": [r"\sum_{#1} p_{#1,#2}^{#4,#3}", 4],
+            # five-arg macro  \sumgen{i}{t}{s}{G}{\leq P} -> \sum_{i} p_{i,t}^{G,s} \leq P
+            "sumgen": [r"\sum_{#1} p_{#1,#2}^{#4,#3} \leq #5", 5],
+        }
+    }
+}
