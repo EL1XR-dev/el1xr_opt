@@ -11,7 +11,11 @@ The symbos used in the objective function are written in **uppercase** letters a
 **Symbol**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\elemarketcost_{p,sc}`                  Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
+:math:`\elemarketcostbuy_{p,sc}`               Cost of electricity market purchases                                 €         «``vTotalEleTradeCost``»
+:math:`\elemarketcostsell_{p,sc}`              Revenue from electricity market sales                                €         «``vTotalEleTradeProfit``»
 :math:`\hydmarketcost_{p,sc}`                  Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
+:math:`\hydmarketcostbuy_{p,sc}`               Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
+:math:`\hydmarketcostsell_{p,sc}`              Revenue from hydrogen market sales                                   €         «``vTotalHydTradeProfit``»
 :math:`\elegenerationcost_{p,sc}`              Total cost of electricity generation                                 €         «``vTotalEleGCost``»
 :math:`\hydgenerationcost_{p,sc}`              Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
 :math:`\carboncost_{p,sc}`                     Total cost of CO2 emissions                                          €         «``vTotalECost``»
@@ -52,7 +56,7 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           em^{C}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (&(CEB_{p,sc,n,er} \times R^{EB}_{er} + M^{EF}_{er} \times F1 + M^{ES}_{er} \times F1) \times \\
+           \elemarketcostbuy_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (&(CEB_{p,sc,n,er} \times R^{EB}_{er} + M^{EF}_{er} \times F1 + M^{ES}_{er} \times F1) \times \\
            & (1 + M^{ER}_{er} \times F1) + M^{EN}_{er} \times F1) \times eb_{p,sc,n,er}
 
     #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.

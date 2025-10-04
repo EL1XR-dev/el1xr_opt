@@ -146,6 +146,9 @@ mathjax3_config = {
             "nE": r"\mathcal{E}",                               # All storage units
             "nEE": r"\mathcal{E}^{e}",                          # All electrical storage units
             "nEH": r"\mathcal{E}^{h}",                          # All hydrogen storage units
+            "nR": r"\mathcal{R}",                               # All retailers
+            "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
+            "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
             "nL": r"\mathcal{L}",                               # All lines
             "nR": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
@@ -194,6 +197,9 @@ mathjax3_config = {
             "elestorageindex": r"e^{e}",                        # Index for electrical storage
             "hydstorageindex": r"e^{h}",                        # Index for hydrogen storage
             "storageindex": r"e",                               # Index for storage
+            "retailerindex": r"r",                              # Index for retailer
+            "eletraderindex": r"r^{e}",                         # Index for electrical retailer
+            "hydtraderindex": r"r^{h}",                         # Index for hydrogen retailer
             "periodindex": r"p",                                # Index for period
             "scenarioindex": r"s",                              # Index for scenario
             "weekindex": r"w",                                  # Index for week
