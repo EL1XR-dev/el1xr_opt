@@ -1,9 +1,40 @@
-Decision Variables
-==================
+Variables
+=========
 
 The optimization model determines the values of numerous decision variables to minimize the total system cost while satisfying all constraints. These variables represent the physical and economic operations of the energy system. They are defined as `Var` objects in Pyomo within the ``create_variables`` function.
 
 The main variables are indexed by the :doc:`model sets <model-sets>`, primarily by period (`p`), scenario (`sc`), and timestep (`n`).
+
+They are written in **lowercase** letters.
+
+=============================================  ===================================================================  ========  ===========================================================================
+**Symbol**                                     **Description**                                                      **Unit**  **oM_ModelFormulation.py**
+---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
+:math:`\alpha`                                 Total system cost                                                    €         «``vTotalSCost``»
+:math:`c^{EM}_{p,sc}`                          Net cost of electricity market transactions                          €         «``vTotalEleMCost``»
+:math:`c^{HM}_{p,sc}`                          Net cost of hydrogen market transactions                             €         «``vTotalHydMCost``»
+:math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                       €         «``vTotalEleGCost``»
+:math:`c^{HG}_{p,sc}`                          Generation cost of hydrogen                                          €         «``vTotalHydGCost``»
+:math:`c^{E}_{p,sc}`                           Emission cost                                                        €         «``vTotalECost``»
+:math:`c^{EC}_{p,sc}`                          Consumption cost of electricity                                      €         «``vTotalEleCCost``»
+:math:`c^{HC}_{p,sc}`                          Consumption cost of hydrogen                                         €         «``vTotalHydCCost``»
+:math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                      €         «``vTotalEleRCost``»
+:math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                         €         «``vTotalHydRCost``»
+:math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                       €         «``vTotalElePeakCost``»
+:math:`em^{C}_{p,sc,n}`                        Cost of electricity market transactions (purchasing)                 €         «``vTotalEleTradeCost``»
+:math:`em^{P}_{p,sc,n}`                        Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
+:math:`hm^{C}_{p,sc,n}`                        Cost of hydrogen market transactions (purchasing)                    €         «``vTotalHydTradeCost``»
+:math:`hm^{P}_{p,sc,n}`                        Profit of hydrogen market transactions (sales)                       €         «``vTotalHydTradeProfit``»
+:math:`eb_{p,sc,n,er}`                         Electricity bought from the market                                   MWh       «``vEleBuy``»
+:math:`es_{p,sc,n,er}`                         Electricity sold to the market                                       MWh       «``vEleSell``»
+:math:`h^{B}_{p,sc,n,hr}`                      Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
+:math:`h^{S}_{p,sc,n,hr}`                      Hydrogen sold to the market                                          kgH2      «``vHydSell``»
+:math:`eg_{p,sc,n,eg}`                         Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
+:math:`hg_{p,sc,n,hg}`                         Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
+:math:`ens_{p,sc,n,ed}`                        Electricity not served                                               MWh       «``vENS``»
+:math:`hns_{p,sc,n,hd}`                        Hydrogen not served                                                  kgH2      «``vHNS``»
+:math:`peak_{p,sc,m,er,peak}`                  Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
+=============================================  ===================================================================  ========  ===========================================================================
 
 Key Variable Categories
 -----------------------
