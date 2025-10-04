@@ -1,5 +1,5 @@
-Model Sets
-==========
+Sets
+====
 
 Acronyms
 --------
