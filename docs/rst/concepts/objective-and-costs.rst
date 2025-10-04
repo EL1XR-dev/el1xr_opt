@@ -85,7 +85,7 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 .. math::
 
-   \min\; \cost = \sum_{i,t} c_i\,\flow{i}{t}
+   \min\; \cost = \sum_{i,t} c_i\, \flow{i}{t}
 
 Inline: :math:`\load{i} \le \gen{i}`.
 
