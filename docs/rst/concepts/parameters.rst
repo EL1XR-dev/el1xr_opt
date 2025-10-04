@@ -20,9 +20,4 @@ They are written in **uppercase** letters.
 :math:`\pelemarketmoms_{er}`                   Electricity tax (moms) for electricity market region                 -         «``pEleRetmoms```
 :math:`\pelemarketnetfee_{er}`                 Electricity network fee for electricity market region                €/MWh     «``pEleRetnetavgift``»
 :math:`\pelemarkettariff_{er}`                 Tariff for electricity market region                                 €/MW      «``pEleRetTariff``»
-:math:`UP^{SR}_{n},  DP^{SR}_{n}`              Price of :math:`SR` upward and downward secondary reserve            €/MW      «``pOperatingReservePrice_Up_SR``, ``pOperatingReservePrice_Down_SR``»
-:math:`UR^{SR}_{n},  DR^{SR}_{n}`              Requirement for :math:`SR` upward and downward secondary reserve     €/MW      «``pOperatingReserveRequire_Up_SR``, ``pOperatingReserveRequire_Down_SR``»
-:math:`UEI^{TR}_{n}, DEI^{TR}_{n}`             Expected income of :math:`TR` upward and downward tertiary reserve   €/MW      «``pOperatingReservePrice_Up_TR``, ``pOperatingReservePrice_Down_TR``»
-:math:`CENS`                                   Cost of electricity not served. Value of Lost Load (VoLL)            €/MWh     «``pParENSCost``»
-:math:`CHNS`                                   Cost of hydrogen not served.                                         €/tH2     «``pParHNSCost``»
 =============================================  ===================================================================  ========  ===========================================================================
