@@ -60,8 +60,8 @@ The total cost is broken down into several components, each represented by a spe
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
         .. math::
-           \elemarketcostbuy_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} \times (&(\pelebuyprice_{p,sc,n,er} \times \pelemarketbuyingratio_{er} + \pelemarketcertrevenue_{er} \times \pfactor1 + \pelemarketpassthrough_{er} \times \pfactor1) \times \\
-           & (1 + \pelemarketmoms_{er} \times \pfactor1) + \pelemarketnetfee_{er} \times \pfactor1) \times \velemarketbuy_{p,sc,n,er}
+           \elemarketcostbuy_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} \times (&(\pelebuyprice_{p,sc,n,er} \times \pelemarketbuyingratio_{er} + \pelemarketcertrevenue_{er} \times \pfactorone + \pelemarketpassthrough_{er} \times \pfactorone) \times \\
+           & (1 + \pelemarketmoms_{er} \times \pfactorone) + \pelemarketnetfee_{er} \times \pfactorone) \times \velemarketbuy_{p,sc,n,er}
 
     #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
