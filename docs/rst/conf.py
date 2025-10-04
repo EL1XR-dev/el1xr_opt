@@ -266,6 +266,11 @@ mathjax3_config = {
 
             # --- Curtailment & Reliability Costs ---
             "unservedenergycost": r"C^{ue}",                    # Unserved energy cost
+            "eleunservedenergycost": r"C^{ens,e}",              # Electrical unserved energy cost
+            "hydunservedenergycost": r"C^{ens,h}",              # Hydrogen unserved
+            "demandresponsecost": r"C^{dr}",                    # Demand response cost
+            "demandflexibilitycost": r"C^{df}",                 # Demand flexibility cost
+            "spillcost": r"C^{spill}",                          # Spill cost
             "loadsheddingcost": r"C^{ls}",                      # Load-shedding cost
             "curtailmentcost": r"C^{curt}",                     # Curtailment cost
 
@@ -312,92 +317,99 @@ mathjax3_config = {
             "exportemission": r"EM^{exp}",                      # Virtual emissions of exports
             "LROcost": r"C^{LRO}",
 
-            # === FUNCTIONS ===
+            # === PARAMETERS ===
+            "pfactor1": r"F1",                                  # Generic factor 1
+            "pfactor2": r"F2",                                  # Generic factor 2
+            "pfactor3": r"F3",                                  # Generic factor 3
+            "pfactor4": r"F4",                                  # Generic factor 4
+
+            "pdiscountrate": r"\Gamma",                         # Discount rate
+
             # --- Prices (use uppercase Pi for market prices) ---
-            "pelespotprice": r"\Pi^{e}",                         # Electrical spot price
-            "phydspotprice": r"\Pi^{h}",                         # Hydrogen spot price
-            "pelebuyprice": r"\Pi^{b,e}",                        # Electrical buy price
-            "phydbuyprice": r"\Pi^{b,h}",                        # Hydrogen buy price
-            "pelesellprice": r"\Pi^{s,e}",                       # Electrical sell price
-            "phydsellprice": r"\Pi^{s,h}",                       # Hydrogen sell price
-            "peleimportprice": r"\Pi^{imp,e}",                   # Electrical import price
-            "phydimportprice": r"\Pi^{imp,h}",                   # Hydrogen import price
-            "peleexportprice": r"\Pi^{exp,e}",                   # Electrical export price
-            "phydexportprice": r"\Pi^{exp,h}",                   # Hydrogen export price
+            "pelespotprice": r"\Pi^{e}",                        # Electrical spot price
+            "phydspotprice": r"\Pi^{h}",                        # Hydrogen spot price
+            "pelebuyprice": r"\Pi^{b,e}",                       # Electrical buy price
+            "phydbuyprice": r"\Pi^{b,h}",                       # Hydrogen buy price
+            "pelesellprice": r"\Pi^{s,e}",                      # Electrical sell price
+            "phydsellprice": r"\Pi^{s,h}",                      # Hydrogen sell price
+            "peleimportprice": r"\Pi^{imp,e}",                  # Electrical import price
+            "phydimportprice": r"\Pi^{imp,h}",                  # Hydrogen import price
+            "peleexportprice": r"\Pi^{exp,e}",                  # Electrical export price
+            "phydexportprice": r"\Pi^{exp,h}",                  # Hydrogen export price
 
             # --- Demand ---
-            "peledemand": r"D^{e}",                              # Electrical demand
-            "phyddemand": r"D^{h}",                              # Hydrogen demand
-            "pelemaxdemand": r"\overline{D}^{e}",                # Electrical max demand
-            "pelemindemand": r"\underline{D}^{e}",               # Electrical min demand
-            "phydmaxdemand": r"\overline{D}^{h}",                # Hydrogen max demand
-            "phydmindemand": r"\underline{D}^{h}",               # Hydrogen min demand
-            "pelepeakdemand": r"D^{e,peak}",                     # Electrical peak demand
-            "phydpeakdemand": r"D^{h,peak}",                     # Hydrogen peak demand
+            "peledemand": r"D^{e}",                             # Electrical demand
+            "phyddemand": r"D^{h}",                             # Hydrogen demand
+            "pelemaxdemand": r"\overline{D}^{e}",               # Electrical max demand
+            "pelemindemand": r"\underline{D}^{e}",              # Electrical min demand
+            "phydmaxdemand": r"\overline{D}^{h}",               # Hydrogen max demand
+            "phydmindemand": r"\underline{D}^{h}",              # Hydrogen min demand
+            "pelepeakdemand": r"D^{e,peak}",                    # Electrical peak demand
+            "phydpeakdemand": r"D^{h,peak}",                    # Hydrogen peak demand
 
             # --- Generation and Consumption Limits ---
-            "pelemaxproduction": r"\overline{EP}^{e}",           # Max electrical generation
-            "peleminproduction": r"\underline{EP}^{e}",          # Min electrical generation
-            "phydmaxproduction": r"\overline{HP}^{h}",           # Max hydrogen generation
-            "phydminproduction": r"\underline{HP}^{h}",          # Min hydrogen generation
-            "pelemaxconsumption": r"\overline{EC}^{e}",          # Max electrical consumption
-            "peleminconsumption": r"\underline{EC}^{e}",         # Min electrical consumption
-            "phydmaxconsumption": r"\overline{HC}^{h}",          # Max hydrogen consumption
-            "phydminconsumption": r"\underline{HC}^{h}",         # Min hydrogen consumption
+            "pelemaxproduction": r"\overline{EP}^{e}",          # Max electrical generation
+            "peleminproduction": r"\underline{EP}^{e}",         # Min electrical generation
+            "phydmaxproduction": r"\overline{HP}^{h}",          # Max hydrogen generation
+            "phydminproduction": r"\underline{HP}^{h}",         # Min hydrogen generation
+            "pelemaxconsumption": r"\overline{EC}^{e}",         # Max electrical consumption
+            "peleminconsumption": r"\underline{EC}^{e}",        # Min electrical consumption
+            "phydmaxconsumption": r"\overline{HC}^{h}",         # Max hydrogen consumption
+            "phydminconsumption": r"\underline{HC}^{h}",        # Min hydrogen consumption
 
             # --- Technical Parameters ---
-            "prampuprate": r"R^{u}",                             # Ramp-up rate
-            "prampdwrate": r"R^{d}",                             # Ramp-down rate
-            "puptime": r"T^{u}",                                 # Minimum up time
-            "pdwtime": r"T^{d}",                                 # Minimum down time
-            "peleefficiency": r"\eta^{e}",                       # Electrical efficiency
-            "phydefficiency": r"\eta^{h}",                       # Hydrogen efficiency
-            "peletohydfunction": r"F^{e2h}",                     # Power-to-hydrogen conversion
+            "prampuprate": r"R^{u}",                            # Ramp-up rate
+            "prampdwrate": r"R^{d}",                            # Ramp-down rate
+            "puptime": r"T^{u}",                                # Minimum up time
+            "pdwtime": r"T^{d}",                                # Minimum down time
+            "peleefficiency": r"\eta^{e}",                      # Electrical efficiency
+            "phydefficiency": r"\eta^{h}",                      # Hydrogen efficiency
+            "peletohydfunction": r"F^{e2h}",                    # Power-to-hydrogen conversion
 
             # --- Cost Parameters ---
-            "pstartupcost": r"C^{su}",                           # Start-up cost
-            "pshutdowncost": r"C^{sd}",                          # Shut-down cost
-            "pnoloadcost": r"C^{nl}",                            # No-load cost
-            "pfuelafactor": r"A",                                # Linear fuel cost coeff.
-            "pfuelbfactor": r"B",                                # Quadratic fuel cost coeff.
-            "pfuelcfactor": r"C",                                # Fixed fuel cost coeff.
-            "pmaintenancecost": r"C^{m}",                        # Maintenance cost
-            "poperationcost": r"C^{o}",                          # Operation cost
-            "pfixedcost": r"C^{fix}",                            # Fixed cost
-            "pvariablecost": r"C^{var}",                         # Variable cost
-            "pinvestmentcost": r"C^{inv}",                       # Investment cost
-            "pannualcost": r"C^{ann}",                           # Annualized cost
-            "pcarbonprice": r"C^{co2}",                          # Carbon price or tax
+            "pstartupcost": r"C^{su}",                          # Start-up cost
+            "pshutdowncost": r"C^{sd}",                         # Shut-down cost
+            "pnoloadcost": r"C^{nl}",                           # No-load cost
+            "pfuelafactor": r"A",                               # Linear fuel cost coeff.
+            "pfuelbfactor": r"B",                               # Quadratic fuel cost coeff.
+            "pfuelcfactor": r"C",                               # Fixed fuel cost coeff.
+            "pmaintenancecost": r"C^{m}",                       # Maintenance cost
+            "poperationcost": r"C^{o}",                         # Operation cost
+            "pfixedcost": r"C^{fix}",                           # Fixed cost
+            "pvariablecost": r"C^{var}",                        # Variable cost
+            "pinvestmentcost": r"C^{inv}",                      # Investment cost
+            "pannualcost": r"C^{ann}",                          # Annualized cost
+            "pcarbonprice": r"C^{co2}",                         # Carbon price or tax
 
             # --- Electrical Network Parameters ---
-            "peleresistantline": r"R",                           # Resistance
-            "pelereactanceline": r"X",                           # Reactance
-            "peleimpedanceline": r"Z",                           # Impedance magnitude
-            "peleconductline": r"G",                             # Conductance
-            "pelesusceptline": r"B",                             # Susceptance
-            "peleshuntsuscepline": r"B^{l}",                     # Line shunt susceptance
-            "pelemaxcurrent": r"\overline{I}",                   # Max current
-            "pelemaxapparentpower": r"\overline{S}",             # Max apparent power
-            "pelemaxvolt": r"\overline{V}",                      # Max voltage magnitude
-            "peleminvolt": r"\underline{V}",                     # Min voltage magnitude
-            "pelemaxvoltageangle": r"\overline{\theta}",         # Max voltage angle
-            "peleminvoltageangle": r"\underline{\theta}",        # Min voltage angle
-            "peleinitvolt": r"V^{0}",                            # Initial voltage
+            "peleresistantline": r"R",                          # Resistance
+            "pelereactanceline": r"X",                          # Reactance
+            "peleimpedanceline": r"Z",                          # Impedance magnitude
+            "peleconductline": r"G",                            # Conductance
+            "pelesusceptline": r"B",                            # Susceptance
+            "peleshuntsuscepline": r"B^{l}",                    # Line shunt susceptance
+            "pelemaxcurrent": r"\overline{I}",                  # Max current
+            "pelemaxapparentpower": r"\overline{S}",            # Max apparent power
+            "pelemaxvolt": r"\overline{V}",                     # Max voltage magnitude
+            "peleminvolt": r"\underline{V}",                    # Min voltage magnitude
+            "pelemaxvoltageangle": r"\overline{\theta}",        # Max voltage angle
+            "peleminvoltageangle": r"\underline{\theta}",       # Min voltage angle
+            "peleinitvolt": r"V^{0}",                           # Initial voltage
 
             # --- Storage Parameters ---
-            "peleessduration": r"\tau^{s}",                      # Electrical Energy storage duration
-            "peleessinflowcycle": r"\tau^{i}",                   # Electrical Inflow cycle duration
-            "peleessoutflowcycle": r"\tau^{o}",                  # Electrical Outflow cycle duration
-            "peleessefficiency": r"\eta^{s}",                    # Electrical Storage efficiency
-            "peleesscapacity": r"\Psi",                          # Electrical Storage capacity
+            "peleessduration": r"\tau^{s}",                     # Electrical Energy storage duration
+            "peleessinflowcycle": r"\tau^{i}",                  # Electrical Inflow cycle duration
+            "peleessoutflowcycle": r"\tau^{o}",                 # Electrical Outflow cycle duration
+            "peleessefficiency": r"\eta^{s}",                   # Electrical Storage efficiency
+            "peleesscapacity": r"\Psi",                         # Electrical Storage capacity
 
             # =======================================================
             #                       VARIABLES
             # =======================================================
-            "vproduction": r"p",                               # Generation
+            "vproduction": r"p",                                # Generation
             "veleproduction": r"ep",                            # Electrical generation
             "vhydproduction": r"hp",                            # Hydrogen production
-            "vconsumption": r"c",                              # Consumption
+            "vconsumption": r"c",                               # Consumption
             "veleconsumption": r"ec",                           # Electrical consumption
             "vhydconsumption": r"hc",                           # Hydrogen consumption
             "vinventoryess": r"y",                              # Storage inventory
