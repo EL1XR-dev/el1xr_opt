@@ -35,6 +35,7 @@ jobs:
         run: |
           conda install glpk cartopy
           pip install -r requirements.txt
+          pip install -e .
 #          pip install el1xr_opt
 #          pip install highspy
       - name: Lint with flake8
