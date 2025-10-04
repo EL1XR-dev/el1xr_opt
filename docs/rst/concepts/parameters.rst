@@ -17,7 +17,7 @@ They are written in **uppercase** letters.
 :math:`\pelemarketsellingratio_{er}`           Electricity selling ratio for electricity market region                        «``pEleRetSellingRatio``»
 :math:`\pelemarketcertrevenue_{er}`            Electricity certificate fee for electricity market region            €/MWh     «``pEleRetelcertifikat``»
 :math:`\pelemarketpassthrough_{er}`            Electricity pass-through fee for electricity market region           €/MWh     «``pEleRetpaslag``»
-:math:`\pelemarketmoms_{er}`                   Electricity tax (moms) for electricity market region                           «``pEleRetmoms```
+:math:`\pelemarketmoms_{er}`                   Electricity tax (moms) for electricity market region                           «``pEleRetmoms``»
 :math:`\pelemarketnetfee_{er}`                 Electricity network fee for electricity market region                €/MWh     «``pEleRetnetavgift``»
 :math:`\pelemarkettariff_{er}`                 Tariff for electricity market region                                 €/MW      «``pEleRetTariff``»
 =============================================  ===================================================================  ========  ===========================================================================
