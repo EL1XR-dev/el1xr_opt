@@ -218,12 +218,13 @@ mathjax3_config = {
             # --- Market Costs ---
             "marketcost": r"C^{trade}",                         # Total market trading cost
             "elemarketcost": r"C^{trade,e}",                    # Electrical market trading cost
-            "elemarketbuycost": r"C^{trade,b,e}",               # Electrical market buying cost
-            "elemarketsellcost": r"C^{trade,s,e}",              # Electrical market selling profit
-            "hydmarketbuycost": r"C^{trade,b,h}",               # Hydrogen market
+            "elemarketcostbuy": r"C^{trade,b,e}",               # Electrical market buying cost
+            "elemarketcostsell": r"C^{trade,s,e}",              # Electrical market selling profit
             "hydmarketcost": r"C^{trade,h}",                    # Hydrogen market trading cost
-            "importcost": r"C^{imp}",                           # Import cost
-            "exportcost": r"C^{exp}",                           # Export cost
+            "hydmarketcostbuy": r"C^{trade,b,h}",               # Hydrogen market buying cost
+            "hydmarketcostsell": r"C^{trade,s,h}",              # Hydrogen market selling
+            "importcost": r"C^{imp}",                           # Total Import cost
+            "exportcost": r"C^{exp}",                           # Total Export cost
 
             # --- Generation Costs ---
             "generationcost": r"C^{gen}",                       # Total generation cost

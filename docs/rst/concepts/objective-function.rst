@@ -12,9 +12,9 @@ The symbos used in the objective function are written in **uppercase** letters a
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\elemarketcost_{p,sc}`                  Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
 :math:`\hydmarketcost_{p,sc}`                  Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
-:math:`\elegencost_{p,sc}`                     Total cost of electricity generation                                 €         «``vTotalEleGCost``»
-:math:`\hydcost_{p,sc}`                        Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
-:math:`\emissioncost_{p,sc}`                   Total cost of CO2 emissions                                          €         «``vTotalECost``»
+:math:`\elegenerationcost_{p,sc}`              Total cost of electricity generation                                 €         «``vTotalEleGCost``»
+:math:`\hydgenerationcost_{p,sc}`              Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
+:math:`\carboncost_{p,sc}`                     Total cost of CO2 emissions                                          €         «``vTotalECost``»
 :math:`\eleconsumptioncost_{p,sc}`             Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
 :math:`\hydconsumptioncost_{p,sc}`             Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
 :math:`\eleunservedenergycost_{p,sc}`          Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
@@ -46,8 +46,8 @@ The total cost is broken down into several components, each represented by a spe
 #.  **Market Costs** (``eTotalEleMCost``, ``eTotalHydMCost``)
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
-    *   Cost components: ``em^{C}_{p,sc,n}``, ``hm^{C}_{p,sc,n}``
-    *   Revenue components: ``em^{P}_{p,sc,n}``, ``hm^{P}_{p,sc,n}``
+    *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
+    *   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
 
     #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
