@@ -40,7 +40,7 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC} \pdiscountrate_{\periodindex} \times (&\elemarketcost_{p,sc} + \hydmarketcost_{p,sc} + \elegenerationcost_{p,sc} + \hydgenerationcost_{p,sc} + \carboncost_{p,sc} + \\
+   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC} \pdiscountrate_{\periodindex} \times (\elemarketcost_{p,sc} + \hydmarketcost_{p,sc} + &\elegenerationcost_{p,sc} + \hydgenerationcost_{p,sc} + \carboncost_{p,sc} + \\
             & \eleconsumptioncost_{p,sc} + \hydconsumptioncost_{p,sc} + \eleunservedenergycost_{p,sc} + \hydunservedenergycost_{p,sc} + \elepeakdemandcost_{p,sc})
 
 Key Cost Components
@@ -48,7 +48,8 @@ Key Cost Components
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-#.  **Market Costs** (``eTotalEleMCost``, ``eTotalHydMCost``)
+**Market Costs** (``eTotalEleMCost``, ``eTotalHydMCost``)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
     *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
