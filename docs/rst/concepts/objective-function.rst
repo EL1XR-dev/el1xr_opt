@@ -3,12 +3,12 @@ Objective Function
 
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
 
-The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost``.
+The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost`` (:math:`\alpha`).
 
 Total System Cost
 -----------------
 
-The total system cost is the sum of all discounted costs across every period (:math:`p`) and scenario (:math:`sc`) in the model horizon. The objective function can be expressed conceptually as:
+The total system cost is the sum of all discounted costs across every period (:math:`\periodindex`) and scenario (:math:`\scenarioindex`) in the model horizon. The objective function can be expressed conceptually as:
 
 Total system cost («``eTotalSCost``»)
 
@@ -18,7 +18,7 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{p \in P, sc \in SC} Γ_{p} \times (c^{EM}_{p,sc} + c^{HM}_{p,sc} + c^{EG}_{p,sc} + c^{HG}_{p,sc} + c^{E}_{p,sc} + c^{EC}_{p,sc} + c^{HC}_{p,sc} + c^{ER}_{p,sc} + c^{HR}_{p,sc} + c^{EP}_{p,sc})
+   \alpha = \sum_{\periodindex \in \nP, sc \in SC} Γ_{p} \times (c^{EM}_{p,sc} + c^{HM}_{p,sc} + c^{EG}_{p,sc} + c^{HG}_{p,sc} + c^{E}_{p,sc} + c^{EC}_{p,sc} + c^{HC}_{p,sc} + c^{ER}_{p,sc} + c^{HR}_{p,sc} + c^{EP}_{p,sc})
 
 .. math::
 
