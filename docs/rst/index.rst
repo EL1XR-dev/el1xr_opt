@@ -52,9 +52,10 @@ Index
    :maxdepth: 2
    :caption: Concepts
 
-   concepts/model-sets
-   concepts/decision-variables
-   concepts/objective-and-costs
+   concepts/sets
+   concepts/parameters
+   concepts/variables
+   concepts/objective-function
    concepts/constraints
    concepts/results-and-postprocessing
 

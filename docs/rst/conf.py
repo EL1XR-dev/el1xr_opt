@@ -135,23 +135,303 @@ html_js_files = [
 mathjax3_config = {
     "tex": {
         "macros": {
-            # 0-arg
-            "cost": r"C^{\mathrm{op}}",
+            # === SETS ===
+            "nB": r"\mathcal{B}",                               # All buses
+            "nBE": r"\mathcal{B}^{e}",                          # Buses with electrical connections
+            "nBH": r"\mathcal{B}^{h}",                          # Buses with hydrogen connections
+            "nC": r"\mathcal{C}",                               # All circuits
+            "nG": r"\mathcal{G}",                               # All generators
+            "nGE": r"\mathcal{G}^{e}",                          # All electrical generators
+            "nGH": r"\mathcal{G}^{h}",                          # All hydrogen generators
+            "nE": r"\mathcal{E}",                               # All storage units
+            "nEE": r"\mathcal{E}^{e}",                          # All electrical storage units
+            "nEH": r"\mathcal{E}^{h}",                          # All hydrogen storage units
+            "nL": r"\mathcal{L}",                               # All lines
+            "nR": r"\mathcal{R}",                               # All regions
+            "nZ": r"\mathcal{Z}",                               # All zones
+            "nA": r"\mathcal{A}",                               # All areas
+            "nT": r"\mathcal{T}",                               # All time steps
+            "nV": r"\mathcal{V}",                               # All time step intervals
+            "nT0": r"\mathcal{T}^{0}",                          # All time steps except the first one
+            "nV0": r"\mathcal{V}^{0}",                          # All time step intervals except the first one
+            "nP": r"\mathcal{P}",                               # All periods
+            "nP0": r"\mathcal{P}^{0}",                          # All periods except the first one
+            "nP1": r"\mathcal{P}^{1}",                          # All periods except the last one
+            "nP2": r"\mathcal{P}^{2}",                          # All periods except the first and last one
+            "mS": r"\mathcal{S}",                               # All scenarios
+            "mS0": r"\mathcal{S}^{0}",                          # All scenarios except the first one
+            "mS1": r"\mathcal{S}^{1}",                          # All scenarios except the last one
+            "mS2": r"\mathcal{S}^{2}",                          # All scenarios except the first and last one
+            "nW": r"\mathcal{W}",                               # All weeks in a year
+            "nW0": r"\mathcal{W}^{0}",                          # All weeks in a year except the first one
+            "nW1": r"\mathcal{W}^{1}",                          # All weeks in a year except the last one
+            "nW2": r"\mathcal{W}^{2}",                          # All weeks in a year except the first and last one
+            "nM": r"\mathcal{M}",                               # All months in a year
+            "nM0": r"\mathcal{M}^{0}",                          # All months in a year except the first one
+            "nM1": r"\mathcal{M}^{1}",                          # All months in a year except the last one
+            "nM2": r"\mathcal{M}^{2}",                          # All months in a year except the first and last one
+            "nH": r"\mathcal{H}",                               # All hours in a day
+            "nH0": r"\mathcal{H}^{0}",                          # All hours in a day except the first one
+            "nH1": r"\mathcal{H}^{1}",                          # All hours in a day except the last one
+            "nH2": r"\mathcal{H}^{2}",                          # All hours in a day except the first and last one
+            "nD": r"\mathcal{D}",                               # All days in a week
+            "nD0": r"\mathcal{D}^{0}",                          # All days in a week except the first one
+            "nD1": r"\mathcal{D}^{1}",                          # All days in a week except the last one
 
-            # 1-arg
-            "load": [r"P^{\mathrm{L}}_{#1}", 1],
-            "gen":  [r"P^{\mathrm{G}}_{#1}", 1],
+            # === INDEXES ===
+            "busindexa": r"i",                                  # Index for "from" bus of a branch
+            "busindexb": r"j",                                  # Index for "to" bus of a branch
+            "branchindex": r"ij",                               # Index for branch between bus i and j
+            "lineindexa": r"ijc",                               # Index for "from" bus of a line
+            "lineindexb": r"jic",                               # Index for "to" bus of a line
+            "circuitindex": r"c",                               # Index for circuit of a line
+            "elegenindex": r"g^{e}",                            # Index for electrical generator
+            "hydgenindex": r"g^{h}",                            # Index for hydrogen generator
+            "genindex": r"g",                                   # Index for generator
+            "eleloadindex": r"d^{e}",                           # Index for electrical load
+            "hydloadindex": r"d^{h}",                           # Index for hydrogen load
+            "loadindex": r"d",                                  # Index for load
+            "elestorageindex": r"e^{e}",                        # Index for electrical storage
+            "hydstorageindex": r"e^{h}",                        # Index for hydrogen storage
+            "storageindex": r"e",                               # Index for storage
+            "periodindex": r"p",                                # Index for period
+            "scenarioindex": r"s",                              # Index for scenario
+            "weekindex": r"w",                                  # Index for week
+            "monthindex": r"m",                                 # Index for month
+            "dayindex": r"d",                                   # Index for day
+            "hourindex": r"h",                                  # Index for hour
+            "intervalindex": r"u",                              # Index for time interval
+            "timeindex": r"n",                                  # Index for time  step
+            "timestepindex": r"\nu",                            # Index for time  step interval
+            "storageperiodindex": r"p'",                        # Index for storage period
+            "storagetimeindex": r"n'",                          # Index for storage time step
+            "storagetimestepindex": r"\nu'",                    # Index for storage time step interval
+            "storageweekindex": r"w'",                          # Index for storage week
+            "storagemonthindex": r"m'",                         # Index for storage month
+            "storagedayindex": r"d'",                           # Index for storage day
+            "storagehourindex": r"h'",                          # Index for storage hour
+            "zoneindex": r"z",                                  # Index for zone
+            "areaindex": r"a",                                  # Index for area
+            "regionindex": r"r",                                # Index for region
 
-            # 2-arg
-            "flow": [r"f_{#1,#2}", 2],
+            # === FUNCTIONS ===
+            # --- Market Costs ---
+            "marketcost": r"C^{trade}",                         # Total market trading cost
+            "elemarketcost": r"C^{trade,e}",                    # Electrical market trading cost
+            "hydmarketcost": r"C^{trade,h}",                    # Hydrogen market trading cost
+            "importcost": r"C^{imp}",                           # Import cost
+            "exportcost": r"C^{exp}",                           # Export cost
 
-            # (optional) 3-arg+ examples – give them distinct names
-            "inj":   [r"p_{#1,#2}^{G,#3}", 3],
-            "sumgenle": [r"\sum_{#1} p_{#1,#2}^{#4,#3} \le #5", 5],
-            # four-arg macro  \sumgen{i}{t}{s}{G} -> \sum_{i} p_{i,t}^{G,s}
-            "sumgen": [r"\sum_{#1} p_{#1,#2}^{#4,#3}", 4],
-            # # five-arg macro  \sumgen{i}{t}{s}{G}{\leq P} -> \sum_{i} p_{i,t}^{G,s} \leq P
-            # "sumgen": [r"\sum_{#1} p_{#1,#2}^{#4,#3} \leq #5", 5],
+            # --- Generation Costs ---
+            "generationcost": r"C^{gen}",                       # Total generation cost
+            "elegenerationcost": r"C^{gen,e}",                  # Electrical generation cost
+            "hydgenerationcost": r"C^{gen,h}",                  # Hydrogen generation cost
+            "startcost": r"C^{start}",                          # Start-up cost
+            "shutdowncost": r"C^{shut}",                        # Shut-down cost
+            "noloadcost": r"C^{nl}",                            # No-load cost
+            "fuelcost": r"C^{fuel}",                            # Fuel cost
+            "watercost": r"C^{water}",                          # Water cost
+            "maintenancecost": r"C^{maint}",                    # Maintenance cost
+            "operationcost": r"C^{op}",                         # Operation cost
+
+            # --- Storage Costs ---
+            "storagecost": r"C^{str}",                          # Storage cost
+
+            # --- Demand & Consumption Costs ---
+            "consumptioncost": r"C^{con}",                      # Total consumption cost
+            "eleconsumptioncost": r"C^{con,e}",                 # Electrical consumption cost
+            "hydconsumptioncost": r"C^{con,h}",                 # Hydrogen consumption cost
+            "demandcost": r"C^{dem}",                           # Demand (capacity/volumetric) cost
+            "eledemandcost": r"C^{dem,e}",                      # Electrical demand cost
+            "hyddemandcost": r"C^{dem,h}",                      # Hydrogen demand cost
+            "peakdemandcost": r"C^{peak}",                      # Peak demand cost
+            "elepeakdemandcost": r"C^{peak,e}",                 # Electrical peak demand cost
+            "hydpeakdemandcost": r"C^{peak,h}",                 # Hydrogen peak demand cost
+
+            # --- Transmission & Infrastructure Costs ---
+            "transmissioncost": r"C^{tr}",                      # Transmission system cost
+            "linecost": r"C^{line}",                            # Line cost
+            "convertercost": r"C^{conv}",                       # Converter cost
+            "hvdcost": r"C^{hvdc}",                             # HVDC cost
+
+            # --- Flexibility & Ancillary Services Costs ---
+            "flexibilitycost": r"C^{flex}",                     # Flexibility provision cost
+            "ancillaryservicescost": r"C^{as}",                 # Ancillary services total cost
+            "spinningreservecost": r"C^{sp}",                   # Spinning reserve cost
+            "nonspinningreservecost": r"C^{ns}",                # Non-spinning reserve cost
+            "regulationupcost": r"C^{reg,u}",                   # Regulation-up cost
+            "regulationdowncost": r"C^{reg,d}",                 # Regulation-down cost
+            "reserveprocurementcost": r"C^{res,proc}",          # Reserve procurement cost
+            "reserveactivationcost": r"C^{res,act}",            # Reserve activation cost
+
+            # --- Curtailment & Reliability Costs ---
+            "unservedenergycost": r"C^{ue}",                    # Unserved energy cost
+            "loadsheddingcost": r"C^{ls}",                      # Load-shedding cost
+            "curtailmentcost": r"C^{curt}",                     # Curtailment cost
+
+            # --- Environmental / Policy Costs ---
+            "emissionpermitcost": r"C^{emiss,perm}",            # Emission permit (ETS) cost
+            "emissiontaxcost": r"C^{emiss,tax}",                # Emission tax cost
+            "carboncost": r"C^{carb}",                          # Carbon cost (if modeled separately)
+
+            # --- Investment & Financial Costs ---
+            "investmentcost": r"C^{inv}",                       # Investment cost
+            "fixedcost": r"C^{fix}",                            # Fixed cost
+            "variablecost": r"C^{var}",                         # Variable cost
+            "annualcost": r"C^{ann}",                           # Annualized cost
+            "totalcost": r"C^{tot}",                            # Total system cost
+
+            # --- Total and Category Emissions ---
+            "genemission": r"EM^{gen}",                         # Emissions from generation
+            "conemission": r"EM^{con}",                         # Emissions from consumption
+            "totemission": r"EM^{tot}",                         # Total emissions
+
+            # --- Specific Pollutants ---
+            "genCO2": r"EM^{gen,co2}",                          # CO2 from generation
+            "conCO2": r"EM^{con,co2}",                          # CO2 from consumption
+            "totCO2": r"EM^{tot,co2}",                          # Total CO2
+
+            "genNOx": r"EM^{gen,nox}",                          # NOx from generation
+            "conNOx": r"EM^{con,nox}",                          # NOx from consumption
+            "totNOx": r"EM^{tot,nox}",                          # Total NOx
+
+            "genSO2": r"EM^{gen,so2}",                          # SO2 from generation
+            "conSO2": r"EM^{con,so2}",                          # SO2 from consumption
+            "totSO2": r"EM^{tot,so2}",                          # Total SO2
+
+            "genPM25": r"EM^{gen,pm25}",                        # PM2.5 from generation
+            "conPM25": r"EM^{con,pm25}",                        # PM2.5 from consumption
+            "totPM25": r"EM^{tot,pm25}",                        # Total PM2.5
+
+            # --- Operation-related Emissions (useful decomposition) ---
+            "startupemission": r"EM^{start}",                   # Start-up emissions
+            "shutdownemission": r"EM^{shut}",                   # Shut-down emissions
+            "noloademission": r"EM^{nl}",                       # No-load emissions
+            "storageemission": r"EM^{str}",                     # Storage-induced emissions (via losses)
+            "importemission": r"EM^{imp}",                      # Virtual emissions of imports
+            "exportemission": r"EM^{exp}",                      # Virtual emissions of exports
+            "LROcost": r"C^{LRO}",
+
+            # === FUNCTIONS ===
+            # --- Prices (use uppercase Pi for market prices) ---
+            "pelespotprice": r"\Pi^{e}",                         # Electrical spot price
+            "phydspotprice": r"\Pi^{h}",                         # Hydrogen spot price
+            "pelebuyprice": r"\Pi^{b,e}",                        # Electrical buy price
+            "phydbuyprice": r"\Pi^{b,h}",                        # Hydrogen buy price
+            "pelesellprice": r"\Pi^{s,e}",                       # Electrical sell price
+            "phydsellprice": r"\Pi^{s,h}",                       # Hydrogen sell price
+            "peleimportprice": r"\Pi^{imp,e}",                   # Electrical import price
+            "phydimportprice": r"\Pi^{imp,h}",                   # Hydrogen import price
+            "peleexportprice": r"\Pi^{exp,e}",                   # Electrical export price
+            "phydexportprice": r"\Pi^{exp,h}",                   # Hydrogen export price
+
+            # --- Demand ---
+            "peledemand": r"D^{e}",                              # Electrical demand
+            "phyddemand": r"D^{h}",                              # Hydrogen demand
+            "pelemaxdemand": r"\overline{D}^{e}",                # Electrical max demand
+            "pelemindemand": r"\underline{D}^{e}",               # Electrical min demand
+            "phydmaxdemand": r"\overline{D}^{h}",                # Hydrogen max demand
+            "phydmindemand": r"\underline{D}^{h}",               # Hydrogen min demand
+            "pelepeakdemand": r"D^{e,peak}",                     # Electrical peak demand
+            "phydpeakdemand": r"D^{h,peak}",                     # Hydrogen peak demand
+
+            # --- Generation and Consumption Limits ---
+            "pelemaxproduction": r"\overline{EP}^{e}",           # Max electrical generation
+            "peleminproduction": r"\underline{EP}^{e}",          # Min electrical generation
+            "phydmaxproduction": r"\overline{HP}^{h}",           # Max hydrogen generation
+            "phydminproduction": r"\underline{HP}^{h}",          # Min hydrogen generation
+            "pelemaxconsumption": r"\overline{EC}^{e}",          # Max electrical consumption
+            "peleminconsumption": r"\underline{EC}^{e}",         # Min electrical consumption
+            "phydmaxconsumption": r"\overline{HC}^{h}",          # Max hydrogen consumption
+            "phydminconsumption": r"\underline{HC}^{h}",         # Min hydrogen consumption
+
+            # --- Technical Parameters ---
+            "prampuprate": r"R^{u}",                             # Ramp-up rate
+            "prampdwrate": r"R^{d}",                             # Ramp-down rate
+            "puptime": r"T^{u}",                                 # Minimum up time
+            "pdwtime": r"T^{d}",                                 # Minimum down time
+            "peleefficiency": r"\eta^{e}",                       # Electrical efficiency
+            "phydefficiency": r"\eta^{h}",                       # Hydrogen efficiency
+            "peletohydfunction": r"F^{e2h}",                     # Power-to-hydrogen conversion
+
+            # --- Cost Parameters ---
+            "pstartupcost": r"C^{su}",                           # Start-up cost
+            "pshutdowncost": r"C^{sd}",                          # Shut-down cost
+            "pnoloadcost": r"C^{nl}",                            # No-load cost
+            "pfuelafactor": r"A",                                # Linear fuel cost coeff.
+            "pfuelbfactor": r"B",                                # Quadratic fuel cost coeff.
+            "pfuelcfactor": r"C",                                # Fixed fuel cost coeff.
+            "pmaintenancecost": r"C^{m}",                        # Maintenance cost
+            "poperationcost": r"C^{o}",                          # Operation cost
+            "pfixedcost": r"C^{fix}",                            # Fixed cost
+            "pvariablecost": r"C^{var}",                         # Variable cost
+            "pinvestmentcost": r"C^{inv}",                       # Investment cost
+            "pannualcost": r"C^{ann}",                           # Annualized cost
+            "pcarbonprice": r"C^{co2}",                          # Carbon price or tax
+
+            # --- Electrical Network Parameters ---
+            "peleresistantline": r"R",                           # Resistance
+            "pelereactanceline": r"X",                           # Reactance
+            "peleimpedanceline": r"Z",                           # Impedance magnitude
+            "peleconductline": r"G",                             # Conductance
+            "pelesusceptline": r"B",                             # Susceptance
+            "peleshuntsuscepline": r"B^{l}",                     # Line shunt susceptance
+            "pelemaxcurrent": r"\overline{I}",                   # Max current
+            "pelemaxapparentpower": r"\overline{S}",             # Max apparent power
+            "pelemaxvolt": r"\overline{V}",                      # Max voltage magnitude
+            "peleminvolt": r"\underline{V}",                     # Min voltage magnitude
+            "pelemaxvoltageangle": r"\overline{\theta}",         # Max voltage angle
+            "peleminvoltageangle": r"\underline{\theta}",        # Min voltage angle
+            "peleinitvolt": r"V^{0}",                            # Initial voltage
+
+            # --- Storage Parameters ---
+            "peleessduration": r"\tau^{s}",                      # Electrical Energy storage duration
+            "peleessinflowcycle": r"\tau^{i}",                   # Electrical Inflow cycle duration
+            "peleessoutflowcycle": r"\tau^{o}",                  # Electrical Outflow cycle duration
+            "peleessefficiency": r"\eta^{s}",                    # Electrical Storage efficiency
+            "peleesscapacity": r"\Psi",                          # Electrical Storage capacity
+
+            # =======================================================
+            #                       VARIABLES
+            # =======================================================
+            "vproduction": r"p",                               # Generation
+            "veleproduction": r"ep",                            # Electrical generation
+            "vhydproduction": r"hp",                            # Hydrogen production
+            "vconsumption": r"c",                              # Consumption
+            "veleconsumption": r"ec",                           # Electrical consumption
+            "vhydconsumption": r"hc",                           # Hydrogen consumption
+            "vinventoryess": r"y",                              # Storage inventory
+            "venergyoutflow": r"o",                             # Storage outflow
+            "vspillageess": r"s",                               # Storage spillage
+            "vcommitbin": r"uc",                                # Unit commitment binary
+            "vstartupbin": r"su",                               # Start-up binary
+            "vshutdownbin": r"sd",                              # Shut-down binary
+            "vmagvolt": r"v^{2}",                               # Squared voltage magnitude
+            "vangvolt": r"\theta",                              # Voltage angle
+            "vflow": r"f",                                      # Branch flow
+            "vactflow": r"f^{P}",                               # Active power flow
+            "vreactflow": r"f^{Q}",                             # Reactive power flow
+            "veleflow": r"f^{e}",                               # Electrical flow
+            "vhydflow": r"f^{h}",                               # Hydrogen flow
+
+            # --- Reserves ---
+            "vPupward": r"r^{p,u}",                             # Upward power reserve
+            "vPdownward": r"r^{p,d}",                           # Downward power reserve
+            "vCupward": r"r^{c,u}",                             # Upward consumption reserve
+            "vCdownward": r"r^{c,d}",                           # Downward consumption reserve
+
+            # =======================================================
+            #               Robustness / Uncertainty Terms
+            # =======================================================
+            "robustbudget": r"\Gamma",                          # Robustness budget
+            "devep": r"EP^{dev}",                               # Generation deviation
+            "devdem": r"D^{dev}",                               # Demand deviation
+            "BigM": r"M",                                       # Big-M constant
+            "robustdev": r"\omega",                             # Deviation variable
+            "lightslack": r"m",                                 # Slack variable
+            "dualnumber": r"\upsilon",                          # Dual variable index
+            "dualperiod": r"\eta",                              # Dual variable period
+            "robustindicator": r"\chi",                         # Robustness indicator
         }
     }
 }
