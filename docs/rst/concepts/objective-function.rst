@@ -10,16 +10,16 @@ The symbos used in the objective function are written in **uppercase** letters a
 =============================================  ===================================================================  ========  ===========================================================================
 **Symbol**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
 ---------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`\electricitymarketcost_{p,sc}`          Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
-:math:`\hydrogenmarketcost_{p,sc}`             Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
-:math:`\electricitygencost_{p,sc}`             Total cost of electricity generation                                 €         «``vTotalEleGCost``»
-:math:`\hydrogengencost_{p,sc}`                Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
+:math:`\elemarketcost_{p,sc}`                  Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
+:math:`\hydmarketcost_{p,sc}`                  Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
+:math:`\elegencost_{p,sc}`                     Total cost of electricity generation                                 €         «``vTotalEleGCost``»
+:math:`\hydcost_{p,sc}`                        Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
 :math:`\emissioncost_{p,sc}`                   Total cost of CO2 emissions                                          €         «``vTotalECost``»
-:math:`\electricityconscost_{p,sc}`            Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
-:math:`\hydrogenconscost_{p,sc}`               Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
-:math:`\electricityrelcost_{p,sc}`             Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
-:math:`\hydrogenrelcost_{p,sc}`                Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
-:math:`\electricitypeakcost_{p,sc}`            Total cost of electricity peak demand (capacity tariff)              €         «``vTotalElePeakCost``»
+:math:`\eleconsumptioncost_{p,sc}`             Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
+:math:`\hydconsumptioncost_{p,sc}`             Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
+:math:`\eleunservedenergycost_{p,sc}`          Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
+:math:`\hydunservedenergycost_{p,sc}`          Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
+:math:`\elepeakdemandcost_{p,sc}`              Total cost of electricity peak demand (capacity tariff)              €         «``vTotalElePeakCost``»
 :math:`\alpha`                                 Total system cost (objective function)                               €         «``vTotalSCost``»
 =============================================  ===================================================================  ========  ===========================================================================
 
@@ -36,7 +36,7 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC} \discountrate_{\periodindex} \times (\elemarketcost_{p,sc} + \hydmarketcost_{p,sc} + \elegenerationcost_{p,sc} + \hydgenerationcost_{p,sc} + \carboncost_{p,sc} + \eleconsumptioncost_{p,sc} + \hydconsumptioncost_{p,sc} + \eleunservedenergycost_{p,sc} + \hydunservedenergycost_{p,sc} + \elepeakdemandcost_{p,sc})
+   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC} \pdiscountrate_{\periodindex} \times (\elemarketcost_{p,sc} + \hydmarketcost_{p,sc} + \elegenerationcost_{p,sc} + \hydgenerationcost_{p,sc} + \carboncost_{p,sc} + \eleconsumptioncost_{p,sc} + \hydconsumptioncost_{p,sc} + \eleunservedenergycost_{p,sc} + \hydunservedenergycost_{p,sc} + \elepeakdemandcost_{p,sc})
 
 Key Cost Components
 -------------------
