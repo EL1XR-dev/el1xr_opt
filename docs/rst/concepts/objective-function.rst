@@ -92,7 +92,7 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
          + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
       \Big) \\
    &\quad
-      + \sum_{\,t \in \mathcal{EGT}}
+      + \sum_{\,\elenonresgenindex \in nGE}
       \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \mathrm{pEleGenConstantVarCost}_{t}\,\mathrm{vEleGenCommitment}_{\periodindex,\scenarioindex,\timeindex,t}
