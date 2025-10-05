@@ -496,17 +496,19 @@ mathjax3_config = {
     }
 }
 
-# --- LaTeX: mirror MathJax macros so PDF builds ---
+latex_engine = "lualatex"  # Unicode-safe
 def _latex_macros_from_mathjax(macros: dict) -> str:
-    lines = [r'\usepackage{amsmath,amssymb}']
+    """Auto-generate \providecommand macros for LaTeX from mathjax3_config."""
+    lines = [
+        r"% --- Auto-generated macros ---",
+        r"\usepackage{amsmath,amssymb,mathtools}",
+        r"\DeclareUnicodeCharacter{03C9}{\ensuremath{\omega}}",  # For ω
+    ]
     for name, body in macros.items():
-        # Only simple macros (no arguments) in your config, so this is fine:
         if isinstance(body, str):
-            lines.append(r'\providecommand{\%s}{%s}' % (name, body))
-    return '\n'.join(lines)
+            lines.append(r"\providecommand{\%s}{%s}" % (name, body))
+    return "\n".join(lines)
 
 latex_elements = {
-    'preamble': _latex_macros_from_mathjax(
-        mathjax3_config['tex']['macros']
-    ),
+    "preamble": _latex_macros_from_mathjax(mathjax3_config["tex"]["macros"]),
 }
