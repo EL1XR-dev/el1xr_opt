@@ -85,14 +85,14 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 .. math::
    \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = &\sum_{\elegenindex \in nGE}
+   = &\sum_{\elegenindex \in \nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
          + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
       \Big) \\
    &\quad
-      + \sum_{\,\elenonresgenindex \in nGE}
+      + \sum_{\,\elenonresgenindex \in \nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
@@ -102,7 +102,7 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 .. math::
    \begin{aligned}
    \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = &\sum_{\hydgenindex \in nGH}
+   = &\sum_{\hydgenindex \in \nGH}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
