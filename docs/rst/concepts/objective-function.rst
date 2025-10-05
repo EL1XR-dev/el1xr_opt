@@ -18,30 +18,8 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \begin{aligned}
-   \alpha
-   &= \sum_{\periodindex \in \nP}
-      \pdiscountrate_{\periodindex}
-      \Bigg(
-        \sum_{\scenarioindex \in \nS}
-        \sum_{\timeindex \in \nT}
-        \big(
-          \elemarketcost_{\periodindex\scenarioindex\timeindex}
-        + \hydmarketcost_{\periodindex\scenarioindex\timeindex}
-        + \elegenerationcost_{\periodindex\scenarioindex\timeindex}
-        + \hydgenerationcost_{\periodindex\scenarioindex\timeindex}
-        + \carboncost_{\periodindex\scenarioindex\timeindex} \\
-        &\quad
-        + \eleconsumptioncost_{\periodindex\scenarioindex\timeindex}
-        + \hydconsumptioncost_{\periodindex\scenarioindex\timeindex}
-        + \eleunservedenergycost_{\periodindex\scenarioindex\timeindex}
-        + \hydunservedenergycost_{\periodindex\scenarioindex\timeindex}
-        \big)
-      \Bigg)
-      + \sum_{\periodindex \in \nP}
-        \sum_{\scenarioindex \in \nS}
-        \elepeakdemandcost_{\periodindex,\scenarioindex}
-   \end{aligned}
+   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nS, \timeindex \in \nT} \pdiscountrate_{\periodindex} (\elemarketcost_{\periodindex\scenarioindex\timeindex} + \hydmarketcost_{p,sc} + &\elegenerationcost_{p,sc} + \hydgenerationcost_{p,sc} + \carboncost_{p,sc} + \\
+            & \eleconsumptioncost_{p,sc} + \hydconsumptioncost_{p,sc} + \eleunservedenergycost_{p,sc} + \hydunservedenergycost_{p,sc} + \elepeakdemandcost_{p,sc})
 
 Key Cost Components
 -------------------
