@@ -31,7 +31,7 @@ And the total cost is the sum of all operational costs, discounted to present va
         + \elegenerationcost_{\periodindex\scenarioindex\timeindex}
         + \hydgenerationcost_{\periodindex\scenarioindex\timeindex}
         + \carboncost_{\periodindex\scenarioindex\timeindex} \\
-        &\qquad
+        &\quad
         + \eleconsumptioncost_{\periodindex\scenarioindex\timeindex}
         + \hydconsumptioncost_{\periodindex\scenarioindex\timeindex}
         + \eleunservedenergycost_{\periodindex\scenarioindex\timeindex}
