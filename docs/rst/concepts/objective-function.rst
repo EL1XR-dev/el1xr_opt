@@ -85,11 +85,11 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 .. math::
    \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   &= \sum_{\,g \in \mathcal{EG}}
-      \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
+   = \sum_{\elegenindex \in nGE}
+      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \mathrm{pEleGenLinearVarCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
-         + \mathrm{pEleGenOMVariableCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
+           \pvariablecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+         + \pmaintenancecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
       \Big) \\
    &\quad
       + \sum_{\,t \in \mathcal{EGT}}
