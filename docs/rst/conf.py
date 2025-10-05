@@ -197,8 +197,8 @@ mathjax3_config = {
             "eleconsindex": r"c^{e}",                           # Index for electrical consumer
             "hydconsindex": r"c^{h}",                           # Index for hydrogen consumer
             "consindex": r"c",                                  # Index for consumer
-            "elepeakindex": r"d^{e,peak}",                      # Index for electrical peak load
-            "hydpeakindex": r"d^{h,peak}",                      # Index for hydrogen peak load
+            "elepeakindex": r"k^{e}",                      # Index for electrical peak load
+            "hydpeakindex": r"k^{h}",                      # Index for hydrogen peak load
             "peakindex": r"d^{peak}",                           # Index for peak load
             "elestorageindex": r"e^{e}",                        # Index for electrical storage
             "hydstorageindex": r"e^{h}",                        # Index for hydrogen storage
