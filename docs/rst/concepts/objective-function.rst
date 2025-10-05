@@ -83,21 +83,23 @@ This is the operational cost of running the generation and production assets. It
 The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
 
 .. math::
+   \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = \sum_{\elegenindex \in nGE}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+   &= \sum_{\,g \in \mathcal{EG}}
+      \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pvariablecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-         + \pmaintenancecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-      \Big)
-   \quad
-      + \sum_{\,\timeindex \in \nT}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+           \mathrm{pEleGenLinearVarCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
+         + \mathrm{pEleGenOMVariableCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
+      \Big) \\
+   &\quad
+      + \sum_{\,t \in \mathcal{EGT}}
+      \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
-         + \pstartupcost_{\elenonresgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
-         + \pshutdowncost_{\elenonresgenindex}\,\vshutdowncost_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+           \mathrm{pEleGenConstantVarCost}_{t}\,\mathrm{vEleGenCommitment}_{\periodindex,\scenarioindex,\timeindex,t}
+         + \mathrm{pEleGenStartUpCost}_{t}\,\mathrm{vEleGenStartUp}_{\periodindex,\scenarioindex,\timeindex,t}
+         + \mathrm{pEleGenShutDownCost}_{t}\,\mathrm{vEleGenShutDown}_{\periodindex,\scenarioindex,\timeindex,t}
       \Big)
+   \end{aligned}
 
 .. math::
 \text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
