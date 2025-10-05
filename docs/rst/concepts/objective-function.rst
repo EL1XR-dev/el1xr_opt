@@ -88,16 +88,16 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
    &= \sum_{\elegenindex \in nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \mathrm{pEleGenLinearVarCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
-         + \mathrm{pEleGenOMVariableCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
+           \pvariablecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+         + \pmaintenancecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
       \Big) \\
    &\quad
-      + \sum_{\,t \in \mathcal{EGT}}
-      \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
+      + \sum_{\,\timeindex \in \nT}
+      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \mathrm{pEleGenConstantVarCost}_{t}\,\mathrm{vEleGenCommitment}_{\periodindex,\scenarioindex,\timeindex,t}
-         + \mathrm{pEleGenStartUpCost}_{t}\,\mathrm{vEleGenStartUp}_{\periodindex,\scenarioindex,\timeindex,t}
-         + \mathrm{pEleGenShutDownCost}_{t}\,\mathrm{vEleGenShutDown}_{\periodindex,\scenarioindex,\timeindex,t}
+           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+         + \pstartupcost_{\elenonresgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+         + \pshutdowncost_{\elenonresgenindex}\,\vshutdowncost_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
       \Big)
    \end{aligned}
 

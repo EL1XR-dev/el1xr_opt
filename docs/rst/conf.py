@@ -189,6 +189,8 @@ mathjax3_config = {
             "lineindexb": r"jic",                               # Index for "to" bus of a line
             "circuitindex": r"c",                               # Index for circuit of a line
             "elegenindex": r"g^{e}",                            # Index for electrical generator
+            "elenonresgenindex": r"g^{e,nonres}",               # Index for non-renewable electrical generator
+            "elenresgenindex": r"g^{e,res}",                    # Index for renewable electrical
             "hydgenindex": r"g^{h}",                            # Index for hydrogen generator
             "genindex": r"g",                                   # Index for generator
             "eleloadindex": r"d^{e}",                           # Index for electrical load
@@ -398,19 +400,19 @@ mathjax3_config = {
             "peletohydfunction": r"F^{e2h}",                    # Power-to-hydrogen conversion
 
             # --- Cost Parameters ---
-            "pstartupcost": r"C^{su}",                          # Start-up cost
-            "pshutdowncost": r"C^{sd}",                         # Shut-down cost
+            "pstartupcost": r"CSU",                             # Start-up cost
+            "pshutdowncost": r"CSD",                            # Shut-down cost
             "pnoloadcost": r"C^{nl}",                           # No-load cost
             "pfuelafactor": r"A",                               # Linear fuel cost coeff.
             "pfuelbfactor": r"B",                               # Quadratic fuel cost coeff.
             "pfuelcfactor": r"C",                               # Fixed fuel cost coeff.
-            "pmaintenancecost": r"C^{m}",                       # Maintenance cost
-            "poperationcost": r"C^{o}",                         # Operation cost
-            "pfixedcost": r"C^{fix}",                           # Fixed cost
-            "pvariablecost": r"C^{var}",                        # Variable cost
+            "pmaintenancecost": r"CM",                          # Maintenance cost
+            "poperationcost": r"CO",                            # Operation cost
+            "pfixedcost": r"CF",                                # Fixed cost
+            "pvariablecost": r"CV",                             # Variable cost
             "pinvestmentcost": r"C^{inv}",                      # Investment cost
             "pannualcost": r"C^{ann}",                          # Annualized cost
-            "pcarbonprice": r"C^{co2}",                         # Carbon price or tax
+            "pcarbonprice": r"CE",                              # Carbon price or tax
 
             # --- Electrical Network Parameters ---
             "peleresistantline": r"R",                          # Resistance
