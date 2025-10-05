@@ -18,8 +18,8 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nS, \timeindex \in \nT} \pdiscountrate_{\periodindex} (\elemarketcost_{\periodindex,\scenarioindex,\timeindex} + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex} + &\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex} + \carboncost_{\periodindex,\scenarioindex,\timeindex} + \\
-            & \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}) + \sum_{\periodindex \in \nP, \scenarioindex \in \nS}\elepeakdemandcost_{p,sc}
+   \alpha = \sum_{ \periodindex \in \nP, \scenarioindex \in \nS, \timeindex \in \nT } \pdiscountrate_{\periodindex} (\elemarketcost_{ \periodindex, \scenarioindex, \timeindex} + \hydmarketcost_{ \periodindex, \scenarioindex, \timeindex} + &\elegenerationcost_{ \periodindex, \scenarioindex, \timeindex} + \hydgenerationcost_{ \periodindex, \scenarioindex, \timeindex} + \carboncost_{ \periodindex, \scenarioindex, \timeindex} + \\
+            & \eleconsumptioncost_{ \periodindex, \scenarioindex, \timeindex } + \hydconsumptioncost_{ \periodindex, \scenarioindex, \timeindex} + \eleunservedenergycost_{ \periodindex, \scenarioindex, \timeindex} + \hydunservedenergycost_{ \periodindex, \scenarioindex, \timeindex}) + \sum_{ \periodindex \in \nP, \scenarioindex \in \nS}\elepeakdemandcost_{p,sc}
 
 Key Cost Components
 -------------------
@@ -36,10 +36,10 @@ This represents the net cost of trading with external markets. It is calculated 
 *   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
 
 .. math::
-   \elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}
+   \elemarketcost_{ \periodindex, \scenarioindex, \timeindex } = \elemarketcostbuy_{ \periodindex, \scenarioindex, \timeindex } - \elemarketcostsell_{ \periodindex, \scenarioindex, \timeindex }
 
 .. math::
-   \hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}
+   \hydmarketcost_{ \periodindex, \scenarioindex, \timeindex } = \hydmarketcostbuy_{ \periodindex, \scenarioindex, \timeindex } - \hydmarketcostsell_{ \periodindex, \scenarioindex, \timeindex }
 
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
