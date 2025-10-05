@@ -194,6 +194,12 @@ mathjax3_config = {
             "eleloadindex": r"d^{e}",                           # Index for electrical load
             "hydloadindex": r"d^{h}",                           # Index for hydrogen load
             "loadindex": r"d",                                  # Index for load
+            "eleconsindex": r"c^{e}",                           # Index for electrical consumer
+            "hydconsindex": r"c^{h}",                           # Index for hydrogen consumer
+            "consindex": r"c",                                  # Index for consumer
+            "elepeakindex": r"d^{e,peak}",                      # Index for electrical peak load
+            "hydpeakindex": r"d^{h,peak}",                      # Index for hydrogen peak load
+            "peakindex": r"d^{peak}",                           # Index for peak load
             "elestorageindex": r"e^{e}",                        # Index for electrical storage
             "hydstorageindex": r"e^{h}",                        # Index for hydrogen storage
             "storageindex": r"e",                               # Index for storage
@@ -460,6 +466,13 @@ mathjax3_config = {
             "vreactflow": r"f^{Q}",                             # Reactive power flow
             "veleflow": r"f^{e}",                               # Electrical flow
             "vhydflow": r"f^{h}",                               # Hydrogen flow
+            "veleload": r"d^{e}",                               # Electrical load
+            "vhydload": r"d^{h}",                               # Hydrogen load
+            "veleloadshed": r"ls^{e}",                          # Electrical load-shedding
+            "vhydloadshed": r"ls^{h}",                          # Hydrogen load-shedding
+            "vpeakdemand": r"d^{peak}",                         # Peak demand
+            "velepeakdemand": r"d^{e,peak}",                    # Electrical peak demand
+            "vhydpeakdemand": r"d^{h,peak}",                    # Hydrogen peak demand
 
             # --- Reserves ---
             "vPupward": r"r^{p,u}",                             # Upward power reserve

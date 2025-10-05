@@ -7,34 +7,34 @@ The main variables are indexed by the :doc:`model sets <model-sets>`, primarily 
 
 They are written in **lowercase** letters.
 
-=============================================  ===================================================================  ========  ===========================================================================
-**Symbol**                                     **Description**                                                      **Unit**  **oM_ModelFormulation.py**
----------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`\alpha`                                 Total system cost                                                    €         «``vTotalSCost``»
-:math:`c^{EM}_{p,sc}`                          Net cost of electricity market transactions                          €         «``vTotalEleMCost``»
-:math:`c^{HM}_{p,sc}`                          Net cost of hydrogen market transactions                             €         «``vTotalHydMCost``»
-:math:`c^{EG}_{p,sc}`                          Generation cost of electricity                                       €         «``vTotalEleGCost``»
-:math:`c^{HG}_{p,sc}`                          Generation cost of hydrogen                                          €         «``vTotalHydGCost``»
-:math:`c^{E}_{p,sc}`                           Emission cost                                                        €         «``vTotalECost``»
-:math:`c^{EC}_{p,sc}`                          Consumption cost of electricity                                      €         «``vTotalEleCCost``»
-:math:`c^{HC}_{p,sc}`                          Consumption cost of hydrogen                                         €         «``vTotalHydCCost``»
-:math:`c^{ER}_{p,sc}`                          Reliability cost of electricity                                      €         «``vTotalEleRCost``»
-:math:`c^{HR}_{p,sc}`                          Reliability cost of hydrogen                                         €         «``vTotalHydRCost``»
-:math:`c^{EP}_{p,sc}`                          Power peak cost of electricity                                       €         «``vTotalElePeakCost``»
-:math:`em^{C}_{p,sc,n}`                        Cost of electricity market transactions (purchasing)                 €         «``vTotalEleTradeCost``»
-:math:`em^{P}_{p,sc,n}`                        Profit of electricity market transactions (sales)                    €         «``vTotalEleTradeProfit``»
-:math:`hm^{C}_{p,sc,n}`                        Cost of hydrogen market transactions (purchasing)                    €         «``vTotalHydTradeCost``»
-:math:`hm^{P}_{p,sc,n}`                        Profit of hydrogen market transactions (sales)                       €         «``vTotalHydTradeProfit``»
-:math:`eb_{p,sc,n,er}`                         Electricity bought from the market                                   MWh       «``vEleBuy``»
-:math:`es_{p,sc,n,er}`                         Electricity sold to the market                                       MWh       «``vEleSell``»
-:math:`h^{B}_{p,sc,n,hr}`                      Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
-:math:`h^{S}_{p,sc,n,hr}`                      Hydrogen sold to the market                                          kgH2      «``vHydSell``»
-:math:`eg_{p,sc,n,eg}`                         Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
-:math:`hg_{p,sc,n,hg}`                         Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
-:math:`ens_{p,sc,n,ed}`                        Electricity not served                                               MWh       «``vENS``»
-:math:`hns_{p,sc,n,hd}`                        Hydrogen not served                                                  kgH2      «``vHNS``»
-:math:`peak_{p,sc,m,er,peak}`                  Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
-=============================================  ===================================================================  ========  ===========================================================================
+=========================================================================================================  ===================================================================  ========  ===========================================================================
+**Symbol**                                                                                                 **Description**                                                      **Unit**  **oM_ModelFormulation.py**
+---------------------------------------------------------------------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
+:math:`\alpha`                                                                                             Total system cost                                                    €         «``vTotalSCost``»
+:math:`\elemarketcost_{\periodindex,\scenarioindex}`                                                       Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
+:math:`\elemarketcostbuy_{\periodindex,\scenarioindex}`                                                    Cost of electricity market purchases                                 €         «``vTotalEleTradeCost``»
+:math:`\elemarketcostsell_{\periodindex,\scenarioindex}`                                                   Revenue from electricity market sales                                €         «``vTotalEleTradeProfit``»
+:math:`\hydmarketcost_{\periodindex,\scenarioindex}`                                                       Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
+:math:`\hydmarketcostbuy_{\periodindex,\scenarioindex}`                                                    Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
+:math:`\hydmarketcostsell_{\periodindex,\scenarioindex}`                                                   Revenue from hydrogen market sales                                   €         «``vTotalHydTradeProfit``»
+:math:`\elegenerationcost_{\periodindex,\scenarioindex}`                                                   Total cost of electricity generation                                 €         «``vTotalEleGCost``»
+:math:`\hydgenerationcost_{\periodindex,\scenarioindex}`                                                   Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
+:math:`\carboncost_{\periodindex,\scenarioindex}`                                                          Total cost of CO2 emissions                                          €         «``vTotalECost``»
+:math:`\eleconsumptioncost_{\periodindex,\scenarioindex}`                                                  Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
+:math:`\hydconsumptioncost_{\periodindex,\scenarioindex}`                                                  Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
+:math:`\eleunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
+:math:`\hydunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
+:math:`\elepeakdemandcost_{\periodindex,\scenarioindex}`                                                   Total cost of electricity peak demand (capacity tariff)              €         «``vTotalElePeakCost``»
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\eleretailerindex}`                          Electricity bought from the market                                   MWh       «``vEleBuy``»
+:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\eleretailerindex}`                         Electricity sold to the market                                       MWh       «``vEleSell``»
+:math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\hydretailerindex}`                          Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
+:math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\hydretailerindex}`                         Hydrogen sold to the market                                          kgH2      «``vHydSell``»
+:math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}`                              Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
+:math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}`                              Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
+:math:`\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\eleloadindex}`                               Electricity not served                                               MWh       «``vENS``»
+:math:`\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\hydloadindex}`                               Hydrogen not served                                                  kgH2      «``vHNS``»
+:math:`\velepeakdemand_{\periodindex,\scenarioindex,\timeindex,\eleretailerindex,\elepeakindex}`           Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
+=========================================================================================================  ===================================================================  ========  ===========================================================================
 
 Key Variable Categories
 -----------------------

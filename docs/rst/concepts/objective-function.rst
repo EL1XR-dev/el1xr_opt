@@ -5,28 +5,6 @@ The core purpose of the optimization model is to minimize the total system cost 
 
 The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost`` (:math:`\alpha`).
 
-The symbos used in the objective function are written in **uppercase** letters as follows:
-
-=============================================  ===================================================================  ========  ===========================================================================
-**Symbol**                                     **Description**                                                      **Unit**  **oM_Modelformulation.py**
----------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
-:math:`\elemarketcost_{p,sc}`                  Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
-:math:`\elemarketcostbuy_{p,sc}`               Cost of electricity market purchases                                 €         «``vTotalEleTradeCost``»
-:math:`\elemarketcostsell_{p,sc}`              Revenue from electricity market sales                                €         «``vTotalEleTradeProfit``»
-:math:`\hydmarketcost_{p,sc}`                  Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
-:math:`\hydmarketcostbuy_{p,sc}`               Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
-:math:`\hydmarketcostsell_{p,sc}`              Revenue from hydrogen market sales                                   €         «``vTotalHydTradeProfit``»
-:math:`\elegenerationcost_{p,sc}`              Total cost of electricity generation                                 €         «``vTotalEleGCost``»
-:math:`\hydgenerationcost_{p,sc}`              Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
-:math:`\carboncost_{p,sc}`                     Total cost of CO2 emissions                                          €         «``vTotalECost``»
-:math:`\eleconsumptioncost_{p,sc}`             Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
-:math:`\hydconsumptioncost_{p,sc}`             Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
-:math:`\eleunservedenergycost_{p,sc}`          Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
-:math:`\hydunservedenergycost_{p,sc}`          Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
-:math:`\elepeakdemandcost_{p,sc}`              Total cost of electricity peak demand (capacity tariff)              €         «``vTotalElePeakCost``»
-:math:`\alpha`                                 Total system cost (objective function)                               €         «``vTotalSCost``»
-=============================================  ===================================================================  ========  ===========================================================================
-
 Total System Cost
 -----------------
 
@@ -80,32 +58,32 @@ This represents the net cost of trading with external markets. It is calculated 
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
-(`vTotalEleGCost`, `vTotalHydGCost`)
+(``vTotalEleGCost``, ``vTotalHydGCost``)
 
-    This is the operational cost of running the generation and production assets. It typically includes:
-    *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
-    *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
-    *   **Start-up and Shut-down Costs**: Costs incurred when changing a unit's commitment state.
+This is the operational cost of running the generation and production assets. It typically includes:
+*   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
+*   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
+*   **Start-up and Shut-down Costs**: Costs incurred when changing a unit's commitment state.
 
-    The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
+The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
 
-    .. math::
-       \text{vTotalEleGCost}_{p,sc,n} = \sum_{eg \in EG} \text{pDuration}_{p,sc,n} \times (
-       & \text{pEleGenLinearVarCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg} + \\
-       & \text{pEleGenOMVariableCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg}) + \\
-       & \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times (
-       \text{pEleGenConstantVarCost}_{egt} \times \text{vEleGenCommitment}_{p,sc,n,egt} + \\
-       & \text{pEleGenStartUpCost}_{egt} \times \text{vEleGenStartUp}_{p,sc,n,egt} + \\
-       & \text{pEleGenShutDownCost}_{egt} \times \text{vEleGenShutDown}_{p,sc,n,egt})
+.. math::
+\text{vTotalEleGCost}_{p,sc,n} = \sum_{eg \in EG} \text{pDuration}_{p,sc,n} \times (
+& \text{pEleGenLinearVarCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg} + \\
+& \text{pEleGenOMVariableCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg}) + \\
+& \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times (
+\text{pEleGenConstantVarCost}_{egt} \times \text{vEleGenCommitment}_{p,sc,n,egt} + \\
+& \text{pEleGenStartUpCost}_{egt} \times \text{vEleGenStartUp}_{p,sc,n,egt} + \\
+& \text{pEleGenShutDownCost}_{egt} \times \text{vEleGenShutDown}_{p,sc,n,egt})
 
-    .. math::
-       \text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
-       & \text{pHydGenLinearVarCost}_{hg} \times \text{vHydTotalOutput}_{p,sc,n,hg} - \\
-       & \text{pHydGenOMVariableCost}_{hg} \times \text{vHydTotalOutput}_{p,sc,n,hg}) + \\
-       & \sum_{hgt \in HGT} \text{pDuration}_{p,sc,n} \times (
-       \text{pHydGenConstantVarCost}_{hgt} \times \text{vHydGenCommitment}_{p,sc,n,hgt} + \\
-       & \text{pHydGenStartUpCost}_{hgt} \times \text{vHydGenStartUp}_{p,sc,n,hgt} + \\
-       & \text{pHydGenShutDownCost}_{hgt} \times \text{vHydGenShutDown}_{p,sc,n,hgt})
+.. math::
+\text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
+& \text{pHydGenLinearVarCost}_{hg} \times \text{vHydTotalOutput}_{p,sc,n,hg} - \\
+& \text{pHydGenOMVariableCost}_{hg} \times \text{vHydTotalOutput}_{p,sc,n,hg}) + \\
+& \sum_{hgt \in HGT} \text{pDuration}_{p,sc,n} \times (
+\text{pHydGenConstantVarCost}_{hgt} \times \text{vHydGenCommitment}_{p,sc,n,hgt} + \\
+& \text{pHydGenStartUpCost}_{hgt} \times \text{vHydGenStartUp}_{p,sc,n,hgt} + \\
+& \text{pHydGenShutDownCost}_{hgt} \times \text{vHydGenShutDown}_{p,sc,n,hgt})
 
 Emission Costs
 ~~~~~~~~~~~~~~
