@@ -83,13 +83,23 @@ This is the operational cost of running the generation and production assets. It
 The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
 
 .. math::
-\text{vTotalEleGCost}_{p,sc,n} = \sum_{eg \in EG} \text{pDuration}_{p,sc,n} \times (
-& \text{pEleGenLinearVarCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg} + \\
-& \text{pEleGenOMVariableCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg}) + \\
-& \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times (
-\text{pEleGenConstantVarCost}_{egt} \times \text{vEleGenCommitment}_{p,sc,n,egt} + \\
-& \text{pEleGenStartUpCost}_{egt} \times \text{vEleGenStartUp}_{p,sc,n,egt} + \\
-& \text{pEleGenShutDownCost}_{egt} \times \text{vEleGenShutDown}_{p,sc,n,egt})
+   \begin{aligned}
+   \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
+   &= \sum_{\elegenindex \in nGE}
+      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+      \Big(
+           \mathrm{pEleGenLinearVarCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
+         + \mathrm{pEleGenOMVariableCost}_{g}\,\mathrm{vEleTotalOutput}_{\periodindex,\scenarioindex,\timeindex,g}
+      \Big) \\
+   &\quad
+      + \sum_{\,t \in \mathcal{EGT}}
+      \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
+      \Big(
+           \mathrm{pEleGenConstantVarCost}_{t}\,\mathrm{vEleGenCommitment}_{\periodindex,\scenarioindex,\timeindex,t}
+         + \mathrm{pEleGenStartUpCost}_{t}\,\mathrm{vEleGenStartUp}_{\periodindex,\scenarioindex,\timeindex,t}
+         + \mathrm{pEleGenShutDownCost}_{t}\,\mathrm{vEleGenShutDown}_{\periodindex,\scenarioindex,\timeindex,t}
+      \Big)
+   \end{aligned}
 
 .. math::
 \text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
