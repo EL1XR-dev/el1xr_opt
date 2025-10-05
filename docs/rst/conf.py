@@ -150,7 +150,7 @@ mathjax3_config = {
             "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
             "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
             "nL": r"\mathcal{L}",                               # All lines
-            "nR": r"\mathcal{R}",                               # All regions
+            "nX": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
             "nA": r"\mathcal{A}",                               # All areas
             "nT": r"\mathcal{T}",                               # All time steps
