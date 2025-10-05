@@ -88,8 +88,8 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
    = &\sum_{\elegenindex \in nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pvariablecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-         + \pmaintenancecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+           \pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+         + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
       \Big) \\
    &\quad
       + \sum_{\,t \in \mathcal{EGT}}
