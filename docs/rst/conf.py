@@ -442,8 +442,10 @@ mathjax3_config = {
             # symbols in lowercase to distinguish from parameters
             "velemarketbuy": r"mb^{e}",                         # Electrical market buying
             "vhydmarketbuy": r"mb^{h}",                         # Hydrogen market buying
+            "vmarketbuy": r"mb",                                # Market buying
             "velemarketsell": r"ms^{e}",                        # Electrical market selling
             "vhydmarketsell": r"ms^{h}",                        # Hydrogen market selling
+            "vmarketsell": r"ms",                               # Market selling
             "veleimport": r"imp^{e}",                           # Electrical import
             "vhydimport": r"imp^{h}",                           # Hydrogen import
             "veleexport": r"exp^{e}",                           # Electrical export
@@ -468,8 +470,10 @@ mathjax3_config = {
             "vreactflow": r"f^{Q}",                             # Reactive power flow
             "veleflow": r"f^{e}",                               # Electrical flow
             "vhydflow": r"f^{h}",                               # Hydrogen flow
+            "vload": r"d",                                      # Load
             "veleload": r"d^{e}",                               # Electrical load
             "vhydload": r"d^{h}",                               # Hydrogen load
+            "vloadshed": r"ls",                                 # Load
             "veleloadshed": r"ls^{e}",                          # Electrical load-shedding
             "vhydloadshed": r"ls^{h}",                          # Hydrogen load-shedding
             "vpeakdemand": r"d^{peak}",                         # Peak demand

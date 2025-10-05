@@ -83,15 +83,14 @@ This is the operational cost of running the generation and production assets. It
 The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
 
 .. math::
-   \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   &= \sum_{\elegenindex \in nGE}
+   = \sum_{\elegenindex \in nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pvariablecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
          + \pmaintenancecost_{\elegenindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-      \Big) \\
-   &\quad
+      \Big)
+   \quad
       + \sum_{\,\timeindex \in \nT}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
@@ -99,7 +98,6 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
          + \pstartupcost_{\elenonresgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
          + \pshutdowncost_{\elenonresgenindex}\,\vshutdowncost_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
       \Big)
-   \end{aligned}
 
 .. math::
 \text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
