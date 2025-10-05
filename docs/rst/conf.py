@@ -438,21 +438,21 @@ mathjax3_config = {
             #                       VARIABLES
             # =======================================================
             # symbols in lowercase to distinguish from parameters
-            "velemarketbuy": r"b^{e}",                          # Electrical market buying
-            "vhydmarketbuy": r"b^{h}",                          # Hydrogen market buying
-            "velemarketsell": r"s^{e}",                         # Electrical market selling
-            "vhydmarketsell": r"s^{h}",                         # Hydrogen market selling
+            "velemarketbuy": r"mb^{e}",                         # Electrical market buying
+            "vhydmarketbuy": r"mb^{h}",                         # Hydrogen market buying
+            "velemarketsell": r"ms^{e}",                        # Electrical market selling
+            "vhydmarketsell": r"ms^{h}",                        # Hydrogen market selling
             "veleimport": r"imp^{e}",                           # Electrical import
             "vhydimport": r"imp^{h}",                           # Hydrogen import
             "veleexport": r"exp^{e}",                           # Electrical export
             "vhydexport": r"exp^{h}",                           # Hydrogen export
 
             "vproduction": r"p",                                # Generation
-            "veleproduction": r"ep",                            # Electrical generation
-            "vhydproduction": r"hp",                            # Hydrogen production
+            "veleproduction": r"p^{e}",                         # Electrical generation
+            "vhydproduction": r"p^{h}",                         # Hydrogen production
             "vconsumption": r"c",                               # Consumption
-            "veleconsumption": r"ec",                           # Electrical consumption
-            "vhydconsumption": r"hc",                           # Hydrogen consumption
+            "veleconsumption": r"c^{e}",                        # Electrical consumption
+            "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
             "vinventoryess": r"y",                              # Storage inventory
             "venergyoutflow": r"o",                             # Storage outflow
             "vspillageess": r"s",                               # Storage spillage

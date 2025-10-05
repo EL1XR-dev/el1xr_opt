@@ -73,7 +73,7 @@ This represents the net cost of trading with external markets. It is calculated 
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
-(``vTotalEleGCost``, ``vTotalHydGCost``)
+(``eTotalEleGCost``, ``eTotalHydGCost``)
 
 This is the operational cost of running the generation and production assets. It typically includes:
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
