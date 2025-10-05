@@ -150,7 +150,7 @@ mathjax3_config = {
             "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
             "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
             "nL": r"\mathcal{L}",                               # All lines
-            "nR": r"\mathcal{R}",                               # All regions
+            "nX": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
             "nA": r"\mathcal{A}",                               # All areas
             "nT": r"\mathcal{T}",                               # All time steps
@@ -161,10 +161,10 @@ mathjax3_config = {
             "nP0": r"\mathcal{P}^{0}",                          # All periods except the first one
             "nP1": r"\mathcal{P}^{1}",                          # All periods except the last one
             "nP2": r"\mathcal{P}^{2}",                          # All periods except the first and last one
-            "mS": r"\mathcal{S}",                               # All scenarios
-            "mS0": r"\mathcal{S}^{0}",                          # All scenarios except the first one
-            "mS1": r"\mathcal{S}^{1}",                          # All scenarios except the last one
-            "mS2": r"\mathcal{S}^{2}",                          # All scenarios except the first and last one
+            "nS": r"\mathcal{S}",                               # All scenarios
+            "nS0": r"\mathcal{S}^{0}",                          # All scenarios except the first one
+            "nS1": r"\mathcal{S}^{1}",                          # All scenarios except the last one
+            "nS2": r"\mathcal{S}^{2}",                          # All scenarios except the first and last one
             "nW": r"\mathcal{W}",                               # All weeks in a year
             "nW0": r"\mathcal{W}^{0}",                          # All weeks in a year except the first one
             "nW1": r"\mathcal{W}^{1}",                          # All weeks in a year except the last one
