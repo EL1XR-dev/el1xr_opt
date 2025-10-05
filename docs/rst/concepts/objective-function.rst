@@ -21,8 +21,8 @@ And the total cost is the sum of all operational costs, discounted to present va
    \begin{aligned}
    \alpha
    &= \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
-      \sum_{\scenarioindex \in \nS} \sum_{\timeindex \in \nT}
-      \big(
+      \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex} \sum_{\timeindex \in \nT}
+      (
         \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
       + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
       + \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
@@ -33,9 +33,7 @@ And the total cost is the sum of all operational costs, discounted to present va
       + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
       + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
       + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
-      \big)
-      + \sum_{\periodindex \in \nP} \sum_{\scenarioindex \in \nS}
-        \elepeakdemandcost_{\periodindex,\scenarioindex}
+      )
    \end{aligned}
 
 Key Cost Components
