@@ -93,11 +93,11 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
       \Big) \\
    &\quad
       + \sum_{\,\elenonresgenindex \in nGE}
-      \mathrm{pDuration}_{\periodindex,\scenarioindex,\timeindex}\,
+      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \mathrm{pEleGenConstantVarCost}_{t}\,\mathrm{vEleGenCommitment}_{\periodindex,\scenarioindex,\timeindex,t}
-         + \mathrm{pEleGenStartUpCost}_{t}\,\mathrm{vEleGenStartUp}_{\periodindex,\scenarioindex,\timeindex,t}
-         + \mathrm{pEleGenShutDownCost}_{t}\,\mathrm{vEleGenShutDown}_{\periodindex,\scenarioindex,\timeindex,t}
+           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+         + \pstartupcost_{\elenonresgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+         + \pshutdowncost_{\elenonresgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
       \Big)
    \end{aligned}
 
