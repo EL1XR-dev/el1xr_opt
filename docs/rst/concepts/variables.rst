@@ -3,7 +3,7 @@ Variables
 
 The optimization model determines the values of numerous decision variables to minimize the total system cost while satisfying all constraints. These variables represent the physical and economic operations of the energy system. They are defined as `Var` objects in Pyomo within the ``create_variables`` function.
 
-The main variables are indexed by the :doc:`model sets <model-sets>`, primarily by period (`p`), scenario (`sc`), and timestep (`n`).
+The main variables are indexed by the :doc:`sets <sets>`, primarily by period (:math:`\periodindex`), scenario (:math:`\scenarioindex`), and timestep (:math:`\timeindex`).
 
 They are written in **lowercase** letters.
 
