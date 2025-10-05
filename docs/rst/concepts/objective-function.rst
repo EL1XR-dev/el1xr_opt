@@ -44,7 +44,7 @@ This represents the net cost of trading with external markets. It is calculated 
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
     .. math::
-       \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketbuyingratio_{\eletraderindex} + \pelemarketcertrevenue_{\eletraderindex} \pfactorone + \pelemarketpassthrough_{\eletraderindex} \pfactorone) \\
+       \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} ((\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketbuyingratio_{\eletraderindex} + \pelemarketcertrevenue_{\eletraderindex} \pfactorone + \pelemarketpassthrough_{\eletraderindex} \pfactorone) \\
        & (1 + \pelemarketmoms_{\eletraderindex} \pfactorone) + \pelemarketnetfee_{\eletraderindex} \pfactorone) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}
 
 #.  **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
