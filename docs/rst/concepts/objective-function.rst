@@ -94,7 +94,9 @@ The cost is defined by ``eTotalEleGCost`` for electricity:
    &\quad
       + \sum_{\,\elenonresgenindex \in nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
-
+      \Big(
+           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+      \Big)
    \end{aligned}
 
 And ``eTotalHydGCost`` for hydrogen:
