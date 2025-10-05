@@ -66,7 +66,7 @@ This represents the net cost of trading with external markets. It is calculated 
 #.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
     .. math::
-       em^{P}_{p,sc,n} = \sum_{er \in ER} DUR_{p,sc,n} \times (PES_{p,sc,n,er} \times R^{ES}_{er} \times es_{p,sc,n,er})
+       \elemarketcostsell_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} (\pelesellprice_{p,sc,n,er} \pelemarketsellingratio_{er} \velemarketsell_{p,sc,n,er})
 
 #.  **Hydrogen Purchase** (``vTotalHydTradeCost``): The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
