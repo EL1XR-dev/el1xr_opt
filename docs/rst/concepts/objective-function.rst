@@ -99,6 +99,8 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
       \Big)
    \end{aligned}
 
+
+
 .. math::
    \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
    = \sum_{\hydgenindex \in \nGH}
