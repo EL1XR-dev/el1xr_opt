@@ -80,7 +80,7 @@ This is the operational cost of running the generation and production assets. It
 *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
 *   **Start-up and Shut-down Costs**: Costs incurred when changing a unit's commitment state.
 
-The cost is defined by ``eTotalEleGCost`` for electricity: And ``eTotalHydGCost`` for hydrogen:
+The cost is defined by ``eTotalEleGCost`` for electricity:
 
 .. math::
    \begin{aligned}
@@ -99,6 +99,9 @@ The cost is defined by ``eTotalEleGCost`` for electricity: And ``eTotalHydGCost`
       \Big)
    \end{aligned}
 
+
+
+ And ``eTotalHydGCost`` for hydrogen:
 
 .. math::
 \text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
