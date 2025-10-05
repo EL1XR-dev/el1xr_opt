@@ -3,7 +3,7 @@ Objective Function
 
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
 
-The main objective function is defined by the Pyomo constraint ``eTotalSCost``, which minimizes the variable ``vTotalSCost`` (:math:`\alpha`).
+The main objective function is defined by the Pyomo constraint «``eTotalSCost``», which minimizes the variable «``vTotalSCost``» (:math:`\alpha`).
 
 Total System Cost
 -----------------
@@ -35,7 +35,7 @@ This represents the net cost of trading with external markets. It is calculated 
 *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
 *   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
 
-#.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
+#.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
     .. math::
        \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketbuyingratio_{\eletraderindex} + \pelemarketcertrevenue_{\eletraderindex} \pfactorone + \pelemarketpassthrough_{\eletraderindex} \pfactorone) \\
