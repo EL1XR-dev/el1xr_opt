@@ -18,8 +18,8 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC, \timeindex \in \nT} \pdiscountrate_{\periodindex} (\elemarketcost_{\periodindex,\scenarioindex,\timeindex} + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex} + &\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex} + \carboncost_{\periodindex,\scenarioindex,\timeindex} + \\
-            & \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}) + \sum_{\periodindex \in \nP, \scenarioindex \in \nC}\elepeakdemandcost_{p,sc}
+   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nS, \timeindex \in \nT} \pdiscountrate_{\periodindex} (\elemarketcost_{\periodindex,\scenarioindex,\timeindex} + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex} + &\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex} + \carboncost_{\periodindex,\scenarioindex,\timeindex} + \\
+            & \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}) + \sum_{\periodindex \in \nP, \scenarioindex \in \nS}\elepeakdemandcost_{p,sc}
 
 Key Cost Components
 -------------------
@@ -28,7 +28,7 @@ The total cost is broken down into several components, each represented by a spe
 
 Market Costs
 ~~~~~~~~~~~~
-(``eTotalEleMCost``, ``eTotalHydMCost``)
+(«``eTotalEleMCost``», «``eTotalHydMCost``»)
 
 This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
@@ -64,7 +64,7 @@ This represents the net cost of trading with external markets. It is calculated 
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
-(``vTotalEleGCost``, ``vTotalHydGCost``)
+(«``vTotalEleGCost``», «``vTotalHydGCost``»)
 
 This is the operational cost of running the generation and production assets. It typically includes:
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
@@ -74,7 +74,7 @@ This is the operational cost of running the generation and production assets. It
 The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
 
 .. math::
-\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} = \sum_{eg \in EG} \text{pDuration}_{p,sc,n} \times (
+\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\elegendindex \in \nGE} \text{pDuration}_{p,sc,n} \times (
 & \text{pEleGenLinearVarCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg} + \\
 & \text{pEleGenOMVariableCost}_{eg} \times \text{vEleTotalOutput}_{p,sc,n,eg}) + \\
 & \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times (
@@ -93,7 +93,7 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 
 Emission Costs
 ~~~~~~~~~~~~~~
-(`vTotalECost`)
+(«``vTotalECost``»)
 
     This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
 
