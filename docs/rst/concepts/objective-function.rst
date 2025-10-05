@@ -107,11 +107,9 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
       \Big(
            \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
          + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-      \Big) \\
+      \\
    &\quad
-      +\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
-      \Big(
-           \pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+      +\pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
          + \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
          + \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
       \Big)
