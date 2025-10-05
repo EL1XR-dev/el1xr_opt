@@ -18,8 +18,8 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 .. math::
-   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC} \pdiscountrate_{\periodindex} (\elemarketcost_{p,sc} + \hydmarketcost_{p,sc} + &\elegenerationcost_{p,sc} + \hydgenerationcost_{p,sc} + \carboncost_{p,sc} + \\
-            & \eleconsumptioncost_{p,sc} + \hydconsumptioncost_{p,sc} + \eleunservedenergycost_{p,sc} + \hydunservedenergycost_{p,sc} + \elepeakdemandcost_{p,sc})
+   \alpha = \sum_{\periodindex \in \nP, \scenarioindex \in \nC, \timeindex \in \nT} \pdiscountrate_{\periodindex} (\elemarketcost_{\periodindex,\scenarioindex,\timeindex} + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex} + &\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex} + \carboncost_{\periodindex,\scenarioindex,\timeindex} + \\
+            & \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}) + \sum_{\periodindex \in \nP, \scenarioindex \in \nC}\elepeakdemandcost_{p,sc}
 
 Key Cost Components
 -------------------
