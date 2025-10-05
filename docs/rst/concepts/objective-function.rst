@@ -82,35 +82,42 @@ This is the operational cost of running the generation and production assets. It
 
 The cost is defined by ``eTotalEleGCost`` for electricity:
 
-.. math::
-   \begin{aligned}
-   \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = &\sum_{\elegenindex \in nGE}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
-      \Big(
-           \pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-         + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-      \Big) \\
-   &\quad
-      + \sum_{\,\elenonresgenindex \in nGE}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
-      \Big(
-           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
-      \Big)
-   \end{aligned}
+    .. math::
+       \begin{aligned}
+       \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
+       = &\sum_{\elegenindex \in nGE}
+          \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+          \Big(
+               \pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+             + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+          \Big) \\
+       &\quad
+          + \sum_{\,\elenonresgenindex \in nGE}
+          \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+          \Big(
+               \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+          \Big)
+       \end{aligned}
 
+And ``eTotalHydGCost`` for hydrogen:
 
-
- And ``eTotalHydGCost`` for hydrogen:
-
-.. math::
-\text{vTotalHydGCost}_{p,sc,n} = \sum_{hg \in HG} \text{pDuration}_{p,sc,n} \times (
-& \text{pHydGenLinearVarCost}_{hg} \times \text{vHydTotalOutput}_{p,sc,n,hg} - \\
-& \text{pHydGenOMVariableCost}_{hg} \times \text{vHydTotalOutput}_{p,sc,n,hg}) + \\
-& \sum_{hgt \in HGT} \text{pDuration}_{p,sc,n} \times (
-\text{pHydGenConstantVarCost}_{hgt} \times \text{vHydGenCommitment}_{p,sc,n,hgt} + \\
-& \text{pHydGenStartUpCost}_{hgt} \times \text{vHydGenStartUp}_{p,sc,n,hgt} + \\
-& \text{pHydGenShutDownCost}_{hgt} \times \text{vHydGenShutDown}_{p,sc,n,hgt})
+    .. math::
+       \begin{aligned}
+       \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
+       = &\sum_{\hydgenindex \in nGH}
+          \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+          \Big(
+               \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+             + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+          \Big) \\
+       &\quad
+          +\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+          \Big(
+               \pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+             + \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+             + \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+          \Big)
+       \end{aligned}
 
 Emission Costs
 ~~~~~~~~~~~~~~
