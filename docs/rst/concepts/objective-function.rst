@@ -60,23 +60,23 @@ This represents the net cost of trading with external markets. It is calculated 
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint ``eTotalEleTradeCost`` and includes variable energy costs, taxes, and other fees.
 
     .. math::
-       \elemarketcostbuy_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} (&(\pelebuyprice_{p,sc,n,er} \pelemarketbuyingratio_{er} + \pelemarketcertrevenue_{er} \pfactorone + \pelemarketpassthrough_{er} \pfactorone) \\
-       & (1 + \pelemarketmoms_{er} \pfactorone) + \pelemarketnetfee_{er} \pfactorone) \velemarketbuy_{p,sc,n,er}
+       \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketbuyingratio_{\eletraderindex} + \pelemarketcertrevenue_{\eletraderindex} \pfactorone + \pelemarketpassthrough_{\eletraderindex} \pfactorone) \\
+       & (1 + \pelemarketmoms_{\eletraderindex} \pfactorone) + \pelemarketnetfee_{\eletraderindex} \pfactorone) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}
 
-#.  **Electricity Sales** (``vTotalEleTradeProfit``): The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
-
-    .. math::
-       \elemarketcostsell_{p,sc,n} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{p,sc,n} (\pelesellprice_{p,sc,n,er} \pelemarketsellingratio_{er} \velemarketsell_{p,sc,n,er})
-
-#.  **Hydrogen Purchase** (``vTotalHydTradeCost``): The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
+#.  **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
     .. math::
-       \text{vTotalHydTradeCost}_{p,sc,n} = \sum_{hr \in HR} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyCost}_{hr,p,sc,n} \times \text{vHydBuy}_{p,sc,n,hr})
+       \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketsellingratio_{\eletraderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\eletraderindex})
 
-#.  **Hydrogen Sales** (``vTotalHydTradeProfit``): The revenue generated from selling hydrogen to the market, as defined by ``eTotalHydTradeProfit``.
+#.  **Hydrogen Purchase**: The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
     .. math::
-       \text{vTotalHydTradeProfit}_{p,sc,n} = \sum_{hr \in HR} \text{pDuration}_{p,sc,n} \times (\text{pVarEnergyPrice}_{hr,p,sc,n} \times \text{vHydSell}_{p,sc,n,hr})
+       \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\hydtraderindex \in nRH} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex})
+
+#.  **Hydrogen Sales**: The revenue generated from selling hydrogen to the market, as defined by ``eTotalHydTradeProfit``.
+
+    .. math::
+       \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\hydtraderindex \in nRH} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex})
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
