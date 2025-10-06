@@ -99,6 +99,17 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
       \Big)
    \end{aligned}
 
+
+
+.. math::
+    \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
+    = \sum_{\hydgenindex \in \nGH}
+        \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
+        \Big(
+              \phydvariablecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+            + \phydmaintenancecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+        \Big)
+
 Emission Costs
 ~~~~~~~~~~~~~~
 (`vTotalECost`)
