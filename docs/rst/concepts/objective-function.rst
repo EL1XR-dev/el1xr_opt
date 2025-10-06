@@ -24,8 +24,7 @@ And the total cost is the sum of all operational costs, discounted to present va
 \!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}`
 
-:math:`
-\!+\! \carboncost_{\periodindex,\scenarioindex,\timeindex}
+:math:`\!+\! \carboncost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} \\
 \!+\! \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
