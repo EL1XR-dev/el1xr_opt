@@ -138,14 +138,14 @@ Electricity Consumption Costs
 The formulation is defined by «``eTotalEleCCost``».
 
 .. math::
-    \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\elestorageindex \in \nEE} \pvariablecost_{\elestorageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\elestorageindex}
+    \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\storageindex \in \nEE} \pvariablecost_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 Hydrogen Consumption Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydCCost``».
 
 .. math::
-    \text{vTotalHydCCost}_{p,sc,n} = \sum_{hgs \in HGS} \text{pDuration}_{p,sc,n} \times \text{pHydGenLinearTerm}_{hgs} \times \text{vHydTotalCharge}_{p,sc,n,hgs}
+    \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\storageindex \in \nEH} \pvariablecost_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 Reliability Costs
 ~~~~~~~~~~~~~~~~~
