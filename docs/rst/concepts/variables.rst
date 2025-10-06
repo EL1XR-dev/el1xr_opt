@@ -29,11 +29,11 @@ They are written in **lowercase** letters.
 :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                              Electricity sold to the market                                       MWh       «``vEleSell``»
 :math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                               Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
 :math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                              Hydrogen sold to the market                                          kgH2      «``vHydSell``»
-:math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
-:math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
-:math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Electricity not served                                               MWh       «``vENS``»
-:math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Hydrogen not served                                                  kgH2      «``vHNS``»
-:math:`\vpeakdemand_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`                      Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
+:math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
+:math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
+:math:`\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Electricity not served                                               MWh       «``vENS``»
+:math:`\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Hydrogen not served                                                  kgH2      «``vHNS``»
+:math:`\velepeakdemand_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`                      Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
 =========================================================================================================  ===================================================================  ========  ===========================================================================
 
 Key Variable Categories
