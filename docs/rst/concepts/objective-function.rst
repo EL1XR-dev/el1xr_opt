@@ -94,7 +94,7 @@ Electricity Generation Costs
            \pvariablecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pmaintenancecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big) \\
-   &\quad
+   &
       + \sum_{\genindex \in \nGENR}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
