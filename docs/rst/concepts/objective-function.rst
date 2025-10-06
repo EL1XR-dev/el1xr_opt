@@ -131,12 +131,18 @@ This component captures the cost of carbon emissions from fossil-fueled generato
 
 Consumption Costs
 ~~~~~~~~~~~~~~~~~
-(`vTotalEleCCost`, `vTotalHydCCost`)
+This represents the costs associated with operating energy consumers within the system, most notably the cost of power used to charge energy storage devices.
 
-    This represents the costs associated with operating energy consumers within the system, most notably the cost of power used to charge energy storage devices. These are defined by ``eTotalEleCCost`` and ``eTotalHydCCost``.
+Electricity Consumption Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+«``eTotalEleCCost``»
 
     .. math::
        \text{vTotalEleCCost}_{p,sc,n} = \sum_{egs \in EGS} \text{pDuration}_{p,sc,n} \times \text{pEleGenLinearTerm}_{egs} \times \text{vEleTotalCharge}_{p,sc,n,egs}
+
+Hydrogen Consumption Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+«``eTotalHydCCost``»
 
     .. math::
        \text{vTotalHydCCost}_{p,sc,n} = \sum_{hgs \in HGS} \text{pDuration}_{p,sc,n} \times \text{pHydGenLinearTerm}_{hgs} \times \text{vHydTotalCharge}_{p,sc,n,hgs}
