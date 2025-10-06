@@ -172,6 +172,6 @@ This component models capacity-based tariffs, where costs are determined by the 
 The formulation is defined by «``eTotalElePeakCost``».
 
 .. math::
-    \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\text{Peaks}|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\text{peak} \in \text{Peaks}} \text{vElePeak}_{p,sc,m,er,\text{peak}}
+    \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\nKE|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\peakindex \in \nKE} \velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}
 
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
