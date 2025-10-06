@@ -17,10 +17,10 @@ They are written in **lowercase** letters.
 :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}`                                            Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
 :math:`\hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex}`                                         Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
 :math:`\hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`                                        Revenue from hydrogen market sales                                   €         «``vTotalHydTradeProfit``»
-:math:`\elegenerationcost_{\periodindex,\scenarioindex}`                                                   Total cost of electricity generation                                 €         «``vTotalEleGCost``»
-:math:`\hydgenerationcost_{\periodindex,\scenarioindex}`                                                   Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
-:math:`\carboncost_{\periodindex,\scenarioindex}`                                                          Total cost of CO2 emissions                                          €         «``vTotalECost``»
-:math:`\eleconsumptioncost_{\periodindex,\scenarioindex}`                                                  Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
+:math:`\elegenerationcost_{\periodindex,\scenarioindex,\timeindex}`                                        Total cost of electricity generation                                 €         «``vTotalEleGCost``»
+:math:`\hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}`                                        Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
+:math:`\carboncost_{\periodindex,\scenarioindex,\timeindex}`                                               Total cost of CO2 emissions                                          €         «``vTotalECost``»
+:math:`\eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`                                       Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
 :math:`\hydconsumptioncost_{\periodindex,\scenarioindex}`                                                  Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
 :math:`\eleunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
 :math:`\hydunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
