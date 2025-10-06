@@ -127,12 +127,13 @@ Hydrogen Generation Costs
 
 Emission Costs
 ~~~~~~~~~~~~~~
-(`vTotalECost`)
 
-    This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
+This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
+«``eTotalECost``»
 
-    .. math::
-       \text{vTotalECost}_{p,sc,n} = \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times \text{pGenCO2EmissionCost}_{egt} \times \text{vEleTotalOutput}_{p,sc,n,egt}
+
+.. math::
+    \carboncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times \text{pGenCO2EmissionCost}_{egt} \times \text{vEleTotalOutput}_{p,sc,n,egt}
 
 Consumption Costs
 ~~~~~~~~~~~~~~~~~
