@@ -409,6 +409,8 @@ mathjax3_config = {
             "pstartupcost": r"CSU",                             # Start-up cost
             "pshutdowncost": r"CSD",                            # Shut-down cost
             "pnoloadcost": r"C^{nl}",                           # No-load cost
+            "ploadsheddingcost": r"C^{ls}",                     # Load-shedding cost
+            "pspillcost": r"C^{spill}",                         # Spill cost
             "pfuelafactor": r"A",                               # Linear fuel cost coeff.
             "pfuelbfactor": r"B",                               # Quadratic fuel cost coeff.
             "pfuelcfactor": r"C",                               # Fixed fuel cost coeff.

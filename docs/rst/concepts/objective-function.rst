@@ -157,14 +157,14 @@ Electricity Energy-not-served Costs
 The formulation is defined by «``eTotalEleRCost``».
 
 .. math::
-    \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\loadindex \in \nDE} \text{pParENSCost} \times \text{vENS}_{p,sc,n,ed}
+    \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\loadindex \in \nDE} \ploadsheddingcost_{\loadindex} \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}
 
 Hydrogen Energy-not-served Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydRCost``».
 
 .. math::
-    \text{vTotalHydRCost}_{p,sc,n} = \sum_{hd \in HD} \text{pDuration}_{p,sc,n} \times \text{pParHNSCost} \times \text{vHNS}_{p,sc,n,hd}
+    \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\loadindex \in \nDH} \ploadsheddingcost_{\loadindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}
 
 Electricity Peak Demand Costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
