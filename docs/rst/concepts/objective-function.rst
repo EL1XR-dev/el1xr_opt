@@ -82,6 +82,9 @@ This is the operational cost of running the generation and production assets. It
 
 The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
 
+Electricity Generation Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. math::
    \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
@@ -99,7 +102,8 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
       \Big)
    \end{aligned}
 
-
+Hydrogen Generation Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. math::
     \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
