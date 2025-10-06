@@ -120,32 +120,6 @@ The formulation is defined by «``eTotalHydGCost``».
       \Big)
    \end{aligned}
 
-Emission Costs
-~~~~~~~~~~~~~~
-This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (:math:`\pcarbonprice_{\genindex}`).
-The formulation is defined by «``eTotalECost``».
-
-
-.. math::
-    \carboncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGENR} \pcarbonprice_{\genindex} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-
-Consumption Costs
-~~~~~~~~~~~~~~~~~
-This represents the costs associated with operating energy consumers within the system, most notably the cost of power used to charge energy storage devices.
-
-Electricity Consumption Costs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The formulation is defined by «``eTotalEleCCost``».
-
-.. math::
-    \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\storageindex \in \nEE} \pvariablecost_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-
-Hydrogen Consumption Costs
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-The formulation is defined by «``eTotalHydCCost``».
-
-.. math::
-    \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\storageindex \in \nEH} \pvariablecost_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 Reliability Costs
 ~~~~~~~~~~~~~~~~~
