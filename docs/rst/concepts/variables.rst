@@ -22,8 +22,8 @@ They are written in **lowercase** letters.
 :math:`\carboncost_{\periodindex,\scenarioindex,\timeindex}`                                               Total cost of CO2 emissions                                          €         «``vTotalECost``»
 :math:`\eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`                                       Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
 :math:`\hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`                                       Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
-:math:`\eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`                                    Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
-:math:`\hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`                                    Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
+:math:`\eleunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
+:math:`\hydunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
 :math:`\elepeakdemandcost_{\periodindex,\scenarioindex}`                                                   Total cost of electricity peak demand (capacity tariff)              €         «``vTotalElePeakCost``»
 :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                               Electricity bought from the market                                   MWh       «``vEleBuy``»
 :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                              Electricity sold to the market                                       MWh       «``vEleSell``»
