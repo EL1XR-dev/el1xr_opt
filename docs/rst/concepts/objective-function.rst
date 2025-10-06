@@ -50,6 +50,10 @@ This represents the net cost of trading with external markets. It is calculated 
 *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
 *   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
 
+:math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+
+:math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
     .. math::
