@@ -103,7 +103,7 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 .. math::
    \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = &\sum_{\elegenindex \in \nGE}
+   = \sum_{\elegenindex \in \nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
