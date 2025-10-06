@@ -12,7 +12,7 @@ They are written in **lowercase** letters.
 ---------------------------------------------------------------------------------------------------------  -------------------------------------------------------------------  --------  ---------------------------------------------------------------------------
 :math:`\alpha`                                                                                             Total system cost                                                    €         «``vTotalSCost``»
 :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex}`                                            Net cost of electricity market transactions (buying - selling)       €         «``vTotalEleMCost``»
-:math:`\elemarketcostbuy_{\periodindex,\scenarioindex}`                                                    Cost of electricity market purchases                                 €         «``vTotalEleTradeCost``»
+:math:`\elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex}`                                         Cost of electricity market purchases                                 €         «``vTotalEleTradeCost``»
 :math:`\elemarketcostsell_{\periodindex,\scenarioindex}`                                                   Revenue from electricity market sales                                €         «``vTotalEleTradeProfit``»
 :math:`\hydmarketcost_{\periodindex,\scenarioindex}`                                                       Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
 :math:`\hydmarketcostbuy_{\periodindex,\scenarioindex}`                                                    Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
