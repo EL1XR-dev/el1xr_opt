@@ -108,9 +108,9 @@ Hydrogen Generation Costs
 .. math::
    \begin{aligned}
    \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = &\sum_{\hydgenindex \in \nGH}
+   = \sum_{\hydgenindex \in \nGH}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
-      \Big(
+      \Big(&
            \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
          + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}\\
    &\quad
