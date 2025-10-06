@@ -98,7 +98,7 @@ Electricity Generation Costs
       + \sum_{\,\genindex \in \nGENR}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+           \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pshutdowncost_{\genindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big)
    \end{aligned}
 
