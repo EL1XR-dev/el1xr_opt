@@ -88,17 +88,17 @@ Electricity Generation Costs
 .. math::
    \begin{aligned}
    \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = &\sum_{\elegenindex \in \nGE}
+   = &\sum_{\genindex \in \nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
-         + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}
+           \pvariablecost_{\genindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pmaintenancecost_{\genindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big) \\
    &\quad
-      + \sum_{\,\elenonresgenindex \in \nGE}
+      + \sum_{\,\genindex \in \nGENR}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\elenonresgenindex}
+           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big)
    \end{aligned}
 
@@ -108,15 +108,15 @@ Hydrogen Generation Costs
 .. math::
    \begin{aligned}
    \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = \sum_{\hydgenindex \in \nGH}
+   = \sum_{\genindex \in \nGH}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(&
-           \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-         + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}\\
+           \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
    &\quad
-         + \pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-         + \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-         + \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+         + \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pshutdowncost_{\genindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big)
    \end{aligned}
 

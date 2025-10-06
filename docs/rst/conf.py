@@ -142,6 +142,8 @@ mathjax3_config = {
             "nC": r"\mathcal{C}",                               # All circuits
             "nG": r"\mathcal{G}",                               # All generators
             "nGE": r"\mathcal{G}^{e}",                          # All electrical generators
+            "nGER": r"\mathcal{G}^{e,res}",                     # All renewable electrical generators
+            "nGENR": r"\mathcal{G}^{e,nonres}",                 # All non-renewable electrical generators
             "nGH": r"\mathcal{G}^{h}",                          # All hydrogen generators
             "nE": r"\mathcal{E}",                               # All storage units
             "nEE": r"\mathcal{E}^{e}",                          # All electrical storage units
