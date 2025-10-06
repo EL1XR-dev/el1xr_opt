@@ -113,7 +113,7 @@ The formulation is defined by «``eTotalHydGCost``».
       \Big(&
            \pvariablecost_{\genindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pmaintenancecost_{\genindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
-   &\quad
+   &
          + \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pshutdowncost_{\genindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
