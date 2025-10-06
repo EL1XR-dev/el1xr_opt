@@ -122,7 +122,7 @@ The formulation is defined by «``eTotalHydGCost``».
 
 Emission Costs
 ~~~~~~~~~~~~~~
-This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
+This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (:math:`\pcarbonprice`).
 The formulation is defined by «``eTotalECost``».
 
 
