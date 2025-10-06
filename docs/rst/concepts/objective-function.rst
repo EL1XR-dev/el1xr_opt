@@ -113,8 +113,8 @@ Hydrogen Generation Costs
               \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
             + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
             + \pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-            + \pstartupcost_{\hydgenindex}\,\vstartup_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-            + \pshutdowncost_{\hydgenindex}\,\vshutdown_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+            + \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+            + \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
         \Big)
 
 Emission Costs
