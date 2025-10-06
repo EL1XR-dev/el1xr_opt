@@ -91,8 +91,8 @@ Electricity Generation Costs
    = &\sum_{\genindex \in \nGE}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pvariablecost_{\genindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-         + \pmaintenancecost_{\genindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+           \pvariablecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pmaintenancecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big) \\
    &\quad
       + \sum_{\,\genindex \in \nGENR}
