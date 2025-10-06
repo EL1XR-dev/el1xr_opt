@@ -133,7 +133,7 @@ This component captures the cost of carbon emissions from fossil-fueled generato
 
 
 .. math::
-    \carboncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{egt \in EGT} \text{pDuration}_{p,sc,n} \times \text{pGenCO2EmissionCost}_{egt} \times \text{vEleTotalOutput}_{p,sc,n,egt}
+    \carboncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGENR} \pcarbonprice_{\genindex} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
 Consumption Costs
 ~~~~~~~~~~~~~~~~~
