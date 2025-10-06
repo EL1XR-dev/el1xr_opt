@@ -1,13 +1,11 @@
 Objective Function
 ==================
-
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
 
 The main objective function is defined by the Pyomo constraint «``eTotalSCost``», which minimizes the variable «``vTotalSCost``» (:math:`\alpha`).
 
 Total System Cost
 -----------------
-
 The total system cost is the sum of all discounted costs across every period (:math:`\periodindex`) and scenario (:math:`\scenarioindex`) in the model horizon. The objective function can be expressed conceptually as:
 
 Total system cost («``eTotalSCost``»)
@@ -32,12 +30,10 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 Key Cost Components
 -------------------
-
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
 Market Costs
 ~~~~~~~~~~~~
-
 This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
 *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
@@ -78,7 +74,6 @@ Hydrogen Market Costs
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
-
 This is the operational cost of running the generation and production assets. It typically includes:
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
 *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
@@ -127,7 +122,6 @@ Hydrogen Generation Costs
 
 Emission Costs
 ~~~~~~~~~~~~~~
-
 This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
 «``eTotalECost``»
 
