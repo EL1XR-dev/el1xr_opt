@@ -41,7 +41,7 @@ This represents the net cost of trading with external markets. It is calculated 
 
 Electricity Market Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^
-«``eTotalEleMCost``»
+The formulation is defined by «``eTotalEleMCost``».
 
 :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
 
@@ -58,7 +58,7 @@ Electricity Market Costs
 
 Hydrogen Market Costs
 ^^^^^^^^^^^^^^^^^^^^^
-«``eTotalHydMCost``»
+The formulation is defined by «``eTotalHydMCost``».
 
 :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
 
@@ -83,7 +83,7 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 
 Electricity Generation Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-«``eTotalEleGCost``»
+The formulation is defined by «``eTotalEleGCost``».
 
 .. math::
    \begin{aligned}
@@ -104,7 +104,7 @@ Electricity Generation Costs
 
 Hydrogen Generation Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-«``eTotalHydGCost``»
+The formulation is defined by «``eTotalHydGCost``».
 
 .. math::
    \begin{aligned}
@@ -123,7 +123,7 @@ Hydrogen Generation Costs
 Emission Costs
 ~~~~~~~~~~~~~~
 This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (``pGenCO2EmissionCost``). The formulation is defined by ``eTotalECost``.
-«``eTotalECost``»
+The formulation is defined by «``eTotalECost``».
 
 
 .. math::
@@ -135,38 +135,43 @@ This represents the costs associated with operating energy consumers within the 
 
 Electricity Consumption Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-«``eTotalEleCCost``»
+The formulation is defined by «``eTotalEleCCost``».
 
-    .. math::
-       \text{vTotalEleCCost}_{p,sc,n} = \sum_{egs \in EGS} \text{pDuration}_{p,sc,n} \times \text{pEleGenLinearTerm}_{egs} \times \text{vEleTotalCharge}_{p,sc,n,egs}
+.. math::
+    \text{vTotalEleCCost}_{p,sc,n} = \sum_{egs \in EGS} \text{pDuration}_{p,sc,n} \times \text{pEleGenLinearTerm}_{egs} \times \text{vEleTotalCharge}_{p,sc,n,egs}
 
 Hydrogen Consumption Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-«``eTotalHydCCost``»
+The formulation is defined by «``eTotalHydCCost``».
 
-    .. math::
-       \text{vTotalHydCCost}_{p,sc,n} = \sum_{hgs \in HGS} \text{pDuration}_{p,sc,n} \times \text{pHydGenLinearTerm}_{hgs} \times \text{vHydTotalCharge}_{p,sc,n,hgs}
+.. math::
+    \text{vTotalHydCCost}_{p,sc,n} = \sum_{hgs \in HGS} \text{pDuration}_{p,sc,n} \times \text{pHydGenLinearTerm}_{hgs} \times \text{vHydTotalCharge}_{p,sc,n,hgs}
 
 Reliability Costs
 ~~~~~~~~~~~~~~~~~
-(`vTotalEleRCost`, `vTotalHydRCost`)
+This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (``pParENSCost`` or ``pParHNSCost``), ensuring the model prioritizes meeting demand.
+*   Associated variables: ``vENS`` (Energy Not Served), ``vHNS`` (Hydrogen Not Served).
 
-    This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (``pParENSCost`` or ``pParHNSCost``), ensuring the model prioritizes meeting demand. The associated constraints are ``eTotalEleRCost`` and ``eTotalHydRCost``.
-    *   Associated variables: ``vENS`` (Energy Not Supplied), ``vHNS`` (Hydrogen Not Supplied).
+Electricity Energy-not-served Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The formulation is defined by «``eTotalEleRCost``».
 
-    .. math::
-       \text{vTotalEleRCost}_{p,sc,n} = \sum_{ed \in ED} \text{pDuration}_{p,sc,n} \times \text{pParENSCost} \times \text{vENS}_{p,sc,n,ed}
+.. math::
+    \text{vTotalEleRCost}_{p,sc,n} = \sum_{ed \in ED} \text{pDuration}_{p,sc,n} \times \text{pParENSCost} \times \text{vENS}_{p,sc,n,ed}
 
-    .. math::
-       \text{vTotalHydRCost}_{p,sc,n} = \sum_{hd \in HD} \text{pDuration}_{p,sc,n} \times \text{pParHNSCost} \times \text{vHNS}_{p,sc,n,hd}
+Hydrogen Energy-not-served Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The formulation is defined by «``eTotalHydRCost``».
+
+.. math::
+    \text{vTotalHydRCost}_{p,sc,n} = \sum_{hd \in HD} \text{pDuration}_{p,sc,n} \times \text{pParHNSCost} \times \text{vHNS}_{p,sc,n,hd}
 
 Electricity Peak Demand Costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(`vTotalElePeakCost`)
+This component models capacity-based tariffs, where costs are determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
+The formulation is defined by «``eTotalElePeakCost``».
 
-    This component models capacity-based tariffs, where costs are determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs. The formulation is defined by ``eTotalElePeakCost``.
-
-    .. math::
-       \text{vTotalElePeakCost}_{p,sc} = \frac{1}{|\text{Peaks}|} \sum_{er \in ER} \text{pEleRetTariff}_{er} \times \text{factor1} \times \sum_{m \in \text{moy}} \sum_{\text{peak} \in \text{Peaks}} \text{vElePeak}_{p,sc,m,er,\text{peak}}
+.. math::
+    \text{vTotalElePeakCost}_{p,sc} = \frac{1}{|\text{Peaks}|} \sum_{er \in ER} \text{pEleRetTariff}_{er} \times \text{factor1} \times \sum_{m \in \text{moy}} \sum_{\text{peak} \in \text{Peaks}} \text{vElePeak}_{p,sc,m,er,\text{peak}}
 
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
