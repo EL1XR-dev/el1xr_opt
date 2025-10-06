@@ -33,7 +33,7 @@ They are written in **lowercase** letters.
 :math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
 :math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Electricity not served                                               MWh       «``vENS``»
 :math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Hydrogen not served                                                  kgH2      «``vHNS``»
-:math:`\vpeakdemand_{\periodindex,\scenarioindex,\timeindex,\eletraderindex,\peakindex}`                   Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
+:math:`\vpeakdemand_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`                      Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
 =========================================================================================================  ===================================================================  ========  ===========================================================================
 
 Key Variable Categories
