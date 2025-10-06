@@ -149,8 +149,8 @@ The formulation is defined by «``eTotalHydCCost``».
 
 Reliability Costs
 ~~~~~~~~~~~~~~~~~
-This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (``pParENSCost`` or ``pParHNSCost``), ensuring the model prioritizes meeting demand.
-*   Associated variables: ``vENS`` (Energy Not Served), ``vHNS`` (Hydrogen Not Served).
+This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (:math:`\ploadsheddingcost_{\loadindex}`), ensuring the model prioritizes meeting demand.
+*   Associated variables: :math:`\veleloadshed` (Electricity Not Served), :math:`\vhydloadshed` (Hydrogen Not Served).
 
 Electricity Energy-not-served Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
