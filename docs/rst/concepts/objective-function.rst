@@ -122,7 +122,7 @@ The formulation is defined by «``eTotalHydGCost``».
 
 Emission Costs
 ~~~~~~~~~~~~~~
-This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (:math:`\pcarbonprice`).
+This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (:math:`\pcarbonprice_{\genindex}`).
 The formulation is defined by «``eTotalECost``».
 
 
@@ -138,7 +138,7 @@ Electricity Consumption Costs
 The formulation is defined by «``eTotalEleCCost``».
 
 .. math::
-    \text{vTotalEleCCost}_{p,sc,n} = \sum_{egs \in EGS} \text{pDuration}_{p,sc,n} \times \text{pEleGenLinearTerm}_{egs} \times \text{vEleTotalCharge}_{p,sc,n,egs}
+    \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\elestorageindex \in \nEE} \pvariablecost_{\elestorageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\elestorageindex}
 
 Hydrogen Consumption Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
