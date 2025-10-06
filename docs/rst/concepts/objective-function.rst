@@ -98,7 +98,9 @@ Electricity Generation Costs
       + \sum_{\,\genindex \in \nGENR}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
-           \pfixedcost_{\elenonresgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+           \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+            + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+            + \pshutdowncost_{\genindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big)
    \end{aligned}
 
@@ -111,8 +113,8 @@ Hydrogen Generation Costs
    = \sum_{\genindex \in \nGH}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(&
-           \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-         + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
+           \pvariablecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pmaintenancecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
    &\quad
          + \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
