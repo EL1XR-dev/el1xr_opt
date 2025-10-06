@@ -99,10 +99,6 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
       \Big)
    \end{aligned}
 
-
-:math:`\elegenerationcost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\elegenindex \in \nGE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,(\pvariablecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex} + \pmaintenancecost_{\elegenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex})`
-
-
 Emission Costs
 ~~~~~~~~~~~~~~
 (`vTotalECost`)
