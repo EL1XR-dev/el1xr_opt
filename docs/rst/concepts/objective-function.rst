@@ -119,6 +119,7 @@ Hydrogen Generation Costs
         + \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
         + \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
         \Big)
+    end{aligned}
 
 Emission Costs
 ~~~~~~~~~~~~~~
