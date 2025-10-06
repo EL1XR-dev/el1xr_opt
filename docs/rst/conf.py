@@ -154,6 +154,9 @@ mathjax3_config = {
             "nD": r"\mathcal{D}",                               # All demands
             "nDE": r"\mathcal{D}^{e}",                          # All electrical demands
             "nDH": r"\mathcal{D}^{h}",                          # All hydrogen demands
+            "nK": r"\mathcal{K}",                               # All peak demands
+            "nKE": r"\mathcal{K}^{e}",                          # All electrical peak demands
+            "nKH": r"\mathcal{K}^{h}",                          # All hydrogen peak demands
             "nL": r"\mathcal{L}",                               # All lines
             "nX": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
@@ -182,9 +185,9 @@ mathjax3_config = {
             "nH0": r"\mathcal{H}^{0}",                          # All hours in a day except the first one
             "nH1": r"\mathcal{H}^{1}",                          # All hours in a day except the last one
             "nH2": r"\mathcal{H}^{2}",                          # All hours in a day except the first and last one
-            "nD": r"\mathcal{D}",                               # All days in a week
-            "nD0": r"\mathcal{D}^{0}",                          # All days in a week except the first one
-            "nD1": r"\mathcal{D}^{1}",                          # All days in a week except the last one
+            "nD0": r"\mathcal{D}",                              # All days in a week
+            "nD1": r"\mathcal{D}^{0}",                          # All days in a week except the first one
+            "nD2": r"\mathcal{D}^{1}",                          # All days in a week except the last one
 
             # === INDEXES ===
             "busindexa": r"i",                                  # Index for "from" bus of a branch
@@ -210,7 +213,7 @@ mathjax3_config = {
             "elestorageindex": r"e^{e}",                        # Index for electrical storage
             "hydstorageindex": r"e^{h}",                        # Index for hydrogen storage
             "storageindex": r"e",                               # Index for storage
-            "retailerindex": r"r",                              # Index for retailer
+            "traderindex": r"r",                                # Index for retailer
             "eletraderindex": r"r^{e}",                         # Index for electrical retailer
             "hydtraderindex": r"r^{h}",                         # Index for hydrogen retailer
             "periodindex": r"p",                                # Index for period
@@ -408,6 +411,7 @@ mathjax3_config = {
             # --- Cost Parameters ---
             "pstartupcost": r"CSU",                             # Start-up cost
             "pshutdowncost": r"CSD",                            # Shut-down cost
+            "ppeakdemandtariff": r"C^{peak}",                   # Peak demand cost
             "pnoloadcost": r"C^{nl}",                           # No-load cost
             "ploadsheddingcost": r"C^{ls}",                     # Load-shedding cost
             "pspillcost": r"C^{spill}",                         # Spill cost
