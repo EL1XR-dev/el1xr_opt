@@ -92,8 +92,8 @@ Electricity Generation Costs
 
 .. math::
    \begin{aligned}
-   &\elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-   = \sum_{\genindex \in \nGE}
+   \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
+   = &\sum_{\genindex \in \nGE}
       \Big(
            \pvariablecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pmaintenancecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
