@@ -151,6 +151,9 @@ mathjax3_config = {
             "nR": r"\mathcal{R}",                               # All retailers
             "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
             "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
+            "nD": r"\mathcal{D}",                               # All demands
+            "nDE": r"\mathcal{D}^{e}",                          # All electrical demands
+            "nDH": r"\mathcal{D}^{h}",                          # All hydrogen demands
             "nL": r"\mathcal{L}",                               # All lines
             "nX": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
@@ -201,8 +204,8 @@ mathjax3_config = {
             "eleconsindex": r"c^{e}",                           # Index for electrical consumer
             "hydconsindex": r"c^{h}",                           # Index for hydrogen consumer
             "consindex": r"c",                                  # Index for consumer
-            "elepeakindex": r"k^{e}",                      # Index for electrical peak load
-            "hydpeakindex": r"k^{h}",                      # Index for hydrogen peak load
+            "elepeakindex": r"k^{e}",                           # Index for electrical peak load
+            "hydpeakindex": r"k^{h}",                           # Index for hydrogen peak load
             "peakindex": r"d^{peak}",                           # Index for peak load
             "elestorageindex": r"e^{e}",                        # Index for electrical storage
             "hydstorageindex": r"e^{h}",                        # Index for hydrogen storage
@@ -400,6 +403,7 @@ mathjax3_config = {
             "peleefficiency": r"\eta^{e}",                      # Electrical efficiency
             "phydefficiency": r"\eta^{h}",                      # Hydrogen efficiency
             "peletohydfunction": r"F^{e2h}",                    # Power-to-hydrogen conversion
+            "phydtoelecfunction": r"F^{h2e}",                   # Hydrogen-to-power conversion
 
             # --- Cost Parameters ---
             "pstartupcost": r"CSU",                             # Start-up cost

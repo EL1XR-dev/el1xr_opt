@@ -157,7 +157,7 @@ Electricity Energy-not-served Costs
 The formulation is defined by «``eTotalEleRCost``».
 
 .. math::
-    \text{vTotalEleRCost}_{p,sc,n} = \sum_{ed \in ED} \text{pDuration}_{p,sc,n} \times \text{pParENSCost} \times \text{vENS}_{p,sc,n,ed}
+    \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\loadindex \in \nDE} \text{pParENSCost} \times \text{vENS}_{p,sc,n,ed}
 
 Hydrogen Energy-not-served Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
