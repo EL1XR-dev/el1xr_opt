@@ -110,8 +110,8 @@ Hydrogen Generation Costs
     = \sum_{\hydgenindex \in \nGH}
         \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
         \Big(
-              \phydvariablecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-            + \phydmaintenancecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+              \pvariablecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+            + \pmaintenancecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
         \Big)
 
 Emission Costs
