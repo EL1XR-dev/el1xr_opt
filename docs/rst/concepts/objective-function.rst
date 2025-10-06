@@ -24,15 +24,15 @@ And the total cost is the sum of all operational costs, discounted to present va
       \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex} \sum_{\timeindex \in \nT}
       (&
         \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
-      + \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
-      + \carboncost_{\periodindex,\scenarioindex,\timeindex} \\
+      \!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \carboncost_{\periodindex,\scenarioindex,\timeindex} \\
       &
-      + \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
-      + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
+      \!+\! \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
       )
    \end{aligned}
 
