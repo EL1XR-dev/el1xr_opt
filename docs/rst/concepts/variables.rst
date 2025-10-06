@@ -15,8 +15,8 @@ They are written in **lowercase** letters.
 :math:`\elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex}`                                         Cost of electricity market purchases                                 €         «``vTotalEleTradeCost``»
 :math:`\elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`                                        Revenue from electricity market sales                                €         «``vTotalEleTradeProfit``»
 :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}`                                            Net cost of hydrogen market transactions (buying - selling)          €         «``vTotalHydMCost``»
-:math:`\hydmarketcostbuy_{\periodindex,\scenarioindex}`                                                    Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
-:math:`\hydmarketcostsell_{\periodindex,\scenarioindex}`                                                   Revenue from hydrogen market sales                                   €         «``vTotalHydTradeProfit``»
+:math:`\hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex}`                                         Cost of hydrogen market purchases                                    €         «``vTotalHydTradeCost``»
+:math:`\hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`                                        Revenue from hydrogen market sales                                   €         «``vTotalHydTradeProfit``»
 :math:`\elegenerationcost_{\periodindex,\scenarioindex}`                                                   Total cost of electricity generation                                 €         «``vTotalEleGCost``»
 :math:`\hydgenerationcost_{\periodindex,\scenarioindex}`                                                   Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
 :math:`\carboncost_{\periodindex,\scenarioindex}`                                                          Total cost of CO2 emissions                                          €         «``vTotalECost``»
