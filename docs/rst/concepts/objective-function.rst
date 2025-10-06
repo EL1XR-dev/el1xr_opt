@@ -52,13 +52,13 @@ Electricity Market Costs
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
     .. math::
-       \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in \nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketbuyingratio_{\eletraderindex} + \pelemarketcertrevenue_{\eletraderindex} \pfactorone + \pelemarketpassthrough_{\eletraderindex} \pfactorone) \\
+       \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in \nRE} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketbuyingratio_{\eletraderindex} + \pelemarketcertrevenue_{\eletraderindex} \pfactorone + \pelemarketpassthrough_{\eletraderindex} \pfactorone) \\
        & (1 + \pelemarketmoms_{\eletraderindex} \pfactorone) + \pelemarketnetfee_{\eletraderindex} \pfactorone) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}
 
 #.  **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
     .. math::
-       \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in \nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketsellingratio_{\eletraderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\eletraderindex})
+       \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketsellingratio_{\eletraderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\eletraderindex})
 
 Hydrogen Market Costs
 ^^^^^^^^^^^^^^^^^^^^^
@@ -69,12 +69,12 @@ Hydrogen Market Costs
 #.  **Hydrogen Purchase**: The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
     .. math::
-       \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\hydtraderindex \in \nRH} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex})
+       \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\hydtraderindex \in \nRH} (\phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex})
 
 #.  **Hydrogen Sales**: The revenue generated from selling hydrogen to the market, as defined by ``eTotalHydTradeProfit``.
 
     .. math::
-       \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\hydtraderindex \in \nRH} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex})
+       \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\hydtraderindex \in \nRH} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex})
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
@@ -94,14 +94,12 @@ Electricity Generation Costs
    \begin{aligned}
    &\elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
    = \sum_{\genindex \in \nGE}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pvariablecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pmaintenancecost_{\genindex}\,\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
       \Big) \\
    &
       + \sum_{\genindex \in \nGENR}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(
            \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
          \!+\! \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
@@ -117,7 +115,6 @@ Hydrogen Generation Costs
    \begin{aligned}
    \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
    = \sum_{\genindex \in \nGH}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(&
            \pvariablecost_{\genindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pmaintenancecost_{\genindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
