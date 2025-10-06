@@ -42,7 +42,6 @@ The total cost is broken down into several components, each represented by a spe
 
 Market Costs
 ~~~~~~~~~~~~
-(«``eTotalEleMCost``», «``eTotalHydMCost``»)
 
 This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
@@ -51,6 +50,7 @@ This represents the net cost of trading with external markets. It is calculated 
 
 Electricity Market Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^
+«``eTotalEleMCost``»
 
 :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
 
@@ -67,6 +67,7 @@ Electricity Market Costs
 
 Hydrogen Market Costs
 ^^^^^^^^^^^^^^^^^^^^^
+«``eTotalHydMCost``»
 
 :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
 
@@ -82,7 +83,6 @@ Hydrogen Market Costs
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
-(``eTotalEleGCost``, ``eTotalHydGCost``)
 
 This is the operational cost of running the generation and production assets. It typically includes:
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
@@ -93,6 +93,7 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 
 Electricity Generation Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+«``eTotalEleGCost``»
 
 .. math::
    \begin{aligned}
@@ -115,6 +116,7 @@ Electricity Generation Costs
 
 Hydrogen Generation Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+«``eTotalHydGCost``»
 
 .. math::
    \begin{aligned}
