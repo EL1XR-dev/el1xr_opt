@@ -111,8 +111,8 @@ Hydrogen Generation Costs
    = \sum_{\genindex \in \nGH}
       \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
       \Big(&
-           \pvariablecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-         + \pmaintenancecost_{\hydgenindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
+           \pvariablecost_{\genindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+         + \pmaintenancecost_{\genindex}\,\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
    &\quad
          + \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
