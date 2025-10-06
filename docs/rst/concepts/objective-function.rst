@@ -108,15 +108,8 @@ Hydrogen Generation Costs
 .. math::
     \begin{aligned}
     \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
-    = &\sum_{\hydgenindex \in \nGH}
-        \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\,
-              \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-            + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-        \\
-    &\quad
-        + \pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-        + \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
-        + \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
+    = &\sum_{\hydgenindex \in \nGH}\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}\, \pvariablecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex} + \pmaintenancecost_{\hydgenindex}\,\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}\\
+    &\quad + \pfixedcost_{\hydgenindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}+ \pstartupcost_{\hydgenindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}+ \pshutdowncost_{\hydgenindex}\,\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}
     end{aligned}
 
 Emission Costs
