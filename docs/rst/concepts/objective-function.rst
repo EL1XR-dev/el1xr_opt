@@ -20,9 +20,10 @@ And the total cost is the sum of all operational costs, discounted to present va
 .. math::
    \begin{aligned}
    \alpha
-   = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
+   = &\sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
       \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex} \sum_{\timeindex \in \nT}
-      (&
+      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}
+      (
         \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
       \!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
       \!+\! \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
