@@ -22,13 +22,13 @@ And the total cost is the sum of all operational costs, discounted to present va
    \alpha
    = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
       \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex} \sum_{\timeindex \in \nT}
-      (&
+      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}(&
         \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
       + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
       + \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
       + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
       + \carboncost_{\periodindex,\scenarioindex,\timeindex} \\
-      &\qquad
+      &
       + \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
       + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
       + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
