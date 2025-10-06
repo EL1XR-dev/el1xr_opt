@@ -100,7 +100,7 @@ Electricity Generation Costs
       \Big(
            \pfixedcost_{\genindex}\,\vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
          + \pstartupcost_{\genindex}\,\vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
-         + \pshutdowncost_{\genindex}\vshutdownbin_{\periodindex,\scenarioindex}
+         + \pshutdowncost_{\genindex}\vshutdownbin_{\periodindex}
       \Big)
    \end{aligned}
 
