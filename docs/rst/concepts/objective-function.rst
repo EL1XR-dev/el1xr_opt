@@ -34,20 +34,20 @@ Alternative
 ^^^^^^^^^^^
 
 .. math::
-   \begin{aligned}
-   \alpha = & \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
-      \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex} \\
-      & + \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}
-      ( \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
-      + \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex} \\
-      & + \carboncost_{\periodindex,\scenarioindex,\timeindex}
-      + \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
-      + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
-      + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} )
-   \end{aligned}
+   \begin{split}
+   \alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
+   \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex}
+   + \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (
+   \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
+   + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
+   + \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
+   + \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex} \\
+   + \carboncost_{\periodindex,\scenarioindex,\timeindex}
+   + \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
+   + \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
+   + \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
+   + \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} )
+   \end{split}
 
 
 Key Cost Components
