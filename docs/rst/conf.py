@@ -513,3 +513,21 @@ mathjax3_config = {
         }
     }
 }
+
+# --- Reuse MathJax macros for LaTeX/PDF (and imgmath) ---
+_MJ_MACROS = mathjax3_config["tex"]["macros"]
+
+def _latex_preamble_from_macros(macros: dict) -> str:
+    lines = []
+    for name, body in macros.items():
+        # \providecommand avoids "already defined" warnings on rebuilds
+        lines.append(r"\providecommand{\%s}{%s}" % (name, body))
+    return "\n".join(lines)
+
+latex_engine = "lualatex"  # optional but robust for unicode/fonts/links
+latex_elements = {
+    "preamble": _latex_preamble_from_macros(_MJ_MACROS),
+}
+
+# If you ever use sphinx.ext.imgmath for HTML math image rendering:
+imgmath_latex_preamble = latex_elements["preamble"]
