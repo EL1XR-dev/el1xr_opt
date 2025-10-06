@@ -22,7 +22,7 @@ And the total cost is the sum of all operational costs, discounted to present va
    \alpha
    = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
       \sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex} \sum_{\timeindex \in \nT}
-      \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}(&
+      (&
         \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
       + \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
       + \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
@@ -50,9 +50,10 @@ This represents the net cost of trading with external markets. It is calculated 
 *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
 *   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
 
-:math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+Electricity Market Costs
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-:math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+:math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
 
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
@@ -64,6 +65,11 @@ This represents the net cost of trading with external markets. It is calculated 
 
     .. math::
        \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\eletraderindex \in \nRE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex} \pelemarketsellingratio_{\eletraderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\eletraderindex})
+
+Hydrogen Market Costs
+^^^^^^^^^^^^^^^^^^^^^
+
+:math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
 
 #.  **Hydrogen Purchase**: The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
