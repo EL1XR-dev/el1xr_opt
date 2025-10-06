@@ -21,19 +21,19 @@ They are written in **lowercase** letters.
 :math:`\hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}`                                        Total cost of hydrogen generation                                    €         «``vTotalHydGCost``»
 :math:`\carboncost_{\periodindex,\scenarioindex,\timeindex}`                                               Total cost of CO2 emissions                                          €         «``vTotalECost``»
 :math:`\eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`                                       Total cost of electricity consumption (e.g., storage charging)       €         «``vTotalEleCCost``»
-:math:`\hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`                                       Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
-:math:`\eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`                                    Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
-:math:`\hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`                                    Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
+:math:`\hydconsumptioncost_{\periodindex,\scenarioindex}`                                                  Total cost of hydrogen consumption (e.g., storage charging)          €         «``vTotalHydCCost``»
+:math:`\eleunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved electricity demand (penalty)                  €         «``vTotalEleRCost``»
+:math:`\hydunservedenergycost_{\periodindex,\scenarioindex}`                                               Total cost of unserved hydrogen demand (penalty)                     €         «``vTotalHydRCost``»
 :math:`\elepeakdemandcost_{\periodindex,\scenarioindex}`                                                   Total cost of electricity peak demand (capacity tariff)              €         «``vTotalElePeakCost``»
-:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                               Electricity bought from the market                                   MWh       «``vEleBuy``»
-:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                              Electricity sold to the market                                       MWh       «``vEleSell``»
-:math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                               Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
-:math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                              Hydrogen sold to the market                                          kgH2      «``vHydSell``»
-:math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
-:math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                    Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
-:math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Electricity not served                                               MWh       «``vENS``»
-:math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                     Hydrogen not served                                                  kgH2      «``vHNS``»
-:math:`\vpeakdemand_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`                      Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`                            Electricity bought from the market                                   MWh       «``vEleBuy``»
+:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`                           Electricity sold to the market                                       MWh       «``vEleSell``»
+:math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex}`                            Hydrogen bought from the market                                      kgH2      «``vHydBuy``»
+:math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex}`                           Hydrogen sold to the market                                          kgH2      «``vHydSell``»
+:math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\elegenindex}`                                 Electricity output from electricity generator                        MWh       «``vEleTotalOutput``»
+:math:`\vproduction_{\periodindex,\scenarioindex,\timeindex,\hydgenindex}`                                 Hydrogen output from hydrogen generator                              MWh       «``vHydTotalOutput``»
+:math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\eleloadindex}`                                  Electricity not served                                               MWh       «``vENS``»
+:math:`\vloadshed_{\periodindex,\scenarioindex,\timeindex,\hydloadindex}`                                  Hydrogen not served                                                  kgH2      «``vHNS``»
+:math:`\vpeakdemand_{\periodindex,\scenarioindex,\timeindex,\eletraderindex,\elepeakindex}`                Electricity peak demand for tariff calculation                       MW        «``vElePeak``»
 =========================================================================================================  ===================================================================  ========  ===========================================================================
 
 Key Variable Categories
