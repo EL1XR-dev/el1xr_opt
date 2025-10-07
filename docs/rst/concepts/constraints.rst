@@ -14,11 +14,11 @@ The core electricity balance equation, ``eEleBalance``, states that the sum of a
    \begin{aligned}
    &\sum_{\genindex \in \nGE} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nEE} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\text{e2h} \in \text{E2H}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\text{e2h}} \\
-   &- \sum_{\text{nf,cc} \in \text{lout}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\text{nd,nf,cc}}
+   - \sum_{\genindex \in \nGHE} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
+   &- \sum_{\text{\busindexb,\circuitindex} \in \text{lout}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\text{nd,nf,cc}}
    + \sum_{\text{ni,cc} \in \text{lin}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\text{ni,nd,cc}} \\
    &+ \sum_{\traderindex \in \nRE} (\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
-   = \sum_{\loadindex \in \nDE} (\peledem_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa, \busindexa \in \nBE
+   = \sum_{\loadindex \in \nDE} (\peledem_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBE
    \end{aligned}
 
 Hydrogen Balance

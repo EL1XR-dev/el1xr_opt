@@ -144,7 +144,10 @@ mathjax3_config = {
             "nGE": r"\mathcal{G}^{e}",                          # All electrical generators
             "nGER": r"\mathcal{G}^{e,res}",                     # All renewable electrical generators
             "nGENR": r"\mathcal{G}^{e,nonres}",                 # All non-renewable electrical generators
+            "nGEH": r"\mathcal{G}^{e,h}",                       # All electrical generators consuming hydrogen
             "nGH": r"\mathcal{G}^{h}",                          # All hydrogen generators
+            "nCNG": r"\mathcal{G}^{h,cng}",                     # All hydrogen generators consuming natural gas
+            "nGHE": r"\mathcal{G}^{h,e}",                       # All hydrogen generators consuming electricity
             "nE": r"\mathcal{E}",                               # All storage units
             "nEE": r"\mathcal{E}^{e}",                          # All electrical storage units
             "nEH": r"\mathcal{E}^{h}",                          # All hydrogen storage units
@@ -170,6 +173,7 @@ mathjax3_config = {
             "nH": r"\mathcal{H}",                               # All hours in a day
 
             # === INDEXES ===
+            "busindex": r"nd",                                   # Index for buses
             "busindexa": r"i",                                  # Index for "from" bus of a branch
             "busindexb": r"j",                                  # Index for "to" bus of a branch
             "branchindex": r"ij",                               # Index for branch between bus i and j
@@ -179,7 +183,10 @@ mathjax3_config = {
             "elegenindex": r"g^{e}",                            # Index for electrical generator
             "elenonresgenindex": r"g^{e,nonres}",               # Index for non-renewable electrical generator
             "elenresgenindex": r"g^{e,res}",                    # Index for renewable electrical
+            "elenhydgenindex": r"g^{e,h}",                      # Index for electrical generator consuming hydrogen
             "hydgenindex": r"g^{h}",                            # Index for hydrogen generator
+            "hydcnggenindex": r"g^{h,cng}",                     # Index for hydrogen generator consuming natural gas
+            "hydelecgenindex": r"g^{h,e}",                      # Index for hydrogen generator consuming electricity
             "genindex": r"g",                                   # Index for generator
             "eleloadindex": r"d^{e}",                           # Index for electrical load
             "hydloadindex": r"d^{h}",                           # Index for hydrogen load
