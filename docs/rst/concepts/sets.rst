@@ -27,14 +27,19 @@ Temporal Hierarchy
 
 The model uses a nested temporal structure to represent time, from long-term planning periods down to hourly operational timesteps.
 
-*   ``model.p``: **Periods**. The highest level, typically representing years in an investment planning horizon.
-*   ``model.sc``: **Scenarios**. Represents different operational conditions within a period, such as typical weather weeks or stress-case scenarios.
-*   ``model.n``: **Timesteps / Load Levels**. The finest temporal resolution, usually representing hours or sub-hourly intervals within a scenario.
+Sets
+~~~~
 
-These are often used in combination:
+==========================  ===============================================================================  ========================================
+**Symbol**                  **Description**                                                                  **oM_InputData.py**
+--------------------------  -------------------------------------------------------------------------------  ----------------------------------------
+:math:`\nP`                  All periods (e.g., years in a planning horizon)                                 :code:`model.p`
+:math:`\nS`                  All scenarios, representing different operational conditions within a period    :code:`model.sc`
+:math:`\nT`                  All time steps (e.g., hours or sub-hourly intervals)                            :code:`model.n`
+==========================  ===============================================================================  ========================================
 
-*   ``model.ps``: A combined set of ``(period, scenario)``.
-*   ``model.psn``: A combined set of ``(period, scenario, timestep)``, representing every unique time point in the model.
+Indices
+~~~~~~~
 
 ==========================  ===============================================================================  ========================================
 **Symbol**                  **Description**                                                                  **oM_InputData.py**
@@ -53,7 +58,7 @@ Spatial Representation
 The spatial dimension defines the physical layout and regional aggregation of the energy system.
 
 Sets
-----
+~~~~
 
 ============  ==============================================================================  =========================================
 **Symbol**    **Description**                                                                 **oM_InputData.py**
