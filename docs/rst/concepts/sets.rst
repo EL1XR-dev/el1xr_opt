@@ -1,113 +1,275 @@
+.. _sets_section:
+
+****
 Sets
-====
-
-Acronyms
---------
-
-===========  ====================================================================
-**Acronym**  **Description**
-===========  ====================================================================
-BESS         Battery Energy Storage System
-DA           Day-Ahead Market
-ESS          Energy Storage System (includes BESS and HESS)
-H-VPP        Hydrogen-based Virtual Power Plant
-HESS         Hydrogen Energy Storage System
-ID           Intraday Markets
-RT           Real Time Market
-SoC          State of Charge
-VRE          Variable Renewable Energy
-===========  ====================================================================
+****
 
 The optimization model is built upon a series of indexed sets that define its dimensions, including time, space, and technology. These sets are used by Pyomo to create variables and constraints efficiently. Understanding these sets is crucial for interpreting the model's structure and preparing input data.
 
-The core sets are defined in the ``model`` object and are accessible throughout the formulation scripts (e.g., in ``oM_ModelFormulation.py``).
+The core sets are defined in the ``model`` object and are accessible throughout the formulation scripts (e.g., in ``oM_ModelFormulation.py``). This section provides a comprehensive reference for all sets and indices used in the model, aligned with the mathematical notation found in the :ref:`objective_function_section` and :ref:`constraints_section`.
 
-Temporal Hierarchy
-------------------
+.. contents::
+   :local:
+   :depth: 2
+
+Temporal Sets and Indices
+=========================
 
 The model uses a nested temporal structure to represent time, from long-term planning periods down to hourly operational timesteps.
 
-*   ``model.p``: **Periods**. The highest level, typically representing years in an investment planning horizon.
-*   ``model.sc``: **Scenarios**. Represents different operational conditions within a period, such as typical weather weeks or stress-case scenarios.
-*   ``model.n``: **Timesteps / Load Levels**. The finest temporal resolution, usually representing hours or sub-hourly intervals within a scenario.
+Sets
+----
 
-These are often used in combination:
+.. list-table:: Temporal Sets
+   :widths: 15 85
+   :header-rows: 1
 
-*   ``model.ps``: A combined set of ``(period, scenario)``.
-*   ``model.psn``: A combined set of ``(period, scenario, timestep)``, representing every unique time point in the model.
+   * - Symbol
+     - Description
+   * - :math:`\nP`
+     - All periods (e.g., years in a planning horizon).
+   * - :math:`\nS`
+     - All scenarios, representing different operational conditions within a period.
+   * - :math:`\nW`
+     - All weeks in a year.
+   * - :math:`\nM`
+     - All months in a year.
+   * - :math:`\nH`
+     - All hours in a day.
+   * - :math:`\nT`
+     - All time steps (e.g., hours or sub-hourly intervals).
+   * - :math:`\nV`
+     - All time step intervals, defining the duration of each time step.
 
-============  =======================================================================================================================
-**Index**     **Description**
-============  =======================================================================================================================
-:math:`p`     Period (e.g., year.)
-:math:`ω`     Scenario (e.g., solar generation, spot prices, etc.)
-:math:`n`     Time step (e.g., hours or sub-hourly intervals)
-:math:`\nu`   Duration of the time step (e.g., 0.25 h for 15 min, 0.5 h for half an hour)
-============  =======================================================================================================================
+Indices
+-------
 
-Spatial Representation
+.. list-table:: Temporal Indices
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\periodindex`
+     - Index for a specific period.
+   * - :math:`\scenarioindex`
+     - Index for a specific scenario.
+   * - :math:`\weekindex`
+     - Index for a specific week.
+   * - :math:`\monthindex`
+     - Index for a specific month.
+   * - :math:`\dayindex`
+     - Index for a specific day.
+   * - :math:`\hourindex`
+     - Index for a specific hour.
+   * - :math:`\timeindex`
+     - Index for a specific time step.
+   * - :math:`\timestepindex`
+     - Index for a specific time step interval.
+   * - :math:`\storageperiodindex`
+     - Index for a storage-specific period.
+   * - :math:`\storageweekindex`
+     - Index for a storage-specific week.
+   * - :math:`\storagemonthindex`
+     - Index for a storage-specific month.
+   * - :math:`\storagedayindex`
+     - Index for a storage-specific day.
+   * - :math:`\storagehourindex`
+     - Index for a storage-specific hour.
+   * - :math:`\storagetimeindex`
+     - Index for a storage-specific time step.
+   * - :math:`\storagetimestepindex`
+     - Index for a storage-specific time step interval.
+
+
+Spatial Sets and Indices
+========================
+
+The spatial dimension defines the physical layout and regional aggregation of the energy system.
+
+Sets
+----
+
+.. list-table:: Spatial Sets
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\nB`
+     - All buses in the network.
+   * - :math:`\nBE`
+     - Subset of buses with electrical connections.
+   * - :math:`\nBH`
+     - Subset of buses with hydrogen connections.
+   * - :math:`\nL`
+     - All transmission/distribution lines.
+   * - :math:`\nC`
+     - All circuits associated with lines.
+   * - :math:`\nX`
+     - All regions for aggregation.
+   * - :math:`\nZ`
+     - All zones for aggregation.
+   * - :math:`\nA`
+     - All areas for aggregation.
+
+Indices
+-------
+
+.. list-table:: Spatial Indices
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\busindex`
+     - Index for a bus.
+   * - :math:`\busindexa`
+     - Index for the "from" bus of a branch.
+   * - :math:`\busindexb`
+     - Index for the "to" bus of a branch.
+   * - :math:`\branchindex`
+     - Index for a branch between bus :math:`i` and :math:`j`.
+   * - :math:`\lineindexa`
+     - Index for the "from" bus of a line :math:`c`.
+   * - :math:`\lineindexb`
+     - Index for the "to" bus of a line :math:`c`.
+   * - :math:`\circuitindex`
+     - Index for a circuit.
+   * - :math:`\regionindex`
+     - Index for a region.
+   * - :math:`\zoneindex`
+     - Index for a zone.
+   * - :math:`\areaindex`
+     - Index for an area.
+
+Technological Sets and Indices
+==============================
+
+These sets and indices categorize the various technologies for generation, storage, demand, and retail.
+
+Generation Sets
+---------------
+
+.. list-table:: Generation Sets
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\nG`
+     - All generators.
+   * - :math:`\nGE`
+     - All electrical generators.
+   * - :math:`\nGER`
+     - All renewable electrical generators (e.g., solar, wind).
+   * - :math:`\nGENR`
+     - All non-renewable electrical generators (e.g., gas turbines).
+   * - :math:`\nGEH`
+     - All electrical generators that consume hydrogen (e.g., fuel cells).
+   * - :math:`\nGH`
+     - All hydrogen generators.
+   * - :math:`\nCNG`
+     - All hydrogen generators that consume natural gas (e.g., reformers).
+   * - :math:`\nGHE`
+     - All hydrogen generators that consume electricity (e.g., electrolyzers).
+
+Storage Sets
+------------
+
+.. list-table:: Storage Sets
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\nE`
+     - All storage units.
+   * - :math:`\nEE`
+     - All electrical storage units (e.g., batteries).
+   * - :math:`\nEH`
+     - All hydrogen storage units (e.g., tanks, caverns).
+
+Demand and Retail Sets
 ----------------------
 
-The spatial dimension defines the physical layout of the energy system.
+.. list-table:: Demand and Retail Sets
+   :widths: 15 85
+   :header-rows: 1
 
-*   ``model.nd``: **Nodes**. Represents distinct locations or buses in the energy network. All assets (generators, demands, storage) are assigned to a node.
-*   ``model.ela``: **Electricity Arcs**. Defines the connections (transmission lines) in the electricity grid, represented as ``(node_from, node_to, circuit_id)``.
-*   ``model.hpa``: **Hydrogen Arcs**. Defines the connections (pipelines) in the hydrogen network.
+   * - Symbol
+     - Description
+   * - :math:`\nD`
+     - All demands.
+   * - :math:`\nDE`
+     - All electrical demands.
+   * - :math:`\nDH`
+     - All hydrogen demands.
+   * - :math:`\nK`
+     - All peak demands.
+   * - :math:`\nKE`
+     - All electrical peak demands.
+   * - :math:`\nKH`
+     - All hydrogen peak demands.
+   * - :math:`\nR`
+     - All retailers (points of common coupling to a market).
+   * - :math:`\nRE`
+     - All electrical retailers.
+   * - :math:`\nRH`
+     - All hydrogen retailers.
 
-============  =======================================================================================================================
-**Index**     **Description**
-============  =======================================================================================================================
-:math:`nd`    Node or bus bar in the network
-============  =======================================================================================================================
+Technology Indices
+------------------
 
-Technology and Asset Sets
--------------------------
+.. list-table:: Technology Indices
+   :widths: 15 85
+   :header-rows: 1
 
-The model uses a rich set of indices to differentiate between various types of technologies and assets. There is a clear separation between the electricity and hydrogen systems.
-
-General Technology Subsets
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-*   **Electricity Generation (`eg`)**:
-    *   ``model.egt``: Dispatchable generators that can be committed (turned on/off), like gas turbines.
-    *   ``model.egs``: Electricity storage units, like batteries.
-    *   ``model.egnr``: Non-renewable generators.
-    *   ``model.egv``: Variable renewable energy sources (VRES), like solar and wind.
-
-*   **Hydrogen Production (`hg`)**:
-    *   ``model.hgt``: Dispatchable hydrogen producers.
-    *   ``model.hgs``: Hydrogen storage units, like salt caverns or tanks.
-
-*   **Energy Conversion**:
-    *   ``model.e2h``: Technologies that convert **electricity to hydrogen** (e.g., electrolyzers). This is a subset of ``hg``.
-    *   ``model.h2e``: Technologies that convert **hydrogen to electricity** (e.g., fuel cells). This is a subset of ``eg``.
-
-============  =======================================================================================================================
-**Index**     **Description**
-============  =======================================================================================================================
-:math:`eg`    Electricity unit (thermal or hydro unit or ESS)
-:math:`et`    Electricity thermal unit
-:math:`es`    Electricity energy storage system (eESS)
-:math:`hg`    Hydrogen unit (e.g., electrolyzer, hydrogen tank)
-:math:`hz`    Hydrogen electrolyzer
-:math:`hs`    Hydrogen energy storage system (e.g., hydrogen tank)
-============  =======================================================================================================================
-
-Demand and Retail
-~~~~~~~~~~~~~~~~~
-
-*   ``model.ed``: Electricity demands.
-*   ``model.hd``: Hydrogen demands.
-*   ``model.er``: Electricity retail markets (points of common coupling for buying/selling from a wholesale market).
-*   ``model.hr``: Hydrogen retail markets.
-
-Node-to-Technology Mappings
----------------------------
-
-The model uses mapping sets to link specific assets to their locations in the network. For example:
-
-*   ``model.n2eg``: Maps which electricity generators exist at which nodes.
-*   ``model.n2hg``: Maps which hydrogen producers exist at which nodes.
-*   ``model.n2ed``: Maps electricity demands to nodes.
-
-These sets are fundamental for building the energy balance constraints at each node. By combining temporal, spatial, and technological sets, the model can create highly specific variables, such as ``vEleTotalOutput[p,sc,n,eg]``, which represents the electricity output of generator ``eg`` at a specific time ``(p,sc,n)``.
+   * - Symbol
+     - Description
+   * - :math:`\genindex`
+     - Index for a generic generator.
+   * - :math:`\elegenindex`
+     - Index for an electrical generator.
+   * - :math:`\elenonresgenindex`
+     - Index for a non-renewable electrical generator.
+   * - :math:`\elenresgenindex`
+     - Index for a renewable electrical generator.
+   * - :math:`\elenhydgenindex`
+     - Index for an electrical generator consuming hydrogen.
+   * - :math:`\hydgenindex`
+     - Index for a hydrogen generator.
+   * - :math:`\hydcnggenindex`
+     - Index for a hydrogen generator consuming natural gas.
+   * - :math:`\hydelecgenindex`
+     - Index for a hydrogen generator consuming electricity.
+   * - :math:`\storageindex`
+     - Index for a generic storage unit.
+   * - :math:`\elestorageindex`
+     - Index for an electrical storage unit.
+   * - :math:`\hydstorageindex`
+     - Index for a hydrogen storage unit.
+   * - :math:`\loadindex`
+     - Index for a generic load/demand.
+   * - :math:`\eleloadindex`
+     - Index for an electrical load.
+   * - :math:`\hydloadindex`
+     - Index for a hydrogen load.
+   * - :math:`\peakindex`
+     - Index for a generic peak load.
+   * - :math:`\elepeakindex`
+     - Index for an electrical peak load.
+   * - :math:`\hydpeakindex`
+     - Index for a hydrogen peak load.
+   * - :math:`\consindex`
+     - Index for a generic consumer.
+   * - :math:`\eleconsindex`
+     - Index for an electrical consumer.
+   * - :math:`\hydconsindex`
+     - Index for a hydrogen consumer.
+   * - :math:`\traderindex`
+     - Index for a generic retailer/trader.
+   * - :math:`\eletraderindex`
+     - Index for an electrical retailer.
+   * - :math:`\hydtraderindex`
+     - Index for a hydrogen retailer.

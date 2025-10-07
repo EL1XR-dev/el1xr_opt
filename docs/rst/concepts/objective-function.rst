@@ -1,3 +1,5 @@
+.. _objective_function_section:
+
 Objective Function
 ==================
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
