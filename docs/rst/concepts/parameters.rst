@@ -23,5 +23,5 @@ They are written in **uppercase** letters.
 :math:`\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Maximum electricity production from technology                       kWh       «``pMaxEleProduction``»
 :math:`\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Minimum electricity production from technology                       kWh       «``pMinEleProduction``»
 :math:`\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Maximum hydrogen production from technology                          kgH2      «``pMaxHydProduction``»
-:math:`\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Minimum hydrogen production from technology                          kgH2      «``pMinHydProduction
+:math:`\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Minimum hydrogen production from technology                          kgH2      «``pMinHydProduction``»
 ==========================================================================================  ===================================================================  ========  ===========================================================================
