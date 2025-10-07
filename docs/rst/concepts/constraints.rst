@@ -142,14 +142,14 @@ These constraints model the rules for interacting with external markets.
 *   ``eEleRetMaxBuy`` / ``eEleRetMaxSell``: Limit the amount of energy that can be bought from or sold to the market.
 
     .. math::
-       \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pmaxbuy_{\traderindex}
+       \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex}
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
 A set of constraints starting with ``eElePeak...`` identify the highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
 
 .. math::
-   \velepeak_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \vpeakindicatorbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
+   \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
 
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
@@ -167,7 +167,7 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 *   **Minimum Starting Charge**: The ``eEleMinEnergyStartUp`` constraint enforces a realistic user behavior: an EV must have a minimum state of charge *before* it can be considered "available" to leave its charging station (i.e., before its availability for grid services can change). This ensures the model doesn't fully drain the battery for grid purposes if the user needs it for a trip.
 
     .. math::
-       \vinventory_{\periodindex,\scenarioindex,\timeindex-1,\text{ev}} \ge 0.8 \cdot \pmaxstorage_{\text{ev}} \quad (\text{if starting trip})
+       \vinventory_{\periodindex,\scenarioindex,\timeindex-1,\text{ev}} \ge 0.8 \cdot \peleesscapacity_{\text{ev}} \quad (\text{if starting trip})
 
 *   **Driving Consumption (``vEleEnergyOutflows``)**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
 

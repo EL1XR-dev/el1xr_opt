@@ -364,6 +364,18 @@ mathjax3_config = {
             "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
             "pelemarketnetfee": r"M^{net,e}",                   # Electrical network fee
             "pelemarkettariff": r"M^{tariff,e}",                # Electrical tariff
+            "pmaxmarketbuy": r"\overline{MB}",                  # Max market buying
+            "pelemaxmarketbuy": r"\overline{MB}^{e}",           # Max electrical market buying
+            "phydmaxmarketbuy": r"\overline{MB}^{h}",           # Max hydrogen market buying
+            "pmaxmarketsell": r"\overline{MS}",                 # Max market selling
+            "pelemaxmarketsell": r"\overline{MS}^{e}",          # Max electrical market selling
+            "phydmaxmarketsell": r"\overline{MS}^{h}",          # Max hydrogen market selling
+            "pminmarketbuy": r"\underline{MB}",                 # Min market buying
+            "peleminmarketbuy": r"\underline{MB}^{e}",          # Min electrical market buying
+            "phydminmarketbuy": r"\underline{MB}^{h}",          # Min hydrogen market buying
+            "pminmarketsell": r"\underline{MS}",                # Min market selling
+            "peleminmarketsell": r"\underline{MS}^{e}",         # Min electrical market selling
+            "phydminmarketsell": r"\underline{MS}^{h}",         # Min hydrogen market selling
 
             # --- Demand ---
             "peledemand": r"D^{e}",                             # Electrical demand
@@ -491,6 +503,9 @@ mathjax3_config = {
             "vpeakdemand": r"d^{peak}",                         # Peak demand
             "velepeakdemand": r"d^{e,peak}",                    # Electrical peak demand
             "vhydpeakdemand": r"d^{h,peak}",                    # Hydrogen peak demand
+            "vpeakdemandindbin": r"kd",                         # Peak demand indicator binary
+            "velepeakdemandindbin": r"kd^{e}",                  # Electrical peak demand indicator binary
+            "vhydpeakdemandindbin": r"kd^{h}",                  # Hydrogen peak demand indicator binary
 
             # --- Reserves ---
             "vPupward": r"r^{p,u}",                             # Upward power reserve
