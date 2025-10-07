@@ -74,9 +74,9 @@ Indices
 :math:`\busindex`         Node or bus bar in the network                                                  :code:`nd`
 :math:`\busindexa`        From node of a connection or arc                                                :code:`i`
 :math:`\busindexb`        To node of a connection or arc                                                  :code:`j`
-:math:`\circuitindex`     Circuit ID of a connection                                                      :code:`c`
-:math:`\lineindexa`       From node of a transmission line                                                :code:`i`
-:math:`\lineindexb`       To node of a transmission line                                                  :code:`j`
+:math:`\circuitindex`     Circuit ID of a connection                                                      :code:`cc`
+:math:`\lineindexa`       From node of a transmission line                                                :code:`ijc`
+:math:`\lineindexb`       To node of a transmission line                                                  :code:`jic`
 :math:`\zoneindex`        Zone or region in the network                                                   :code:`z`
 ========================  ==============================================================================  =========================================
 
