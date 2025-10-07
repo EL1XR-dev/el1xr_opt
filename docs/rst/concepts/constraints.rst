@@ -31,7 +31,7 @@ Similarly, ``eHydBalance`` ensures the conservation of energy for the hydrogen n
    - \sum_{\storageindex \in \nEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    - \sum_{\genindex \in \GEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \\
    &- \sum_{(\busindexb,\circuitindex) \in \text{hout}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   + \sum_{(\busindexa,\circuitindex) \in \text{hin}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}} \\
+   + \sum_{(\busindexa,\circuitindex) \in \text{hin}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
    &+ \sum_{\traderindex \in \nRH} (\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
    = \sum_{\loadindex \in \nDH} (\vhydload_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBH
    \end{aligned}
@@ -47,7 +47,7 @@ Constraints like ``eEleMaxOutput2ndBlock`` and ``eEleMaxESSCharge2ndBlock`` ensu
 *   **Max Output (Dispatchable Generator):** ``eEleMaxOutput2ndBlock``
 
     .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pmaxpower_{\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vshutdownbin_{\periodindex,\scenarioindex,\timeindex+1,\genindex}
+       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}-\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vshutdownbin_{\periodindex,\scenarioindex,\timeindex+1,\genindex}
 
 *   **Max Charge (Storage):** ``eEleMaxESSCharge2ndBlock``
 

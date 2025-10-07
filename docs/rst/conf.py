@@ -376,14 +376,14 @@ mathjax3_config = {
             "phydpeakdemand": r"D^{h,peak}",                    # Hydrogen peak demand
 
             # --- Generation and Consumption Limits ---
-            "pelemaxproduction": r"\overline{EP}^{e}",          # Max electrical generation
-            "peleminproduction": r"\underline{EP}^{e}",         # Min electrical generation
-            "phydmaxproduction": r"\overline{HP}^{h}",          # Max hydrogen generation
-            "phydminproduction": r"\underline{HP}^{h}",         # Min hydrogen generation
-            "pelemaxconsumption": r"\overline{EC}^{e}",         # Max electrical consumption
-            "peleminconsumption": r"\underline{EC}^{e}",        # Min electrical consumption
-            "phydmaxconsumption": r"\overline{HC}^{h}",         # Max hydrogen consumption
-            "phydminconsumption": r"\underline{HC}^{h}",        # Min hydrogen consumption
+            "pelemaxproduction": r"\overline{EP}",              # Max electrical generation
+            "peleminproduction": r"\underline{EP}",             # Min electrical generation
+            "phydmaxproduction": r"\overline{HP}",              # Max hydrogen generation
+            "phydminproduction": r"\underline{HP}",             # Min hydrogen generation
+            "pelemaxconsumption": r"\overline{EC}",             # Max electrical consumption
+            "peleminconsumption": r"\underline{EC}",            # Min electrical consumption
+            "phydmaxconsumption": r"\overline{HC}",             # Max hydrogen consumption
+            "phydminconsumption": r"\underline{HC}",            # Min hydrogen consumption
 
             # --- Technical Parameters ---
             "prampuprate": r"R^{u}",                            # Ramp-up rate

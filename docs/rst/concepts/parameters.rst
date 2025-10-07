@@ -20,4 +20,8 @@ They are written in **uppercase** letters.
 :math:`\pelemarketmoms_{\eletraderindex}`                                                   Electricity tax (moms) for electricity market region                           «``pEleRetmoms``»
 :math:`\pelemarketnetfee_{\eletraderindex}`                                                 Electricity network fee for electricity market region                €/kWh     «``pEleRetnetavgift``»
 :math:`\pelemarkettariff_{\eletraderindex}`                                                 Tariff for electricity market region                                 €/kW      «``pEleRetTariff``»
+:math:`\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Maximum electricity production from technology                       kWh       «``pMaxEleProduction``»
+:math:`\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Minimum electricity production from technology                       kWh       «``pMinEleProduction``»
+:math:`\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Maximum hydrogen production from technology                          kgH2      «``pMaxHydProduction``»
+:math:`\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`               Minimum hydrogen production from technology                          kgH2      «``pMinHydProduction
 ==========================================================================================  ===================================================================  ========  ===========================================================================
