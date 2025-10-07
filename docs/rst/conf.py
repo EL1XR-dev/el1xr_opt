@@ -50,7 +50,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
 ]
-autosummary_generate = False
+autosummary_generate = True
 napoleon_google_docstring = False
 napoleon_numpy_docstring = False
 
@@ -126,6 +126,10 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
+# create docs/rst/_static/ if it doesn't exist
+if not (pathlib.Path(__file__).parent / "_static").exists():
+    (pathlib.Path(__file__).parent / "_static").mkdir(parents=True)
+
 html_static_path = ['_static']
 
 html_js_files = [
