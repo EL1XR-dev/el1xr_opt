@@ -25,7 +25,7 @@ except Exception:
 
 project = ''
 copyright = '2025, EL1XR-dev'
-author = 'EL1XR-dev Team: Erik F. Alvarez'
+author = 'EL1XR-dev Team'
 
 # The short X.Y version
 version = 'version 1.0.1'
