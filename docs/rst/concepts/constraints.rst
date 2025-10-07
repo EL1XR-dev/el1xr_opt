@@ -1,5 +1,3 @@
-.. _constraints_section:
-
 Constraints
 ===========
 The optimization model is governed by a series of constraints that ensure the solution is physically and economically feasible. These constraints, defined in the ``create_constraints`` function, enforce everything from the laws of physics to the operational limits of individual assets.
