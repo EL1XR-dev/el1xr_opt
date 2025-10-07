@@ -101,9 +101,9 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
 
 .. math::
    \begin{aligned}
-   \vinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} = &\vinventory_{\periodindex,\scenarioindex,\timeindex-1,\storageindex} \\
+   \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} = &\veleinventory_{\periodindex,\scenarioindex,\timeindex-1,\storageindex} \\
    &+ \ptimestepduration \cdot (\eta_{\text{charge}} \cdot \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \frac{1}{\eta_{\text{discharge}}} \cdot \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \\
-   &+ \ptimestepduration \cdot (\vinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \voutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}) - \vspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   &+ \ptimestepduration \cdot (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}) - \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \end{aligned}
 
 Charge/Discharge Incompatibility

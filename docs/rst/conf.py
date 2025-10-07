@@ -457,9 +457,18 @@ mathjax3_config = {
             "vconsumption": r"c",                               # Consumption
             "veleconsumption": r"c^{e}",                        # Electrical consumption
             "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
-            "vinventoryess": r"y",                              # Storage inventory
+            "vinventory": r"y",                                 # Storage inventory
+            "veleinventory": r"y^{e}",                          # Electrical storage inventory
+            "vhydinventory": r"y^{h}",                          # Hydrogen storage inventory
+            "venergyinflow": r"i",                              # Storage inflow
+            "veleenergyinflow": r"i^{e}",                       # Electrical storage inflow
+            "vhydenergyinflow": r"i^{h}",                       # Hydrogen storage inflow
             "venergyoutflow": r"o",                             # Storage outflow
-            "vspillageess": r"s",                               # Storage spillage
+            "veleenergyoutflow": r"o^{e}",                      # Electrical storage outflow
+            "vhydenergyoutflow": r"o^{h}",                      # Hydrogen storage outflow
+            "vspillage": r"s",                                  # Storage spillage
+            "velespillage": r"s^{e}",                           # Electrical storage spillage
+            "vhydspillage": r"s^{h}",                           # Hydrogen storage spillage
             "vcommitbin": r"uc",                                # Unit commitment binary
             "vstartupbin": r"su",                               # Start-up binary
             "vshutdownbin": r"sd",                              # Shut-down binary
