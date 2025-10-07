@@ -50,7 +50,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
 ]
-autosummary_generate = True
+autosummary_generate = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = False
 
