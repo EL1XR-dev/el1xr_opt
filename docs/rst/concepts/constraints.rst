@@ -18,7 +18,7 @@ The core electricity balance equation, ``eEleBalance``, states that the sum of a
    &- \sum_{(\busindexb,\circuitindex) \in \text{lout}_{\busindex}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    + \sum_{(\busindexa,\circuitindex) \in \text{lin}_{\busindex}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
    &+ \sum_{\traderindex \in \nRE} (\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
-   = \sum_{\loadindex \in \nDE} (\vload_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \vloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBE
+   = \sum_{\loadindex \in \nDE} (\veleload_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBE
    \end{aligned}
 
 Hydrogen Balance
@@ -29,11 +29,11 @@ Similarly, ``eHydBalance`` ensures the conservation of energy for the hydrogen n
    \begin{aligned}
    &\sum_{\genindex \in \nGH} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nSH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\text{h2e} \in \text{H2E}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\text{h2e}} \\
-   &- \sum_{\text{nf,cc} \in \text{hout}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\text{nd,nf,cc}}
-   + \sum_{\text{ni,cc} \in \text{hin}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\text{ni,nd,cc}} \\
+   - \sum_{\genindex \in \GEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \\
+   &- \sum_{(\busindexb,\circuitindex) \in \text{hout}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
+   + \sum_{(\busindexa,\circuitindex) \in \text{hin}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}} \\
    &+ \sum_{\traderindex \in \nRH} (\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
-   = \sum_{\loadindex \in \nDH} (\phydem_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})
+   = \sum_{\loadindex \in \nDH} (\vhydload_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBH
    \end{aligned}
 
 2. Asset Operational Constraints
