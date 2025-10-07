@@ -434,7 +434,7 @@ mathjax3_config = {
             "peleessoutflowcycle": r"\tau^{o}",                 # Electrical Outflow cycle duration
             "peleessefficiency": r"\eta^{s}",                   # Electrical Storage efficiency
             "peleesscapacity": r"\Psi",                         # Electrical Storage capacity
-            "pvarfixedavailability": r"\A^{fix}",               # Variable/fixed availability ratio
+            "pvarfixedavailability": r"A^{fix}",               # Variable/fixed availability ratio
 
             # =======================================================
             #                       VARIABLES
