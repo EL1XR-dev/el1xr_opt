@@ -10,7 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import sys, pathlib, importlib, types
+import sys, pathlib, importlib, types, re
 ROOT = pathlib.Path(__file__).resolve().parents[2]  # repo root
 sys.path.insert(0, str(ROOT / "src"))               # src/ layout
 
@@ -163,31 +163,11 @@ mathjax3_config = {
             "nA": r"\mathcal{A}",                               # All areas
             "nT": r"\mathcal{T}",                               # All time steps
             "nV": r"\mathcal{V}",                               # All time step intervals
-            "nT0": r"\mathcal{T}^{0}",                          # All time steps except the first one
-            "nV0": r"\mathcal{V}^{0}",                          # All time step intervals except the first one
             "nP": r"\mathcal{P}",                               # All periods
-            "nP0": r"\mathcal{P}^{0}",                          # All periods except the first one
-            "nP1": r"\mathcal{P}^{1}",                          # All periods except the last one
-            "nP2": r"\mathcal{P}^{2}",                          # All periods except the first and last one
             "nS": r"\mathcal{S}",                               # All scenarios
-            "nS0": r"\mathcal{S}^{0}",                          # All scenarios except the first one
-            "nS1": r"\mathcal{S}^{1}",                          # All scenarios except the last one
-            "nS2": r"\mathcal{S}^{2}",                          # All scenarios except the first and last one
             "nW": r"\mathcal{W}",                               # All weeks in a year
-            "nW0": r"\mathcal{W}^{0}",                          # All weeks in a year except the first one
-            "nW1": r"\mathcal{W}^{1}",                          # All weeks in a year except the last one
-            "nW2": r"\mathcal{W}^{2}",                          # All weeks in a year except the first and last one
             "nM": r"\mathcal{M}",                               # All months in a year
-            "nM0": r"\mathcal{M}^{0}",                          # All months in a year except the first one
-            "nM1": r"\mathcal{M}^{1}",                          # All months in a year except the last one
-            "nM2": r"\mathcal{M}^{2}",                          # All months in a year except the first and last one
             "nH": r"\mathcal{H}",                               # All hours in a day
-            "nH0": r"\mathcal{H}^{0}",                          # All hours in a day except the first one
-            "nH1": r"\mathcal{H}^{1}",                          # All hours in a day except the last one
-            "nH2": r"\mathcal{H}^{2}",                          # All hours in a day except the first and last one
-            "nD0": r"\mathcal{D}",                              # All days in a week
-            "nD1": r"\mathcal{D}^{0}",                          # All days in a week except the first one
-            "nD2": r"\mathcal{D}^{1}",                          # All days in a week except the last one
 
             # === INDEXES ===
             "busindexa": r"i",                                  # Index for "from" bus of a branch
@@ -516,8 +496,22 @@ mathjax3_config = {
 
 # --- Reuse MathJax macros for LaTeX/PDF (and imgmath) ---
 _MJ_MACROS = mathjax3_config["tex"]["macros"]
-def _latex_preamble_from_macros(macros):
-    return "\n".join(r"\providecommand{\%s}{%s}" % (k, v) for k, v in macros.items())
+
+def _latex_preamble_from_macros(macros: dict) -> str:
+    lines = [r"\usepackage{amsmath,amssymb}"]  # safe, helpful
+    for name, body in macros.items():
+        if re.fullmatch(r"[A-Za-z]+", name):
+            # normal LaTeX control word: \name
+            lines.append(r"\providecommand{\%s}{%s}" % (name, body))
+        else:
+            # names containing digits/other chars → define with \csname ...\endcsname
+            # (won't crash the build even if not directly invokable as \name)
+            lines.append(
+                r"\expandafter\ifx\csname %s\endcsname\relax"
+                r"\expandafter\def\csname %s\endcsname{%s}"
+                r"\else\relax\fi" % (name, name, body)
+            )
+    return "\n".join(lines)
 
 latex_engine = "lualatex"
 latex_elements = {"preamble": _latex_preamble_from_macros(_MJ_MACROS)}
