@@ -63,12 +63,12 @@ A series of constraints limit how quickly the output or charging rate of an asse
 *   **Ramp-Up:** ``eEleMaxRampUpOutput``
 
     .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex-1,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \cdot \prampup_{\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex-1,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \cdot \prampuprate_{\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
 *   **Ramp-Down:** ``eEleMaxRampDwOutput``
 
     .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex-1,\genindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \cdot \prampdown_{\genindex}} \ge -\vcommitbin_{\periodindex,\scenarioindex,\timeindex-1,\genindex} + \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex-1,\genindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \cdot \prampdwrate_{\genindex}} \ge -\vcommitbin_{\periodindex,\scenarioindex,\timeindex-1,\genindex} + \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
 Unit Commitment Logic
 ~~~~~~~~~~~~~~~~~~~~~
@@ -82,9 +82,12 @@ For dispatchable assets, these constraints model the on/off decisions.
 *   **Minimum Up/Down Time:** ``eEleMinUpTime`` and ``eEleMinDownTime`` enforce that once a unit is turned on (or off), it must remain in that state for a minimum number of hours.
 
     *   ``eEleMinUpTime``:
+
         .. math::
-           \sum_{t'=t-\text{min\_up\_time}}^{t} \vstartupbin_{\periodindex,\scenarioindex,t',\genindex} \le \vcommitbin_{\periodindex,\scenarioindex,t,\genindex}
+           \sum_{\timeindex '=t-\text{min\_up\_time}}^{t} \vstartupbin_{\periodindex,\scenarioindex,t',\genindex} \le \vcommitbin_{\periodindex,\scenarioindex,t,\genindex}
+
     *   ``eEleMinDownTime``:
+
         .. math::
            \sum_{t'=t-\text{min\_down\_time}}^{t} \vshutdownbin_{\periodindex,\scenarioindex,t',\genindex} \le 1 - \vcommitbin_{\periodindex,\scenarioindex,t,\genindex}
 
