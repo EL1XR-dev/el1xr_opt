@@ -36,16 +36,16 @@ These are often used in combination:
 *   ``model.ps``: A combined set of ``(period, scenario)``.
 *   ``model.psn``: A combined set of ``(period, scenario, timestep)``, representing every unique time point in the model.
 
-==========================  =======================================================================================================================
-**Index**                   **Description**
-==========================  =======================================================================================================================
-:math:`\periodindex`        Period (e.g., year.)
-:math:`\scenarioindex`      Scenario (e.g., solar generation, spot prices, etc.)
-:math:`\timeindex`          Time step (e.g., hours or sub-hourly intervals)
-:math:`\ptimestepduration`  Duration of the time step (e.g., 0.25 h for 15 min, 0.5 h for half an hour)
-:math:`ps`                  Combination of period and scenario
-:math:`psn`                 Combination of period, scenario, and time step
-==========================  =======================================================================================================================
+==========================  ===============================================================================  ========================================
+**Index**                   **Description**                                                                  **oM_InputData.py**
+==========================  ===============================================================================  ========================================
+:math:`\periodindex`        Period (e.g., year.)                                                             :code:`model.p`
+:math:`\scenarioindex`      Scenario (e.g., solar generation, spot prices, etc.)                             :code:`model.sc`
+:math:`\timeindex`          Time step (e.g., hours or sub-hourly intervals)                                  :code:`model.n`
+:math:`\ptimestepduration`  Duration of the time step (e.g., 0.25 h for 15 min, 0.5 h for half an hour)      :code:`model.dt`
+:math:`ps`                  Combination of period and scenario                                               :code:`model.ps`
+:math:`psn`                 Combination of period, scenario, and time step                                   :code:`model.psn`
+==========================  ===============================================================================  ========================================
 
 Spatial Representation
 ----------------------
