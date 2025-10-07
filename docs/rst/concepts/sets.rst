@@ -47,7 +47,6 @@ Indices
 :math:`\periodindex`        Period (e.g., year.)                                                             :code:`model.p`
 :math:`\scenarioindex`      Scenario (e.g., solar generation, spot prices, etc.)                             :code:`model.sc`
 :math:`\timeindex`          Time step (e.g., hours or sub-hourly intervals)                                  :code:`model.n`
-:math:`\ptimestepduration`  Duration of the time step (e.g., 0.25 h for 15 min, 0.5 h for half an hour)      :code:`model.dt`
 :math:`ps`                  Combination of period and scenario                                               :code:`model.ps`
 :math:`psn`                 Combination of period, scenario, and time step                                   :code:`model.psn`
 ==========================  ===============================================================================  ========================================
