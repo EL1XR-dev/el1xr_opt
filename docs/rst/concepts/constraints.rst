@@ -4,7 +4,7 @@ The optimization model is governed by a series of constraints that ensure the so
 
 1. Energy Balance
 -----------------
-These are the most fundamental constraints, ensuring that at every node (``nd``) and at every timestep (``p,sc,n``), energy supply equals energy demand.
+These are the most fundamental constraints, ensuring that at every node (:math:`\busindexa`) and at every timestep (:math:`\timeindex`), energy supply equals energy demand.
 
 Electricity Balance
 ~~~~~~~~~~~~~~~~~~~
@@ -18,7 +18,7 @@ The core electricity balance equation, ``eEleBalance``, states that the sum of a
    &- \sum_{\text{nf,cc} \in \text{lout}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\text{nd,nf,cc}}
    + \sum_{\text{ni,cc} \in \text{lin}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\text{ni,nd,cc}} \\
    &+ \sum_{\traderindex \in \nRE} (\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
-   = \sum_{\loadindex \in \nDE} (\peledem_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})
+   = \sum_{\loadindex \in \nDE} (\peledem_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa, \busindexa \in \nBE
    \end{aligned}
 
 Hydrogen Balance
