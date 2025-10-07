@@ -84,12 +84,12 @@ For dispatchable assets, these constraints model the on/off decisions.
     *   ``eEleMinUpTime``:
 
         .. math::
-           \sum_{\timeindex '=t-\text{min\_up\_time}}^{t} \vstartupbin_{\periodindex,\scenarioindex,t',\genindex} \le \vcommitbin_{\periodindex,\scenarioindex,t,\genindex}
+           \sum_{\timeindex '=\timeindex-\puptime_{\genindex}}^{\timeindex} \vstartupbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
     *   ``eEleMinDownTime``:
 
         .. math::
-           \sum_{t'=t-\text{min\_down\_time}}^{t} \vshutdownbin_{\periodindex,\scenarioindex,t',\genindex} \le 1 - \vcommitbin_{\periodindex,\scenarioindex,t,\genindex}
+           \sum_{\timeindex '=\timeindex-\pdwtime_{\genindex}}^{\timeindex} \vshutdownbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \le 1 - \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
 3. Energy Storage Dynamics
 --------------------------
