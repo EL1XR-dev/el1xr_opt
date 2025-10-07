@@ -111,10 +111,12 @@ Charge/Discharge Incompatibility
 The ``eIncompatibilityEleChargeOutflows`` and related constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\velestoroperatbin`).
 
 *   ``eEleChargingDecision``:
+
     .. math::
        \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\storageindex}} \le \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 *   ``eEleDischargingDecision``:
+
     .. math::
        \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\storageindex}} \le 1 - \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
