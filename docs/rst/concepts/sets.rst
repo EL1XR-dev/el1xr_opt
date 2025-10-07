@@ -93,12 +93,14 @@ General Technology Subsets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *   **Electricity Generation (`eg`)**:
+
     *   ``model.egt``: Dispatchable generators that can be committed (turned on/off), like gas turbines.
     *   ``model.egs``: Electricity storage units, like batteries.
     *   ``model.egnr``: Non-renewable generators.
     *   ``model.egv``: Variable renewable energy sources (VRES), like solar and wind.
 
 *   **Hydrogen Production (`hg`)**:
+
     *   ``model.hgt``: Dispatchable hydrogen producers.
     *   ``model.hgs``: Hydrogen storage units, like salt caverns or tanks.
 
@@ -108,7 +110,7 @@ General Technology Subsets
 
 ============  =======================================================================================================================
 **Index**     **Description**
-============  =======================================================================================================================
+------------  -----------------------------------------------------------------------------------------------------------------------
 :math:`eg`    Electricity unit (thermal or hydro unit or ESS)
 :math:`et`    Electricity thermal unit
 :math:`es`    Electricity energy storage system (eESS)
