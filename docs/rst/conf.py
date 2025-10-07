@@ -457,18 +457,21 @@ mathjax3_config = {
             "vconsumption": r"c",                               # Consumption
             "veleconsumption": r"c^{e}",                        # Electrical consumption
             "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
-            "vinventory": r"y",                                 # Storage inventory
-            "veleinventory": r"y^{e}",                          # Electrical storage inventory
-            "vhydinventory": r"y^{h}",                          # Hydrogen storage inventory
-            "venergyinflow": r"i",                              # Storage inflow
-            "veleenergyinflow": r"i^{e}",                       # Electrical storage inflow
-            "vhydenergyinflow": r"i^{h}",                       # Hydrogen storage inflow
-            "venergyoutflow": r"o",                             # Storage outflow
-            "veleenergyoutflow": r"o^{e}",                      # Electrical storage outflow
-            "vhydenergyoutflow": r"o^{h}",                      # Hydrogen storage outflow
-            "vspillage": r"s",                                  # Storage spillage
-            "velespillage": r"s^{e}",                           # Electrical storage spillage
-            "vhydspillage": r"s^{h}",                           # Hydrogen storage spillage
+            "vinventory": r"si",                                # Storage inventory
+            "veleinventory": r"si^{e}",                         # Electrical storage inventory
+            "vhydinventory": r"si^{h}",                         # Hydrogen storage inventory
+            "venergyinflow": r"ei",                             # Storage inflow
+            "veleenergyinflow": r"ei^{e}",                      # Electrical storage inflow
+            "vhydenergyinflow": r"ei^{h}",                      # Hydrogen storage inflow
+            "venergyoutflow": r"eo",                            # Storage outflow
+            "veleenergyoutflow": r"eo^{e}",                     # Electrical storage outflow
+            "vhydenergyoutflow": r"eo^{h}",                     # Hydrogen storage outflow
+            "vspillage": r"es",                                 # Storage spillage
+            "velespillage": r"es^{e}",                          # Electrical storage spillage
+            "vhydspillage": r"es^{h}",                          # Hydrogen storage spillage
+            "vstoroperatbin": r"so",                            # Storage operating binary
+            "velestoroperatbin": r"so^{e}",                     # Electrical storage operating binary
+            "vhydstoroperatbin": r"so^{h}",                     # Hydrogen storage operating binary
             "vcommitbin": r"uc",                                # Unit commitment binary
             "vstartupbin": r"su",                               # Start-up binary
             "vshutdownbin": r"sd",                              # Shut-down binary

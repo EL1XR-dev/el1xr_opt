@@ -108,15 +108,15 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``eIncompatibilityEleChargeOutflows`` and related constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\vstoroperatbin`).
+The ``eIncompatibilityEleChargeOutflows`` and related constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\velestoroperatbin`).
 
 *   ``eEleChargingDecision``:
     .. math::
-       \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pmaxcharge_{\storageindex}} \le \vstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+       \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\storageindex}} \le \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 *   ``eEleDischargingDecision``:
     .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pmaxpower_{\storageindex}} \le 1 - \vstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\storageindex}} \le 1 - \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 4. Network Constraints
 ----------------------
