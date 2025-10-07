@@ -92,14 +92,13 @@ The model uses a rich set of indices to differentiate between various types of t
 General Technology Subsets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*   **Electricity Generation (`eg`)**:
+*   **Electricity Generation** (:math:`\elegenindex`):
 
     *   ``model.egt``: Dispatchable generators that can be committed (turned on/off), like gas turbines.
     *   ``model.egs``: Electricity storage units, like batteries.
     *   ``model.egnr``: Non-renewable generators.
-    *   ``model.egv``: Variable renewable energy sources (VRES), like solar and wind.
 
-*   **Hydrogen Production (`hg`)**:
+*   **Hydrogen Production** (:math:`\hydgenindex`):
 
     *   ``model.hgt``: Dispatchable hydrogen producers.
     *   ``model.hgs``: Hydrogen storage units, like salt caverns or tanks.
