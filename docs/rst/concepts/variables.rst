@@ -31,6 +31,7 @@ They are written in **lowercase** letters.
 :math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`                              Hydrogen sold to the market                                          kgH2      «``vHydSell``»
 :math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                 Electricity output from electricity generator                        kWh       «``vEleTotalOutput``»
 :math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`                                 Hydrogen output from hydrogen generator                              kWh       «``vHydTotalOutput``»
+:math:`\vload_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                         Electricity demand                                                   kWh       «``vEleDemand``»
 :math:`\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                  Electricity not served                                               kWh       «``vENS``»
 :math:`\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`                                  Hydrogen not served                                                  kgH2      «``vHNS``»
 :math:`\velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`                  Electricity peak demand for tariff calculation                       kW        «``vElePeak``»
