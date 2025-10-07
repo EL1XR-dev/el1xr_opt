@@ -29,7 +29,7 @@ Similarly, ``eHydBalance`` ensures the conservation of energy for the hydrogen n
    \begin{aligned}
    &\sum_{\genindex \in \nGH} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \GEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
+   - \sum_{\genindex \in \nGEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
    &- \sum_{(\busindexb,\circuitindex) \in \text{hout}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    + \sum_{(\busindexa,\circuitindex) \in \text{hin}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
    &+ \sum_{\traderindex \in \nRH} (\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
@@ -49,10 +49,12 @@ Constraints like ``eEleMaxOutput2ndBlock`` and ``eEleMaxESSCharge2ndBlock`` ensu
     .. math::
        \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}-\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vshutdownbin_{\periodindex,\scenarioindex,\timeindex+1,\genindex}
 
+
+
 *   **Max Charge (Storage):** ``eEleMaxESSCharge2ndBlock``
 
     .. math::
-       \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pmaxcharge_{\storageindex}} \le \pavailability_{\storageindex}
+       \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}-\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 Ramping Limits
 ~~~~~~~~~~~~~~
