@@ -551,3 +551,5 @@ def _latex_preamble_from_macros(macros: dict) -> str:
 latex_engine = "lualatex"
 latex_elements = {"preamble": _latex_preamble_from_macros(_MJ_MACROS)}
 imgmath_latex_preamble = latex_elements["preamble"]
+
+latex_use_xindy = False
