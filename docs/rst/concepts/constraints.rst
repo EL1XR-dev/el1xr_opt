@@ -28,7 +28,7 @@ Similarly, ``eHydBalance`` ensures the conservation of energy for the hydrogen n
 .. math::
    \begin{aligned}
    &\sum_{\genindex \in \nGH} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   - \sum_{\storageindex \in \nSH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \sum_{\storageindex \in \nEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    - \sum_{\genindex \in \GEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \\
    &- \sum_{(\busindexb,\circuitindex) \in \text{hout}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    + \sum_{(\busindexa,\circuitindex) \in \text{hin}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}} \\
