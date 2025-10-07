@@ -101,7 +101,6 @@ These parameters define the economic environment, including energy prices, tarif
      - €/kWh
      - ``pGenRampUpCost``, ``pGenRampDownCost``
 
-
 Asset Performance & Limits
 --------------------------
 
@@ -247,10 +246,10 @@ These parameters define the operational characteristics, capacities, and limitat
      - p.u.
      - ``pGenEfficiency``
 
-Ancillary Services & Network
-----------------------------
+Ancillary Services
+~~~~~~~~~~~~~~~~~~
 
-Parameters related to grid support services and network infrastructure.
+Parameters related to grid support services.
 
 .. list-table::
    :widths: 30 50 10 30
@@ -268,6 +267,20 @@ Parameters related to grid support services and network infrastructure.
      - Up/down activation of Tertiary Reserve
      - p.u.
      - ``pOperatingReserveActivation_Up_TR``, ``pOperatingReserveActivation_Down_TR``
+
+Network
+~~~~~~~
+
+Parameters related to network infrastructure.
+
+.. list-table::
+   :widths: 30 50 10 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Unit**
+     - **Pyomo Component**
    * - :math:`\overline{ENF}_{nijc}` / :math:`\underline{ENF}_{nijc}`
      - Max/min electricity network flow
      - MWh
