@@ -1,0 +1,587 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>el1xr_opt.Modules.oM_SolverSetup &#8212;   documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/el1xr_opt/Modules/oM_SolverSetup';</script>
+    <script src="../../../_static/../custom.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../../../_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+
+
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts/sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts/parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts/variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts/objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts/constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts/results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+
+    </div>
+
+
+    <div class="header-article-items__end">
+
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2F_modules/el1xr_opt/Modules/oM_SolverSetup.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+
+    </div>
+
+</div>
+</div>
+
+
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+
+        </div>
+    </div>
+</div>
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <h1>Source code for el1xr_opt.Modules.oM_SolverSetup</h1><div class="highlight"><pre>
+<span></span><span class="c1"># oM_SolverSetup.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="c1"># import subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Supported solvers (extend carefully)</span>
+<span class="n">_SUPPORTED_SOLVERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;highs&quot;</span><span class="p">,</span> <span class="s2">&quot;cbc&quot;</span><span class="p">}</span>
+
+<span class="c1"># ---------- AMPL module helpers ----------</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ampl_module_available</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if an AMPL solver module is available in the current environment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: The short name of the solver (e.g., &quot;highs&quot;, &quot;cbc&quot;).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the module is found, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">amplpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">modules</span>
+        <span class="n">modules</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># raises if missing</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_install_ampl_module</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Attempt to install an AMPL solver module using the amplpy Python API.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: The short name of the solver (e.g., &quot;highs&quot;, &quot;cbc&quot;).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the installation succeeded, False otherwise.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the requested solver is not in the supported list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">solver</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_SOLVERS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported solver &#39;</span><span class="si">{</span><span class="n">solver</span><span class="si">}</span><span class="s2">&#39;. Allowed: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_SUPPORTED_SOLVERS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Try Python API first (safer than subprocess)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">amplpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">modules</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">modules</span><span class="p">,</span> <span class="s2">&quot;install&quot;</span><span class="p">):</span>
+            <span class="n">modules</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>  <span class="c1"># may raise</span>
+            <span class="n">modules</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># # Fallback: subprocess with STATIC commands (no variables in the argv list)</span>
+    <span class="c1"># try:</span>
+    <span class="c1">#     if solver == &quot;highs&quot;:</span>
+    <span class="c1">#         argv = [sys.executable, &quot;-m&quot;, &quot;amplpy.modules&quot;, &quot;install&quot;, &quot;highs&quot;]</span>
+    <span class="c1">#     elif solver == &quot;cbc&quot;:</span>
+    <span class="c1">#         argv = [sys.executable, &quot;-m&quot;, &quot;amplpy.modules&quot;, &quot;install&quot;, &quot;cbc&quot;]</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         # Defensive—should never reach here due to whitelist check above</span>
+    <span class="c1">#         raise ValueError(</span>
+    <span class="c1">#             f&quot;Unsupported solver &#39;{solver}&#39;. Allowed: {sorted(_SUPPORTED_SOLVERS)}&quot;</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#</span>
+    <span class="c1">#     subprocess.run(</span>
+    <span class="c1">#         argv,</span>
+    <span class="c1">#         check=True,</span>
+    <span class="c1">#         stdout=subprocess.PIPE,</span>
+    <span class="c1">#         stderr=subprocess.STDOUT,</span>
+    <span class="c1">#         shell=False,        # be explicit for linters</span>
+    <span class="c1">#     )</span>
+    <span class="c1">#     return _ampl_module_available(solver)</span>
+    <span class="c1"># except Exception:</span>
+    <span class="c1">#     return False</span>
+
+
+<div class="viewcode-block" id="ensure_ampl_solvers">
+<a class="viewcode-back" href="../../../user-guide/solvers-and-settings.html#el1xr_opt.Modules.oM_SolverSetup.ensure_ampl_solvers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_ampl_solvers</span><span class="p">(</span>
+    <span class="n">targets</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;highs&quot;</span><span class="p">,),</span>
+    <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check for and automatically install a list of AMPL solver modules if missing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        targets: An iterable of solver names to check/install (e.g., [&quot;highs&quot;, &quot;cbc&quot;]).</span>
+<span class="sd">        quiet: If True, suppress warnings about failed installations.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary mapping each solver name to a boolean indicating its availability</span>
+<span class="sd">        after the check/installation process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">printable</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">printable</span> <span class="o">=</span> <span class="s2">&quot;&lt;targets&gt;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;- Ensuring AMPL solver modules </span><span class="si">{</span><span class="n">printable</span><span class="si">}</span><span class="s1"> are installed...</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">out</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">_ampl_module_available</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_install_ampl_module</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">out</span><span class="p">[</span><span class="n">s</span><span class="p">]:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;AMPL module &#39;</span><span class="si">%s</span><span class="s2">&#39; not available. Try: </span><span class="si">%s</span><span class="s2"> -m amplpy.modules install </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">s</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="n">s</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="c1"># ---------- Unified solver selection ----------</span>
+<div class="viewcode-block" id="pick_solver">
+<a class="viewcode-back" href="../../../user-guide/solvers-and-settings.html#el1xr_opt.Modules.oM_SolverSetup.pick_solver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pick_solver</span><span class="p">(</span><span class="n">preferred</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">allow_fallback</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Select and configure a solver, prioritizing AMPL modules for performance.</span>
+
+<span class="sd">    This function provides a standardized way to select a solver. It checks for the</span>
+<span class="sd">    availability of a high-performance AMPL module first. If the preferred solver&#39;s</span>
+<span class="sd">    module is found, it configures Pyomo to use it via the &#39;nl&#39; interface.</span>
+
+<span class="sd">    The selection is strict by default: if the AMPL module is not available, the</span>
+<span class="sd">    function will raise a ``RuntimeError`` unless ``allow_fallback`` is True.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        preferred: The desired solver&#39;s name (e.g., &quot;highs&quot;). Defaults to &quot;highs&quot;</span>
+<span class="sd">                   if None.</span>
+<span class="sd">        allow_fallback: If True, the function can be extended to support other</span>
+<span class="sd">                        solver configurations (e.g., Pyomo&#39;s built-in appsi solvers)</span>
+<span class="sd">                        when the AMPL module is unavailable. Currently, this will</span>
+<span class="sd">                        still result in an error if the module is not found.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary containing the solver configuration for Pyomo&#39;s ``SolverFactory``,</span>
+<span class="sd">        including the factory name, I/O method, and executable path.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the ``preferred`` solver is not in the supported list.</span>
+<span class="sd">        RuntimeError: If the corresponding AMPL module is not found and</span>
+<span class="sd">                      ``allow_fallback`` is False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">preferred</span> <span class="ow">or</span> <span class="s2">&quot;highs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_SOLVERS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported solver &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;. Allowed: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_SUPPORTED_SOLVERS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># AMPL module</span>
+    <span class="k">if</span> <span class="n">_ampl_module_available</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">amplpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">modules</span>
+        <span class="n">exe</span> <span class="o">=</span> <span class="n">modules</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;factory&quot;</span><span class="p">:</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;nl&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;solve_io&quot;</span><span class="p">:</span> <span class="s2">&quot;nl&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;executable&quot;</span><span class="p">:</span> <span class="n">exe</span><span class="p">,</span>
+            <span class="s2">&quot;resolved&quot;</span><span class="p">:</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; (AMPL module)&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_fallback</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;AMPL solver module &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Install it with: </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="si">}</span><span class="s2"> -m amplpy.modules install </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+<div class="bd-footer-content__inner container">
+
+  <div class="footer-item">
+
+<p class="component-author">
+By EL1XR-dev Team: Erik F. Alvarez
+</p>
+
+  </div>
+
+  <div class="footer-item">
+
+
+  <p class="copyright">
+
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+
+  </p>
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+</div>
+          </footer>
+
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

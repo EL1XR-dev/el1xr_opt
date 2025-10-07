@@ -1,0 +1,968 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Sets &#8212;   documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"nB": "\\mathcal{B}", "nBE": "\\mathcal{B}^{e}", "nBH": "\\mathcal{B}^{h}", "nC": "\\mathcal{C}", "nG": "\\mathcal{G}", "nGE": "\\mathcal{G}^{e}", "nGER": "\\mathcal{G}^{e,res}", "nGENR": "\\mathcal{G}^{e,nonres}", "nGEH": "\\mathcal{G}^{e,h}", "nGH": "\\mathcal{G}^{h}", "nCNG": "\\mathcal{G}^{h,cng}", "nGHE": "\\mathcal{G}^{h,e}", "nE": "\\mathcal{E}", "nEE": "\\mathcal{E}^{e}", "nEH": "\\mathcal{E}^{h}", "nR": "\\mathcal{R}", "nRE": "\\mathcal{R}^{e}", "nRH": "\\mathcal{R}^{h}", "nD": "\\mathcal{D}", "nDE": "\\mathcal{D}^{e}", "nDH": "\\mathcal{D}^{h}", "nK": "\\mathcal{K}", "nKE": "\\mathcal{K}^{e}", "nKH": "\\mathcal{K}^{h}", "nL": "\\mathcal{L}", "nX": "\\mathcal{R}", "nZ": "\\mathcal{Z}", "nA": "\\mathcal{A}", "nT": "\\mathcal{T}", "nV": "\\mathcal{V}", "nP": "\\mathcal{P}", "nS": "\\mathcal{S}", "nW": "\\mathcal{W}", "nM": "\\mathcal{M}", "nH": "\\mathcal{H}", "busindex": "nd", "busindexa": "i", "busindexb": "j", "branchindex": "ij", "lineindexa": "ijc", "lineindexb": "jic", "circuitindex": "c", "elegenindex": "g^{e}", "elenonresgenindex": "g^{e,nonres}", "elenresgenindex": "g^{e,res}", "elenhydgenindex": "g^{e,h}", "hydgenindex": "g^{h}", "hydcnggenindex": "g^{h,cng}", "hydelecgenindex": "g^{h,e}", "genindex": "g", "eleloadindex": "d^{e}", "hydloadindex": "d^{h}", "loadindex": "d", "eleconsindex": "c^{e}", "hydconsindex": "c^{h}", "consindex": "c", "elepeakindex": "k^{e}", "hydpeakindex": "k^{h}", "peakindex": "k", "elestorageindex": "e^{e}", "hydstorageindex": "e^{h}", "storageindex": "e", "traderindex": "r", "eletraderindex": "r^{e}", "hydtraderindex": "r^{h}", "periodindex": "p", "scenarioindex": "s", "weekindex": "w", "monthindex": "m", "dayindex": "d", "hourindex": "h", "intervalindex": "u", "timeindex": "n", "timestepindex": "\\nu", "storageperiodindex": "p'", "storagetimeindex": "n'", "storagetimestepindex": "\\nu'", "storageweekindex": "w'", "storagemonthindex": "m'", "storagedayindex": "d'", "storagehourindex": "h'", "zoneindex": "z", "areaindex": "a", "regionindex": "r", "marketcost": "C^{trade}", "elemarketcost": "C^{trade,e}", "elemarketcostbuy": "C^{trade,b,e}", "elemarketcostsell": "C^{trade,s,e}", "hydmarketcost": "C^{trade,h}", "hydmarketcostbuy": "C^{trade,b,h}", "hydmarketcostsell": "C^{trade,s,h}", "importcost": "C^{imp}", "exportcost": "C^{exp}", "generationcost": "C^{gen}", "elegenerationcost": "C^{gen,e}", "hydgenerationcost": "C^{gen,h}", "startcost": "C^{start}", "shutdowncost": "C^{shut}", "noloadcost": "C^{nl}", "fuelcost": "C^{fuel}", "watercost": "C^{water}", "maintenancecost": "C^{maint}", "operationcost": "C^{op}", "storagecost": "C^{str}", "consumptioncost": "C^{con}", "eleconsumptioncost": "C^{con,e}", "hydconsumptioncost": "C^{con,h}", "demandcost": "C^{dem}", "eledemandcost": "C^{dem,e}", "hyddemandcost": "C^{dem,h}", "peakdemandcost": "C^{peak}", "elepeakdemandcost": "C^{peak,e}", "hydpeakdemandcost": "C^{peak,h}", "transmissioncost": "C^{tr}", "linecost": "C^{line}", "convertercost": "C^{conv}", "hvdcost": "C^{hvdc}", "flexibilitycost": "C^{flex}", "ancillaryservicescost": "C^{as}", "spinningreservecost": "C^{sp}", "nonspinningreservecost": "C^{ns}", "regulationupcost": "C^{reg,u}", "regulationdowncost": "C^{reg,d}", "reserveprocurementcost": "C^{res,proc}", "reserveactivationcost": "C^{res,act}", "unservedenergycost": "C^{ue}", "eleunservedenergycost": "C^{ens,e}", "hydunservedenergycost": "C^{ens,h}", "demandresponsecost": "C^{dr}", "demandflexibilitycost": "C^{df}", "spillcost": "C^{spill}", "loadsheddingcost": "C^{ls}", "curtailmentcost": "C^{curt}", "emissionpermitcost": "C^{emiss,perm}", "emissiontaxcost": "C^{emiss,tax}", "carboncost": "C^{carb}", "investmentcost": "C^{inv}", "fixedcost": "C^{fix}", "variablecost": "C^{var}", "annualcost": "C^{ann}", "totalcost": "C^{tot}", "genemission": "EM^{gen}", "conemission": "EM^{con}", "totemission": "EM^{tot}", "genCO2": "EM^{gen,co2}", "conCO2": "EM^{con,co2}", "totCO2": "EM^{tot,co2}", "genNOx": "EM^{gen,nox}", "conNOx": "EM^{con,nox}", "totNOx": "EM^{tot,nox}", "genSO2": "EM^{gen,so2}", "conSO2": "EM^{con,so2}", "totSO2": "EM^{tot,so2}", "genPM25": "EM^{gen,pm25}", "conPM25": "EM^{con,pm25}", "totPM25": "EM^{tot,pm25}", "startupemission": "EM^{start}", "shutdownemission": "EM^{shut}", "noloademission": "EM^{nl}", "storageemission": "EM^{str}", "importemission": "EM^{imp}", "exportemission": "EM^{exp}", "LROcost": "C^{LRO}", "pfactorone": "F1", "pfactortwo": "F2", "pfactorthr": "F3", "pfactorfou": "F4", "pdiscountrate": "\\Gamma", "ptimestepduration": "\\Delta t", "pintervalduration": "\\Delta u", "nintervals": "N^{u}", "nperiods": "N^{p}", "nweeks": "N^{w}", "nmonths": "N^{m}", "ndays": "N^{d}", "nhours": "N^{h}", "pelespotprice": "\\Pi^{e}", "phydspotprice": "\\Pi^{h}", "pelebuyprice": "\\Pi^{b,e}", "phydbuyprice": "\\Pi^{b,h}", "pelesellprice": "\\Pi^{s,e}", "phydsellprice": "\\Pi^{s,h}", "peleimportprice": "\\Pi^{imp,e}", "phydimportprice": "\\Pi^{imp,h}", "peleexportprice": "\\Pi^{exp,e}", "phydexportprice": "\\Pi^{exp,h}", "pelemarketbuyingratio": "R^{b,e}", "pelemarketsellingratio": "R^{s,e}", "pelemarketcertrevenue": "M^{cert,e}", "pelemarketpassthrough": "M^{pass,e}", "pelemarketmoms": "M^{moms,e}", "pelemarketnetfee": "M^{net,e}", "pelemarkettariff": "M^{tariff,e}", "pmaxmarketbuy": "\\overline{MB}", "pelemaxmarketbuy": "\\overline{MB}^{e}", "phydmaxmarketbuy": "\\overline{MB}^{h}", "pmaxmarketsell": "\\overline{MS}", "pelemaxmarketsell": "\\overline{MS}^{e}", "phydmaxmarketsell": "\\overline{MS}^{h}", "pminmarketbuy": "\\underline{MB}", "peleminmarketbuy": "\\underline{MB}^{e}", "phydminmarketbuy": "\\underline{MB}^{h}", "pminmarketsell": "\\underline{MS}", "peleminmarketsell": "\\underline{MS}^{e}", "phydminmarketsell": "\\underline{MS}^{h}", "peledemand": "D^{e}", "phyddemand": "D^{h}", "pelemaxdemand": "\\overline{D}^{e}", "pelemindemand": "\\underline{D}^{e}", "phydmaxdemand": "\\overline{D}^{h}", "phydmindemand": "\\underline{D}^{h}", "pelepeakdemand": "D^{e,peak}", "phydpeakdemand": "D^{h,peak}", "pelemaxproduction": "\\overline{EP}", "peleminproduction": "\\underline{EP}", "phydmaxproduction": "\\overline{HP}", "phydminproduction": "\\underline{HP}", "pelemaxconsumption": "\\overline{EC}", "peleminconsumption": "\\underline{EC}", "phydmaxconsumption": "\\overline{HC}", "phydminconsumption": "\\underline{HC}", "prampuprate": "R^{u}", "prampdwrate": "R^{d}", "puptime": "T^{u}", "pdwtime": "T^{d}", "peleefficiency": "\\eta^{e}", "phydefficiency": "\\eta^{h}", "peletohydfunction": "F^{e2h}", "phydtoelecfunction": "F^{h2e}", "pstartupcost": "CSU", "pshutdowncost": "CSD", "ppeakdemandtariff": "C^{peak}", "pnoloadcost": "C^{nl}", "ploadsheddingcost": "C^{ls}", "pspillcost": "C^{spill}", "pfuelafactor": "A", "pfuelbfactor": "B", "pfuelcfactor": "C", "pmaintenancecost": "CM", "poperationcost": "CO", "pfixedcost": "CF", "pvariablecost": "CV", "pinvestmentcost": "C^{inv}", "pannualcost": "C^{ann}", "pcarbonprice": "CE", "peleresistantline": "R", "pelereactanceline": "X", "peleimpedanceline": "Z", "peleconductline": "G", "pelesusceptline": "B", "peleshuntsuscepline": "B^{l}", "pelemaxcurrent": "\\overline{I}", "pelemaxapparentpower": "\\overline{S}", "pelemaxvolt": "\\overline{V}", "peleminvolt": "\\underline{V}", "pelemaxvoltageangle": "\\overline{\\theta}", "peleminvoltageangle": "\\underline{\\theta}", "peleinitvolt": "V^{0}", "peleessduration": "\\tau^{s}", "peleessinflowcycle": "\\tau^{i}", "peleessoutflowcycle": "\\tau^{o}", "peleessefficiency": "\\eta^{s}", "peleesscapacity": "\\Psi", "pvarfixedavailability": "A", "velemarketbuy": "mb^{e}", "vhydmarketbuy": "mb^{h}", "vmarketbuy": "mb", "velemarketsell": "ms^{e}", "vhydmarketsell": "ms^{h}", "vmarketsell": "ms", "veleimport": "imp^{e}", "vhydimport": "imp^{h}", "veleexport": "exp^{e}", "vhydexport": "exp^{h}", "vproduction": "p", "veleproduction": "p^{e}", "vhydproduction": "p^{h}", "vconsumption": "c", "veleconsumption": "c^{e}", "vhydconsumption": "c^{h}", "vinventory": "si", "veleinventory": "si^{e}", "vhydinventory": "si^{h}", "venergyinflow": "ei", "veleenergyinflow": "ei^{e}", "vhydenergyinflow": "ei^{h}", "venergyoutflow": "eo", "veleenergyoutflow": "eo^{e}", "vhydenergyoutflow": "eo^{h}", "vspillage": "es", "velespillage": "es^{e}", "vhydspillage": "es^{h}", "vstoroperatbin": "so", "velestoroperatbin": "so^{e}", "vhydstoroperatbin": "so^{h}", "vcommitbin": "uc", "vstartupbin": "su", "vshutdownbin": "sd", "vmagvolt": "v^{2}", "vangvolt": "\\theta", "vflow": "f", "vactflow": "f^{P}", "vreactflow": "f^{Q}", "veleflow": "f^{e}", "vhydflow": "f^{h}", "vload": "d", "veleload": "d^{e}", "vhydload": "d^{h}", "vloadshed": "ls", "veleloadshed": "ls^{e}", "vhydloadshed": "ls^{h}", "vpeakdemand": "d^{peak}", "velepeakdemand": "d^{e,peak}", "vhydpeakdemand": "d^{h,peak}", "vpeakdemandindbin": "kd", "velepeakdemandindbin": "kd^{e}", "vhydpeakdemandindbin": "kd^{h}", "vPupward": "r^{p,u}", "vPdownward": "r^{p,d}", "vCupward": "r^{c,u}", "vCdownward": "r^{c,d}", "robustbudget": "\\Gamma", "devep": "EP^{dev}", "devdem": "D^{dev}", "BigM": "M", "robustdev": "\\omega", "lightslack": "m", "dualnumber": "\\upsilon", "dualperiod": "\\eta", "robustindicator": "\\chi"}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'concepts/sets';</script>
+    <script src="../_static/../custom.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Parameters" href="parameters.html" />
+    <link rel="prev" title="Examples" href="../user-guide/examples.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+
+
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+
+    </div>
+
+
+    <div class="header-article-items__end">
+
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2Fconcepts/sets.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="../_sources/concepts/sets.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+
+
+
+
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+
+    </div>
+
+</div>
+</div>
+
+
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Sets</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#temporal-sets-and-indices">Temporal Sets and Indices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#indices">Indices</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-sets-and-indices">Spatial Sets and Indices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Indices</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#technological-sets-and-indices">Technological Sets and Indices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-sets">Generation Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#storage-sets">Storage Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#demand-and-retail-sets">Demand and Retail Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#technology-indices">Technology Indices</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="sets">
+<span id="sets-section"></span><h1>Sets<a class="headerlink" href="#sets" title="Link to this heading">#</a></h1>
+<p>The optimization model is built upon a series of indexed sets that define its dimensions, including time, space, and technology. These sets are used by Pyomo to create variables and constraints efficiently. Understanding these sets is crucial for interpreting the model’s structure and preparing input data.</p>
+<p>The core sets are defined in the <code class="docutils literal notranslate"><span class="pre">model</span></code> object and are accessible throughout the formulation scripts (e.g., in <code class="docutils literal notranslate"><span class="pre">oM_ModelFormulation.py</span></code>). This section provides a comprehensive reference for all sets and indices used in the model, aligned with the mathematical notation found in the <a class="reference internal" href="objective-function.html#objective-function-section"><span class="std std-ref">Objective Function</span></a> and <a class="reference internal" href="constraints.html#constraints-section"><span class="std std-ref">Constraints</span></a>.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#temporal-sets-and-indices" id="id12">Temporal Sets and Indices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id1" id="id13">Sets</a></p></li>
+<li><p><a class="reference internal" href="#indices" id="id14">Indices</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#spatial-sets-and-indices" id="id15">Spatial Sets and Indices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id2" id="id16">Sets</a></p></li>
+<li><p><a class="reference internal" href="#id3" id="id17">Indices</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#technological-sets-and-indices" id="id18">Technological Sets and Indices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#generation-sets" id="id19">Generation Sets</a></p></li>
+<li><p><a class="reference internal" href="#storage-sets" id="id20">Storage Sets</a></p></li>
+<li><p><a class="reference internal" href="#demand-and-retail-sets" id="id21">Demand and Retail Sets</a></p></li>
+<li><p><a class="reference internal" href="#technology-indices" id="id22">Technology Indices</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="temporal-sets-and-indices">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Temporal Sets and Indices</a><a class="headerlink" href="#temporal-sets-and-indices" title="Link to this heading">#</a></h2>
+<p>The model uses a nested temporal structure to represent time, from long-term planning periods down to hourly operational timesteps.</p>
+<section id="id1">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Sets</a><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Temporal Sets</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nP\)</span></p></td>
+<td><p>All periods (e.g., years in a planning horizon).</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nS\)</span></p></td>
+<td><p>All scenarios, representing different operational conditions within a period.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nW\)</span></p></td>
+<td><p>All weeks in a year.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nM\)</span></p></td>
+<td><p>All months in a year.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nH\)</span></p></td>
+<td><p>All hours in a day.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nT\)</span></p></td>
+<td><p>All time steps (e.g., hours or sub-hourly intervals).</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nV\)</span></p></td>
+<td><p>All time step intervals, defining the duration of each time step.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="indices">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Indices</a><a class="headerlink" href="#indices" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id5">
+<caption><span class="caption-text">Temporal Indices</span><a class="headerlink" href="#id5" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\periodindex\)</span></p></td>
+<td><p>Index for a specific period.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\scenarioindex\)</span></p></td>
+<td><p>Index for a specific scenario.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\weekindex\)</span></p></td>
+<td><p>Index for a specific week.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\monthindex\)</span></p></td>
+<td><p>Index for a specific month.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\dayindex\)</span></p></td>
+<td><p>Index for a specific day.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hourindex\)</span></p></td>
+<td><p>Index for a specific hour.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\timeindex\)</span></p></td>
+<td><p>Index for a specific time step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\timestepindex\)</span></p></td>
+<td><p>Index for a specific time step interval.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\storageperiodindex\)</span></p></td>
+<td><p>Index for a storage-specific period.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\storageweekindex\)</span></p></td>
+<td><p>Index for a storage-specific week.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\storagemonthindex\)</span></p></td>
+<td><p>Index for a storage-specific month.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\storagedayindex\)</span></p></td>
+<td><p>Index for a storage-specific day.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\storagehourindex\)</span></p></td>
+<td><p>Index for a storage-specific hour.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\storagetimeindex\)</span></p></td>
+<td><p>Index for a storage-specific time step.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\storagetimestepindex\)</span></p></td>
+<td><p>Index for a storage-specific time step interval.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="spatial-sets-and-indices">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Spatial Sets and Indices</a><a class="headerlink" href="#spatial-sets-and-indices" title="Link to this heading">#</a></h2>
+<p>The spatial dimension defines the physical layout and regional aggregation of the energy system.</p>
+<section id="id2">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Sets</a><a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id6">
+<caption><span class="caption-text">Spatial Sets</span><a class="headerlink" href="#id6" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nB\)</span></p></td>
+<td><p>All buses in the network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nBE\)</span></p></td>
+<td><p>Subset of buses with electrical connections.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nBH\)</span></p></td>
+<td><p>Subset of buses with hydrogen connections.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nL\)</span></p></td>
+<td><p>All transmission/distribution lines.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nC\)</span></p></td>
+<td><p>All circuits associated with lines.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nX\)</span></p></td>
+<td><p>All regions for aggregation.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nZ\)</span></p></td>
+<td><p>All zones for aggregation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nA\)</span></p></td>
+<td><p>All areas for aggregation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id3">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Indices</a><a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id7">
+<caption><span class="caption-text">Spatial Indices</span><a class="headerlink" href="#id7" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\busindex\)</span></p></td>
+<td><p>Index for a bus.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\busindexa\)</span></p></td>
+<td><p>Index for the “from” bus of a branch.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\busindexb\)</span></p></td>
+<td><p>Index for the “to” bus of a branch.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\branchindex\)</span></p></td>
+<td><p>Index for a branch between bus <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\lineindexa\)</span></p></td>
+<td><p>Index for the “from” bus of a line <span class="math notranslate nohighlight">\(c\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\lineindexb\)</span></p></td>
+<td><p>Index for the “to” bus of a line <span class="math notranslate nohighlight">\(c\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\circuitindex\)</span></p></td>
+<td><p>Index for a circuit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\regionindex\)</span></p></td>
+<td><p>Index for a region.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\zoneindex\)</span></p></td>
+<td><p>Index for a zone.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\areaindex\)</span></p></td>
+<td><p>Index for an area.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="technological-sets-and-indices">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Technological Sets and Indices</a><a class="headerlink" href="#technological-sets-and-indices" title="Link to this heading">#</a></h2>
+<p>These sets and indices categorize the various technologies for generation, storage, demand, and retail.</p>
+<section id="generation-sets">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Generation Sets</a><a class="headerlink" href="#generation-sets" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id8">
+<caption><span class="caption-text">Generation Sets</span><a class="headerlink" href="#id8" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nG\)</span></p></td>
+<td><p>All generators.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nGE\)</span></p></td>
+<td><p>All electrical generators.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nGER\)</span></p></td>
+<td><p>All renewable electrical generators (e.g., solar, wind).</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nGENR\)</span></p></td>
+<td><p>All non-renewable electrical generators (e.g., gas turbines).</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nGEH\)</span></p></td>
+<td><p>All electrical generators that consume hydrogen (e.g., fuel cells).</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nGH\)</span></p></td>
+<td><p>All hydrogen generators.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nCNG\)</span></p></td>
+<td><p>All hydrogen generators that consume natural gas (e.g., reformers).</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nGHE\)</span></p></td>
+<td><p>All hydrogen generators that consume electricity (e.g., electrolyzers).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="storage-sets">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Storage Sets</a><a class="headerlink" href="#storage-sets" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id9">
+<caption><span class="caption-text">Storage Sets</span><a class="headerlink" href="#id9" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nE\)</span></p></td>
+<td><p>All storage units.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nEE\)</span></p></td>
+<td><p>All electrical storage units (e.g., batteries).</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nEH\)</span></p></td>
+<td><p>All hydrogen storage units (e.g., tanks, caverns).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="demand-and-retail-sets">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Demand and Retail Sets</a><a class="headerlink" href="#demand-and-retail-sets" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id10">
+<caption><span class="caption-text">Demand and Retail Sets</span><a class="headerlink" href="#id10" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nD\)</span></p></td>
+<td><p>All demands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nDE\)</span></p></td>
+<td><p>All electrical demands.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nDH\)</span></p></td>
+<td><p>All hydrogen demands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nK\)</span></p></td>
+<td><p>All peak demands.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nKE\)</span></p></td>
+<td><p>All electrical peak demands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nKH\)</span></p></td>
+<td><p>All hydrogen peak demands.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nR\)</span></p></td>
+<td><p>All retailers (points of common coupling to a market).</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nRE\)</span></p></td>
+<td><p>All electrical retailers.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nRH\)</span></p></td>
+<td><p>All hydrogen retailers.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="technology-indices">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Technology Indices</a><a class="headerlink" href="#technology-indices" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id11">
+<caption><span class="caption-text">Technology Indices</span><a class="headerlink" href="#id11" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 85.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\genindex\)</span></p></td>
+<td><p>Index for a generic generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elegenindex\)</span></p></td>
+<td><p>Index for an electrical generator.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elenonresgenindex\)</span></p></td>
+<td><p>Index for a non-renewable electrical generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elenresgenindex\)</span></p></td>
+<td><p>Index for a renewable electrical generator.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elenhydgenindex\)</span></p></td>
+<td><p>Index for an electrical generator consuming hydrogen.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydgenindex\)</span></p></td>
+<td><p>Index for a hydrogen generator.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydcnggenindex\)</span></p></td>
+<td><p>Index for a hydrogen generator consuming natural gas.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydelecgenindex\)</span></p></td>
+<td><p>Index for a hydrogen generator consuming electricity.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\storageindex\)</span></p></td>
+<td><p>Index for a generic storage unit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elestorageindex\)</span></p></td>
+<td><p>Index for an electrical storage unit.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydstorageindex\)</span></p></td>
+<td><p>Index for a hydrogen storage unit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\loadindex\)</span></p></td>
+<td><p>Index for a generic load/demand.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\eleloadindex\)</span></p></td>
+<td><p>Index for an electrical load.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydloadindex\)</span></p></td>
+<td><p>Index for a hydrogen load.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\peakindex\)</span></p></td>
+<td><p>Index for a generic peak load.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elepeakindex\)</span></p></td>
+<td><p>Index for an electrical peak load.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydpeakindex\)</span></p></td>
+<td><p>Index for a hydrogen peak load.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\consindex\)</span></p></td>
+<td><p>Index for a generic consumer.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\eleconsindex\)</span></p></td>
+<td><p>Index for an electrical consumer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydconsindex\)</span></p></td>
+<td><p>Index for a hydrogen consumer.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\traderindex\)</span></p></td>
+<td><p>Index for a generic retailer/trader.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\eletraderindex\)</span></p></td>
+<td><p>Index for an electrical retailer.</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydtraderindex\)</span></p></td>
+<td><p>Index for a hydrogen retailer.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../user-guide/examples.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="parameters.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Parameters</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#temporal-sets-and-indices">Temporal Sets and Indices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#indices">Indices</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-sets-and-indices">Spatial Sets and Indices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Indices</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#technological-sets-and-indices">Technological Sets and Indices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-sets">Generation Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#storage-sets">Storage Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#demand-and-retail-sets">Demand and Retail Sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#technology-indices">Technology Indices</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+<div class="bd-footer-content__inner container">
+
+  <div class="footer-item">
+
+<p class="component-author">
+By EL1XR-dev Team: Erik F. Alvarez
+</p>
+
+  </div>
+
+  <div class="footer-item">
+
+
+  <p class="copyright">
+
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+
+  </p>
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+</div>
+          </footer>
+
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

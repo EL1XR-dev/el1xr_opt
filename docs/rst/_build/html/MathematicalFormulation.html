@@ -1,0 +1,1369 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Mathematical Formulation &#8212;   documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"nB": "\\mathcal{B}", "nBE": "\\mathcal{B}^{e}", "nBH": "\\mathcal{B}^{h}", "nC": "\\mathcal{C}", "nG": "\\mathcal{G}", "nGE": "\\mathcal{G}^{e}", "nGER": "\\mathcal{G}^{e,res}", "nGENR": "\\mathcal{G}^{e,nonres}", "nGEH": "\\mathcal{G}^{e,h}", "nGH": "\\mathcal{G}^{h}", "nCNG": "\\mathcal{G}^{h,cng}", "nGHE": "\\mathcal{G}^{h,e}", "nE": "\\mathcal{E}", "nEE": "\\mathcal{E}^{e}", "nEH": "\\mathcal{E}^{h}", "nR": "\\mathcal{R}", "nRE": "\\mathcal{R}^{e}", "nRH": "\\mathcal{R}^{h}", "nD": "\\mathcal{D}", "nDE": "\\mathcal{D}^{e}", "nDH": "\\mathcal{D}^{h}", "nK": "\\mathcal{K}", "nKE": "\\mathcal{K}^{e}", "nKH": "\\mathcal{K}^{h}", "nL": "\\mathcal{L}", "nX": "\\mathcal{R}", "nZ": "\\mathcal{Z}", "nA": "\\mathcal{A}", "nT": "\\mathcal{T}", "nV": "\\mathcal{V}", "nP": "\\mathcal{P}", "nS": "\\mathcal{S}", "nW": "\\mathcal{W}", "nM": "\\mathcal{M}", "nH": "\\mathcal{H}", "busindex": "nd", "busindexa": "i", "busindexb": "j", "branchindex": "ij", "lineindexa": "ijc", "lineindexb": "jic", "circuitindex": "c", "elegenindex": "g^{e}", "elenonresgenindex": "g^{e,nonres}", "elenresgenindex": "g^{e,res}", "elenhydgenindex": "g^{e,h}", "hydgenindex": "g^{h}", "hydcnggenindex": "g^{h,cng}", "hydelecgenindex": "g^{h,e}", "genindex": "g", "eleloadindex": "d^{e}", "hydloadindex": "d^{h}", "loadindex": "d", "eleconsindex": "c^{e}", "hydconsindex": "c^{h}", "consindex": "c", "elepeakindex": "k^{e}", "hydpeakindex": "k^{h}", "peakindex": "k", "elestorageindex": "e^{e}", "hydstorageindex": "e^{h}", "storageindex": "e", "traderindex": "r", "eletraderindex": "r^{e}", "hydtraderindex": "r^{h}", "periodindex": "p", "scenarioindex": "s", "weekindex": "w", "monthindex": "m", "dayindex": "d", "hourindex": "h", "intervalindex": "u", "timeindex": "n", "timestepindex": "\\nu", "storageperiodindex": "p'", "storagetimeindex": "n'", "storagetimestepindex": "\\nu'", "storageweekindex": "w'", "storagemonthindex": "m'", "storagedayindex": "d'", "storagehourindex": "h'", "zoneindex": "z", "areaindex": "a", "regionindex": "r", "marketcost": "C^{trade}", "elemarketcost": "C^{trade,e}", "elemarketcostbuy": "C^{trade,b,e}", "elemarketcostsell": "C^{trade,s,e}", "hydmarketcost": "C^{trade,h}", "hydmarketcostbuy": "C^{trade,b,h}", "hydmarketcostsell": "C^{trade,s,h}", "importcost": "C^{imp}", "exportcost": "C^{exp}", "generationcost": "C^{gen}", "elegenerationcost": "C^{gen,e}", "hydgenerationcost": "C^{gen,h}", "startcost": "C^{start}", "shutdowncost": "C^{shut}", "noloadcost": "C^{nl}", "fuelcost": "C^{fuel}", "watercost": "C^{water}", "maintenancecost": "C^{maint}", "operationcost": "C^{op}", "storagecost": "C^{str}", "consumptioncost": "C^{con}", "eleconsumptioncost": "C^{con,e}", "hydconsumptioncost": "C^{con,h}", "demandcost": "C^{dem}", "eledemandcost": "C^{dem,e}", "hyddemandcost": "C^{dem,h}", "peakdemandcost": "C^{peak}", "elepeakdemandcost": "C^{peak,e}", "hydpeakdemandcost": "C^{peak,h}", "transmissioncost": "C^{tr}", "linecost": "C^{line}", "convertercost": "C^{conv}", "hvdcost": "C^{hvdc}", "flexibilitycost": "C^{flex}", "ancillaryservicescost": "C^{as}", "spinningreservecost": "C^{sp}", "nonspinningreservecost": "C^{ns}", "regulationupcost": "C^{reg,u}", "regulationdowncost": "C^{reg,d}", "reserveprocurementcost": "C^{res,proc}", "reserveactivationcost": "C^{res,act}", "unservedenergycost": "C^{ue}", "eleunservedenergycost": "C^{ens,e}", "hydunservedenergycost": "C^{ens,h}", "demandresponsecost": "C^{dr}", "demandflexibilitycost": "C^{df}", "spillcost": "C^{spill}", "loadsheddingcost": "C^{ls}", "curtailmentcost": "C^{curt}", "emissionpermitcost": "C^{emiss,perm}", "emissiontaxcost": "C^{emiss,tax}", "carboncost": "C^{carb}", "investmentcost": "C^{inv}", "fixedcost": "C^{fix}", "variablecost": "C^{var}", "annualcost": "C^{ann}", "totalcost": "C^{tot}", "genemission": "EM^{gen}", "conemission": "EM^{con}", "totemission": "EM^{tot}", "genCO2": "EM^{gen,co2}", "conCO2": "EM^{con,co2}", "totCO2": "EM^{tot,co2}", "genNOx": "EM^{gen,nox}", "conNOx": "EM^{con,nox}", "totNOx": "EM^{tot,nox}", "genSO2": "EM^{gen,so2}", "conSO2": "EM^{con,so2}", "totSO2": "EM^{tot,so2}", "genPM25": "EM^{gen,pm25}", "conPM25": "EM^{con,pm25}", "totPM25": "EM^{tot,pm25}", "startupemission": "EM^{start}", "shutdownemission": "EM^{shut}", "noloademission": "EM^{nl}", "storageemission": "EM^{str}", "importemission": "EM^{imp}", "exportemission": "EM^{exp}", "LROcost": "C^{LRO}", "pfactorone": "F1", "pfactortwo": "F2", "pfactorthr": "F3", "pfactorfou": "F4", "pdiscountrate": "\\Gamma", "ptimestepduration": "\\Delta t", "pintervalduration": "\\Delta u", "nintervals": "N^{u}", "nperiods": "N^{p}", "nweeks": "N^{w}", "nmonths": "N^{m}", "ndays": "N^{d}", "nhours": "N^{h}", "pelespotprice": "\\Pi^{e}", "phydspotprice": "\\Pi^{h}", "pelebuyprice": "\\Pi^{b,e}", "phydbuyprice": "\\Pi^{b,h}", "pelesellprice": "\\Pi^{s,e}", "phydsellprice": "\\Pi^{s,h}", "peleimportprice": "\\Pi^{imp,e}", "phydimportprice": "\\Pi^{imp,h}", "peleexportprice": "\\Pi^{exp,e}", "phydexportprice": "\\Pi^{exp,h}", "pelemarketbuyingratio": "R^{b,e}", "pelemarketsellingratio": "R^{s,e}", "pelemarketcertrevenue": "M^{cert,e}", "pelemarketpassthrough": "M^{pass,e}", "pelemarketmoms": "M^{moms,e}", "pelemarketnetfee": "M^{net,e}", "pelemarkettariff": "M^{tariff,e}", "pmaxmarketbuy": "\\overline{MB}", "pelemaxmarketbuy": "\\overline{MB}^{e}", "phydmaxmarketbuy": "\\overline{MB}^{h}", "pmaxmarketsell": "\\overline{MS}", "pelemaxmarketsell": "\\overline{MS}^{e}", "phydmaxmarketsell": "\\overline{MS}^{h}", "pminmarketbuy": "\\underline{MB}", "peleminmarketbuy": "\\underline{MB}^{e}", "phydminmarketbuy": "\\underline{MB}^{h}", "pminmarketsell": "\\underline{MS}", "peleminmarketsell": "\\underline{MS}^{e}", "phydminmarketsell": "\\underline{MS}^{h}", "peledemand": "D^{e}", "phyddemand": "D^{h}", "pelemaxdemand": "\\overline{D}^{e}", "pelemindemand": "\\underline{D}^{e}", "phydmaxdemand": "\\overline{D}^{h}", "phydmindemand": "\\underline{D}^{h}", "pelepeakdemand": "D^{e,peak}", "phydpeakdemand": "D^{h,peak}", "pelemaxproduction": "\\overline{EP}", "peleminproduction": "\\underline{EP}", "phydmaxproduction": "\\overline{HP}", "phydminproduction": "\\underline{HP}", "pelemaxconsumption": "\\overline{EC}", "peleminconsumption": "\\underline{EC}", "phydmaxconsumption": "\\overline{HC}", "phydminconsumption": "\\underline{HC}", "prampuprate": "R^{u}", "prampdwrate": "R^{d}", "puptime": "T^{u}", "pdwtime": "T^{d}", "peleefficiency": "\\eta^{e}", "phydefficiency": "\\eta^{h}", "peletohydfunction": "F^{e2h}", "phydtoelecfunction": "F^{h2e}", "pstartupcost": "CSU", "pshutdowncost": "CSD", "ppeakdemandtariff": "C^{peak}", "pnoloadcost": "C^{nl}", "ploadsheddingcost": "C^{ls}", "pspillcost": "C^{spill}", "pfuelafactor": "A", "pfuelbfactor": "B", "pfuelcfactor": "C", "pmaintenancecost": "CM", "poperationcost": "CO", "pfixedcost": "CF", "pvariablecost": "CV", "pinvestmentcost": "C^{inv}", "pannualcost": "C^{ann}", "pcarbonprice": "CE", "peleresistantline": "R", "pelereactanceline": "X", "peleimpedanceline": "Z", "peleconductline": "G", "pelesusceptline": "B", "peleshuntsuscepline": "B^{l}", "pelemaxcurrent": "\\overline{I}", "pelemaxapparentpower": "\\overline{S}", "pelemaxvolt": "\\overline{V}", "peleminvolt": "\\underline{V}", "pelemaxvoltageangle": "\\overline{\\theta}", "peleminvoltageangle": "\\underline{\\theta}", "peleinitvolt": "V^{0}", "peleessduration": "\\tau^{s}", "peleessinflowcycle": "\\tau^{i}", "peleessoutflowcycle": "\\tau^{o}", "peleessefficiency": "\\eta^{s}", "peleesscapacity": "\\Psi", "pvarfixedavailability": "A", "velemarketbuy": "mb^{e}", "vhydmarketbuy": "mb^{h}", "vmarketbuy": "mb", "velemarketsell": "ms^{e}", "vhydmarketsell": "ms^{h}", "vmarketsell": "ms", "veleimport": "imp^{e}", "vhydimport": "imp^{h}", "veleexport": "exp^{e}", "vhydexport": "exp^{h}", "vproduction": "p", "veleproduction": "p^{e}", "vhydproduction": "p^{h}", "vconsumption": "c", "veleconsumption": "c^{e}", "vhydconsumption": "c^{h}", "vinventory": "si", "veleinventory": "si^{e}", "vhydinventory": "si^{h}", "venergyinflow": "ei", "veleenergyinflow": "ei^{e}", "vhydenergyinflow": "ei^{h}", "venergyoutflow": "eo", "veleenergyoutflow": "eo^{e}", "vhydenergyoutflow": "eo^{h}", "vspillage": "es", "velespillage": "es^{e}", "vhydspillage": "es^{h}", "vstoroperatbin": "so", "velestoroperatbin": "so^{e}", "vhydstoroperatbin": "so^{h}", "vcommitbin": "uc", "vstartupbin": "su", "vshutdownbin": "sd", "vmagvolt": "v^{2}", "vangvolt": "\\theta", "vflow": "f", "vactflow": "f^{P}", "vreactflow": "f^{Q}", "veleflow": "f^{e}", "vhydflow": "f^{h}", "vload": "d", "veleload": "d^{e}", "vhydload": "d^{h}", "vloadshed": "ls", "veleloadshed": "ls^{e}", "vhydloadshed": "ls^{h}", "vpeakdemand": "d^{peak}", "velepeakdemand": "d^{e,peak}", "vhydpeakdemand": "d^{h,peak}", "vpeakdemandindbin": "kd", "velepeakdemandindbin": "kd^{e}", "vhydpeakdemandindbin": "kd^{h}", "vPupward": "r^{p,u}", "vPdownward": "r^{p,d}", "vCupward": "r^{c,u}", "vCdownward": "r^{c,d}", "robustbudget": "\\Gamma", "devep": "EP^{dev}", "devdem": "D^{dev}", "BigM": "M", "robustdev": "\\omega", "lightslack": "m", "dualnumber": "\\upsilon", "dualperiod": "\\eta", "robustindicator": "\\chi"}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'MathematicalFormulation';</script>
+    <script src="_static/../custom.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+
+
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="concepts/sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+
+    </div>
+
+
+    <div class="header-article-items__end">
+
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2FMathematicalFormulation.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="_sources/MathematicalFormulation.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+
+
+
+
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+
+    </div>
+
+</div>
+</div>
+
+
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Mathematical Formulation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acronyms">Acronyms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices">Indices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constraints"><strong>Constraints</strong></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="mathematical-formulation">
+<h1>Mathematical Formulation<a class="headerlink" href="#mathematical-formulation" title="Link to this heading">#</a></h1>
+<p>Here we present the mathematical formulation of the optimization problem solved by the <strong>oHySEM</strong> model.</p>
+<section id="acronyms">
+<h2>Acronyms<a class="headerlink" href="#acronyms" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Acronym</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BESS</p></td>
+<td><p>Battery Energy Storage System</p></td>
+</tr>
+<tr class="row-odd"><td><p>DA</p></td>
+<td><p>Day-Ahead Market</p></td>
+</tr>
+<tr class="row-even"><td><p>ESS</p></td>
+<td><p>Energy Storage System (includes BESS and HESS)</p></td>
+</tr>
+<tr class="row-odd"><td><p>H-VPP</p></td>
+<td><p>Hydrogen-based Virtual Power Plant</p></td>
+</tr>
+<tr class="row-even"><td><p>HESS</p></td>
+<td><p>Hydrogen Energy Storage System</p></td>
+</tr>
+<tr class="row-odd"><td><p>ID</p></td>
+<td><p>Intraday Markets</p></td>
+</tr>
+<tr class="row-even"><td><p>RT</p></td>
+<td><p>Real Time Market</p></td>
+</tr>
+<tr class="row-odd"><td><p>SoC</p></td>
+<td><p>State of Charge</p></td>
+</tr>
+<tr class="row-even"><td><p>VRE</p></td>
+<td><p>Variable Renewable Energy</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="indices">
+<h2>Indices<a class="headerlink" href="#indices" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Index</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ω\)</span></p></td>
+<td><p>Scenario (e.g., solar generation, ID prices, etc.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(nd\)</span></p></td>
+<td><p>Node</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p>Load level</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\nu\)</span></p></td>
+<td><p>Duration of the time step for the load levels (e.g., 0.25 h for 15 min load levels, 0.5 h for half an hour load levels)</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(eg\)</span></p></td>
+<td><p>Electricity unit (thermal or hydro unit or ESS)</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(et\)</span></p></td>
+<td><p>Electricity thermal unit</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(es\)</span></p></td>
+<td><p>Electricity energy storage system (eESS)</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hg\)</span></p></td>
+<td><p>Hydrogen unit (e.g., electrolyzer, hydrogen tank)</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hz\)</span></p></td>
+<td><p>Hydrogen electrolyzer</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hs\)</span></p></td>
+<td><p>Hydrogen energy storage system (e.g., hydrogen tank)</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(R_i\)</span></p></td>
+<td><p>Reserve market number <span class="math notranslate nohighlight">\(i\)</span> (secondary and tertiary)</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(k\)</span></p></td>
+<td><p>Segment of production function piecewise approximation</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h2>
+<p>They are written in <strong>uppercase</strong> letters.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Demand</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ED_{nnd}\)</span></p></td>
+<td><p>Electricity demand</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pElectricityDemand</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(HD_{nnd}\)</span></p></td>
+<td><p>Hydrogen demand</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pHydrogenDemand</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(DUR_n\)</span></p></td>
+<td><p>Duration of each load level</p></td>
+<td><p>h</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pDuration</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(CEB_{nnd},    PES^{DA}_{nnd}\)</span></p></td>
+<td><p>Cost/price of electricity bought/sold</p></td>
+<td><p>€/MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pElectricityCost</span></code>, <code class="docutils literal notranslate"><span class="pre">pElectricityPrice</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(CHB_{nnd},    PHS^{DA}_{nnd}\)</span></p></td>
+<td><p>Cost/price of hydrogen bought/sold</p></td>
+<td><p>€/kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pHydrogenCost</span></code>, <code class="docutils literal notranslate"><span class="pre">pHydrogenPrice</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(UP^{SR}_{n},  DP^{SR}_{n}\)</span></p></td>
+<td><p>Price of <span class="math notranslate nohighlight">\(SR\)</span> upward and downward secondary reserve</p></td>
+<td><p>€/MW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pOperatingReservePrice_Up_SR</span></code>, <code class="docutils literal notranslate"><span class="pre">pOperatingReservePrice_Down_SR</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(UR^{SR}_{n},  DR^{SR}_{n}\)</span></p></td>
+<td><p>Requirement for <span class="math notranslate nohighlight">\(SR\)</span> upward and downward secondary reserve</p></td>
+<td><p>€/MW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pOperatingReserveRequire_Up_SR</span></code>, <code class="docutils literal notranslate"><span class="pre">pOperatingReserveRequire_Down_SR</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(UEI^{TR}_{n}, DEI^{TR}_{n}\)</span></p></td>
+<td><p>Expected income of <span class="math notranslate nohighlight">\(TR\)</span> upward and downward tertiary reserve</p></td>
+<td><p>€/MW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pOperatingReservePrice_Up_TR</span></code>, <code class="docutils literal notranslate"><span class="pre">pOperatingReservePrice_Down_TR</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(CENS\)</span></p></td>
+<td><p>Cost of electricity not served. Value of Lost Load (VoLL)</p></td>
+<td><p>€/MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pParENSCost</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(CHNS\)</span></p></td>
+<td><p>Cost of hydrogen not served.</p></td>
+<td><p>€/tH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pParHNSCost</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Scenarios</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(P^ω\)</span></p></td>
+<td><p>Probability of each scenario</p></td>
+<td><p>p.u.</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pScenProb</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Generation system</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\underline{EP}_{neg},     \overline{EP}_{neg}\)</span></p></td>
+<td><p>Minimum and maximum electricity generation  of a generator</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxPower</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinPower</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\widehat{EP}_{neg}\)</span></p></td>
+<td><p>Last update of the position in the market of the electricity generation of a generator</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pVarPositionGeneration</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\underline{EC}_{neg},     \overline{EC}_{neg}\)</span></p></td>
+<td><p>Minimum and maximum electricity consumption of an ESS</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxCharge</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinCharge</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\overline{EC}^{comp}_{nhs}\)</span></p></td>
+<td><p>Maximum electricity consumption of a compressor unit to compress hydrogen</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenMaxCompressorConsumption</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\overline{EC}^{standby}_{nhz}\)</span></p></td>
+<td><p>Maximum electricity consumption of an electrolyzer unit during the standby mode</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenStandByPower</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\widehat{EC}_{neg}\)</span></p></td>
+<td><p>Last update of the position in the market of the electricity consumption of a generator</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pVarPositionConsumption</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\underline{EI}_{neg},     \overline{EI}_{neg}\)</span></p></td>
+<td><p>Maximum and minimum electricity storage  of an ESS</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxStorage</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinStorage</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\underline{EEO}_{neg},    \overline{EEO}_{neg}\)</span></p></td>
+<td><p>Maximum and minimum electricity outflows of an ESS (e.g., kg of H2)</p></td>
+<td><p>MW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxOutflows</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinOutflows</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\underline{EEI}_{neg},    \overline{EEI}_{neg}\)</span></p></td>
+<td><p>Maximum and minimum electricity inflows  of an ESS</p></td>
+<td><p>MW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxInflows</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinInflows</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\underline{HP}_{nhg},     \overline{HP}_{nhg}\)</span></p></td>
+<td><p>Minimum and maximum hydrogen generation  of a generator</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxPower</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinPower</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\widehat{HP}_{nhg}\)</span></p></td>
+<td><p>Last update of the position in the market of the hydrogen generation of a generator</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pVarPositionGeneration</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\underline{HC}_{nhg},     \overline{HC}_{nhg}\)</span></p></td>
+<td><p>Minimum and maximum hydrogen consumption of an ESS</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxCharge</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinCharge</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\widehat{HC}_{nhg}\)</span></p></td>
+<td><p>Last update of the position in the market of the hydrogen consumption of a generator</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pVarPositionConsumption</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\underline{HI}_{nhg},     \overline{HI}_{nhg}\)</span></p></td>
+<td><p>Maximum and minimum hydrogen storage     of an ESS</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxStorage</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinStorage</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\underline{HEO}_{nhg},    \overline{HEO}_{nhg}\)</span></p></td>
+<td><p>Maximum and minimum hydrogen outflows    of an ESS</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxOutflows</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinOutflows</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\underline{HEI}_{nhg},    \overline{HEI}_{nhg}\)</span></p></td>
+<td><p>Maximum and minimum hydrogen inflows     of an ESS (e.g., kg of H2)</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pMaxInflows</span></code>, <code class="docutils literal notranslate"><span class="pre">pMinInflows</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(CF_g, CV_g\)</span></p></td>
+<td><p>Fixed and variable cost of an electricity generator. Variable cost includes fuel, O&amp;M and emission cost</p></td>
+<td><p>€/h, €/MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenConstantVarCost</span></code>, <code class="docutils literal notranslate"><span class="pre">pGenLinearVarCost</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(RU_t, RD_t\)</span></p></td>
+<td><p>Ramp up and ramp down of an electricity thermal unit</p></td>
+<td><p>MW/h</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenRampUp</span></code>, <code class="docutils literal notranslate"><span class="pre">pGenRampDown</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(RC^{+}_{hz}, RC^{-}_{hz}\)</span></p></td>
+<td><p>Ramp up and ramp down of a hydrogen unit</p></td>
+<td><p>kgH2/h</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenRampUp</span></code>, <code class="docutils literal notranslate"><span class="pre">pGenRampDown</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(TU_t, TD_t\)</span></p></td>
+<td><p>Minimum uptime and downtime of an electricity thermal unit</p></td>
+<td><p>h</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenUpTime</span></code>, <code class="docutils literal notranslate"><span class="pre">pGenDownTime</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(CSU_g, CSD_g\)</span></p></td>
+<td><p>Startup and shutdown cost of an electricity committed unit</p></td>
+<td><p>M€</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenStartUpCost</span></code>, <code class="docutils literal notranslate"><span class="pre">pGenShutDownCost</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(CRU_h, CRD_h\)</span></p></td>
+<td><p>Ramp up and ramp down cost of a hydrogen unit</p></td>
+<td><p>M€/MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenRampUpCost</span></code>, <code class="docutils literal notranslate"><span class="pre">pGenRampDownCost</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(EF_e\)</span></p></td>
+<td><p>Round-trip efficiency of the charge/discharge of an electricity ESS</p></td>
+<td><p>p.u.</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenEfficiency</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(EF_h\)</span></p></td>
+<td><p>Round-trip efficiency of the charge/discharge of a hydrogen ESS</p></td>
+<td><p>p.u.</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenEfficiency</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(PF_{he}\)</span></p></td>
+<td><p>Production function of electricity from hydrogen</p></td>
+<td><p>kWh/kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pGenProductionFunction</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(PF1_{ehk}\)</span></p></td>
+<td><p>Intercept of piecewise Production function of hydrogen from electricity</p></td>
+<td></td>
+<td><p>kgH2/kWh     «<code class="docutils literal notranslate"><span class="pre">pGenProductionFunction</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(PF2_{ehk}\)</span></p></td>
+<td><p>slope of piecewise Production function of hydrogen from electricity</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(URA^{SR}_{n}, DRA^{SR}_{n}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(SR\)</span> upward and downward activation</p></td>
+<td><p>p.u.</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pOperatingReserveActivation_Up_SR</span></code>, <code class="docutils literal notranslate"><span class="pre">pOperatingReserveActivation_Down_SR</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(URA^{TR}_{n}, DRA^{TR}_{n}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(TR\)</span> upward and downward activation</p></td>
+<td><p>p.u.</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pOperatingReserveActivation_Up_TR</span></code>, <code class="docutils literal notranslate"><span class="pre">pOperatingReserveActivation_Down_TR</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Network system</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\underline{ENF}_{nijc}, \overline{ENF}_{nijc}\)</span></p></td>
+<td><p>Minimum and maximum electricity network flow through the line ijc</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pEleNetTTCBck</span></code>, <code class="docutils literal notranslate"><span class="pre">pEleNetTTC</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\underline{HNF}_{nijc}, \overline{HNF}_{nijc}\)</span></p></td>
+<td><p>Minimum and maximum hydrogen network flow through the line ijc</p></td>
+<td><p>MWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pHydNetTTCBck</span></code>, <code class="docutils literal notranslate"><span class="pre">pHydNetTTC</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\overline{X}_{nijc}\)</span></p></td>
+<td><p>Reactance of the line ijc</p></td>
+<td><p>p.u.</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">pEleNetReactance</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h2>
+<p>They are written in <strong>lowercase</strong> letters.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Demand</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(e^{b}_{nnd}, e^{s}_{nnd}\)</span></p></td>
+<td><p>Electricity bought and sold in the electricity market</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vElectricityBuy</span></code>, <code class="docutils literal notranslate"><span class="pre">vElectricitySell</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ens_{nnd}\)</span></p></td>
+<td><p>Electricity not served</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vENS</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ed_{nnd}\)</span></p></td>
+<td><p>Electricity demand</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalDemand</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ed^{\Delta}_{nnd}\)</span></p></td>
+<td><p>Electricity demand due to market correction</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalDemandDelta</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(h^{b}_{nnd}, h^{s}_{nnd}\)</span></p></td>
+<td><p>Hydrogen bought and sold in the hydrogen market</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydrogenBuy</span></code>, <code class="docutils literal notranslate"><span class="pre">vHydrogenSell</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hns_{nnd}\)</span></p></td>
+<td><p>Hydrogen not served</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHNS</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hd_{nnd}\)</span></p></td>
+<td><p>Hydrogen demand</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalDemand</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hd^{\Delta}_{nnd}\)</span></p></td>
+<td><p>Hydrogen demand due to market correction</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalDemandDelta</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Generation system</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ep_{neg}\)</span></p></td>
+<td><p>Electricity production (discharge if an ESS)</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalOutput</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ec_{nes}, ec_{nhz}\)</span></p></td>
+<td><p>Electricity consumption of electricity ESS and electrolyzer units</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalCharge</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ep2b_{neg}\)</span></p></td>
+<td><p>Electricity production of the second block (i.e., above the minimum load)</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalOutput2ndBlock</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ec2b_{nes}, ec2b_{nhz}\)</span></p></td>
+<td><p>Electricity charge of the second block (i.e., above the minimum charge)</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalCharge2ndBlock</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ep^{\Delta}_{neg}\)</span></p></td>
+<td><p>Electricity production (discharge if an ESS) for market correction</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalOutputDelta</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ec^{\Delta}_{nes}, ec^{\Delta}_{nhz}\)</span></p></td>
+<td><p>Electricity consumption of electricity ESS and electrolyzer units for market correction</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalChargeDelta</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ec^{R+}_{nes}, ec^{R+}_{nhz}\)</span></p></td>
+<td><p>Positive ramp of electricity consumption of an ESS and electrolyzer</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalChargeRampPos</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ec^{R-}_{nes}, ec^{R-}_{nhz}\)</span></p></td>
+<td><p>Negative ramp of electricity consumption of an ESS and electrolyzer</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleTotalChargeRampNeg</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(eei_{nes}\)</span></p></td>
+<td><p>Electricity inflows of an ESS</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleEnergyInflows</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(eeo_{nes}\)</span></p></td>
+<td><p>Electricity outflows of an ESS</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleEnergyOutflows</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(esi_{nes}\)</span></p></td>
+<td><p>Electricity ESS stored energy (inventory, SoC for batteries)</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleInventory</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ess_{nes}\)</span></p></td>
+<td><p>Electricity ESS spilled energy</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleSpillage</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hp_{nhg}\)</span></p></td>
+<td><p>Hydrogen production (discharge if an ESS)</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalOutput</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hc_{nhs}, hc_{neg}\)</span></p></td>
+<td><p>Hydrogen consumption of hydrogen ESS and electricity thermal units</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalCharge</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hp2b_{nhg}\)</span></p></td>
+<td><p>Hydrogen production of the second block (i.e., above the minimum load)</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalOutput2ndBlock</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hc2b_{nhs}, hc2b_{neg}\)</span></p></td>
+<td><p>Hydrogen charge of the second block (i.e., above the minimum charge)</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalCharge2ndBlock</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hp^{\Delta}_{nhg}\)</span></p></td>
+<td><p>Hydrogen production (discharge if an ESS) for market correction</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalOutputDelta</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hc^{\Delta}_{nhs}, hc^{\Delta}_{neg}\)</span></p></td>
+<td><p>Hydrogen consumption of hydrogen ESS and electricity thermal units for market correction</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydTotalChargeDelta</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hei_{nhs}\)</span></p></td>
+<td><p>Hydrogen inflows of an ESS</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydEnergyInflows</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(heo_{nhs}\)</span></p></td>
+<td><p>Hydrogen outflows of an ESS</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydEnergyOutflows</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hsi_{nhs}\)</span></p></td>
+<td><p>Hydrogen ESS stored energy (inventory, SoC for batteries)</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydInventory</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hss_{nhs}\)</span></p></td>
+<td><p>Hydrogen ESS spilled energy</p></td>
+<td><p>GWh</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydSpillage</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ec^{Comp}_{nhs}\)</span></p></td>
+<td><p>Electricity consumption of a compressor unit to compress hydrogen</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydCompressorConsumption</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(ec^{StandBy}_{nhz}\)</span></p></td>
+<td><p>Electricity consumption of a electrolyzer unit during the standby mode</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydStandByConsumption</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(up^{SR}_{neg}, dp^{SR}_{neg}\)</span></p></td>
+<td><p>Upward and downward <span class="math notranslate nohighlight">\(SR\)</span> operating reserves of a generating or ESS unit</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleReserveProd_Up_SR</span></code>, <code class="docutils literal notranslate"><span class="pre">vEleReserveProd_Down_SR</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(uc^{SR}_{nes}, dc^{SR}_{nes}\)</span></p></td>
+<td><p>Upward and downward <span class="math notranslate nohighlight">\(SR\)</span> operating reserves of an ESS as a consumption unit</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleReserveCons_Up_SR</span></code>, <code class="docutils literal notranslate"><span class="pre">vEleReserveCons_Down_SR</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(up^{TR}_{ωneg}, dp^{TR}_{ωneg}\)</span></p></td>
+<td><p>Upward and downward <span class="math notranslate nohighlight">\(TR\)</span> operating reserves of a generating or ESS unit</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleReserveProd_Up_TR</span></code>, <code class="docutils literal notranslate"><span class="pre">vEleReserveProd_Down_TR</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(uc^{TR}_{ωnes}, dc^{TR}_{ωnes}\)</span></p></td>
+<td><p>Upward and downward <span class="math notranslate nohighlight">\(TR\)</span> operating reserves of an ESS as a consumption unit</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleReserveCons_Up_TR</span></code>, <code class="docutils literal notranslate"><span class="pre">vEleReserveCons_Down_TR</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(euc_{neg}, esu_{neg}, esd_{neg}\)</span></p></td>
+<td><p>Commitment, startup and shutdown of electricity generation unit per load level</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vGenCommitment</span></code>, <code class="docutils literal notranslate"><span class="pre">vGenStartup</span></code>, <code class="docutils literal notranslate"><span class="pre">vGenShutdown</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(euc^{max}_{neg}\)</span></p></td>
+<td><p>Maximum commitment of electricity generation unit per load level</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vGenMaxCommitment</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(huc_{nhg}\)</span></p></td>
+<td><p>Commitment of hydrogen generation unit per load level</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydCommitment</span></code>, <code class="docutils literal notranslate"><span class="pre">vHydStartup</span></code>, <code class="docutils literal notranslate"><span class="pre">vHydShutdown</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(huc^{max}_{nhg}\)</span></p></td>
+<td><p>Maximum commitment of hydrogen generation unit per load level</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydMaxCommitment</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(esf_{nes}\)</span></p></td>
+<td><p>Electricity ESS energy functioning per load level, charging or discharging</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleStorOperat</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hsf_{nhs}\)</span></p></td>
+<td><p>Hydrogen ESS energy functioning per load level, charging or discharging</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydStorOperat</span></code>»</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(hcf_{nhs}\)</span></p></td>
+<td><p>Hydrogen compressor functioning, off or on</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydCompressorOperat</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hsb_{nhg}\)</span></p></td>
+<td><p>Hydrogen electrolyzer StandBy mode, off or on</p></td>
+<td><p>{0,1}</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydStandBy</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>Network system</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+<td><p><strong>Unit</strong></p></td>
+<td><p><strong>oHySEM.py</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(ef_{nijc}\)</span></p></td>
+<td><p>Electricity transmission flow through a line</p></td>
+<td><p>GW</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleNetFlow</span></code>»</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(hf_{nijc}\)</span></p></td>
+<td><p>Hydrogen transmission flow through a pipeline</p></td>
+<td><p>kgH2</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vHydNetFlow</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(theta_{ni}\)</span></p></td>
+<td><p>Voltage angle of a node</p></td>
+<td><p>rad</p></td>
+<td><p>«<code class="docutils literal notranslate"><span class="pre">vEleNetTheta</span></code>»</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="equations">
+<h2>Equations<a class="headerlink" href="#equations" title="Link to this heading">#</a></h2>
+<p>This formulation corresponds to a <strong>Rolling horizon optimization problem</strong> to schedule the operation of the electricity and hydrogen systems in a multi-energy system. The model is enabled to consider previous information from the Day-Ahead (DA) market, Intraday (ID) markets, and Real-Time (RT) market, and correct the market positions of the systems.
+The model is solved using a rolling horizon approach: once the DA market is cleared, the model is solved for the next ID markets, and so on.</p>
+<p><strong>Objective function</strong>: minimization of operation cost for the scope of the model</p>
+<p>Market variable cost in [M€] («<code class="docutils literal notranslate"><span class="pre">eTotalMCost</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{nnd}DUR_n (CEB_{nnd} e^{b}_{nnd} - PES_{nnd} e^{s}_{nnd} + CHB_{nnd} h^{b}_{nnd} - PHS_{nnd} h^{s}_{nnd} + CENS ens_{nnd} + CHNS hns_{nnd}) +\)</span></p>
+<p>Generation operation cost [M€] («<code class="docutils literal notranslate"><span class="pre">eTotalGCost</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg}DUR_n (CV_g ep_{neg} + CF_g euc_{neg} + CF_h (huc_{nhz} - hsb_{nhz}) + CRU_h ec^{R+}_{nhz} + CSU_g esu_{neg} + CSD_g esd_{neg} + CSU_h hsu_{nhz} + CSD_h hsd_{nhz}) +\)</span></p>
+<p>Generation emission cost [M€] («<code class="docutils literal notranslate"><span class="pre">eTotalECost</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg}DUR_n CE_g ep_{neg} +\)</span></p>
+<p>Consumption operation cost [M€] («<code class="docutils literal notranslate"><span class="pre">eTotalCCost</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n}DUR_n (\sum_{es} CV_{es} ec_{nes} + \sum_{hz} CV_{hz}  ec_{nhz}) -\)</span></p>
+<p>Operation reserve revenue [M€] («<code class="docutils literal notranslate"><span class="pre">eTotalRCost</span></code>»)operation</p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg}  UP^{SR}_{n} up^{SR}_{neg}  + DP^{SR}_{n} dp^{SR}_{neg}  + DUR_n (UEI^{SR}_{n} URA^{SR}_{n} up^{SR}_{neg}  + DEI^{SR}_{n} DRA^{SR}_{n} dp^{SR}_{neg}  + UEI^{TR}_{n} URA^{TR}_{n} up^{TR}_{neg}  + DEI^{TR}_{n} DRA^{TR}_{n} dp^{TR}_{neg}) +\)</span></p>
+<p><span class="math notranslate nohighlight">\(\sum_{nes} UP^{SR}_{n} uc^{SR}_{nes} + DP^{SR}_{n} dc^{SR}_{nes} + DUR_n (UEI^{SR}_{n} URA^{SR}_{n} uc^{SR}_{nes} + DEI^{SR}_{n} DRA^{SR}_{n} dc^{SR}_{nes} + UEI^{TR}_{n} URA^{TR}_{n} uc^{TR}_{nes} + DEI^{TR}_{n} DRA^{TR}_{n} dc^{TR}_{nes}) +\)</span></p>
+<section id="constraints">
+<h3><strong>Constraints</strong><a class="headerlink" href="#constraints" title="Link to this heading">#</a></h3>
+<p>Corrections of the units in the electricity and hydrogen markets:</p>
+<ul class="simple">
+<li><p>Electricity production («<code class="docutils literal notranslate"><span class="pre">eMarketCorrectionEleProd</span></code>»)</p></li>
+</ul>
+<p><span class="math notranslate nohighlight">\(ep_{neg} = \widehat{EP}_{neg} + ep^{\Delta}_{neg} \quad \forall neg\)</span></p>
+<ul class="simple">
+<li><p>Electricity consumption («<code class="docutils literal notranslate"><span class="pre">eMarketCorrectionEleCharge</span></code>»)</p></li>
+</ul>
+<p><span class="math notranslate nohighlight">\(ec_{nes} = \widehat{EC}_{nes} + ec^{\Delta}_{nes} \quad \forall nes\)</span></p>
+<ul class="simple">
+<li><p>Hydrogen production («<code class="docutils literal notranslate"><span class="pre">eMarketCorrectionHydProd</span></code>»)</p></li>
+</ul>
+<p><span class="math notranslate nohighlight">\(ec_{nhz} = \widehat{EC}_{nhz} + ec^{\Delta}_{nhz} \quad \forall nhz\)</span></p>
+<ul class="simple">
+<li><p>Hydrogen consumption («<code class="docutils literal notranslate"><span class="pre">eMarketCorrectionHydCharge</span></code>»)</p></li>
+</ul>
+<p><span class="math notranslate nohighlight">\(hp_{neg} = \widehat{HP}_{nhg} + hp^{\Delta}_{nhg} \quad \forall nhg\)</span></p>
+<ul class="simple">
+<li><p>Electricity consumption («<code class="docutils literal notranslate"><span class="pre">eMarketCorrectionEleCharge</span></code>»)</p></li>
+</ul>
+<p><span class="math notranslate nohighlight">\(hc_{nes} = \widehat{HC}_{nhs} + hc^{\Delta}_{nhs} \quad \forall nhs\)</span></p>
+<ul class="simple">
+<li><p>Hydrogen demand («<code class="docutils literal notranslate"><span class="pre">eMarketCorrectionHydDemand</span></code>»)</p></li>
+</ul>
+<p><span class="math notranslate nohighlight">\(hc_{net} = \widehat{HC}_{net} + hc^{\Delta}_{net} \quad \forall net\)</span></p>
+<p>Electricity balance of generation and demand [GW] («<code class="docutils literal notranslate"><span class="pre">eElectricityBalance</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{g\in nd} ep_{neg} - \sum_{es\in nd} ec_{nes} - \sum_{hz\in nd} (ec_{nhz} + ec^{StandBy}_{nhz}) - \sum_{hs\in nd} (ec^{Comp}_{nhs}) + ens_{nnd} + eb_{nnd} - es_{nnd} = ED_{nnd} + \sum_{jc} ef_{nndjc} - \sum_{jc} ef_{njndc} \quad \forall nnd\)</span></p>
+<p>Hydrogen balance of generation and demand [GW] («<code class="docutils literal notranslate"><span class="pre">eHydrogenBalance</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{h\in nd} hp_{nhg} - \sum_{hs\in nd} hc_{nhs} - \sum_{g\in nd} hc_{net} + hns_{nnd} + hb_{nnd} - hs_{nnd} = HD_{nnd} + \sum_{jc} hf_{nndjc} - \sum_{jc} hf_{njndc} \quad \forall nnd\)</span></p>
+<p>Upward and downward operating secondary reserves provided by non-renewable generators, and ESS when charging for each area [GW] («<code class="docutils literal notranslate"><span class="pre">eReserveRequire_Up_SR</span></code>, <code class="docutils literal notranslate"><span class="pre">eReserveRequire_Dw_SR</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg} up^{SR}_{neg} + \sum_{nes} uc^{SR}_{nes} \leq UR^{SR}_{n} \quad \forall n\)</span></p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg} dp^{SR}_{neg} + \sum_{nes} dc^{SR}_{nes} \leq DR^{SR}_{n} \quad \forall n\)</span></p>
+<p>Upward and downward operating tertiary reserves provided by non-renewable generators, and ESS when charging for each area [GW] («<code class="docutils literal notranslate"><span class="pre">eReserveRequire_Up_TR</span></code>, <code class="docutils literal notranslate"><span class="pre">eReserveRequire_Dw_TR</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg} up^{TR}_{neg} + \sum_{nes} uc^{TR}_{nes} \leq UR^{TR}_{n} \quad \forall n\)</span></p>
+<p><span class="math notranslate nohighlight">\(\sum_{neg} dp^{TR}_{neg} + \sum_{nes} dc^{TR}_{nes} \leq DR^{TR}_{n} \quad \forall n\)</span></p>
+<p>operating reserves from ESS can only be provided if enough energy is available for producing [GW] («<code class="docutils literal notranslate"><span class="pre">eReserveUpIfEnergyProd</span></code>, <code class="docutils literal notranslate"><span class="pre">eReserveDwIfEnergyProd</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(URA^{SR}_{n}up^{SR}_{nes} + URA^{TR}_{n}up^{TR}_{nes} \leq \frac{                      esi_{nes}}{DUR_n} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(DRA^{SR}_{n}dp^{SR}_{nes} + DRA^{TR}_{n}dp^{TR}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_n} \quad \forall nes\)</span></p>
+<p>or for storing [GW] («<code class="docutils literal notranslate"><span class="pre">eReserveUpIfEnergyCons</span></code>, <code class="docutils literal notranslate"><span class="pre">eReserveDwIfEnergyCons</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(URA^{SR}_{n}uc^{SR}_{nes} + URA^{TR}_{n}uc^{TR}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_n} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(DRA^{SR}_{n}dc^{SR}_{nes} + DRA^{TR}_{n}dc^{TR}_{nes} \leq \frac{                      esi_{nes}}{DUR_n} \quad \forall nes\)</span></p>
+<p>Maximum and minimum relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the maximum capacity [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxInventory2Comm</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinInventory2Comm</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{esi_{nes}}{\overline{EI}_{nes}}  \leq euc_{nes} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{esi_{nes}}{\underline{EI}_{nes}} \geq euc_{nes} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hsi_{nhs}}{\overline{HI}_{nhs}}  \leq huc_{nhs} \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hsi_{nhs}}{\underline{HI}_{nhs}} \geq huc_{nhs} \quad \forall nhs\)</span></p>
+<p>Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxInflows2Commitment</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinInflows2Commitment</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{eei_{nes}}{EEI_{nes}} \leq euc_{nes} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hei_{nhs}}{HEI_{nhs}} \leq huc_{nhs} \quad \forall nhs\)</span></p>
+<p>ESS energy inventory (only for load levels multiple of 1, 24, 168 h depending on the ESS storage type) [GWh] («<code class="docutils literal notranslate"><span class="pre">eEleInventory</span></code>, <code class="docutils literal notranslate"><span class="pre">eHydInventory</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(esi_{n-\frac{\tau_e}{\nu},es} + \sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (eei_{n'es} - eeo_{n'es} - ep_{n'es} + EF_{es} ec_{n'es}) = esi_{nes} + ess_{nes} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(hsi_{n-\frac{\tau_h}{\nu},hs} + \sum_{n' = n-\frac{\tau_h}{\nu}}^n DUR_{n'} (hei_{n'hs} - heo_{n'hs} - hp_{n'hs} + EF_{hs} hc_{n'hs}) = hsi_{nhs} + hss_{nhs} \quad \forall nhs\)</span></p>
+<p>Energy conversion from energy from electricity to hydrogen and vice versa [p.u.] («<code class="docutils literal notranslate"><span class="pre">eAllEnergy2Ele</span></code>, <code class="docutils literal notranslate"><span class="pre">eAllEnergy2Hyd</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(ep_{neg} = PF_{he} hc_{neg} \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(hp_{nhz} \leq PF1_{ehk} +  PF2_{ehk} gc_{nhz} \quad \forall nhz\)</span></p>
+<p>Relationship between electricity outflows and commitment of the units [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxEleOutflows2Commitment</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinEleOutflows2Commitment</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{eeo_{nes}}{\overline{EEO}_{nes}} \leq euc_{nes} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{eeo_{nes}}{\underline{EEO}_{nes}} \geq euc_{nes} \quad \forall nes\)</span></p>
+<p>Relationship between hydrogen outflows and commitment of the units [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxHydOutflows2Commitment</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinHydOutflows2Commitment</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{heo_{nhs}}{\overline{HEO}_{nhs}} \leq huc_{nhs} \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{heo_{nhs}}{\underline{HEO}_{nhs}} \geq huc_{nhs} \quad \forall nhs\)</span></p>
+<p>ESS electricity outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied [GWh] («<code class="docutils literal notranslate"><span class="pre">eEleEnergyOutflows</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_e}{\rho_e}}^n DUR_{n'} (eeo_{n'es} - EEO_{n'es}) = 0 \quad \forall nes, n \in \rho_e\)</span></p>
+<p>ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied [GWh] («<code class="docutils literal notranslate"><span class="pre">eHydMinEnergyOutflows</span></code>, <code class="docutils literal notranslate"><span class="pre">eHydMaxEnergyOutflows</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \geq 0 \quad \forall nhs, n \in \rho_h\)</span></p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \leq 0 \quad \forall nhs, n \in \rho_h\)</span></p>
+<p>Demand cycle target [GWh] («<code class="docutils literal notranslate"><span class="pre">eHydDemandCycleTarget</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_d}{\nu}}^n DUR_{n'} (hd_{n'nd} - HD_{n'nd}) = 0 \quad \forall nnd, n \in \rho_d\)</span></p>
+<p>Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxEleOutput2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinEleOutput2ndBlock</span></code>»)</p>
+<ul class="simple">
+<li><p>D.A. Tejada-Aranego, S. Lumbreras, P. Sánchez-Martín, and A. Ramos “Which Unit-Commitment Formulation is Best? A Systematic Comparison” IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 <a class="reference external" href="https://doi.org/10.1109/TPWRS.2019.2962024">10.1109/TPWRS.2019.2962024</a></p></li>
+<li><ol class="upperalpha simple" start="3">
+<li><p>Gentile, G. Morales-España, and A. Ramos “A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints” EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. <a class="reference external" href="https://doi.org/10.1007/s13675-016-0066-y">10.1007/s13675-016-0066-y</a></p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="7">
+<li><p>Morales-España, A. Ramos, and J. Garcia-Gonzalez “An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling” IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. <a class="reference external" href="https://doi.org/10.1109/TPWRS.2013.2259601">10.1109/TPWRS.2013.2259601</a></p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="7">
+<li><p>Morales-España, J.M. Latorre, and A. Ramos “Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem” IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. <a class="reference external" href="https://doi.org/10.1109/TPWRS.2013.2251373">10.1109/TPWRS.2013.2251373</a></p></li>
+</ol>
+</li>
+</ul>
+<p><span class="math notranslate nohighlight">\(\frac{ep2b_{net} + up^{SR}_{net} + up^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \leq euc_{net} \quad \forall net\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{ep2b_{net} - dp^{SR}_{net} - dp^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \geq 0         \quad \forall net\)</span></p>
+<p>Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxHydOutput2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinHydOutput2ndBlock</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \leq huc_{nhg} \quad \forall nhg\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \geq 0         \quad \forall nhg\)</span></p>
+<p>Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxEleESSOutput2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinEleESSOutput2ndBlock</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ep2b_{nes} + up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \leq 1 \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{ep2b_{nes} - dp^{SR}_{nes} - dp^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \geq 0 \quad \forall nes\)</span></p>
+<p>Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxHydESSOutput2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinHydESSOutput2ndBlock</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \leq 1 \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \geq 0 \quad \forall nhs\)</span></p>
+<p>Maximum and minimum charge of the second block of an electricity ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxEleESSCharge2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinEleESSCharge2ndBlock</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \geq 0 \quad \forall nes\)</span></p>
+<p>Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxEle2HydCharge2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinEle2HydCharge2ndBlock</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ec2b_{nhz} + dc^{SR}_{nhz} + dc^{TR}_{nhz}}{\overline{EC}_{nhz}} \leq 1 \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{ec2b_{nhz} - uc^{SR}_{nhz} - uc^{TR}_{nhz}}{\overline{EC}_{nhz}} \geq 0 \quad \forall nhz\)</span></p>
+<p>Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxHydESSCharge2ndBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinHydESSCharge2ndBlock</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \geq 0 \quad \forall nhs\)</span></p>
+<p>Incompatibility between charge and discharge of an ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eEleChargingDecision</span></code>, <code class="docutils literal notranslate"><span class="pre">eEleDischargingDecision</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ec_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{ep_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes\)</span></p>
+<p>Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself [p.u.] («<code class="docutils literal notranslate"><span class="pre">eReserveConsChargingDecision_Up</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{uc^{SR}_{nes} + uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes\)</span></p>
+<p>Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself [p.u.] («<code class="docutils literal notranslate"><span class="pre">eReserveProdDischargingDecision_Up</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes\)</span></p>
+<p>Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself [p.u.] («<code class="docutils literal notranslate"><span class="pre">eReserveConsChargingDecision_Dw</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 - esf_{nes} \quad \forall nes\)</span></p>
+<p>Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself [p.u.] («<code class="docutils literal notranslate"><span class="pre">eReserveProdDischargingDecision_Dw</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{dp^{SR}_{nes} + dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes\)</span></p>
+<p>Energy stored for upward operating reserve in consecutive time steps when ESS is consuming [GWh] («<code class="docutils literal notranslate"><span class="pre">eReserveConsUpConsecutiveTime</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} + uc^{TR}_{nes}) \leq \overline{EC}_{nes} - esi_{nes} \quad \forall nes\)</span></p>
+<p>Energy stored for downward operating reserve in consecutive time steps when ESS is consuming [GWh] («<code class="docutils literal notranslate"><span class="pre">eReserveConsDwConsecutiveTime</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} + dc^{TR}_{nes}) \leq esi_{nes} - \underline{EC}_{nes} \quad \forall nes\)</span></p>
+<p>Energy stored for upward operating reserve in consecutive time steps when ESS is producing [GWh] («<code class="docutils literal notranslate"><span class="pre">eReserveProdUpConsecutiveTime</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} + up^{TR}_{nes}) \leq \overline{EP}_{nes} - esi_{nes} \quad \forall nes\)</span></p>
+<p>Energy stored for downward operating reserve in consecutive time steps when ESS is producing [GWh] («<code class="docutils literal notranslate"><span class="pre">eReserveProdDwConsecutiveTime</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} + dp^{TR}_{nes}) \leq esi_{nes} - \underline{EP}_{nes} \quad \forall nes\)</span></p>
+<p>Incompatibility between charge and discharge of a hydrogen ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eHydChargingDecision</span></code>, <code class="docutils literal notranslate"><span class="pre">eHydDischargingDecision</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{hc_{nhs}}{\overline{HC}_{nhs}} \leq hsf_{nhs} \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{hp_{nhs}}{\overline{HP}_{nhs}} \leq 1 - hsf_{nhs} \quad \forall nhs\)</span></p>
+<p>Total generation of an electricity unit (all except the VRE units) [GW] («<code class="docutils literal notranslate"><span class="pre">eEleTotalOutput</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ep_{neg}}{\underline{EP}_{neg}} = euc_{neg} + \frac{ep2b_{neg} + URA^{SR}_{n}up^{SR}_{nes} + URA^{TR}_{n}up^{TR}_{nes} - DRA^{SR}_{n}dp^{SR}_{nes} - DRA^{TR}_{n}dp^{TR}_{nes}}{\underline{EP}_{neg}} \quad \forall neg\)</span></p>
+<p>Total generation of a hydrogen unit [kgH2] («<code class="docutils literal notranslate"><span class="pre">eHydTotalOutput</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{hp_{nhg}}{\underline{HP}_{nhg}} = huc_{nhg} + \frac{hp2b_{nhz}}{\underline{HP}_{nhg}} \quad \forall nh\)</span></p>
+<p>Total charge of an electricity ESS [GW,kgH2] («<code class="docutils literal notranslate"><span class="pre">eEleTotalCharge</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ec_{nes}}{\underline{EC}_{nes}} = 1 + \frac{ec2b_{nes} - URA^{SR}_{n}uc^{SR}_{nes} - URA^{TR}_{n}uc^{TR}_{nes} + DRA^{SR}_{n}dc^{SR}_{nes} + DRA^{TR}_{n}dc^{TR}_{nes}}{\underline{EC}_{nes}} \quad \forall nes\)</span></p>
+<p>Total charge of a hydrogen unit [kgH2] («<code class="docutils literal notranslate"><span class="pre">eHydTotalCharge</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{hc_{nhs}}{\underline{HC}_{nhs}} = 1 + \frac{hc2b_{nhs}}{\underline{EC}_{nhs}} \quad \forall nhs\)</span></p>
+<p>Incompatibility between charge and outflows use of an electricity ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eIncompatibilityEleChargeOutflows</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{eeo_{nes} + ec2b_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes\)</span></p>
+<p>Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eIncompatibilityHydChargeOutflows</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{heo_{nhs} + hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs\)</span></p>
+<p>Logical relation between commitment, startup and shutdown status of a committed electricity unit (all except the VRE units) [p.u.] («<code class="docutils literal notranslate"><span class="pre">eEleCommitmentStartupShutdown</span></code>»)
+Initial commitment of the units is determined by the model based on the merit order loading, including the VRE and ESS units.</p>
+<p><span class="math notranslate nohighlight">\(euc_{neg} - euc_{n-\nu,g} = esu_{neg} - esd_{neg} \quad \forall neg\)</span></p>
+<p>Maximum commitment of an electricity unit (all except the VRE units) [p.u.] («<code class="docutils literal notranslate"><span class="pre">eEleMaxCommitment</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(euc_{neg} \leq sum_{n' = n-\nu-TU_t}^n euc^{max}_{n't} \quad \forall neg\)</span></p>
+<p>Logical relation between commitment, startup and shutdown status of a committed hydrogen unit [p.u.] («<code class="docutils literal notranslate"><span class="pre">eHydCommitmentStartupShutdown</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(huc_{nhg} - huc_{n-\nu,hg} = hsu_{nhg} - hsd_{nhg} \quad \forall nhg\)</span></p>
+<p>Maximum ramp up and ramp down for the second block of a non-renewable (thermal, hydro) electricity unit [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxRampUpEleOutput</span></code>, <code class="docutils literal notranslate"><span class="pre">eMaxRampDwEleOutput</span></code>»)</p>
+<ul class="simple">
+<li><ol class="upperalpha simple" start="16">
+<li><p>Damcı-Kurt, S. Küçükyavuz, D. Rajan, and A. Atamtürk, “A polyhedral study of production ramping,” Math. Program., vol. 158, no. 1–2, pp. 175–205, Jul. 2016. <a class="reference external" href="https://doi.org/10.1007/s10107-015-0919-9">10.1007/s10107-015-0919-9</a></p></li>
+</ol>
+</li>
+</ul>
+<p><span class="math notranslate nohighlight">\(\frac{- ep2b_{n-\nu,g} - dp^{SR}_{n-\nu,g} - dp^{TR}_{n-\nu,g} + ep2b_{neg} + up^{SR}_{neg} + up^{TR}_{neg}}{DUR_n RU_g} \leq   euc_{neg}      - esu_{neg} \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{- ep2b_{n-\nu,g} + up^{SR}_{n-\nu,g} + up^{TR}_{n-\nu,g} + ep2b_{neg} - dp^{SR}_{neg} - dp^{TR}_{neg}}{DUR_n RD_g} \geq - euc_{n-\nu,g} + esd_{neg} \quad \forall neg\)</span></p>
+<p>Maximum ramp down and ramp up for the charge of an electricity ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxRampUpEleCharge</span></code>, <code class="docutils literal notranslate"><span class="pre">eMaxRampDwEleCharge</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{- ec2b_{n-\nu,es} + dc^{SR}_{n-\nu,es} + dc^{TR}_{n-\nu,es} + ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{DUR_n RU_es} \geq - 1 \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{- ec2b_{n-\nu,es} - uc^{SR}_{n-\nu,es} - uc^{TR}_{n-\nu,es} + ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{DUR_n RD_es} \leq   1 \quad \forall nes\)</span></p>
+<p>Maximum ramp up and ramp down for the  second block of a hydrogen unit [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxRampUpHydOutput</span></code>, <code class="docutils literal notranslate"><span class="pre">eMaxRampDwHydOutput</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{- hp2b_{n-\nu,hg} + hp2b_{nhg}}{DUR_n RU_hg} \leq   huc_{nhg}      - hsu_{nhg} \quad \forall nhg\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{- hp2b_{n-\nu,hg} + hp2b_{nhg}}{DUR_n RD_hg} \geq - huc_{n-\nu,hg} + hsd_{nhg} \quad \forall nhg\)</span></p>
+<p>Maximum ramp down and ramp up for the charge of a hydrogen ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxRampUpHydCharge</span></code>, <code class="docutils literal notranslate"><span class="pre">eMaxRampDwHydCharge</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{- hc2b_{n-\nu,hs} + hc2b_{nhs}}{DUR_n RU_hs} \geq - 1 \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{- hc2b_{n-\nu,hs} + hc2b_{nhs}}{DUR_n RD_hs} \leq   1 \quad \forall nhs\)</span></p>
+<p>Maximum ramp up and ramp down for the outflows of a hydrogen ESS [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxRampUpHydOutflows</span></code>, <code class="docutils literal notranslate"><span class="pre">eMaxRampDwHydOutflows</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{- heo_{n-\nu,hs} + heo_{nhs}}{DUR_n RU_hs} \leq   1 \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{- heo_{n-\nu,hs} + heo_{nhs}}{DUR_n RD_hs} \geq - 1 \quad \forall nhs\)</span></p>
+<p>Ramp up and ramp down for the provision of demand to the hydrogen customers [p.u.] («<code class="docutils literal notranslate"><span class="pre">eMaxRampUpHydDemand</span></code>, <code class="docutils literal notranslate"><span class="pre">eMaxRampDwHydDemand</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{- hd_{n-\nu,nd} + hd_{nnd}}{DUR_n RU_nd} \leq   1 \quad \forall nnd\)</span></p>
+<p><span class="math notranslate nohighlight">\(\frac{- hd_{n-\nu,nd} + hd_{nnd}}{DUR_n RD_nd} \geq - 1 \quad \forall nnd\)</span></p>
+<p>Differences between electricity consumption of two consecutive hours [GW] («<code class="docutils literal notranslate"><span class="pre">eEleConsumptionDiff</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(-ec_{n-\nu,es} + ec_{nes} = RC^{+}_{hz} - RC^{-}_{hz}\)</span></p>
+<p>Minimum up time and down time of thermal unit [h] («<code class="docutils literal notranslate"><span class="pre">eMinUpTimeEle</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinDownTimeEle</span></code>»)</p>
+<ul class="simple">
+<li><ol class="upperalpha simple" start="4">
+<li><p>Rajan and S. Takriti, “Minimum up/down polytopes of the unit commitment problem with start-up costs,” IBM, New York, Technical Report RC23628, 2005. <a class="reference external" href="https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf">https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf</a></p></li>
+</ol>
+</li>
+</ul>
+<p><span class="math notranslate nohighlight">\(\sum_{n'=n+\nu-TU_t}^n esu_{n't} \leq     euc_{net} \quad \forall net\)</span></p>
+<p><span class="math notranslate nohighlight">\(\sum_{n'=n+\nu-TD_t}^n esd_{n't} \leq 1 - euc_{net} \quad \forall net\)</span></p>
+<p>Minimum up time and down time of hydrogen unit [h] («<code class="docutils literal notranslate"><span class="pre">eMinUpTimeHyd</span></code>, <code class="docutils literal notranslate"><span class="pre">eMinDownTimeHyd</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\sum_{n'=n+\nu-TU_h}^n hsu_{n'hg} \leq     huc_{nhg} \quad \forall nhg\)</span></p>
+<p><span class="math notranslate nohighlight">\(\sum_{n'=n+\nu-TD_h}^n hsd_{n'hg} \leq 1 - huc_{nhg} \quad \forall nhg\)</span></p>
+<p>Decision variable of the operation of the compressor conditioned by the on/off status variable of itself [GWh] («<code class="docutils literal notranslate"><span class="pre">eCompressorOperStatus</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(ec^{Comp}_{nhs} \geq hp_{nhz}/\overline{HP}_{nhz} \overline{EC}^{comp}_{nhs} - 1e-3 (1 - hcf_{nhs}) \quad \forall nhs\)</span></p>
+<p>Decision variable of the operation of the compressor conditioned by the status of energy of the hydrogen tank [kgH2] («<code class="docutils literal notranslate"><span class="pre">eCompressorOperInventory</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(hsi_{nhs} \leq \underline{HI}_{nhs} + (\overline{HI}_{nhs} - \underline{HI}_{nhs}) hcf_{nhs} \quad \forall nhs\)</span></p>
+<p>StandBy status of the electrolyzer conditioning its electricity consumption [GWh] («<code class="docutils literal notranslate"><span class="pre">eEleStandBy_consumption_UpperBound</span></code>, <code class="docutils literal notranslate"><span class="pre">eEleStandBy_consumption_LowerBound</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} hsf_{nhz} \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(ec^{StandBy}_{nhz} \leq \overline{EC}_{nhz} hsf_{nhz} \quad \forall nhz\)</span></p>
+<p>StandBy status of the electrolyzer conditioning its hydrogen production [GWh] («<code class="docutils literal notranslate"><span class="pre">eHydStandBy_production_UpperBound</span></code>, <code class="docutils literal notranslate"><span class="pre">eHydStandBy_production_LowerBound</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} (1 - hsf_{nhz}) \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(ec^{StandBy}_{nhz} \leq \underline{EC}_{nhz} (1 - hsf_{nhz}) \quad \forall nhz\)</span></p>
+<p>Avoid transition status from off to StandBy of the electrolyzer [p.u.] («<code class="docutils literal notranslate"><span class="pre">eHydAvoidTransitionOff2StandBy</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(hsf_{nhz} \leq huc_{nhz} \quad \forall nhz\)</span></p>
+<p>Second Kirchhoff’s law for the electricity network [kgH2] («<code class="docutils literal notranslate"><span class="pre">eKirchhoff2ndLaw</span></code>»)</p>
+<p><span class="math notranslate nohighlight">\(\frac{ef_{nijc}}{\overline{ENF}_{nijc}} - \frac{\theta_{ni} - \theta_{nj}}{\overline{X}_{nijc}\overline{ENF}_{nijc}} == 0 \quad \forall nijc\)</span></p>
+<p>Bounds on variables [GW, kgH2]</p>
+<p><span class="math notranslate nohighlight">\(0 \leq ep_{neg}                               \leq \overline{EP}_{neg}                              \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\widehat{EP}_{neg} \leq ep^{\Delta}_{neg}   \leq \overline{EP}_{neg} - \widehat{EP}_{neg}         \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq hp_{nhg}   \leq \overline{HP}_{nhg}                                                          \quad \forall nhg\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\widehat{HP}_{nhg} \leq hp^{\Delta}_{nhg}   \leq \overline{HP}_{nhg} - \widehat{HP}_{nhg}          \quad \forall nhg\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec_{nes}  \leq \overline{EC}_{nes}                                                           \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\widehat{EC}_{nes} \leq ec^{\Delta}_{nes}  \leq \overline{EC}_{nes} - \widehat{EC}_{nes}           \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec_{nhz}  \leq \overline{EC}_{nhz}                                                           \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\widehat{EC}_{nhz} \leq ec^{\Delta}_{nhz}  \leq \overline{EC}_{nhz} - \widehat{EC}_{nhz}           \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq hc_{nhs}   \leq \overline{HC}_{nhs}                                                          \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\widehat{HC}_{nhs} \leq hc^{\Delta}_{nhs}  \leq \overline{HC}_{nhs} - \widehat{HC}_{nhs}           \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\widehat{HC}_{net}\leq hc^{\Delta}_{net}  \leq \overline{HC}_{net} -\widehat{HC}_{net}             \quad \forall net\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ep2b_{neg} \leq \overline{EP}_{neg} - \underline{EP}_{neg}                                   \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq hp2b_{nhg} \leq \overline{HP}_{nhg} - \underline{HP}_{nhg}                                   \quad \forall nh\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq eeo_{nes} \leq \max(\overline{EP}_{nes},\overline{EC}_{nes})                                 \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq heo_{nhs} \leq \max(\overline{HP}_{nhs},\overline{HC}_{nhs})                                 \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq up^{SR}_{neg}, dp^{SR}_{neg}  \leq \overline{EP}_{neg} - \underline{EP}_{neg}                \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq up^{TR}_{neg}, dp^{TR}_{neg}  \leq \overline{EP}_{neg} - \underline{EP}_{neg}                \quad \forall neg\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq uc^{SR}_{nes}, dc^{SR}_{nes} \leq \overline{EC}_{nes} - \underline{EC}_{nes}                 \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq uc^{TR}_{nes}, dc^{TR}_{nes} \leq \overline{EC}_{nes} - \underline{EC}_{nes}                 \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec2b_{nes}  \leq \overline{EC}_{nes}                                                         \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq hc2b_{nhs}  \leq \overline{HC}_{nhs}                                                         \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(\underline{EI}_{nes} \leq  esi_{nes}  \leq \overline{EI}_{nes}                                      \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(\underline{HI}_{nhs} \leq  hsi_{nhs}  \leq \overline{HI}_{nhs}                                      \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq  ess_{nes}                                                                                   \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq  hss_{nhs}                                                                                   \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec^{R+}_{nes}, ec^{R-}_{nes} \leq \overline{EC}_{nes}                                        \quad \forall nes\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec^{R+}_{nhz}, ec^{R-}_{nhz} \leq \overline{EC}_{nhz}                                        \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec^{Comp}_{nhs} \leq \overline{EC}_{nhs}                                                     \quad \forall nhs\)</span></p>
+<p><span class="math notranslate nohighlight">\(0 \leq ec^{StandBy}_{nhz} \leq \overline{EC}_{nhz}                                                  \quad \forall nhz\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\overline{ENF}_{nijc} \leq  ef_{nij}  \leq \overline{ENF}_{nijc}                                   \quad \forall nijc\)</span></p>
+<p><span class="math notranslate nohighlight">\(-\overline{HNF}_{nijc} \leq  hf_{nij}  \leq \overline{HNF}_{nijc}                                   \quad \forall nijc\)</span></p>
+</section>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acronyms">Acronyms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices">Indices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constraints"><strong>Constraints</strong></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+<div class="bd-footer-content__inner container">
+
+  <div class="footer-item">
+
+<p class="component-author">
+By EL1XR-dev Team: Erik F. Alvarez
+</p>
+
+  </div>
+
+  <div class="footer-item">
+
+
+  <p class="copyright">
+
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+
+  </p>
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+</div>
+          </footer>
+
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

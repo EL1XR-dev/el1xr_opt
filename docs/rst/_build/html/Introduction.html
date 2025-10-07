@@ -1,0 +1,599 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Overview &#8212;   documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'Introduction';</script>
+    <script src="_static/../custom.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+
+
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="concepts/sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+
+    </div>
+
+
+    <div class="header-article-items__end">
+
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2FIntroduction.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="_sources/Introduction.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+
+
+
+
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+
+    </div>
+
+</div>
+</div>
+
+
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Overview</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hybrid-systems-for-the-energy-transition">Hybrid Systems for the Energy Transition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-features">Key Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs-and-results">Outputs and results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scalability-and-performance">Scalability and performance</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h1>
+<p>The <em>optimized Hybrid Systems for Energy and Market management</em> (<strong>oHySEM</strong>) model is a state-of-the-art Python library designed for the optimization of hybrid renewable energy systems, particularly hybrid virtual power plants (H-VPPs), in short-term electricity markets. Developed with a focus on efficient energy management, <strong>oHySEM</strong> also enables strategic decisions regarding the <strong>location and sizing of new energy assets</strong>, ensuring optimal system design and market participation.</p>
+<p>By integrating renewable energy sources like Solar PV, Wind, and CCGT with hydrogen-based energy storage and battery systems, <strong>oHySEM</strong> allows H-VPP to operate as a unified, flexible entity in various electricity markets. The model helps users maximize operational efficiency, profitability, and the overall performance of hybrid systems by dynamically optimizing energy dispatch, storage, and market bids.</p>
+<a class="reference internal image-reference" href="_images/System.png"><img alt="_images/System.png" class="align-center" src="_images/System.png" style="width: 534.1px; height: 345.09999999999997px;" />
+</a>
+<section id="hybrid-systems-for-the-energy-transition">
+<h2>Hybrid Systems for the Energy Transition<a class="headerlink" href="#hybrid-systems-for-the-energy-transition" title="Link to this heading">#</a></h2>
+<p>As energy systems increasingly incorporate hybrid resources, <strong>oHySEM</strong> plays a pivotal role by enabling users to design, operate, and optimize their hybrid virtual power plants. Whether managing existing assets or planning the <strong>location and sizing of new energy assets</strong>, the model provides essential decision support tools to balance renewable energy generation, hydrogen as a long-term storage solution, and battery systems for short-term energy flexibility.</p>
+<p>The model addresses uncertainties inherent in renewable energy production and market conditions, making it ideal for both operational optimization and strategic asset planning.</p>
+<p><strong>Optimized Scheduling, Operation, and Asset Design</strong></p>
+<p>The <strong>oHySEM</strong> model is highly versatile, designed not only to optimize operational schedules over short-term horizons but also to provide insights into the <strong>optimal location and sizing of new energy assets</strong>. The model supports detailed decision-making with time scopes ranging from 1 to 365 days and high temporal granularity (15-minute to 1-hour intervals).</p>
+<ul class="simple">
+<li><p><strong>Optimal Operation Planning &amp; Scheduling</strong>: Ensure efficient energy resource management in hybrid systems.</p></li>
+<li><p><strong>Integrated Resource Planning (IRP)</strong>: Plan long-term energy strategies integrating multiple energy sources.</p></li>
+<li><p><strong>Market Participation</strong>: Engage in real-time electricity markets and future hydrogen markets.</p></li>
+</ul>
+<p><strong>Tailored Decision Support for Assets and Operations</strong></p>
+<p><strong>oHySEM</strong> allows users to predefine the structure of their H-VPP, including the placement of new assets. It then determines the optimal operating schedules and market participation strategies for existing and planned resources. Key decision variables include:</p>
+<ul class="simple">
+<li><p>Energy production from renewable sources (solar, wind, or CCGT)</p></li>
+<li><p>Hydrogen production, consumption, and storage design</p></li>
+<li><p>Battery energy storage sizing and operational schedules</p></li>
+<li><p>Market bids for energy sales and reserve capacity</p></li>
+<li><p>Optimal sizing and location of new energy assets</p></li>
+</ul>
+<p>This tailored decision support enables energy managers and system operators to make informed choices about not only operations but also the strategic expansion of their H-VPP infrastructure.</p>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Planning and Asset Design</p>
+<ul class="simple">
+<li><p><strong>Long-Term Asset Planning</strong>:
+Support strategic decision-making spanning multiple years to determine the optimal location and sizing of new energy assets such as hydrogen tanks and battery units, ensuring long-term viability and market participation.</p></li>
+<li><p><strong>Mid-Term Asset Optimization</strong>:
+Provide planning within a year to optimize asset usage and adjust system capabilities in response to evolving market conditions and policy changes.</p></li>
+<li><p><strong>Short-Term Operational Planning</strong>:
+Focus on weekly and daily operational adjustments, offering fine-grained temporal resolution (15 minutes to 1 hour) for accurate scheduling and immediate response to system needs.</p></li>
+</ul>
+</li>
+<li><p>Operational Optimization</p>
+<ul class="simple">
+<li><p><strong>Hydrogen and Battery Optimization</strong>:
+Optimize the operation of hydrogen production, storage, and battery energy storage systems (BESS) to maximize system flexibility and overall profitability.</p></li>
+<li><p><strong>Efficient Scheduling</strong>:
+Ensure efficient day-to-day operational scheduling by aligning system operations with energy demands and grid requirements, adapting to market conditions in real-time.</p></li>
+</ul>
+</li>
+<li><p>Market Participation and Profitability</p>
+<ul class="simple">
+<li><p><strong>Comprehensive Market Integration</strong>:
+Participate in multiple markets, including day-ahead, intraday, real-time, and secondary reserve markets, allowing the system to dynamically respond to market needs.</p></li>
+<li><p><strong>Imbalance Settlement</strong>:
+Manage deviations in energy supply and demand, improving market outcomes and ensuring profitability through effective imbalance settlement mechanisms.</p></li>
+<li><p><strong>Optimized Market Bids and Reserve Contributions</strong>:
+Maximize profitability by optimizing bids for market participation and reserve contributions, ensuring the system operates efficiently while contributing to grid stability.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="outputs-and-results">
+<h2>Outputs and results<a class="headerlink" href="#outputs-and-results" title="Link to this heading">#</a></h2>
+<p><strong>oHySEM</strong> generates a comprehensive set of output data in both CSV and graphical formats, enabling users to thoroughly evaluate the design, operation and market participation of their hybrid systems and asset configurations:</p>
+<ol class="arabic simple">
+<li><p>Market participation results</p>
+<ul class="simple">
+<li><p>Optimised bids for day-ahead, intraday and real-time markets</p></li>
+<li><p>Secondary reserve offers (up and down)</p></li>
+<li><p>Real-time dispatch, balancing and imbalance management</p></li>
+<li><p>Financial impact of energy imbalances, helping to assess profitability</p></li>
+</ul>
+</li>
+<li><p>Operational results for hydrogen and battery systems</p>
+<ul class="simple">
+<li><p>Optimisation of hydrogen production, storage and battery use</p></li>
+<li><p>Daily hydrogen consumption plans</p></li>
+<li><p>Imbalance management within hydrogen systems and battery storage</p></li>
+<li><p>Performance metrics to assess the flexibility and efficiency of hybrid systems</p></li>
+</ul>
+</li>
+<li><p>Planning and system design results</p>
+<ul class="simple">
+<li><p>Recommendations for long term location and sizing of new generation, hydrogen and battery storage assets</p></li>
+<li><p>Medium-term adjustments for asset optimisation in response to market dynamics</p></li>
+<li><p>Short-term performance analysis of newly installed assets to ensure operational and market alignment</p></li>
+</ul>
+</li>
+</ol>
+<p>These outputs provide key insights into the operational efficiency, profitability and long-term strategic expansion of H-VPPs.</p>
+</section>
+<section id="scalability-and-performance">
+<h2>Scalability and performance<a class="headerlink" href="#scalability-and-performance" title="Link to this heading">#</a></h2>
+<p><strong>oHySEM</strong> is designed for scalability and flexibility, capable of handling both small and large H-VPPs with different levels of temporal complexity:</p>
+<ul class="simple">
+<li><p>For <strong>small systems with high temporal resolution</strong>, <strong>oHySEM</strong> can efficiently manage fine-grained time steps (e.g. 15 minutes to 1 hour) to optimise detailed operational schedules, market participation and system performance. This ensures that even smaller energy systems can respond dynamically to real-time market signals and grid conditions.</p></li>
+<li><p>For <strong>large systems</strong>, the model remains robust, capable of managing numerous components, assets and market interactions. It can handle high temporal dimensions for detailed short-term analysis, or <strong>reduce temporal resolution</strong> for long-term planning and optimisation, making it adaptable to the scale and complexity of any system.</p></li>
+</ul>
+<p>Using advanced optimisation techniques such as Mixed Integer Linear Programming (MILP), <strong>oHySEM</strong> ensures efficient computation and reliable results regardless of system size or temporal complexity. The model’s ability to balance detail and computational efficiency makes it suitable for a wide range of energy systems, from small distributed plants to large hybrid plants.</p>
+<p>With the ability to analyse both short-term operations and long-term asset placement, <strong>oHySEM</strong> provides reliable, actionable insights for managing and expanding hybrid energy systems over both short and long-term decision horizons.</p>
+<dl class="simple">
+<dt>With <strong>oHySEM</strong>, energy system operators, market participants and researchers can</dt><dd><ul class="simple">
+<li><p>Optimise the operation and market participation of renewable hybrid systems</p></li>
+<li><p>Seamlessly integrate hydrogen and battery storage into their energy portfolio</p></li>
+<li><p>Make informed decisions on the optimal location and sizing of new facilities</p></li>
+</ul>
+</dd>
+</dl>
+<p>Maximise the potential of your hybrid energy systems with <strong>oHySEM</strong> today!</p>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hybrid-systems-for-the-energy-transition">Hybrid Systems for the Energy Transition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-features">Key Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs-and-results">Outputs and results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scalability-and-performance">Scalability and performance</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+<div class="bd-footer-content__inner container">
+
+  <div class="footer-item">
+
+<p class="component-author">
+By EL1XR-dev Team: Erik F. Alvarez
+</p>
+
+  </div>
+
+  <div class="footer-item">
+
+
+  <p class="copyright">
+
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+
+  </p>
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+</div>
+          </footer>
+
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

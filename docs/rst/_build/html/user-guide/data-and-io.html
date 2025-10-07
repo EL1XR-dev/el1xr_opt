@@ -1,0 +1,635 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data &amp; I/O &#8212;   documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/data-and-io';</script>
+    <script src="../_static/../custom.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scenarios &amp; stages" href="scenarios-and-stages.html" />
+    <link rel="prev" title="Project structure" href="project-structure.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+
+
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="project-structure.html">Project structure</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../concepts/sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+
+    </div>
+
+
+    <div class="header-article-items__end">
+
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+
+
+
+
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2Fuser-guide/data-and-io.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+
+
+
+      <li><a href="../_sources/user-guide/data-and-io.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+
+
+
+
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+
+    </div>
+
+</div>
+</div>
+
+
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Data & I/O</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-formats">Data formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csv-file-naming-conventions">CSV File Naming Conventions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loaders">Loaders</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#el1xr_opt.Modules.oM_LoadCase.load_case"><code class="docutils literal notranslate"><span class="pre">load_case()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-el1xr_opt.Modules.oM_OutputData">Writers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#el1xr_opt.Modules.oM_OutputData.saving_rawdata"><code class="docutils literal notranslate"><span class="pre">saving_rawdata()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#el1xr_opt.Modules.oM_OutputData.saving_results"><code class="docutils literal notranslate"><span class="pre">saving_results()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="data-i-o">
+<h1>Data &amp; I/O<a class="headerlink" href="#data-i-o" title="Link to this heading">#</a></h1>
+<section id="data-formats">
+<h2>Data formats<a class="headerlink" href="#data-formats" title="Link to this heading">#</a></h2>
+<p>The model is data-driven, with all inputs defined in a collection of CSV files
+located in a dedicated case directory. These files define the model’s sets (e.g.,
+periods, technologies, nodes) and parameters (e.g., costs, capacities, efficiencies).</p>
+<section id="csv-file-naming-conventions">
+<h3>CSV File Naming Conventions<a class="headerlink" href="#csv-file-naming-conventions" title="Link to this heading">#</a></h3>
+<p>The input CSV files follow a specific naming convention to distinguish between
+different types of data:</p>
+<ul class="simple">
+<li><p><strong>``oM_Dict…``</strong>: Files starting with this prefix are used to define the model’s
+sets and dictionaries. These typically contain lists of technologies, nodes,
+or other categorical data.</p></li>
+<li><p><strong>``oM_Data…``</strong>: Files starting with this prefix contain the numerical data
+for the model’s parameters, such as costs, efficiencies, or time series data.</p></li>
+</ul>
+<p>This convention helps in organizing the input data and is used by the data loading
+functions to correctly process the files.</p>
+</section>
+</section>
+<section id="loaders">
+<h2>Loaders<a class="headerlink" href="#loaders" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="el1xr_opt.Modules.oM_LoadCase.load_case">
+<span class="sig-prename descclassname"><span class="pre">el1xr_opt.Modules.oM_LoadCase.</span></span><span class="sig-name descname"><span class="pre">load_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'highs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rawresults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/el1xr_opt/Modules/oM_LoadCase.html#load_case"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#el1xr_opt.Modules.oM_LoadCase.load_case" title="Link to this definition">#</a></dt>
+<dd><p>Create and validate a load case configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]]</span></p>
+</dd>
+</dl>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>dir (str, optional): Directory where the case is located.</dt><dd><p>Defaults to “../site-packages/el1xr_opt”.</p>
+</dd>
+</dl>
+<p>case (str, optional): Name of the case to load. Defaults to “Grid1”.
+date (datetime or str, optional): Date information.</p>
+<blockquote>
+<div><p>If string, it should follow “%Y-%m-%d %H:%M”.
+Defaults to current datetime (rounded to minute).</p>
+</div></blockquote>
+<p>solver (str, optional): Solver to be used. Defaults to “highs”.
+rawresults (bool, optional): Whether to save raw results. Defaults to False.
+plots (bool, optional): Whether to generate plots. Defaults to False.</p>
+</dd>
+<dt>Returns:</dt><dd><p>dict: A dictionary containing the case configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-el1xr_opt.Modules.oM_OutputData">
+<span id="writers"></span><h2>Writers<a class="headerlink" href="#module-el1xr_opt.Modules.oM_OutputData" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="el1xr_opt.Modules.oM_OutputData.saving_rawdata">
+<span class="sig-prename descclassname"><span class="pre">el1xr_opt.Modules.oM_OutputData.</span></span><span class="sig-name descname"><span class="pre">saving_rawdata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DirName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CaseName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SolverName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optmodel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/el1xr_opt/Modules/oM_OutputData.html#saving_rawdata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#el1xr_opt.Modules.oM_OutputData.saving_rawdata" title="Link to this definition">#</a></dt>
+<dd><p>Save raw optimization model data to CSV files.</p>
+<p>This function iterates through all active variables, parameters, and constraints
+in the optimization model and saves their data to separate CSV files.</p>
+<ul class="simple">
+<li><p>Variables are saved with their values, lower bounds, and upper bounds.</p></li>
+<li><p>Parameters are saved with their values.</p></li>
+<li><p>Constraints are saved with their dual values.</p></li>
+</ul>
+<dl class="simple">
+<dt>Args:</dt><dd><p>DirName (str): The directory where the result files will be saved.
+CaseName (str): The name of the case, used for subdirectory and file naming.
+SolverName (str): The name of the solver used.
+model: The optimization model object.
+optmodel: The concrete optimization model instance.</p>
+</dd>
+<dt>Returns:</dt><dd><p>model: The original optimization model object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="el1xr_opt.Modules.oM_OutputData.saving_results">
+<span class="sig-prename descclassname"><span class="pre">el1xr_opt.Modules.oM_OutputData.</span></span><span class="sig-name descname"><span class="pre">saving_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DirName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CaseName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optmodel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/el1xr_opt/Modules/oM_OutputData.html#saving_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#el1xr_opt.Modules.oM_OutputData.saving_results" title="Link to this definition">#</a></dt>
+<dd><p>Save processed optimization results to CSV files and generate plots.</p>
+<p>This function processes the results from the optimization model to generate
+a series of CSV files and Altair plots for analysis. It covers:</p>
+<ul class="simple">
+<li><p>Total costs (hourly and general)</p></li>
+<li><p>Electricity balance (generation, consumption, flows)</p></li>
+<li><p>Net and original electricity demand</p></li>
+<li><p>State of energy for storage systems</p></li>
+<li><p>Fixed availability of assets</p></li>
+<li><p>A summary of all key output metrics</p></li>
+</ul>
+<p>It also generates Sankey diagrams and duration curves for various metrics.</p>
+<dl>
+<dt>Args:</dt><dd><p>DirName (str): The directory where the result files will be saved.
+CaseName (str): The name of the case, used for subdirectory and file naming.
+Date (str or datetime): The starting date for the results, used to calculate</p>
+<blockquote>
+<div><p>time-series data.</p>
+</div></blockquote>
+<p>model: The optimization model object.
+optmodel: The concrete optimization model instance.</p>
+</dd>
+<dt>Returns:</dt><dd><p>model: The original optimization model object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="project-structure.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Project structure</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="scenarios-and-stages.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Scenarios &amp; stages</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-formats">Data formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csv-file-naming-conventions">CSV File Naming Conventions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loaders">Loaders</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#el1xr_opt.Modules.oM_LoadCase.load_case"><code class="docutils literal notranslate"><span class="pre">load_case()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-el1xr_opt.Modules.oM_OutputData">Writers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#el1xr_opt.Modules.oM_OutputData.saving_rawdata"><code class="docutils literal notranslate"><span class="pre">saving_rawdata()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#el1xr_opt.Modules.oM_OutputData.saving_results"><code class="docutils literal notranslate"><span class="pre">saving_results()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+<div class="bd-footer-content__inner container">
+
+  <div class="footer-item">
+
+<p class="component-author">
+By EL1XR-dev Team: Erik F. Alvarez
+</p>
+
+  </div>
+
+  <div class="footer-item">
+
+
+  <p class="copyright">
+
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+
+  </p>
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+  <div class="footer-item">
+
+  </div>
+
+</div>
+          </footer>
+
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
