@@ -67,31 +67,3 @@ Index
    developer/coding-style
    developer/testing
    developer/changelog
-
-API reference
--------------
-The sections below are rendered automatically from the Python modules in ``src/``.
-If you change the package name, make the same change to the ``:toctree:`` entries
-or to the value of ``automodule``/``autosummary`` directives.
-
-Core package
-~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: api
-   :recursive:
-
-   el1xr_opt.oM_Main
-   el1xr_opt.Modules.oM_InputData
-   el1xr_opt.Modules.oM_ModelFormulation
-   el1xr_opt.Modules.oM_OutputData
-   el1xr_opt.Modules.oM_ProblemSolving
-
-
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
