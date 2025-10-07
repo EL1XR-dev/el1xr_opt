@@ -37,7 +37,7 @@ These are often used in combination:
 *   ``model.psn``: A combined set of ``(period, scenario, timestep)``, representing every unique time point in the model.
 
 ==========================  ===============================================================================  ========================================
-**Index**                   **Description**                                                                  **oM_InputData.py**
+**Symbol**                  **Description**                                                                  **oM_InputData.py**
 --------------------------  -------------------------------------------------------------------------------  ----------------------------------------
 :math:`\periodindex`        Period (e.g., year.)                                                             :code:`model.p`
 :math:`\scenarioindex`      Scenario (e.g., solar generation, spot prices, etc.)                             :code:`model.sc`
@@ -50,17 +50,35 @@ These are often used in combination:
 Spatial Representation
 ----------------------
 
-The spatial dimension defines the physical layout of the energy system.
+The spatial dimension defines the physical layout and regional aggregation of the energy system.
 
-*   ``model.nd``: **Nodes**. Represents distinct locations or buses in the energy network. All assets (generators, demands, storage) are assigned to a node.
-*   ``model.ela``: **Electricity Arcs**. Defines the connections (transmission lines) in the electricity grid, represented as ``(node_from, node_to, circuit_id)``.
-*   ``model.hpa``: **Hydrogen Arcs**. Defines the connections (pipelines) in the hydrogen network.
+Sets
+----
 
-============  =======================================================================================================================
-**Index**     **Description**
-============  =======================================================================================================================
-:math:`nd`    Node or bus bar in the network
-============  =======================================================================================================================
+============  ==============================================================================  =========================================
+**Symbol**    **Description**                                                                 **oM_InputData.py**
+------------  ------------------------------------------------------------------------------  -----------------------------------------
+:math:`\nB`   Node or bus bar in the network                                                  :code:`model.nd`
+:math:`\nC`   Electricity connection (from node, to node, circuit ID)                         :code:`model.cc`
+:math:`\nL`   Electricity arc (transmission line)                                             :code:`model.eln`
+:math:`\nH`   Hydrogen arc (pipeline)                                                         :code:`model.hpn`
+:math:`\nZ`   Zone or region in the network                                                   :code:`model.zn`
+============  ==============================================================================  =========================================
+
+Indices
+~~~~~~~
+
+========================  ==============================================================================  =========================================
+**Symbol**                **Description**                                                                 **oM_InputData.py**
+------------------------  ------------------------------------------------------------------------------  -----------------------------------------
+:math:`\busindex`         Node or bus bar in the network                                                  :code:`nd`
+:math:`\busindexa`        From node of a connection or arc                                                :code:`i`
+:math:`\busindexb`        To node of a connection or arc                                                  :code:`j`
+:math:`\circuitindex`     Circuit ID of a connection                                                      :code:`c`
+:math:`\lineindexa`       From node of a transmission line                                                :code:`i`
+:math:`\lineindexb`       To node of a transmission line                                                  :code:`j`
+:math:`\zoneindex`        Zone or region in the network                                                   :code:`z`
+========================  ==============================================================================  =========================================
 
 Technology and Asset Sets
 -------------------------
