@@ -283,27 +283,15 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq ep_{neg}                               \leq \overline{EP}_{neg}                              \quad \forall neg`
 
-:math:`-\widehat{EP}_{neg} \leq ep^{\Delta}_{neg}   \leq \overline{EP}_{neg} - \widehat{EP}_{neg}         \quad \forall neg`
-
 :math:`0 \leq hp_{nhg}   \leq \overline{HP}_{nhg}                                                          \quad \forall nhg`
-
-:math:`-\widehat{HP}_{nhg} \leq hp^{\Delta}_{nhg}   \leq \overline{HP}_{nhg} - \widehat{HP}_{nhg}          \quad \forall nhg`
 
 :math:`0 \leq ec_{nes}  \leq \overline{EC}_{nes}                                                           \quad \forall nes`
 
-:math:`-\widehat{EC}_{nes} \leq ec^{\Delta}_{nes}  \leq \overline{EC}_{nes} - \widehat{EC}_{nes}           \quad \forall nes`
-
 :math:`0 \leq ec_{nhz}  \leq \overline{EC}_{nhz}                                                           \quad \forall nhz`
-
-:math:`-\widehat{EC}_{nhz} \leq ec^{\Delta}_{nhz}  \leq \overline{EC}_{nhz} - \widehat{EC}_{nhz}           \quad \forall nhz`
 
 :math:`0 \leq hc_{nhs}   \leq \overline{HC}_{nhs}                                                          \quad \forall nhs`
 
-:math:`-\widehat{HC}_{nhs} \leq hc^{\Delta}_{nhs}  \leq \overline{HC}_{nhs} - \widehat{HC}_{nhs}           \quad \forall nhs`
-
 :math:`0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net`
-
-:math:`-\widehat{HC}_{net}\leq hc^{\Delta}_{net}  \leq \overline{HC}_{net} -\widehat{HC}_{net}             \quad \forall net`
 
 :math:`0 \leq ep2b_{neg} \leq \overline{EP}_{neg} - \underline{EP}_{neg}                                   \quad \forall neg`
 
