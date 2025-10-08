@@ -57,20 +57,7 @@ These are the most fundamental constraints, ensuring that at every node (:math:`
 
 Electricity Balance
 ~~~~~~~~~~~~~~~~~~~
-Electricity balance of generation and demand («``eElectricityBalance``»)
-
-.. math::
-
-   \sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} + \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) \\
-   - \sum_{\storageindex \in \nEH_{\busindex}} (\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex})
-   + \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
-   = \sum_{\demandindex \in \nDE_{\busindex}}(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
-   + \sum_{\busindexb,\circuitindex} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   - \sum_{\busindexa,\circuitindex} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
-
+It is represented by («``eElectricityBalance``») as follows:
 
 .. math::
 
@@ -91,9 +78,20 @@ Electricity balance of generation and demand («``eElectricityBalance``»)
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
-Hydrogen balance of generation and demand («``eHydrogenBalance``»)
+It is represented by «``eHydrogenBalance``») as follows:
 
-:math:`\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} + \sum_{\traderindex \in \nRE_{\busindex}}(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) = \sum_{\demandindex \in \nDH_{\busindex}} (\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}) +  \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex} - \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex`
+.. math::
+
+   \begin{align}
+   &\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   - \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
+   &+ \sum_{\traderindex \in \nRE_{\busindex}}(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})\\
+   &= \sum_{\demandindex \in \nDH_{\busindex}} (\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
+   + \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
+   - \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
+   \end{align}
 
 
 2. Asset Operational Constraints
