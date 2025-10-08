@@ -391,16 +391,17 @@ Demand Shifting Balance
 ~~~~~~~~~~~~~~~~~~~~~~~
 Flexible electricity demand shifting balance («``eEleDemandShiftBalance``»)
 
-* If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
+If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
 
-    :math:`\sum_{\timeindex ' = \timeindex-\peledemshiftedsteps_{\demandindex}}^n DUR_{n'} (\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} - \peledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}) = 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
+:math:`\sum_{\timeindex ' = \timeindex-\peledemshiftedsteps_{\demandindex}}^n DUR_{n'} (\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} - \peledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}) = 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
 
 Share of Flexible Demand
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Flexible electricity demand share of total demand («``eEleDemandShifted``»)
 
-* If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
-    :math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} = \peledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
+If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
+
+:math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} = \peledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
 
 Cycle target for demand
 ~~~~~~~~~~~~~~~~~~~~~~~
