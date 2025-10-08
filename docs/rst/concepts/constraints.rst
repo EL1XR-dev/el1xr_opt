@@ -51,7 +51,7 @@ Electricity Balance
 ~~~~~~~~~~~~~~~~~~~
 Electricity balance of generation and demand («``eElectricityBalance``»)
 
-:math:`\sum_{g\in nd} ep_{neg} - \sum_{es\in nd} ec_{nes} - \sum_{hz\in nd} (ec_{nhz} + ec^{StandBy}_{nhz}) - \sum_{hs\in nd} (ec^{Comp}_{nhs}) + ens_{nnd} + eb_{nnd} - es_{nnd} = ED_{nnd} + \sum_{jc} ef_{nndjc} - \sum_{jc} ef_{njndc} \quad \forall nnd`
+:math:`\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \sum_{\genindex \in \nGHE_{nd}} (ec_{nhz} + ec^{StandBy}_{nhz}) - \sum_{hs\in nd} (ec^{Comp}_{nhs}) + ens_{nnd} + eb_{nnd} - es_{nnd} = ED_{nnd} + \sum_{jc} ef_{nndjc} - \sum_{jc} ef_{njndc} \quad \forall nnd`
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
