@@ -61,7 +61,7 @@ It is represented by («``eElectricityBalance``») as follows:
 
 .. math::
 
-   \begin{align}
+   \begin{aligned}
    &\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    - \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
@@ -74,7 +74,7 @@ It is represented by («``eElectricityBalance``») as follows:
    + \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    - \sum_{\busindexa,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
-   \end{align}
+   \end{aligned}
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
@@ -82,7 +82,7 @@ It is represented by «``eHydrogenBalance``») as follows:
 
 .. math::
 
-   \begin{align}
+   \begin{aligned}
    &\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    - \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
@@ -91,7 +91,7 @@ It is represented by «``eHydrogenBalance``») as follows:
    + \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    - \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
-   \end{align}
+   \end{aligned}
 
 2. Asset Operational Constraints
 --------------------------------
