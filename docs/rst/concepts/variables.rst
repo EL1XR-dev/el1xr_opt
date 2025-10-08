@@ -141,7 +141,7 @@ These variables control the physical operation of all assets in the system.
      - ``vHydTotalOutput``
    * - :math:`ep2b_{neg}`
      - Elec. production above min. stable level
-     - GW
+     - kW
      - ``vEleTotalOutput2ndBlock``
    * - :math:`hp2b_{nhg}`
      - Hyd. production above min. stable level
@@ -149,7 +149,7 @@ These variables control the physical operation of all assets in the system.
      - ``vHydTotalOutput2ndBlock``
    * - :math:`ep^{\Delta}_{neg}`
      - Elec. production for market correction
-     - GW
+     - kW
      - ``vEleTotalOutputDelta``
    * - :math:`hp^{\Delta}_{nhg}`
      - Hyd. production for market correction
@@ -169,7 +169,7 @@ These variables control the physical operation of all assets in the system.
      - **Pyomo Component**
    * - :math:`ec_{nes}, ec_{nhz}`
      - Electricity consumption (ESS & electrolyzer)
-     - GW
+     - kW
      - ``vEleTotalCharge``
    * - :math:`hc_{nhs}, hc_{neg}`
      - Hydrogen consumption (ESS & thermal units)
@@ -177,7 +177,7 @@ These variables control the physical operation of all assets in the system.
      - ``vHydTotalCharge``
    * - :math:`ec2b_{nes}, ec2b_{nhz}`
      - Elec. charge above min. stable level
-     - GW
+     - kW
      - ``vEleTotalCharge2ndBlock``
    * - :math:`hc2b_{nhs}, hc2b_{neg}`
      - Hyd. charge above min. stable level
@@ -185,7 +185,7 @@ These variables control the physical operation of all assets in the system.
      - ``vHydTotalCharge2ndBlock``
    * - :math:`ec^{\Delta}_{nes}, ec^{\Delta}_{nhz}`
      - Elec. consumption for market correction
-     - GW
+     - kW
      - ``vEleTotalChargeDelta``
    * - :math:`hc^{\Delta}_{nhs}, hc^{\Delta}_{neg}`
      - Hyd. consumption for market correction
@@ -193,11 +193,11 @@ These variables control the physical operation of all assets in the system.
      - ``vHydTotalChargeDelta``
    * - :math:`ec^{R+}_{nes}, ec^{R+}_{nhz}`
      - Positive ramp of electricity consumption
-     - GW
+     - kW
      - ``vEleTotalChargeRampPos``
    * - :math:`ec^{R-}_{nes}, ec^{R-}_{nhz}`
      - Negative ramp of electricity consumption
-     - GW
+     - kW
      - ``vEleTotalChargeRampNeg``
    * - :math:`ec^{Comp}_{nhs}`
      - Elec. consumption of a compressor
@@ -237,27 +237,27 @@ These variables control the physical operation of all assets in the system.
      - **Pyomo Component**
    * - :math:`esi_{nes}`
      - Stored energy in an elec. ESS (State of Charge)
-     - GWh
+     - kWh
      - ``vEleInventory``
    * - :math:`hsi_{nhs}`
      - Stored energy in a hyd. ESS (State of Charge)
-     - GWh
+     - kWh
      - ``vHydInventory``
    * - :math:`eei_{nes}` / :math:`eeo_{nes}`
      - Inflows/Outflows of an electricity ESS
-     - GWh
+     - kWh
      - ``vEleEnergyInflows``, ``vEleEnergyOutflows``
    * - :math:`hei_{nhs}` / :math:`heo_{nhs}`
      - Inflows/Outflows of a hydrogen ESS
-     - GWh
+     - kWh
      - ``vHydEnergyInflows``, ``vHydEnergyOutflows``
    * - :math:`ess_{nes}`
      - Spilled energy from an electricity ESS
-     - GWh
+     - kWh
      - ``vEleSpillage``
    * - :math:`hss_{nhs}`
      - Spilled energy from a hydrogen ESS
-     - GWh
+     - kWh
      - ``vHydSpillage``
 
 Ancillary Services
@@ -271,22 +271,18 @@ Ancillary Services
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`up^{SR}_{neg}, dp^{SR}_{neg}`
-     - Up/down SR from a producer (gen/ESS)
-     - GW
-     - ``vEleReserveProd_Up_SR``, ``vEleReserveProd_Down_SR``
-   * - :math:`uc^{SR}_{nes}, dc^{SR}_{nes}`
+   * - :math:`rp^{FN}_{neg}, rc^{FN}_{nes}`
+     - FCR from a producer (gen/ESS) or consumer (ESS)
+     - kW
+     - ``vEleReserveFCR_Prod``, ``vEleReserveFCR_Cons``
+   * - :math:`up^{FD}_{neg}, dp^{FD}_{neg}`
+     - Up/down FD from a producer (gen/ESS)
+     - kW
+     - ``vEleReserveProd_Up_FD``, ``vEleReserveProd_Down_FD``
+   * - :math:`uc^{FD}_{nes}, dc^{FD}_{nes}`
      - Up/down SR from a consumer (ESS)
-     - GW
-     - ``vEleReserveCons_Up_SR``, ``vEleReserveCons_Down_SR``
-   * - :math:`up^{TR}_{ωneg}, dp^{TR}_{ωneg}`
-     - Up/down TR from a producer (gen/ESS)
-     - GW
-     - ``vEleReserveProd_Up_TR``, ``vEleReserveProd_Down_TR``
-   * - :math:`uc^{TR}_{ωnes}, dc^{TR}_{ωnes}`
-     - Up/down TR from a consumer (ESS)
-     - GW
-     - ``vEleReserveCons_Up_TR``, ``vEleReserveCons_Down_TR``
+     - kW
+     - ``vEleReserveCons_Up_FD``, ``vEleReserveCons_Down_FD``
 
 Network
 -------
@@ -301,7 +297,7 @@ Network
      - **Pyomo Component**
    * - :math:`ef_{nijc}`
      - Electricity flow on a transmission line
-     - GW
+     - kW
      - ``vEleNetFlow``
    * - :math:`hf_{nijc}`
      - Hydrogen flow in a pipeline

@@ -163,7 +163,7 @@ FCR-N is modeled through the next constraint, which ensure that the provision of
 
 Where
 
-:math:`fnr^{FN}_{neg}` and :math:`fnr^{FN}_{nes}` are the symmetric reserve capacities provided (both directions) by unit :math:`g`, and :math:`e`, and
+:math:`rp^{FN}_{neg}` and :math:`rc^{FN}_{nes}` are the symmetric reserve capacities provided (both directions) by unit :math:`g`, and :math:`e`, and
 
 :math:`FRN_{n}` is the zonl FCR-N capacity required.
 
