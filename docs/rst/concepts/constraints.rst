@@ -7,7 +7,7 @@ The optimization model is governed by a series of constraints that ensure the so
 These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
 
 .. image:: /../img/Market_interaction.png
-   :scale: 50%
+   :scale: 30%
    :align: center
 
 Day-ahead Electricity Market Participation
