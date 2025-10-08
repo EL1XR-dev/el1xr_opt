@@ -389,14 +389,13 @@ For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model,
 
 Demand Shifting Balance
 ~~~~~~~~~~~~~~~~~~~~~~~
-Flexible electricity demand shifting balance if :math:``\peledemflexible_{\eledemindex} == 1.0` and :math:`\peledemshiftedsteps_{\eledemindex} > 0.0` («``eEleDemandShiftBalance``»)
+Flexible electricity demand shifting balance if :math:`\peledemflexible_{\eledemindex} == 1.0` and :math:`\peledemshiftedsteps_{\eledemindex} > 0.0` («``eEleDemandShiftBalance``»)
 
-:math:`\sum_{\timeindex ' = \timeindex-\peledemshiftedsteps_{\eledemindex}}^n DUR_{n'} (\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} - \peledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}) = 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
-
+:math:`\sum_{\timeindex ' = \timeindex-\peledemshiftedsteps_{\demandindex}}^n DUR_{n'} (\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} - \peledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}) = 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
 
 Share of Flexible Demand
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Flexible electricity demand share of total demand if :math:``\peledemflexible_{\eledemindex} == 1.0` and :math:`\peledemshiftedsteps_{\eledemindex} > 0.0` («``eEleDemandShifted``»)
+Flexible electricity demand share of total demand if :math:`\peledemflexible_{\eledemindex} == 1.0` and :math:`\peledemshiftedsteps_{\eledemindex} > 0.0` («``eEleDemandShifted``»)
 
 :math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} = \peledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
 
