@@ -105,7 +105,7 @@ Flexible Demand Balance
 ~~~~~~~~~~~~~~~~~~~~~~~
 *   **eEleDemandShifted**: The actual demand is defined as the original demand profile plus any flexible adjustments.
     .. math::
-       \vEleDemand_{p,s,t,ed} = \pVarMaxDemand_{ed,p,s,t} + \vEleDemFlex_{p,s,t,ed}
+       vEleDemand_{p,s,t,ed} = pVarMaxDemand_{ed,p,s,t} + vEleDemFlex_{p,s,t,ed}
        \quad \forall (p,s,t,ed)
 
 *   **eEleDemandShiftBalance**: This ensures that for a flexible load `ed`, the total energy consumed over a shifting window of `S_ed` steps is conserved. The constraint is applied at the end of each window.
