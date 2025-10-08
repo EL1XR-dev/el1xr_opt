@@ -151,6 +151,36 @@ A set of constraints starting with ``eElePeak...`` identify the highest power pe
 .. math::
    \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
 
+
+Reserve Market Participation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Frequency containment reserves in normal operation (FCR-N)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
+
+:math:`\sum_{neg} fnr^{FN}_{neg} + \sum_{nes} fnr^{FN}_{nes} \leq FRN_{n}`
+
+Where
+
+:math:`fnr^{FN}_{neg}` and :math:`fnr^{FN}_{nes}` are the symmetric reserve capacities provided (both directions) by unit :math:`g`, and :math:`e`, and
+
+:math:`FRN_{n}` is the zonl FCR-N capacity required.
+
+Frequency containment reserves in disturbed operation (FCR-D)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
+
+:math:`\sum_{neg} up^{FD}_{neg} + \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n}`
+
+:math:`\sum_{neg} dp^{FD}_{neg} + \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n}`
+
+Where
+
+:math:`up^{FD}_{neg}` and :math:`dp^{FD}_{neg}` are the upward and downward reserve capacities provided by an unit when it is producing or discharging, respectively, and
+
+:math:`uc^{FD}_{nes}` and :math:`dc^{FD}_{nes}` are the upward and downward reserve capacities provided by an unit when it is consuming or charging, respectively.
+
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
