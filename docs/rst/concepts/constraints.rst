@@ -2,6 +2,146 @@ Constraints
 ===========
 The optimization model is governed by a series of constraints that ensure the solution is physically and economically feasible. These constraints, defined in the ``create_constraints`` function, enforce everything from the laws of physics to the operational limits of individual assets.
 
+1. Market and Commercial Constraints
+------------------------------------
+These constraints model the rules for interacting with external markets.
+
+Day-ahead Market Participation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Participation in the day-ahead electricity market is modeled through the next constraints, which ensure that the amount of energy bought from or sold to the market does not exceed predefined limits for each time step and retailer.
+
+Eletricity bought from the market if :math:`\pelemaxmarketbuy_{\traderindex}>0` («``eEleRetMaxBuy``»)
+
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex`
+
+Eletricity sold to the market if :math:`\pelemaxmarketsell_{\traderindex}>0` («``eEleRetMaxSell``»)
+
+:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex`
+
+Reserve Market Participation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Frequency containment reserves in normal operation (FCR-N)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
+
+:math:`\sum_{neg} rp^{FN}_{neg} + \sum_{nes} rc^{FN}_{nes} \leq R^{FN}_{n} \quad \forall n`
+
+Frequency containment reserves in disturbed operation (FCR-D)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
+
+:math:`\sum_{neg} up^{FD}_{neg} + \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n} \quad \forall n`
+
+:math:`\sum_{neg} dp^{FD}_{neg} + \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n} \quad \forall n`
+
+Operating reserves from energy storage systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Operating reserves from ESS can only be if enought energy is available for discharging
+
+:math:`RA^{FN}_{n}rp^{FN}_{nes} + URA^{FD}_{n}up^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+:math:`RA^{FN}_{n}rp^{FN}_{nes} + DRA^{FD}_{n}dp^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+or for charging
+
+:math:`RA^{FN}_{n}rc^{FN}_{nes} + URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+:math:`RA^{FN}_{n}rc^{FN}_{nes} + DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
+
+:math:`\frac{uc^{SR}_{nes} + uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
+
+Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
+
+:math:`\frac{up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes`
+
+Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
+
+:math:`\frac{dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+
+Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
+
+:math:`\frac{dp^{SR}_{nes} + dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+
+Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} + uc^{TR}_{nes}) \leq \overline{EC}_{nes} - esi_{nes} \quad \forall nes`
+
+Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} + dc^{TR}_{nes}) \leq esi_{nes} - \underline{EC}_{nes} \quad \forall nes`
+
+Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} + up^{TR}_{nes}) \leq \overline{EP}_{nes} - esi_{nes} \quad \forall nes`
+
+Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} + dp^{TR}_{nes}) \leq esi_{nes} - \underline{EP}_{nes} \quad \forall nes`
+
+Second block of a committed electric generator providing reserves
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eMaxEleOutput2ndBlock``, ``eMinEleOutput2ndBlock``»)
+
+* D.A. Tejada-Aranego, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
+
+* C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
+
+* G. Morales-España, A. Ramos, and J. Garcia-Gonzalez "An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling" IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. `10.1109/TPWRS.2013.2259601 <https://doi.org/10.1109/TPWRS.2013.2259601>`_
+
+* G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
+
+:math:`\frac{ep2b_{net} + up^{SR}_{net} + up^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \leq euc_{net} \quad \forall net`
+
+:math:`\frac{ep2b_{net} - dp^{SR}_{net} - dp^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \geq 0         \quad \forall net`
+
+Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
+
+:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \leq huc_{nhg} \quad \forall nhg`
+
+:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \geq 0         \quad \forall nhg`
+
+Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («``eMaxEleESSOutput2ndBlock``, ``eMinEleESSOutput2ndBlock``»)
+
+:math:`\frac{ep2b_{nes} + up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \leq 1 \quad \forall nes`
+
+:math:`\frac{ep2b_{nes} - dp^{SR}_{nes} - dp^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \geq 0 \quad \forall nes`
+
+Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSOutput2ndBlock``, ``eMinHydESSOutput2ndBlock``»)
+
+:math:`\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \leq 1 \quad \forall nhs`
+
+:math:`\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \geq 0 \quad \forall nhs`
+
+Maximum and minimum charge of the second block of an electricity ESS [p.u.] («``eMaxEleESSCharge2ndBlock``, ``eMinEleESSCharge2ndBlock``»)
+
+:math:`\frac{ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes`
+
+:math:`\frac{ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \geq 0 \quad \forall nes`
+
+Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («``eMaxEle2HydCharge2ndBlock``, ``eMinEle2HydCharge2ndBlock``»)
+
+:math:`\frac{ec2b_{nhz} + dc^{SR}_{nhz} + dc^{TR}_{nhz}}{\overline{EC}_{nhz}} \leq 1 \quad \forall nhz`
+
+:math:`\frac{ec2b_{nhz} - uc^{SR}_{nhz} - uc^{TR}_{nhz}}{\overline{EC}_{nhz}} \geq 0 \quad \forall nhz`
+
+Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSCharge2ndBlock``, ``eMinHydESSCharge2ndBlock``»)
+
+:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
+
+:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \geq 0 \quad \forall nhs`
+
+Peak Demand Calculation
+~~~~~~~~~~~~~~~~~~~~~~~
+A set of constraints starting with ``eElePeak...`` identify the highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
+
+.. math::
+   \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
+
 1. Energy Balance
 -----------------
 These are the most fundamental constraints, ensuring that at every node (:math:`\busindexa`) and at every timestep (:math:`\timeindex`), energy supply equals energy demand.
@@ -241,142 +381,6 @@ For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model,
 
 .. math::
    \frac{\veleflow_{\periodindex,\scenarioindex,\timeindex,\text{ni,nf,cc}}}{\text{TTC}_{\text{ni,nf,cc}}} - \frac{\theta_{\periodindex,\scenarioindex,\timeindex,\text{ni}} - \theta_{\periodindex,\scenarioindex,\timeindex,\text{nf}}}{\text{X}_{\text{ni,nf,cc}} \cdot \text{TTC}_{\text{ni,nf,cc}}} \cdot 0.1 = 0
-
-Flow Limits
-~~~~~~~~~~~
-The ``vEleNetFlow`` and ``vHydNetFlow`` variables are bounded by the thermal or physical capacity of the lines and pipelines. This is typically implemented as a variable bound.
-
-5. Market and Commercial Constraints
-------------------------------------
-These constraints model the rules for interacting with external markets.
-
-*   ``eEleRetMaxBuy`` / ``eEleRetMaxSell``: Limit the amount of energy that can be bought from or sold to the market.
-
-    .. math::
-       \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex}
-
-Peak Demand Calculation
-~~~~~~~~~~~~~~~~~~~~~~~
-A set of constraints starting with ``eElePeak...`` identify the highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
-
-.. math::
-   \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
-
-Reserve Market Participation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Frequency containment reserves in normal operation (FCR-N)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
-
-:math:`\sum_{neg} rp^{FN}_{neg} + \sum_{nes} rc^{FN}_{nes} \leq R^{FN}_{n} \quad \forall n`
-
-Frequency containment reserves in disturbed operation (FCR-D)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
-
-:math:`\sum_{neg} up^{FD}_{neg} + \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n} \quad \forall n`
-
-:math:`\sum_{neg} dp^{FD}_{neg} + \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n} \quad \forall n`
-
-Operating reserves from energy storage systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Operating reserves from ESS can only be if enought energy is available for discharging
-
-:math:`RA^{FN}_{n}rp^{FN}_{nes} + URA^{FD}_{n}up^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
-
-:math:`RA^{FN}_{n}rp^{FN}_{nes} + DRA^{FD}_{n}dp^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
-
-or for charging
-
-:math:`RA^{FN}_{n}rc^{FN}_{nes} + URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
-
-:math:`RA^{FN}_{n}rc^{FN}_{nes} + DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
-
-Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
-
-:math:`\frac{uc^{SR}_{nes} + uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
-
-Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
-
-:math:`\frac{up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes`
-
-Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
-
-:math:`\frac{dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
-
-Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
-
-:math:`\frac{dp^{SR}_{nes} + dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
-
-Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
-
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} + uc^{TR}_{nes}) \leq \overline{EC}_{nes} - esi_{nes} \quad \forall nes`
-
-Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
-
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} + dc^{TR}_{nes}) \leq esi_{nes} - \underline{EC}_{nes} \quad \forall nes`
-
-Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
-
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} + up^{TR}_{nes}) \leq \overline{EP}_{nes} - esi_{nes} \quad \forall nes`
-
-Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
-
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} + dp^{TR}_{nes}) \leq esi_{nes} - \underline{EP}_{nes} \quad \forall nes`
-
-Second block of a committed electric generator providing reserves
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eMaxEleOutput2ndBlock``, ``eMinEleOutput2ndBlock``»)
-
-* D.A. Tejada-Aranego, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
-
-* C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
-
-* G. Morales-España, A. Ramos, and J. Garcia-Gonzalez "An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling" IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. `10.1109/TPWRS.2013.2259601 <https://doi.org/10.1109/TPWRS.2013.2259601>`_
-
-* G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
-
-:math:`\frac{ep2b_{net} + up^{SR}_{net} + up^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \leq euc_{net} \quad \forall net`
-
-:math:`\frac{ep2b_{net} - dp^{SR}_{net} - dp^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \geq 0         \quad \forall net`
-
-Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
-
-:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \leq huc_{nhg} \quad \forall nhg`
-
-:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \geq 0         \quad \forall nhg`
-
-Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («``eMaxEleESSOutput2ndBlock``, ``eMinEleESSOutput2ndBlock``»)
-
-:math:`\frac{ep2b_{nes} + up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \leq 1 \quad \forall nes`
-
-:math:`\frac{ep2b_{nes} - dp^{SR}_{nes} - dp^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \geq 0 \quad \forall nes`
-
-Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSOutput2ndBlock``, ``eMinHydESSOutput2ndBlock``»)
-
-:math:`\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \leq 1 \quad \forall nhs`
-
-:math:`\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \geq 0 \quad \forall nhs`
-
-Maximum and minimum charge of the second block of an electricity ESS [p.u.] («``eMaxEleESSCharge2ndBlock``, ``eMinEleESSCharge2ndBlock``»)
-
-:math:`\frac{ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes`
-
-:math:`\frac{ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \geq 0 \quad \forall nes`
-
-Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («``eMaxEle2HydCharge2ndBlock``, ``eMinEle2HydCharge2ndBlock``»)
-
-:math:`\frac{ec2b_{nhz} + dc^{SR}_{nhz} + dc^{TR}_{nhz}}{\overline{EC}_{nhz}} \leq 1 \quad \forall nhz`
-
-:math:`\frac{ec2b_{nhz} - uc^{SR}_{nhz} - uc^{TR}_{nhz}}{\overline{EC}_{nhz}} \geq 0 \quad \forall nhz`
-
-Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSCharge2ndBlock``, ``eMinHydESSCharge2ndBlock``»)
-
-:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
-
-:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \geq 0 \quad \forall nhs`
 
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
