@@ -478,6 +478,8 @@ mathjax3_config = {
             "vhydproduction": r"p^{h}",                         # Hydrogen production
             "vconsumption": r"c",                               # Consumption
             "veleconsumption": r"c^{e}",                        # Electrical consumption
+            "veleconsumptionstandby": r"c^{e,standby}",         # Electrical consumption (standby)
+            "veleconsumptioncompress": r"c^{e,compress}",       # Electrical consumption (compression)
             "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
             "vinventory": r"si",                                # Storage inventory
             "veleinventory": r"si^{e}",                         # Electrical storage inventory

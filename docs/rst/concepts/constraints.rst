@@ -4,7 +4,11 @@ The optimization model is governed by a series of constraints that ensure the so
 
 1. Market and Commercial Constraints
 ------------------------------------
-These constraints model the rules for interacting with external markets.
+These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
+
+.. image:: /../img/Market_interaction.png
+   :scale: 25%
+   :align: center
 
 Day-ahead Electricity Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,7 +55,7 @@ Electricity Balance
 ~~~~~~~~~~~~~~~~~~~
 Electricity balance of generation and demand («``eElectricityBalance``»)
 
-:math:`\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \sum_{\genindex \in \nGHE_{nd}} (ec_{nhz} + ec^{StandBy}_{nhz}) - \sum_{hs\in nd} (ec^{Comp}_{nhs}) + ens_{nnd} + eb_{nnd} - es_{nnd} = ED_{nnd} + \sum_{jc} ef_{nndjc} - \sum_{jc} ef_{njndc} \quad \forall nnd`
+:math:`\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} + \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) - \sum_{\storageindex \in \nEH_{\busindex}} (\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex}) + \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) = \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex} - \sum_{\busindexa,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex`
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
