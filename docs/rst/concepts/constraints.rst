@@ -8,33 +8,16 @@ These are the most fundamental constraints, ensuring that at every node (:math:`
 
 Electricity Balance
 ~~~~~~~~~~~~~~~~~~~
-The core electricity balance equation, ``eEleBalance``, states that the sum of all power generated and imported must equal the sum of all power consumed and exported.
+Electricity balance of generation and demand («``eElectricityBalance``»)
 
-.. math::
-   \begin{aligned}
-   &\sum_{\genindex \in \nGE} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   - \sum_{\storageindex \in \nEE} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGHE} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
-   &- \sum_{(\busindexb,\circuitindex) \in \text{lout}_{\busindex}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   + \sum_{(\busindexa,\circuitindex) \in \text{lin}_{\busindex}} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
-   &+ \sum_{\traderindex \in \nRE} (\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
-   = \sum_{\loadindex \in \nDE} (\veleload_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBE
-   \end{aligned}
+:math:`\sum_{g\in nd} ep_{neg} - \sum_{es\in nd} ec_{nes} - \sum_{hz\in nd} (ec_{nhz} + ec^{StandBy}_{nhz}) - \sum_{hs\in nd} (ec^{Comp}_{nhs}) + ens_{nnd} + eb_{nnd} - es_{nnd} = ED_{nnd} + \sum_{jc} ef_{nndjc} - \sum_{jc} ef_{njndc} \quad \forall nnd`
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
-Similarly, ``eHydBalance`` ensures the conservation of energy for the hydrogen network.
+Hydrogen balance of generation and demand («``eHydrogenBalance``»)
 
-.. math::
-   \begin{aligned}
-   &\sum_{\genindex \in \nGH} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   - \sum_{\storageindex \in \nEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGEH} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
-   &- \sum_{(\busindexb,\circuitindex) \in \text{hout}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   + \sum_{(\busindexa,\circuitindex) \in \text{hin}_{\busindex}} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
-   &+ \sum_{\traderindex \in \nRH} (\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
-   = \sum_{\loadindex \in \nDH} (\vhydload_{\periodindex,\scenarioindex,\timeindex,\loadindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex})  \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex, \busindex \in \nBH
-   \end{aligned}
+:math:`\sum_{h\in nd} hp_{nhg} - \sum_{hs\in nd} hc_{nhs} - \sum_{g\in nd} hc_{net} + hns_{nnd} + hb_{nnd} - hs_{nnd} = HD_{nnd} + \sum_{jc} hf_{nndjc} - \sum_{jc} hf_{njndc} \quad \forall nnd`
+
 
 2. Asset Operational Constraints
 --------------------------------
@@ -42,19 +25,21 @@ These constraints model the physical limitations of generation and storage asset
 
 Output and Charge Limits
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Constraints like ``eEleMaxOutput2ndBlock`` and ``eEleMaxESSCharge2ndBlock`` ensure that generators and storage units operate within their rated power capacities. For a dispatchable generator, the output is limited by its capacity and commitment status.
+Total generation of an electricity unit (all except the VRE units) («``eEleTotalOutput``»)
 
-*   **Max Output (Dispatchable Generator):** ``eEleMaxOutput2ndBlock``
+:math:`\frac{ep_{neg}}{\underline{EP}_{neg}} = euc_{neg} + \frac{ep2b_{neg} + URA^{SR}_{n}up^{SR}_{nes} + URA^{TR}_{n}up^{TR}_{nes} - DRA^{SR}_{n}dp^{SR}_{nes} - DRA^{TR}_{n}dp^{TR}_{nes}}{\underline{EP}_{neg}} \quad \forall neg`
 
-    .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}-\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vshutdownbin_{\periodindex,\scenarioindex,\timeindex+1,\genindex}
+Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
+:math:`\frac{hp_{nhg}}{\underline{HP}_{nhg}} = huc_{nhg} + \frac{hp2b_{nhz}}{\underline{HP}_{nhg}} \quad \forall nh`
 
+Total charge of an electricity ESS («``eEleTotalCharge``»)
 
-*   **Max Charge (Storage):** ``eEleMaxESSCharge2ndBlock``
+:math:`\frac{ec_{nes}}{\underline{EC}_{nes}} = 1 + \frac{ec2b_{nes} - URA^{SR}_{n}uc^{SR}_{nes} - URA^{TR}_{n}uc^{TR}_{nes} + DRA^{SR}_{n}dc^{SR}_{nes} + DRA^{TR}_{n}dc^{TR}_{nes}}{\underline{EC}_{nes}} \quad \forall nes`
 
-    .. math::
-       \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}-\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+Total charge of a hydrogen unit («``eHydTotalCharge``»)
+
+:math:`\frac{hc_{nhs}}{\underline{HC}_{nhs}} = 1 + \frac{hc2b_{nhs}}{\underline{EC}_{nhs}} \quad \forall nhs`
 
 Energy Conversion
 ~~~~~~~~~~~~~~~~~
@@ -68,36 +53,102 @@ Ramping Limits
 ~~~~~~~~~~~~~~
 A series of constraints limit how quickly the output or charging rate of an asset can change. For example, ``eEleMaxRampUpOutput`` restricts the increase in a generator's output between consecutive timesteps.
 
-*   **Ramp-Up:** ``eEleMaxRampUpOutput``
+Maximum ramp up and ramp down for the second block of a non-renewable (thermal, hydro) electricity unit («``eMaxRampUpEleOutput``, ``eMaxRampDwEleOutput``»)
 
-    .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex-1,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \cdot \prampuprate_{\genindex}} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+* P. Damcı-Kurt, S. Küçükyavuz, D. Rajan, and A. Atamtürk, “A polyhedral study of production ramping,” Math. Program., vol. 158, no. 1–2, pp. 175–205, Jul. 2016. `10.1007/s10107-015-0919-9 <https://doi.org/10.1007/s10107-015-0919-9>`_
 
-*   **Ramp-Down:** ``eEleMaxRampDwOutput``
+:math:`\frac{- ep2b_{n-\nu,g} - dp^{SR}_{n-\nu,g} - dp^{TR}_{n-\nu,g} + ep2b_{neg} + up^{SR}_{neg} + up^{TR}_{neg}}{DUR_n RU_g} \leq   euc_{neg}      - esu_{neg} \quad \forall neg`
 
-    .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex-1,\genindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \cdot \prampdwrate_{\genindex}} \ge -\vcommitbin_{\periodindex,\scenarioindex,\timeindex-1,\genindex} + \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+:math:`\frac{- ep2b_{n-\nu,g} + up^{SR}_{n-\nu,g} + up^{TR}_{n-\nu,g} + ep2b_{neg} - dp^{SR}_{neg} - dp^{TR}_{neg}}{DUR_n RD_g} \geq - euc_{n-\nu,g} + esd_{neg} \quad \forall neg`
+
+Maximum ramp down and ramp up for the charge of an electricity ESS («``eMaxRampUpEleCharge``, ``eMaxRampDwEleCharge``»)
+
+:math:`\frac{- ec2b_{n-\nu,es} + dc^{SR}_{n-\nu,es} + dc^{TR}_{n-\nu,es} + ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{DUR_n RU_es} \geq - 1 \quad \forall nes`
+
+:math:`\frac{- ec2b_{n-\nu,es} - uc^{SR}_{n-\nu,es} - uc^{TR}_{n-\nu,es} + ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{DUR_n RD_es} \leq   1 \quad \forall nes`
+
+Maximum ramp up and ramp down for the  second block of a hydrogen unit («``eMaxRampUpHydOutput``, ``eMaxRampDwHydOutput``»)
+
+:math:`\frac{- hp2b_{n-\nu,hg} + hp2b_{nhg}}{DUR_n RU_hg} \leq   huc_{nhg}      - hsu_{nhg} \quad \forall nhg`
+
+:math:`\frac{- hp2b_{n-\nu,hg} + hp2b_{nhg}}{DUR_n RD_hg} \geq - huc_{n-\nu,hg} + hsd_{nhg} \quad \forall nhg`
+
+Maximum ramp down and ramp up for the charge of a hydrogen ESS («``eMaxRampUpHydCharge``, ``eMaxRampDwHydCharge``»)
+
+:math:`\frac{- hc2b_{n-\nu,hs} + hc2b_{nhs}}{DUR_n RU_hs} \geq - 1 \quad \forall nhs`
+
+:math:`\frac{- hc2b_{n-\nu,hs} + hc2b_{nhs}}{DUR_n RD_hs} \leq   1 \quad \forall nhs`
+
+Maximum ramp up and ramp down for the outflows of a hydrogen ESS («``eMaxRampUpHydOutflows``, ``eMaxRampDwHydOutflows``»)
+
+:math:`\frac{- heo_{n-\nu,hs} + heo_{nhs}}{DUR_n RU_hs} \leq   1 \quad \forall nhs`
+
+:math:`\frac{- heo_{n-\nu,hs} + heo_{nhs}}{DUR_n RD_hs} \geq - 1 \quad \forall nhs`
+
+Ramp up and ramp down for the provision of demand to the hydrogen customers («``eMaxRampUpHydDemand``, ``eMaxRampDwHydDemand``»)
+
+:math:`\frac{- hd_{n-\nu,nd} + hd_{nnd}}{DUR_n RU_nd} \leq   1 \quad \forall nnd`
+
+:math:`\frac{- hd_{n-\nu,nd} + hd_{nnd}}{DUR_n RD_nd} \geq - 1 \quad \forall nnd`
+
+Differences between electricity consumption of two consecutive hours [GW] («``eEleConsumptionDiff``»)
+
+:math:`-ec_{n-\nu,es} + ec_{nes} = RC^{+}_{hz} - RC^{-}_{hz}`
 
 Unit Commitment Logic
 ~~~~~~~~~~~~~~~~~~~~~
 For dispatchable assets, these constraints model the on/off decisions.
 
-*   **Commitment State Change:** ``eEleCommitmentStartupShutdown`` links the commitment status of a unit (:math:`\vcommitbin`) to its start-up (:math:`\vstartupbin`) and shut-down (:math:`\vshutdownbin`) decisions.
+Logical relation between commitment, startup and shutdown status of a committed electricity unit (all except the VRE units) [p.u.] («``eEleCommitmentStartupShutdown``»)
+Initial commitment of the units is determined by the model based on the merit order loading, including the VRE and ESS units.
 
-    .. math::
-       \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vcommitbin_{\periodindex,\scenarioindex,\timeindex-1,\genindex} = \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+:math:`euc_{neg} - euc_{n-\nu,g} = esu_{neg} - esd_{neg} \quad \forall neg`
 
-*   **Minimum Up/Down Time:** ``eEleMinUpTime`` and ``eEleMinDownTime`` enforce that once a unit is turned on (or off), it must remain in that state for a minimum number of hours.
+Maximum commitment of an electricity unit (all except the VRE units) [p.u.] («``eEleMaxCommitment``»)
 
-    *   ``eEleMinUpTime``:
+:math:`euc_{neg} \leq sum_{n' = n-\nu-TU_t}^n euc^{max}_{n't} \quad \forall neg`
 
-        .. math::
-           \sum_{\timeindex '=\timeindex-\puptime_{\genindex}}^{\timeindex} \vstartupbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \le \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+Logical relation between commitment, startup and shutdown status of a committed hydrogen unit [p.u.] («``eHydCommitmentStartupShutdown``»)
 
-    *   ``eEleMinDownTime``:
+:math:`huc_{nhg} - huc_{n-\nu,hg} = hsu_{nhg} - hsd_{nhg} \quad \forall nhg`
 
-        .. math::
-           \sum_{\timeindex '=\timeindex-\pdwtime_{\genindex}}^{\timeindex} \vshutdownbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \le 1 - \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+Minimum up time and down time of thermal unit [h] («``eMinUpTimeEle``, ``eMinDownTimeEle``»)
+
+- D. Rajan and S. Takriti, “Minimum up/down polytopes of the unit commitment problem with start-up costs,” IBM, New York, Technical Report RC23628, 2005. https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf
+
+:math:`\sum_{n'=n+\nu-TU_t}^n esu_{n't} \leq     euc_{net} \quad \forall net`
+
+:math:`\sum_{n'=n+\nu-TD_t}^n esd_{n't} \leq 1 - euc_{net} \quad \forall net`
+
+Minimum up time and down time of hydrogen unit [h] («``eMinUpTimeHyd``, ``eMinDownTimeHyd``»)
+
+:math:`\sum_{n'=n+\nu-TU_h}^n hsu_{n'hg} \leq     huc_{nhg} \quad \forall nhg`
+
+:math:`\sum_{n'=n+\nu-TD_h}^n hsd_{n'hg} \leq 1 - huc_{nhg} \quad \forall nhg`
+
+Decision variable of the operation of the compressor conditioned by the on/off status variable of itself [GWh] («``eCompressorOperStatus``»)
+
+:math:`ec^{Comp}_{nhs} \geq hp_{nhz}/\overline{HP}_{nhz} \overline{EC}^{comp}_{nhs} - 1e-3 (1 - hcf_{nhs}) \quad \forall nhs`
+
+Decision variable of the operation of the compressor conditioned by the status of energy of the hydrogen tank [kgH2] («``eCompressorOperInventory``»)
+
+:math:`hsi_{nhs} \leq \underline{HI}_{nhs} + (\overline{HI}_{nhs} - \underline{HI}_{nhs}) hcf_{nhs} \quad \forall nhs`
+
+StandBy status of the electrolyzer conditioning its electricity consumption («``eEleStandBy_consumption_UpperBound``, ``eEleStandBy_consumption_LowerBound``»)
+
+:math:`ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} hsf_{nhz} \quad \forall nhz`
+
+:math:`ec^{StandBy}_{nhz} \leq \overline{EC}_{nhz} hsf_{nhz} \quad \forall nhz`
+
+StandBy status of the electrolyzer conditioning its hydrogen production («``eHydStandBy_production_UpperBound``, ``eHydStandBy_production_LowerBound``»)
+
+:math:`ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} (1 - hsf_{nhz}) \quad \forall nhz`
+
+:math:`ec^{StandBy}_{nhz} \leq \underline{EC}_{nhz} (1 - hsf_{nhz}) \quad \forall nhz`
+
+Avoid transition status from off to StandBy of the electrolyzer («``eHydAvoidTransitionOff2StandBy``»)
+
+:math:`hsf_{nhz} \leq huc_{nhz} \quad \forall nhz`
 
 3. Energy Storage Dynamics
 --------------------------
@@ -107,13 +158,6 @@ Inventory  Balance (State-of-Charge)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electricity and ``eHydInventory`` for hydrogen, tracks the stored energy level over time.
 
-.. math::
-   \begin{aligned}
-   \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} = &\veleinventory_{\periodindex,\scenarioindex,\timeindex-1,\storageindex} \\
-   &+ \ptimestepduration \cdot (\eta_{\text{charge}} \cdot \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \frac{1}{\eta_{\text{discharge}}} \cdot \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \\
-   &+ \ptimestepduration \cdot (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}) - \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   \end{aligned}
-
 :math:`esi_{n-\frac{\tau_e}{\nu},es} + \sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (eei_{n'es} - eeo_{n'es} - ep_{n'es} + EF_{es} ec_{n'es}) = esi_{nes} + ess_{nes} \quad \forall nes`
 
 :math:`hsi_{n-\frac{\tau_h}{\nu},hs} + \sum_{n' = n-\frac{\tau_h}{\nu}}^n DUR_{n'} (hei_{n'hs} - heo_{n'hs} - hp_{n'hs} + EF_{hs} hc_{n'hs}) = hsi_{nhs} + hss_{nhs} \quad \forall nhs`
@@ -122,15 +166,17 @@ Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``eIncompatibilityEleChargeOutflows`` and related constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\velestoroperatbin`).
 
-*   ``eEleChargingDecision``:
+Electricity Storage Charge/Discharge Incompatibility
 
-    .. math::
-       \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\storageindex}} \le \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+:math:`\frac{ec_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
 
-*   ``eEleDischargingDecision``:
+:math:`\frac{ep_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
 
-    .. math::
-       \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\storageindex}} \le 1 - \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+Hydrogen Storage Charge/Discharge Incompatibility
+
+:math:`\frac{hc_{nhs}}{\overline{HC}_{nhs}} \leq hsf_{nhs} \quad \forall nhs`
+
+:math:`\frac{hp_{nhs}}{\overline{HP}_{nhs}} \leq 1 - hsf_{nhs} \quad \forall nhs`
 
 Maximum and Minimum Relative Inventory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -177,6 +223,14 @@ ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 2
 
 :math:`\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \leq 0 \quad \forall nhs, n \in \rho_h`
 
+Incompatibility between charge and outflows use of an electricity ESS [p.u.] («``eIncompatibilityEleChargeOutflows``»)
+
+:math:`\frac{eeo_{nes} + ec2b_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes`
+
+Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eIncompatibilityHydChargeOutflows``»)
+
+:math:`\frac{heo_{nhs} + hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
+
 4. Network Constraints
 ----------------------
 These constraints model the physics and limits of the energy transmission and distribution networks.
@@ -208,7 +262,6 @@ A set of constraints starting with ``eElePeak...`` identify the highest power pe
 .. math::
    \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
 
-
 Reserve Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -239,6 +292,91 @@ or for charging
 :math:`RA^{FN}_{n}rc^{FN}_{nes} + URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
 
 :math:`RA^{FN}_{n}rc^{FN}_{nes} + DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
+
+:math:`\frac{uc^{SR}_{nes} + uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
+
+Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
+
+:math:`\frac{up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes`
+
+Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
+
+:math:`\frac{dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+
+Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
+
+:math:`\frac{dp^{SR}_{nes} + dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+
+Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} + uc^{TR}_{nes}) \leq \overline{EC}_{nes} - esi_{nes} \quad \forall nes`
+
+Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} + dc^{TR}_{nes}) \leq esi_{nes} - \underline{EC}_{nes} \quad \forall nes`
+
+Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} + up^{TR}_{nes}) \leq \overline{EP}_{nes} - esi_{nes} \quad \forall nes`
+
+Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} + dp^{TR}_{nes}) \leq esi_{nes} - \underline{EP}_{nes} \quad \forall nes`
+
+Second block of a committed electric generator providing reserves
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eMaxEleOutput2ndBlock``, ``eMinEleOutput2ndBlock``»)
+
+* D.A. Tejada-Aranego, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
+
+* C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
+
+* G. Morales-España, A. Ramos, and J. Garcia-Gonzalez "An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling" IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. `10.1109/TPWRS.2013.2259601 <https://doi.org/10.1109/TPWRS.2013.2259601>`_
+
+* G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
+
+:math:`\frac{ep2b_{net} + up^{SR}_{net} + up^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \leq euc_{net} \quad \forall net`
+
+:math:`\frac{ep2b_{net} - dp^{SR}_{net} - dp^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \geq 0         \quad \forall net`
+
+Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
+
+:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \leq huc_{nhg} \quad \forall nhg`
+
+:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \geq 0         \quad \forall nhg`
+
+Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («``eMaxEleESSOutput2ndBlock``, ``eMinEleESSOutput2ndBlock``»)
+
+:math:`\frac{ep2b_{nes} + up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \leq 1 \quad \forall nes`
+
+:math:`\frac{ep2b_{nes} - dp^{SR}_{nes} - dp^{TR}_{nes}}{\overline{EP}_{nes} - \underline{EP}_{nes}} \geq 0 \quad \forall nes`
+
+Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSOutput2ndBlock``, ``eMinHydESSOutput2ndBlock``»)
+
+:math:`\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \leq 1 \quad \forall nhs`
+
+:math:`\frac{hp2b_{nhs}}{\overline{HP}_{nhs} - \underline{HP}_{nhs}} \geq 0 \quad \forall nhs`
+
+Maximum and minimum charge of the second block of an electricity ESS [p.u.] («``eMaxEleESSCharge2ndBlock``, ``eMinEleESSCharge2ndBlock``»)
+
+:math:`\frac{ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes`
+
+:math:`\frac{ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \geq 0 \quad \forall nes`
+
+Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («``eMaxEle2HydCharge2ndBlock``, ``eMinEle2HydCharge2ndBlock``»)
+
+:math:`\frac{ec2b_{nhz} + dc^{SR}_{nhz} + dc^{TR}_{nhz}}{\overline{EC}_{nhz}} \leq 1 \quad \forall nhz`
+
+:math:`\frac{ec2b_{nhz} - uc^{SR}_{nhz} - uc^{TR}_{nhz}}{\overline{EC}_{nhz}} \geq 0 \quad \forall nhz`
+
+Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSCharge2ndBlock``, ``eMinHydESSCharge2ndBlock``»)
+
+:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
+
+:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \geq 0 \quad \forall nhs`
 
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
