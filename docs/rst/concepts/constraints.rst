@@ -159,27 +159,29 @@ Frequency containment reserves in normal operation (FCR-N)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{neg} fnr^{FN}_{neg} + \sum_{nes} fnr^{FN}_{nes} \leq FRN_{n}`
-
-Where
-
-:math:`rp^{FN}_{neg}` and :math:`rc^{FN}_{nes}` are the symmetric reserve capacities provided (both directions) by unit :math:`g`, and :math:`e`, and
-
-:math:`FRN_{n}` is the zonl FCR-N capacity required.
+:math:`\sum_{neg} rp^{FN}_{neg} + \sum_{nes} rc^{FN}_{nes} \leq R^{FN}_{n} \quad \forall n`
 
 Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{neg} up^{FD}_{neg} + \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n}`
+:math:`\sum_{neg} up^{FD}_{neg} + \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n} \quad \forall n`
 
-:math:`\sum_{neg} dp^{FD}_{neg} + \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n}`
+:math:`\sum_{neg} dp^{FD}_{neg} + \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n} \quad \forall n`
 
-Where
+Operating reserves from energy storage systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Operating reserves from ESS can only be if enought energy is available for discharging
 
-:math:`up^{FD}_{neg}` and :math:`dp^{FD}_{neg}` are the upward and downward reserve capacities provided by an unit when it is producing or discharging, respectively, and
+:math:`RA^{FN}_{n}rp^{FN}_{nes} + URA^{FD}_{n}up^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
 
-:math:`uc^{FD}_{nes}` and :math:`dc^{FD}_{nes}` are the upward and downward reserve capacities provided by an unit when it is consuming or charging, respectively.
+:math:`RA^{FN}_{n}rp^{FN}_{nes} + DRA^{FD}_{n}dp^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+or for charging
+
+:math:`RA^{FN}_{n}rc^{FN}_{nes} + URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
+
+:math:`RA^{FN}_{n}rc^{FN}_{nes} + DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
 
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
