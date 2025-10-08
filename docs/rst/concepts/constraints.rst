@@ -56,6 +56,14 @@ Constraints like ``eEleMaxOutput2ndBlock`` and ``eEleMaxESSCharge2ndBlock`` ensu
     .. math::
        \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}-\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
+Energy Conversion
+~~~~~~~~~~~~~~~~~
+Energy conversion from energy from electricity to hydrogen and vice versa («``eAllEnergy2Ele``, ``eAllEnergy2Hyd``»)
+
+:math:`ep_{neg} = PF_{he} hc_{neg} \quad \forall neg`
+
+:math:`hp_{nhz} \leq PF1_{ehk} +  PF2_{ehk} gc_{nhz} \quad \forall nhz`
+
 Ramping Limits
 ~~~~~~~~~~~~~~
 A series of constraints limit how quickly the output or charging rate of an asset can change. For example, ``eEleMaxRampUpOutput`` restricts the increase in a generator's output between consecutive timesteps.
@@ -95,8 +103,8 @@ For dispatchable assets, these constraints model the on/off decisions.
 --------------------------
 These constraints specifically model the behavior of energy storage systems.
 
-State-of-Charge Balance
-~~~~~~~~~~~~~~~~~~~~~~~
+Inventory  Balance (State-of-Charge)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electricity and ``eHydInventory`` for hydrogen, tracks the stored energy level over time.
 
 .. math::
@@ -105,6 +113,10 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
    &+ \ptimestepduration \cdot (\eta_{\text{charge}} \cdot \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \frac{1}{\eta_{\text{discharge}}} \cdot \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \\
    &+ \ptimestepduration \cdot (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}) - \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \end{aligned}
+
+:math:`esi_{n-\frac{\tau_e}{\nu},es} + \sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (eei_{n'es} - eeo_{n'es} - ep_{n'es} + EF_{es} ec_{n'es}) = esi_{nes} + ess_{nes} \quad \forall nes`
+
+:math:`hsi_{n-\frac{\tau_h}{\nu},hs} + \sum_{n' = n-\frac{\tau_h}{\nu}}^n DUR_{n'} (hei_{n'hs} - heo_{n'hs} - hp_{n'hs} + EF_{hs} hc_{n'hs}) = hsi_{nhs} + hss_{nhs} \quad \forall nhs`
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,6 +131,51 @@ The ``eIncompatibilityEleChargeOutflows`` and related constraints prevent a stor
 
     .. math::
        \frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\storageindex}} \le 1 - \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+
+Maximum and Minimum Relative Inventory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the maximum capacity («``eMaxInventory2Comm``, ``eMinInventory2Comm``»)
+
+:math:`\frac{esi_{nes}}{\overline{EI}_{nes}}  \leq euc_{nes} \quad \forall nes`
+
+:math:`\frac{esi_{nes}}{\underline{EI}_{nes}} \geq euc_{nes} \quad \forall nes`
+
+:math:`\frac{hsi_{nhs}}{\overline{HI}_{nhs}}  \leq huc_{nhs} \quad \forall nhs`
+
+:math:`\frac{hsi_{nhs}}{\underline{HI}_{nhs}} \geq huc_{nhs} \quad \forall nhs`
+
+
+Energy Inflows
+~~~~~~~~~~~~~~
+Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data («``eMaxInflows2Commitment``, ``eMinInflows2Commitment``»)
+
+:math:`\frac{eei_{nes}}{EEI_{nes}} \leq euc_{nes} \quad \forall nes`
+
+:math:`\frac{hei_{nhs}}{HEI_{nhs}} \leq huc_{nhs} \quad \forall nhs`
+
+Energy Outflows
+~~~~~~~~~~~~~~~
+Relationship between electricity outflows and commitment of the units («``eMaxEleOutflows2Commitment``, ``eMinEleOutflows2Commitment``»)
+
+:math:`\frac{eeo_{nes}}{\overline{EEO}_{nes}} \leq euc_{nes} \quad \forall nes`
+
+:math:`\frac{eeo_{nes}}{\underline{EEO}_{nes}} \geq euc_{nes} \quad \forall nes`
+
+Relationship between hydrogen outflows and commitment of the units («``eMaxHydOutflows2Commitment``, ``eMinHydOutflows2Commitment``»)
+
+:math:`\frac{heo_{nhs}}{\overline{HEO}_{nhs}} \leq huc_{nhs} \quad \forall nhs`
+
+:math:`\frac{heo_{nhs}}{\underline{HEO}_{nhs}} \geq huc_{nhs} \quad \forall nhs`
+
+ESS electricity outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eEleEnergyOutflows``»)
+
+:math:`\sum_{n' = n-\frac{\tau_e}{\rho_e}}^n DUR_{n'} (eeo_{n'es} - EEO_{n'es}) = 0 \quad \forall nes, n \in \rho_e`
+
+ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eHydMinEnergyOutflows``, ``eHydMaxEnergyOutflows``»)
+
+:math:`\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \geq 0 \quad \forall nhs, n \in \rho_h`
+
+:math:`\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \leq 0 \quad \forall nhs, n \in \rho_h`
 
 4. Network Constraints
 ----------------------
@@ -188,6 +245,12 @@ or for charging
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
 *   **Unserved Energy**: The model allows for unserved energy through slack variables (``vENS``, ``vHNS``). The high penalty cost in the objective function acts as a soft constraint to meet demand.
 
+Demand Response for Electricity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Hydrogen demand cycle target («``eHydDemandCycleTarget``»)
+
+:math:`\sum_{n' = n-\frac{\tau_d}{\nu}}^n DUR_{n'} (hd_{n'nd} - HD_{n'nd}) = 0 \quad \forall nnd, n \in \rho_d`
+
 7. Electric Vehicle (EV) Modeling
 ---------------------------------
 Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). They are subject to standard storage dynamics but with unique constraints and economic drivers that reflect their dual role as both a transportation tool and a potential grid asset.
@@ -212,3 +275,72 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
     *   **Capacity Tariffs**: The ``vTotalElePeakCost`` component of the objective function penalizes high monthly power peaks from the grid.
 
     Since EV charging (``vEleTotalCharge``) increases the total load at a node, the model will naturally schedule it during hours when the combination of volumetric and potential capacity costs is lowest. This interaction between the nodal balance, the cost components, and the objective function creates an economically rational "smart charging" behavior.
+
+
+8. Bounds on Variables
+-----------------------
+To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
+
+:math:`0 \leq ep_{neg}                               \leq \overline{EP}_{neg}                              \quad \forall neg`
+
+:math:`-\widehat{EP}_{neg} \leq ep^{\Delta}_{neg}   \leq \overline{EP}_{neg} - \widehat{EP}_{neg}         \quad \forall neg`
+
+:math:`0 \leq hp_{nhg}   \leq \overline{HP}_{nhg}                                                          \quad \forall nhg`
+
+:math:`-\widehat{HP}_{nhg} \leq hp^{\Delta}_{nhg}   \leq \overline{HP}_{nhg} - \widehat{HP}_{nhg}          \quad \forall nhg`
+
+:math:`0 \leq ec_{nes}  \leq \overline{EC}_{nes}                                                           \quad \forall nes`
+
+:math:`-\widehat{EC}_{nes} \leq ec^{\Delta}_{nes}  \leq \overline{EC}_{nes} - \widehat{EC}_{nes}           \quad \forall nes`
+
+:math:`0 \leq ec_{nhz}  \leq \overline{EC}_{nhz}                                                           \quad \forall nhz`
+
+:math:`-\widehat{EC}_{nhz} \leq ec^{\Delta}_{nhz}  \leq \overline{EC}_{nhz} - \widehat{EC}_{nhz}           \quad \forall nhz`
+
+:math:`0 \leq hc_{nhs}   \leq \overline{HC}_{nhs}                                                          \quad \forall nhs`
+
+:math:`-\widehat{HC}_{nhs} \leq hc^{\Delta}_{nhs}  \leq \overline{HC}_{nhs} - \widehat{HC}_{nhs}           \quad \forall nhs`
+
+:math:`0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net`
+
+:math:`-\widehat{HC}_{net}\leq hc^{\Delta}_{net}  \leq \overline{HC}_{net} -\widehat{HC}_{net}             \quad \forall net`
+
+:math:`0 \leq ep2b_{neg} \leq \overline{EP}_{neg} - \underline{EP}_{neg}                                   \quad \forall neg`
+
+:math:`0 \leq hp2b_{nhg} \leq \overline{HP}_{nhg} - \underline{HP}_{nhg}                                   \quad \forall nh`
+
+:math:`0 \leq eeo_{nes} \leq \max(\overline{EP}_{nes},\overline{EC}_{nes})                                 \quad \forall nes`
+
+:math:`0 \leq heo_{nhs} \leq \max(\overline{HP}_{nhs},\overline{HC}_{nhs})                                 \quad \forall nhs`
+
+:math:`0 \leq up^{SR}_{neg}, dp^{SR}_{neg}  \leq \overline{EP}_{neg} - \underline{EP}_{neg}                \quad \forall neg`
+
+:math:`0 \leq up^{TR}_{neg}, dp^{TR}_{neg}  \leq \overline{EP}_{neg} - \underline{EP}_{neg}                \quad \forall neg`
+
+:math:`0 \leq uc^{SR}_{nes}, dc^{SR}_{nes} \leq \overline{EC}_{nes} - \underline{EC}_{nes}                 \quad \forall nes`
+
+:math:`0 \leq uc^{TR}_{nes}, dc^{TR}_{nes} \leq \overline{EC}_{nes} - \underline{EC}_{nes}                 \quad \forall nes`
+
+:math:`0 \leq ec2b_{nes}  \leq \overline{EC}_{nes}                                                         \quad \forall nes`
+
+:math:`0 \leq hc2b_{nhs}  \leq \overline{HC}_{nhs}                                                         \quad \forall nhs`
+
+:math:`\underline{EI}_{nes} \leq  esi_{nes}  \leq \overline{EI}_{nes}                                      \quad \forall nes`
+
+:math:`\underline{HI}_{nhs} \leq  hsi_{nhs}  \leq \overline{HI}_{nhs}                                      \quad \forall nhs`
+
+:math:`0 \leq  ess_{nes}                                                                                   \quad \forall nes`
+
+:math:`0 \leq  hss_{nhs}                                                                                   \quad \forall nhs`
+
+:math:`0 \leq ec^{R+}_{nes}, ec^{R-}_{nes} \leq \overline{EC}_{nes}                                        \quad \forall nes`
+
+:math:`0 \leq ec^{R+}_{nhz}, ec^{R-}_{nhz} \leq \overline{EC}_{nhz}                                        \quad \forall nhz`
+
+:math:`0 \leq ec^{Comp}_{nhs} \leq \overline{EC}_{nhs}                                                     \quad \forall nhs`
+
+:math:`0 \leq ec^{StandBy}_{nhz} \leq \overline{EC}_{nhz}                                                  \quad \forall nhz`
+
+:math:`-\overline{ENF}_{nijc} \leq  ef_{nij}  \leq \overline{ENF}_{nijc}                                   \quad \forall nijc`
+
+:math:`-\overline{HNF}_{nijc} \leq  hf_{nij}  \leq \overline{HNF}_{nijc}                                   \quad \forall nijc`
