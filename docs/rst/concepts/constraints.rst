@@ -7,7 +7,7 @@ The optimization model is governed by a series of constraints that ensure the so
 These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
 
 .. image:: /../img/Market_interaction.png
-   :scale: 25%
+   :scale: 30%
    :align: center
 
 Day-ahead Electricity Market Participation
@@ -71,6 +71,23 @@ Electricity balance of generation and demand («``eElectricityBalance``»)
    - \sum_{\busindexa,\circuitindex} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
 
+
+.. math::
+
+   \begin{align}
+   &\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   + \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) \nonumber \\
+   &- \sum_{\storageindex \in \nEH_{\busindex}} (\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex})
+   + \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+   - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \nonumber \\
+   &= \sum_{\demandindex \in \nDE_{\busindex}}(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+   - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
+   + \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
+   - \sum_{\busindexa,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
+   \end{align}
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
