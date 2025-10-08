@@ -65,10 +65,10 @@ It is represented by («``eElectricityBalance``») as follows:
    &\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    - \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   + \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) \nonumber \\
+   + \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) \\
    &- \sum_{\storageindex \in \nEH_{\busindex}} (\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex})
    + \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
-   - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \nonumber \\
+   - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
    &= \sum_{\demandindex \in \nDE_{\busindex}}(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}
    - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
    + \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
@@ -85,8 +85,8 @@ It is represented by «``eHydrogenBalance``») as follows:
    \begin{aligned}
    &\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    - \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}\\
-   &+ \sum_{\traderindex \in \nRE_{\busindex}}(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})\\
+   - \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
+   &+ \sum_{\traderindex \in \nRE_{\busindex}}(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
    &= \sum_{\demandindex \in \nDH_{\busindex}} (\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
    + \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    - \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
