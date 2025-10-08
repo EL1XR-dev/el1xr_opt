@@ -7,7 +7,7 @@ The optimization model is governed by a series of constraints that ensure the so
 These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
 
 .. image:: /../img/Market_interaction.png
-   :scale: 20%
+   :scale: 25%
    :align: center
 
 Day-ahead Electricity Market Participation
@@ -15,11 +15,15 @@ Day-ahead Electricity Market Participation
 
 Participation in the day-ahead electricity market is modeled through the next constraints, which ensure that the amount of energy bought from or sold to the market does not exceed predefined limits for each time step and retailer.
 
-Eletricity bought from the market if :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0` («``eEleRetMaxBuy``»)
+Eletricity bought from the market («``eEleRetMaxBuy``»)
+
+If :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0`
 
 :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex`
 
-Eletricity sold to the market if :math:`\pelemaxmarketsell_{\traderindex} >= 0.0` («``eEleRetMaxSell``»)
+Eletricity sold to the market («``eEleRetMaxSell``»)
+
+If :math:`\pelemaxmarketsell_{\traderindex} >= 0.0`
 
 :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex`
 
@@ -63,8 +67,8 @@ Electricity balance of generation and demand («``eElectricityBalance``»)
    - \sum_{\storageindex \in \nEH_{\busindex}} (\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex})
    + \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
    = \sum_{\demandindex \in \nDE_{\busindex}}(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
-   + \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   - \sum_{\busindexa,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
+   + \sum_{\busindexb,\circuitindex} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
+   - \sum_{\busindexa,\circuitindex} \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
 
 
