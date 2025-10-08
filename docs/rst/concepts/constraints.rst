@@ -7,7 +7,7 @@ The optimization model is governed by a series of constraints that ensure the so
 These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
 
 .. image:: /../img/Market_interaction.png
-   :scale: 30%
+   :scale: 50%
    :align: center
 
 Day-ahead Electricity Market Participation
@@ -92,7 +92,6 @@ It is represented by «``eHydrogenBalance``») as follows:
    - \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
    \end{align}
-
 
 2. Asset Operational Constraints
 --------------------------------
@@ -270,9 +269,9 @@ Energy Inflows
 ~~~~~~~~~~~~~~
 Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data («``eMaxInflows2Commitment``, ``eMinInflows2Commitment``»)
 
-:math:`\frac{eei_{nes}}{EEI_{nes}} \leq euc_{nes} \quad \forall nes`
+:math:`\frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{hei_{nhs}}{HEI_{nhs}} \leq huc_{nhs} \quad \forall nhs`
+:math:`\frac{\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Energy Outflows
 ~~~~~~~~~~~~~~~

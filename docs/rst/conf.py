@@ -451,12 +451,29 @@ mathjax3_config = {
             "peleinitvolt": r"V^{0}",                           # Initial voltage
 
             # --- Storage Parameters ---
-            "peleessduration": r"\tau^{s}",                     # Electrical Energy storage duration
-            "peleessinflowcycle": r"\tau^{i}",                  # Electrical Inflow cycle duration
-            "peleessoutflowcycle": r"\tau^{o}",                 # Electrical Outflow cycle duration
-            "peleessefficiency": r"\eta^{s}",                   # Electrical Storage efficiency
-            "peleesscapacity": r"\Psi",                         # Electrical Storage capacity
+            "peleessduration": r"\tau^{e}",                     # Electrical Energy storage duration
+            "peleessinflowcycle": r"\tau^{i,e}",                # Electrical Inflow cycle duration
+            "peleessoutflowcycle": r"\tau^{o,e}",               # Electrical Outflow cycle duration
+            "peleessefficiency": r"\eta^{s,e}",                 # Electrical Storage efficiency
+            "peleesscapacity": r"\Psi^{e}",                     # Electrical Storage capacity
             "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
+            "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
+            "pelemaxoutflow": r"\overline{EO}^{e}",             # Max electrical outflow
+            "pelemininflow": r"\underline{EI}^{e}",             # Min electrical inflow
+            "peleminoutflow": r"\underline{EO}^{e}",            # Min electrical outflow
+            "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
+            "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
+            "phydessduration": r"\tau^{s,h}",                   # Hydrogen Energy storage duration
+            "phydessinflowcycle": r"\tau^{i,h}",                # Hydrogen Inflow cycle duration
+            "phydessoutflowcycle": r"\tau^{o,h}",               # Hydrogen Outflow cycle duration
+            "phydessefficiency": r"\eta^{s,h}",                 # Hydrogen Storage efficiency
+            "phydesscapacity": r"\Psi^{h}",                     # Hydrogen Storage capacity
+            "phydmaxinflow": r"\overline{EI}^{h}",              # Max hydrogen inflow
+            "phydmaxoutflow": r"\overline{EO}^{h}",             # Max hydrogen outflow
+            "phydmininflow": r"\underline{EI}^{h}",             # Min hydrogen inflow
+            "phydminoutflow": r"\underline{EO}^{h}",            # Min hydrogen outflow
+            "phydmaxinventory": r"\overline{SI}^{h}",           # Max hydrogen inventory
+            "phydmininventory": r"\underline{SI}^{h}",          # Min hydrogen inventory
 
             # =======================================================
             #                       VARIABLES
@@ -497,8 +514,14 @@ mathjax3_config = {
             "velestoroperatbin": r"so^{e}",                     # Electrical storage operating binary
             "vhydstoroperatbin": r"so^{h}",                     # Hydrogen storage operating binary
             "vcommitbin": r"uc",                                # Unit commitment binary
+            "velecommitbin": r"uc^{e}",                         # Electrical unit commitment binary
+            "vhydcommitbin": r"uc^{h}",                         # Hydrogen unit commitment binary
             "vstartupbin": r"su",                               # Start-up binary
+            "velestartupbin": r"su^{e}",                        # Electrical start-up binary
+            "vhydstartupbin": r"su^{h}",                        # Hydrogen start-up binary
             "vshutdownbin": r"sd",                              # Shut-down binary
+            "veleshutdownbin": r"sd^{e}",                       # Electrical shut-down binary
+            "vhydshutdownbin": r"sd^{h}",                       # Hydrogen shut-down binary
             "vmagvolt": r"v^{2}",                               # Squared voltage magnitude
             "vangvolt": r"\theta",                              # Voltage angle
             "vflow": r"f",                                      # Branch flow
