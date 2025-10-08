@@ -192,9 +192,9 @@ mathjax3_config = {
             "hydcnggenindex": r"g^{h,cng}",                     # Index for hydrogen generator consuming natural gas
             "hydelecgenindex": r"g^{h,e}",                      # Index for hydrogen generator consuming electricity
             "genindex": r"g",                                   # Index for generator
-            "eleloadindex": r"d^{e}",                           # Index for electrical load
-            "hydloadindex": r"d^{h}",                           # Index for hydrogen load
-            "loadindex": r"d",                                  # Index for load
+            "eledemandindex": r"d^{e}",                         # Index for electrical load
+            "hyddemandindex": r"d^{h}",                         # Index for hydrogen load
+            "demandindex": r"d",                                # Index for load
             "eleconsindex": r"c^{e}",                           # Index for electrical consumer
             "hydconsindex": r"c^{h}",                           # Index for hydrogen consumer
             "consindex": r"c",                                  # Index for consumer
@@ -390,6 +390,12 @@ mathjax3_config = {
             "phydmindemand": r"\underline{D}^{h}",              # Hydrogen min demand
             "pelepeakdemand": r"D^{e,peak}",                    # Electrical peak demand
             "phydpeakdemand": r"D^{h,peak}",                    # Hydrogen peak demand
+            "pdemflexible": r"D^{flex}",                        # Generic flexible demand
+            "peledemflexible": r"D^{e,flex}",                   # Electrical flexible demand
+            "phyddemflexible": r"D^{h,flex}",                   # Hydrogen flexible demand
+            "pdemshiftedsteps": r"N^{shift}",                   # Generic demand shifted time steps
+            "peledemshiftedsteps": r"N^{e,shift}",              # Electrical demand shifted time steps
+            "phyddemshiftedsteps": r"N^{h,shift}",              # Hydrogen demand shifted time steps
 
             # --- Generation and Consumption Limits ---
             "pelemaxproduction": r"\overline{EP}",              # Max electrical generation
@@ -498,9 +504,12 @@ mathjax3_config = {
             "vreactflow": r"f^{Q}",                             # Reactive power flow
             "veleflow": r"f^{e}",                               # Electrical flow
             "vhydflow": r"f^{h}",                               # Hydrogen flow
-            "vload": r"d",                                      # Load
-            "veleload": r"d^{e}",                               # Electrical load
-            "vhydload": r"d^{h}",                               # Hydrogen load
+            "vdemand": r"d",                                    # Load
+            "veledemand": r"d^{e}",                             # Electrical load
+            "vhyddemand": r"d^{h}",                             # Hydrogen load
+            "vdemflex": r"d^{flex}",                            # Flexible load
+            "veledemflex": r"d^{e,flex}",                       # Electrical flexible load
+            "vhyddemflex": r"d^{h,flex}",                       # Hydrogen flexible
             "vloadshed": r"ls",                                 # Load
             "veleloadshed": r"ls^{e}",                          # Electrical load-shedding
             "vhydloadshed": r"ls^{h}",                          # Hydrogen load-shedding

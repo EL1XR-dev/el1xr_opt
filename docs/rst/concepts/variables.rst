@@ -207,19 +207,19 @@ These variables control the physical operation of all assets in the system.
      - Elec. consumption of an electrolyzer in standby
      - kgH2
      - ``vHydStandByConsumption``
-   * - :math:`\veleload_{\periodindex,\scenarioindex,\timeindex,\loadindex}`
+   * - :math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Electricity demand served
      - kWh
      - ``vEleDemand``
-   * - :math:`\vhydload_{\periodindex,\scenarioindex,\timeindex,\loadindex}`
+   * - :math:`\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Hydrogen demand served
      - kgH2
      - ``vHydDemand``
-   * - :math:`\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`
+   * - :math:`\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Unserved electricity (energy not supplied)
      - kWh
      - ``vENS``
-   * - :math:`\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}`
+   * - :math:`\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Unserved hydrogen (hydrogen not supplied)
      - kgH2
      - ``vHNS``
