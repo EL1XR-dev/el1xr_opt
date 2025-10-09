@@ -406,21 +406,21 @@ Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («``
 
 Maximum and minimum charge of the second block of an electricity ESS [p.u.] («``eMaxEleESSCharge2ndBlock``, ``eMinEleESSCharge2ndBlock``»)
 
-:math:`\frac{ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \geq 0 \quad \forall nes`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («``eMaxEle2HydCharge2ndBlock``, ``eMinEle2HydCharge2ndBlock``»)
 
-:math:`\frac{ec2b_{nhz} + dc^{SR}_{nhz} + dc^{TR}_{nhz}}{\overline{EC}_{nhz}} \leq 1 \quad \forall nhz`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} + \vCdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`\frac{ec2b_{nhz} - uc^{SR}_{nhz} - uc^{TR}_{nhz}}{\overline{EC}_{nhz}} \geq 0 \quad \forall nhz`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vCupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSCharge2ndBlock``, ``eMinHydESSCharge2ndBlock``»)
 
-:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
+:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`\frac{hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \geq 0 \quad \forall nhs`
+:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 4. Network Constraints
 ----------------------
