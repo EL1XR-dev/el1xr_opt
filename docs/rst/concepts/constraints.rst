@@ -34,22 +34,22 @@ Frequency containment reserves in normal operation (FCR-N)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{neg} rp^{FN}_{neg} + \sum_{nes} rc^{FN}_{nes} \leq R^{FN}_{n} \quad \forall n`
+:math:`\sum_{neg} rp^{FN}_{neg} \!+\! \sum_{nes} rc^{FN}_{nes} \leq R^{FN}_{n} \quad \forall n`
 
 Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{neg} up^{FD}_{neg} + \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n} \quad \forall n`
+:math:`\sum_{neg} up^{FD}_{neg} \!+\! \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n} \quad \forall n`
 
-:math:`\sum_{neg} dp^{FD}_{neg} + \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n} \quad \forall n`
+:math:`\sum_{neg} dp^{FD}_{neg} \!+\! \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n} \quad \forall n`
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
 A set of constraints starting with ``eElePeak...`` identify the highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
 
 .. math::
-   \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} - 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
+   \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} \!-\! 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
 
 2. Energy Balance
 -----------------
@@ -63,16 +63,16 @@ It is represented by («``eElectricityBalance``») as follows:
 
    \begin{aligned}
    &\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   - \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   + \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) \\
+   \!-\! \sum_{\storageindex \in \nEE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \!-\! \sum_{\genindex \in \nGHE_{\busindex}} (\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \!+\! \veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}) \\
    &- \sum_{\storageindex \in \nEH_{\busindex}} (\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex})
-   + \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
-   - \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
+   \!+\! \sum_{\traderindex \in \nRE_{\busindex}}(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+   \!-\! \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
    &= \sum_{\demandindex \in \nDE_{\busindex}}(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}
-   - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
-   + \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   - \sum_{\busindexa,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
+   \!-\! \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
+   \!+\! \sum_{\busindexb,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
+   \!-\! \sum_{\busindexa,\circuitindex} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
    \end{aligned}
 
@@ -84,12 +84,12 @@ It is represented by «``eHydrogenBalance``») as follows:
 
    \begin{aligned}
    &\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   - \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
-   &+ \sum_{\traderindex \in \nRE_{\busindex}}(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} - \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
-   &= \sum_{\demandindex \in \nDH_{\busindex}} (\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
-   + \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
-   - \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
+   \!-\! \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \!-\! \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
+   &\!+\! \sum_{\traderindex \in \nRE_{\busindex}}(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \!-\! \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}) \\
+   &= \sum_{\demandindex \in \nDH_{\busindex}} (\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} \!-\! \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
+   \!+\! \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
+   \!-\! \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
    \end{aligned}
 
@@ -101,19 +101,19 @@ Output and Charge Limits
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Total generation of an electricity unit (all except the VRE units) («``eEleTotalOutput``»)
 
-:math:`\frac{ep_{neg}}{\underline{EP}_{neg}} = euc_{neg} + \frac{ep2b_{neg} + URA^{SR}_{n}up^{SR}_{nes} + URA^{TR}_{n}up^{TR}_{nes} - DRA^{SR}_{n}dp^{SR}_{nes} - DRA^{TR}_{n}dp^{TR}_{nes}}{\underline{EP}_{neg}} \quad \forall neg`
+:math:`\frac{ep_{neg}}{\underline{EP}_{neg}} = euc_{neg} \!+\! \frac{ep2b_{neg} \!+\! URA^{SR}_{n}up^{SR}_{nes} \!+\! URA^{TR}_{n}up^{TR}_{nes} \!-\! DRA^{SR}_{n}dp^{SR}_{nes} \!-\! DRA^{TR}_{n}dp^{TR}_{nes}}{\underline{EP}_{neg}} \quad \forall neg`
 
 Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
-:math:`\frac{hp_{nhg}}{\underline{HP}_{nhg}} = huc_{nhg} + \frac{hp2b_{nhz}}{\underline{HP}_{nhg}} \quad \forall nh`
+:math:`\frac{hp_{nhg}}{\underline{HP}_{nhg}} = huc_{nhg} \!+\! \frac{hp2b_{nhz}}{\underline{HP}_{nhg}} \quad \forall nh`
 
 Total charge of an electricity ESS («``eEleTotalCharge``»)
 
-:math:`\frac{ec_{nes}}{\underline{EC}_{nes}} = 1 + \frac{ec2b_{nes} - URA^{SR}_{n}uc^{SR}_{nes} - URA^{TR}_{n}uc^{TR}_{nes} + DRA^{SR}_{n}dc^{SR}_{nes} + DRA^{TR}_{n}dc^{TR}_{nes}}{\underline{EC}_{nes}} \quad \forall nes`
+:math:`\frac{ec_{nes}}{\underline{EC}_{nes}} = 1 \!+\! \frac{ec2b_{nes} \!-\! URA^{SR}_{n}uc^{SR}_{nes} \!-\! URA^{TR}_{n}uc^{TR}_{nes} \!+\! DRA^{SR}_{n}dc^{SR}_{nes} \!+\! DRA^{TR}_{n}dc^{TR}_{nes}}{\underline{EC}_{nes}} \quad \forall nes`
 
 Total charge of a hydrogen unit («``eHydTotalCharge``»)
 
-:math:`\frac{hc_{nhs}}{\underline{HC}_{nhs}} = 1 + \frac{hc2b_{nhs}}{\underline{EC}_{nhs}} \quad \forall nhs`
+:math:`\frac{hc_{nhs}}{\underline{HC}_{nhs}} = 1 \!+\! \frac{hc2b_{nhs}}{\underline{EC}_{nhs}} \quad \forall nhs`
 
 Energy Conversion
 ~~~~~~~~~~~~~~~~~
@@ -131,43 +131,43 @@ Maximum ramp up and ramp down for the second block of a non-renewable (thermal, 
 
 * P. Damcı-Kurt, S. Küçükyavuz, D. Rajan, and A. Atamtürk, “A polyhedral study of production ramping,” Math. Program., vol. 158, no. 1–2, pp. 175–205, Jul. 2016. `10.1007/s10107-015-0919-9 <https://doi.org/10.1007/s10107-015-0919-9>`_
 
-:math:`\frac{- ep2b_{n-\nu,g} - dp^{SR}_{n-\nu,g} - dp^{TR}_{n-\nu,g} + ep2b_{neg} + up^{SR}_{neg} + up^{TR}_{neg}}{DUR_n RU_g} \leq   euc_{neg}      - esu_{neg} \quad \forall neg`
+:math:`\frac{- ep2b_{n-\nu,g} \!-\! dp^{SR}_{n-\nu,g} \!-\! dp^{TR}_{n-\nu,g} \!+\! ep2b_{neg} \!+\! up^{SR}_{neg} \!+\! up^{TR}_{neg}}{DUR_n RU_g} \leq   euc_{neg}      \!-\! esu_{neg} \quad \forall neg`
 
-:math:`\frac{- ep2b_{n-\nu,g} + up^{SR}_{n-\nu,g} + up^{TR}_{n-\nu,g} + ep2b_{neg} - dp^{SR}_{neg} - dp^{TR}_{neg}}{DUR_n RD_g} \geq - euc_{n-\nu,g} + esd_{neg} \quad \forall neg`
+:math:`\frac{- ep2b_{n-\nu,g} \!+\! up^{SR}_{n-\nu,g} \!+\! up^{TR}_{n-\nu,g} \!+\! ep2b_{neg} \!-\! dp^{SR}_{neg} \!-\! dp^{TR}_{neg}}{DUR_n RD_g} \geq \!-\! euc_{n-\nu,g} \!+\! esd_{neg} \quad \forall neg`
 
 Maximum ramp down and ramp up for the charge of an electricity ESS («``eMaxRampUpEleCharge``, ``eMaxRampDwEleCharge``»)
 
-:math:`\frac{- ec2b_{n-\nu,es} + dc^{SR}_{n-\nu,es} + dc^{TR}_{n-\nu,es} + ec2b_{nes} - uc^{SR}_{nes} - uc^{TR}_{nes}}{DUR_n RU_es} \geq - 1 \quad \forall nes`
+:math:`\frac{- ec2b_{n-\nu,es} \!+\! dc^{SR}_{n-\nu,es} \!+\! dc^{TR}_{n-\nu,es} \!+\! ec2b_{nes} \!-\! uc^{SR}_{nes} \!-\! uc^{TR}_{nes}}{DUR_n RU_es} \geq \!-\! 1 \quad \forall nes`
 
-:math:`\frac{- ec2b_{n-\nu,es} - uc^{SR}_{n-\nu,es} - uc^{TR}_{n-\nu,es} + ec2b_{nes} + dc^{SR}_{nes} + dc^{TR}_{nes}}{DUR_n RD_es} \leq   1 \quad \forall nes`
+:math:`\frac{- ec2b_{n-\nu,es} \!-\! uc^{SR}_{n-\nu,es} \!-\! uc^{TR}_{n-\nu,es} \!+\! ec2b_{nes} \!+\! dc^{SR}_{nes} \!+\! dc^{TR}_{nes}}{DUR_n RD_es} \leq   1 \quad \forall nes`
 
 Maximum ramp up and ramp down for the  second block of a hydrogen unit («``eMaxRampUpHydOutput``, ``eMaxRampDwHydOutput``»)
 
-:math:`\frac{- hp2b_{n-\nu,hg} + hp2b_{nhg}}{DUR_n RU_hg} \leq   huc_{nhg}      - hsu_{nhg} \quad \forall nhg`
+:math:`\frac{- hp2b_{n-\nu,hg} \!+\! hp2b_{nhg}}{DUR_n RU_hg} \leq   huc_{nhg}      \!-\! hsu_{nhg} \quad \forall nhg`
 
-:math:`\frac{- hp2b_{n-\nu,hg} + hp2b_{nhg}}{DUR_n RD_hg} \geq - huc_{n-\nu,hg} + hsd_{nhg} \quad \forall nhg`
+:math:`\frac{- hp2b_{n-\nu,hg} \!+\! hp2b_{nhg}}{DUR_n RD_hg} \geq \!-\! huc_{n-\nu,hg} \!+\! hsd_{nhg} \quad \forall nhg`
 
 Maximum ramp down and ramp up for the charge of a hydrogen ESS («``eMaxRampUpHydCharge``, ``eMaxRampDwHydCharge``»)
 
-:math:`\frac{- hc2b_{n-\nu,hs} + hc2b_{nhs}}{DUR_n RU_hs} \geq - 1 \quad \forall nhs`
+:math:`\frac{- hc2b_{n-\nu,hs} \!+\! hc2b_{nhs}}{DUR_n RU_hs} \geq \!-\! 1 \quad \forall nhs`
 
-:math:`\frac{- hc2b_{n-\nu,hs} + hc2b_{nhs}}{DUR_n RD_hs} \leq   1 \quad \forall nhs`
+:math:`\frac{- hc2b_{n-\nu,hs} \!+\! hc2b_{nhs}}{DUR_n RD_hs} \leq   1 \quad \forall nhs`
 
 Maximum ramp up and ramp down for the outflows of a hydrogen ESS («``eMaxRampUpHydOutflows``, ``eMaxRampDwHydOutflows``»)
 
-:math:`\frac{- heo_{n-\nu,hs} + heo_{nhs}}{DUR_n RU_hs} \leq   1 \quad \forall nhs`
+:math:`\frac{- heo_{n-\nu,hs} \!+\! heo_{nhs}}{DUR_n RU_hs} \leq   1 \quad \forall nhs`
 
-:math:`\frac{- heo_{n-\nu,hs} + heo_{nhs}}{DUR_n RD_hs} \geq - 1 \quad \forall nhs`
+:math:`\frac{- heo_{n-\nu,hs} \!+\! heo_{nhs}}{DUR_n RD_hs} \geq \!-\! 1 \quad \forall nhs`
 
 Ramp up and ramp down for the provision of demand to the hydrogen customers («``eMaxRampUpHydDemand``, ``eMaxRampDwHydDemand``»)
 
-:math:`\frac{- hd_{n-\nu,nd} + hd_{nnd}}{DUR_n RU_nd} \leq   1 \quad \forall nnd`
+:math:`\frac{- hd_{n-\nu,nd} \!+\! hd_{nnd}}{DUR_n RU_nd} \leq   1 \quad \forall nnd`
 
-:math:`\frac{- hd_{n-\nu,nd} + hd_{nnd}}{DUR_n RD_nd} \geq - 1 \quad \forall nnd`
+:math:`\frac{- hd_{n-\nu,nd} \!+\! hd_{nnd}}{DUR_n RD_nd} \geq \!-\! 1 \quad \forall nnd`
 
 Differences between electricity consumption of two consecutive hours [GW] («``eEleConsumptionDiff``»)
 
-:math:`-ec_{n-\nu,es} + ec_{nes} = RC^{+}_{hz} - RC^{-}_{hz}`
+:math:`-ec_{n-\nu,es} \!+\! ec_{nes} = RC^{\!+\!}_{hz} \!-\! RC^{-}_{hz}`
 
 Unit Commitment Logic
 ~~~~~~~~~~~~~~~~~~~~~
@@ -176,7 +176,7 @@ For dispatchable assets, these constraints model the on/off decisions.
 Logical relation between commitment, startup and shutdown status of a committed electricity unit (all except the VRE units) [p.u.] («``eEleCommitmentStartupShutdown``»)
 Initial commitment of the units is determined by the model based on the merit order loading, including the VRE and ESS units.
 
-:math:`euc_{neg} - euc_{n-\nu,g} = esu_{neg} - esd_{neg} \quad \forall neg`
+:math:`euc_{neg} \!-\! euc_{n-\nu,g} = esu_{neg} \!-\! esd_{neg} \quad \forall neg`
 
 Maximum commitment of an electricity unit (all except the VRE units) [p.u.] («``eEleMaxCommitment``»)
 
@@ -184,29 +184,29 @@ Maximum commitment of an electricity unit (all except the VRE units) [p.u.] («`
 
 Logical relation between commitment, startup and shutdown status of a committed hydrogen unit [p.u.] («``eHydCommitmentStartupShutdown``»)
 
-:math:`huc_{nhg} - huc_{n-\nu,hg} = hsu_{nhg} - hsd_{nhg} \quad \forall nhg`
+:math:`huc_{nhg} \!-\! huc_{n-\nu,hg} = hsu_{nhg} \!-\! hsd_{nhg} \quad \forall nhg`
 
 Minimum up time and down time of thermal unit [h] («``eMinUpTimeEle``, ``eMinDownTimeEle``»)
 
 - D. Rajan and S. Takriti, “Minimum up/down polytopes of the unit commitment problem with start-up costs,” IBM, New York, Technical Report RC23628, 2005. https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf
 
-:math:`\sum_{n'=n+\nu-TU_t}^n esu_{n't} \leq     euc_{net} \quad \forall net`
+:math:`\sum_{n'=n\!+\!\nu-TU_t}^n esu_{n't} \leq     euc_{net} \quad \forall net`
 
-:math:`\sum_{n'=n+\nu-TD_t}^n esd_{n't} \leq 1 - euc_{net} \quad \forall net`
+:math:`\sum_{n'=n\!+\!\nu-TD_t}^n esd_{n't} \leq 1 \!-\! euc_{net} \quad \forall net`
 
 Minimum up time and down time of hydrogen unit [h] («``eMinUpTimeHyd``, ``eMinDownTimeHyd``»)
 
-:math:`\sum_{n'=n+\nu-TU_h}^n hsu_{n'hg} \leq     huc_{nhg} \quad \forall nhg`
+:math:`\sum_{n'=n\!+\!\nu-TU_h}^n hsu_{n'hg} \leq     huc_{nhg} \quad \forall nhg`
 
-:math:`\sum_{n'=n+\nu-TD_h}^n hsd_{n'hg} \leq 1 - huc_{nhg} \quad \forall nhg`
+:math:`\sum_{n'=n\!+\!\nu-TD_h}^n hsd_{n'hg} \leq 1 \!-\! huc_{nhg} \quad \forall nhg`
 
 Decision variable of the operation of the compressor conditioned by the on/off status variable of itself [GWh] («``eCompressorOperStatus``»)
 
-:math:`ec^{Comp}_{nhs} \geq hp_{nhz}/\overline{HP}_{nhz} \overline{EC}^{comp}_{nhs} - 1e-3 (1 - hcf_{nhs}) \quad \forall nhs`
+:math:`ec^{Comp}_{nhs} \geq hp_{nhz}/\overline{HP}_{nhz} \overline{EC}^{comp}_{nhs} \!-\! 1e-3 (1 \!-\! hcf_{nhs}) \quad \forall nhs`
 
 Decision variable of the operation of the compressor conditioned by the status of energy of the hydrogen tank [kgH2] («``eCompressorOperInventory``»)
 
-:math:`hsi_{nhs} \leq \underline{HI}_{nhs} + (\overline{HI}_{nhs} - \underline{HI}_{nhs}) hcf_{nhs} \quad \forall nhs`
+:math:`hsi_{nhs} \leq \underline{HI}_{nhs} \!+\! (\overline{HI}_{nhs} \!-\! \underline{HI}_{nhs}) hcf_{nhs} \quad \forall nhs`
 
 StandBy status of the electrolyzer conditioning its electricity consumption («``eEleStandBy_consumption_UpperBound``, ``eEleStandBy_consumption_LowerBound``»)
 
@@ -216,9 +216,9 @@ StandBy status of the electrolyzer conditioning its electricity consumption («`
 
 StandBy status of the electrolyzer conditioning its hydrogen production («``eHydStandBy_production_UpperBound``, ``eHydStandBy_production_LowerBound``»)
 
-:math:`ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} (1 - hsf_{nhz}) \quad \forall nhz`
+:math:`ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} (1 \!-\! hsf_{nhz}) \quad \forall nhz`
 
-:math:`ec^{StandBy}_{nhz} \leq \underline{EC}_{nhz} (1 - hsf_{nhz}) \quad \forall nhz`
+:math:`ec^{StandBy}_{nhz} \leq \underline{EC}_{nhz} (1 \!-\! hsf_{nhz}) \quad \forall nhz`
 
 Avoid transition status from off to StandBy of the electrolyzer («``eHydAvoidTransitionOff2StandBy``»)
 
@@ -234,11 +234,11 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
 
 State-of-Charge balance for electricity storage systems:
 
-:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \pelestorageefficiency_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}},\storageindex} \!+\! \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \veleproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!+\! \pelestorageefficiency_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 State-of-Charge balance for hydrogen storage systems:
 
-:math:`\vhydinventory_{\timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \phydstorageefficiency_{\storageindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\vhydinventory_{\timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}},\storageindex} \!+\! \sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \vhydproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!+\! \phydstorageefficiency_{\storageindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -248,13 +248,13 @@ Electricity Storage Charge/Discharge Incompatibility
 
 :math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 - \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \!-\! \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Hydrogen Storage Charge/Discharge Incompatibility
 
 :math:`\frac{hc_{nhs}}{\overline{HC}_{nhs}} \leq hsf_{nhs} \quad \forall nhs`
 
-:math:`\frac{hp_{nhs}}{\overline{HP}_{nhs}} \leq 1 - hsf_{nhs} \quad \forall nhs`
+:math:`\frac{hp_{nhs}}{\overline{HP}_{nhs}} \leq 1 \!-\! hsf_{nhs} \quad \forall nhs`
 
 Maximum and Minimum Relative Inventory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -305,69 +305,69 @@ Relationship between hydrogen outflows and commitment of the units («``eHydMaxO
 
 ESS electricity outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eEleMaxEnergyOutflows``») and («``eEleMinEnergyOutflows``»)
 
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\pelestorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \leq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \pelestorageoutflowcycle_{\storageindex}, \storageindex \in \nEE`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\pelestorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \leq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \pelestorageoutflowcycle_{\storageindex}, \storageindex \in \nEE`
 
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\pelestorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \peleminoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \pelestorageoutflowcycle_{\storageindex}, \storageindex \in \nEE`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\pelestorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \peleminoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \pelestorageoutflowcycle_{\storageindex}, \storageindex \in \nEE`
 
 ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eHydMaxEnergyOutflows``») and («``eHydMinEnergyOutflows``»)
 
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\phydstorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \leq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \phydstorageoutflowcycle_{\storageindex}, \storageindex \in \nEH`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\phydstorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \leq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \phydstorageoutflowcycle_{\storageindex}, \storageindex \in \nEH`
 
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\phydstorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \phydminoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \phydstorageoutflowcycle_{\storageindex}, \storageindex \in \nEH`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\phydstorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \phydminoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \phydstorageoutflowcycle_{\storageindex}, \storageindex \in \nEH`
 
 Incompatibility between charge and outflows use of an electricity ESS [p.u.] («``eIncompatibilityEleChargeOutflows``»)
 
-:math:`\frac{eeo_{nes} + ec2b_{nes}}{\overline{EC}_{nes} - \underline{EC}_{nes}} \leq 1 \quad \forall nes`
+:math:`\frac{eeo_{nes} \!+\! ec2b_{nes}}{\overline{EC}_{nes} \!-\! \underline{EC}_{nes}} \leq 1 \quad \forall nes`
 
 Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eIncompatibilityHydChargeOutflows``»)
 
-:math:`\frac{heo_{nhs} + hc2b_{nhs}}{\overline{HC}_{nhs} - \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
+:math:`\frac{heo_{nhs} \!+\! hc2b_{nhs}}{\overline{HC}_{nhs} \!-\! \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
 
 Operating reserves from energy storage systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Operating reserves from ESS can only be if enought energy is available for discharging
 
-:math:`RA^{FN}_{n}rp^{FN}_{nes} + URA^{FD}_{n}up^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rp^{FN}_{nes} \!+\! URA^{FD}_{n}up^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
 
-:math:`RA^{FN}_{n}rp^{FN}_{nes} + DRA^{FD}_{n}dp^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rp^{FN}_{nes} \!+\! DRA^{FD}_{n}dp^{FD}_{nes} \leq \frac{\overline{EI}_{nes} \!-\! esi_{nes}}{DUR_{n}} \quad \forall nes`
 
 or for charging
 
-:math:`RA^{FN}_{n}rc^{FN}_{nes} + URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} - esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rc^{FN}_{nes} \!+\! URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} \!-\! esi_{nes}}{DUR_{n}} \quad \forall nes`
 
-:math:`RA^{FN}_{n}rc^{FN}_{nes} + DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rc^{FN}_{nes} \!+\! DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
 
 Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
 
-:math:`\frac{uc^{SR}_{nes} + uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
+:math:`\frac{uc^{SR}_{nes} \!+\! uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
 
 Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
 
-:math:`\frac{up^{SR}_{nes} + up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes`
+:math:`\frac{up^{SR}_{nes} \!+\! up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes`
 
 Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
 
-:math:`\frac{dc^{SR}_{nes} + dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+:math:`\frac{dc^{SR}_{nes} \!+\! dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 \!-\! esf_{nes} \quad \forall nes`
 
 Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
 
-:math:`\frac{dp^{SR}_{nes} + dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+:math:`\frac{dp^{SR}_{nes} \!+\! dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 \!-\! esf_{nes} \quad \forall nes`
 
 Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} + uc^{TR}_{nes}) \leq \overline{EC}_{nes} - esi_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} \!+\! uc^{TR}_{nes}) \leq \overline{EC}_{nes} \!-\! esi_{nes} \quad \forall nes`
 
 Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} + dc^{TR}_{nes}) \leq esi_{nes} - \underline{EC}_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} \!+\! dc^{TR}_{nes}) \leq esi_{nes} \!-\! \underline{EC}_{nes} \quad \forall nes`
 
 Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} + up^{TR}_{nes}) \leq \overline{EP}_{nes} - esi_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} \!+\! up^{TR}_{nes}) \leq \overline{EP}_{nes} \!-\! esi_{nes} \quad \forall nes`
 
 Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} + dp^{TR}_{nes}) \leq esi_{nes} - \underline{EP}_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} \!+\! dp^{TR}_{nes}) \leq esi_{nes} \!-\! \underline{EP}_{nes} \quad \forall nes`
 
 Second block of a committed electric generator providing reserves
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -382,45 +382,45 @@ Maximum and minimum electricity generation of the second block of a committed un
 
 * G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
 
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
 Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
 
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («``eMaxEleESSOutput2ndBlock``, ``eMinEleESSOutput2ndBlock``»)
 
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vPupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vPupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \vPdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \vPdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSOutput2ndBlock``, ``eMinHydESSOutput2ndBlock``»)
 
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Maximum and minimum charge of the second block of an electricity ESS [p.u.] («``eMaxEleESSCharge2ndBlock``, ``eMinEleESSCharge2ndBlock``»)
 
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («``eMaxEle2HydCharge2ndBlock``, ``eMinEle2HydCharge2ndBlock``»)
 
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} + \vCdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \vCdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vCupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \vCupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSCharge2ndBlock``, ``eMinHydESSCharge2ndBlock``»)
 
-:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 4. Network Constraints
 ----------------------
@@ -431,7 +431,7 @@ DC Power Flow
 For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model, relating the power flow on a line to the voltage angles at its connecting nodes.
 
 .. math::
-   \frac{\veleflow_{\periodindex,\scenarioindex,\timeindex,\text{ni,nf,cc}}}{\text{TTC}_{\text{ni,nf,cc}}} - \frac{\theta_{\periodindex,\scenarioindex,\timeindex,\text{ni}} - \theta_{\periodindex,\scenarioindex,\timeindex,\text{nf}}}{\text{X}_{\text{ni,nf,cc}} \cdot \text{TTC}_{\text{ni,nf,cc}}} \cdot 0.1 = 0
+   \frac{\veleflow_{\periodindex,\scenarioindex,\timeindex,\text{ni,nf,cc}}}{\text{TTC}_{\text{ni,nf,cc}}} \!-\! \frac{\theta_{\periodindex,\scenarioindex,\timeindex,\text{ni}} \!-\! \theta_{\periodindex,\scenarioindex,\timeindex,\text{nf}}}{\text{X}_{\text{ni,nf,cc}} \cdot \text{TTC}_{\text{ni,nf,cc}}} \cdot 0.1 = 0
 
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
@@ -444,7 +444,7 @@ Flexible electricity demand shifting balance («``eEleDemandShiftBalance``»)
 
 If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
 
-:math:`\sum_{\timeindex ' = \timeindex-\peledemshiftedsteps_{\demandindex}}^n DUR_{n'} (\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} - \peledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}) = 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
+:math:`\sum_{\timeindex ' = \timeindex-\peledemshiftedsteps_{\demandindex}}^n DUR_{n'} (\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} \!-\! \peledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}) = 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
 
 Share of Flexible Demand
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -452,13 +452,13 @@ Flexible electricity demand share of total demand («``eEleDemandShifted``»)
 
 If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
 
-:math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} = \peledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
+:math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} = \peledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} \!+\! \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex`
 
 Cycle target for demand
 ~~~~~~~~~~~~~~~~~~~~~~~
 Hydrogen demand cycle target («``eHydDemandCycleTarget``»)
 
-:math:`\sum_{n' = n-\frac{\tau_d}{\nu}}^n DUR_{n'} (hd_{n'nd} - HD_{n'nd}) = 0 \quad \forall nnd, n \in \rho_d`
+:math:`\sum_{n' = n-\frac{\tau_d}{\nu}}^n DUR_{n'} (hd_{n'nd} \!-\! HD_{n'nd}) = 0 \quad \forall nnd, n \in \rho_d`
 
 7. Electric Vehicle (EV) Modeling
 ---------------------------------
@@ -502,21 +502,21 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net`
 
-:math:`0 \leq ep2b_{neg} \leq \overline{EP}_{neg} - \underline{EP}_{neg}                                   \quad \forall neg`
+:math:`0 \leq ep2b_{neg} \leq \overline{EP}_{neg} \!-\! \underline{EP}_{neg}                                   \quad \forall neg`
 
-:math:`0 \leq hp2b_{nhg} \leq \overline{HP}_{nhg} - \underline{HP}_{nhg}                                   \quad \forall nh`
+:math:`0 \leq hp2b_{nhg} \leq \overline{HP}_{nhg} \!-\! \underline{HP}_{nhg}                                   \quad \forall nh`
 
 :math:`0 \leq eeo_{nes} \leq \max(\overline{EP}_{nes},\overline{EC}_{nes})                                 \quad \forall nes`
 
 :math:`0 \leq heo_{nhs} \leq \max(\overline{HP}_{nhs},\overline{HC}_{nhs})                                 \quad \forall nhs`
 
-:math:`0 \leq up^{SR}_{neg}, dp^{SR}_{neg}  \leq \overline{EP}_{neg} - \underline{EP}_{neg}                \quad \forall neg`
+:math:`0 \leq up^{SR}_{neg}, dp^{SR}_{neg}  \leq \overline{EP}_{neg} \!-\! \underline{EP}_{neg}                \quad \forall neg`
 
-:math:`0 \leq up^{TR}_{neg}, dp^{TR}_{neg}  \leq \overline{EP}_{neg} - \underline{EP}_{neg}                \quad \forall neg`
+:math:`0 \leq up^{TR}_{neg}, dp^{TR}_{neg}  \leq \overline{EP}_{neg} \!-\! \underline{EP}_{neg}                \quad \forall neg`
 
-:math:`0 \leq uc^{SR}_{nes}, dc^{SR}_{nes} \leq \overline{EC}_{nes} - \underline{EC}_{nes}                 \quad \forall nes`
+:math:`0 \leq uc^{SR}_{nes}, dc^{SR}_{nes} \leq \overline{EC}_{nes} \!-\! \underline{EC}_{nes}                 \quad \forall nes`
 
-:math:`0 \leq uc^{TR}_{nes}, dc^{TR}_{nes} \leq \overline{EC}_{nes} - \underline{EC}_{nes}                 \quad \forall nes`
+:math:`0 \leq uc^{TR}_{nes}, dc^{TR}_{nes} \leq \overline{EC}_{nes} \!-\! \underline{EC}_{nes}                 \quad \forall nes`
 
 :math:`0 \leq ec2b_{nes}  \leq \overline{EC}_{nes}                                                         \quad \forall nes`
 
@@ -530,9 +530,9 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq  hss_{nhs}                                                                                   \quad \forall nhs`
 
-:math:`0 \leq ec^{R+}_{nes}, ec^{R-}_{nes} \leq \overline{EC}_{nes}                                        \quad \forall nes`
+:math:`0 \leq ec^{R\!+\!}_{nes}, ec^{R-}_{nes} \leq \overline{EC}_{nes}                                        \quad \forall nes`
 
-:math:`0 \leq ec^{R+}_{nhz}, ec^{R-}_{nhz} \leq \overline{EC}_{nhz}                                        \quad \forall nhz`
+:math:`0 \leq ec^{R\!+\!}_{nhz}, ec^{R-}_{nhz} \leq \overline{EC}_{nhz}                                        \quad \forall nhz`
 
 :math:`0 \leq ec^{Comp}_{nhs} \leq \overline{EC}_{nhs}                                                     \quad \forall nhs`
 
