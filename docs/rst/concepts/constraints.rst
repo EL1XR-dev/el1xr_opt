@@ -119,9 +119,9 @@ Energy Conversion
 ~~~~~~~~~~~~~~~~~
 Energy conversion from energy from electricity to hydrogen and vice versa («``eAllEnergy2Ele``, ``eAllEnergy2Hyd``»)
 
-:math:`ep_{neg} = PF_{he} hc_{neg} \quad \forall neg`
+:math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \phydtoelecfunction_{\periodindex,\scenarioindex,\timeindex,\genindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGEH`
 
-:math:`hp_{nhz} \leq PF1_{ehk} +  PF2_{ehk} gc_{nhz} \quad \forall nhz`
+:math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \pelectohydfunction_{\periodindex,\scenarioindex,\timeindex,\genindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 Ramping Limits
 ~~~~~~~~~~~~~~
