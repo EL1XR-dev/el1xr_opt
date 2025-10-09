@@ -267,11 +267,23 @@ The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736
 
 Energy Inflows
 ~~~~~~~~~~~~~~
-Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data («``eMaxInflows2Commitment``, ``eMinInflows2Commitment``»)
+Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data.
+
+For maximum electricity inflows («``eMaxEleInflows2Commitment``»)
 
 :math:`\frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
+For minimum electricity inflows («``eMinEleInflows2Commitment``»)
+
+:math:`\frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+For maximum hydrogen inflows («``eMaxHydInflows2Commitment``»)
+
 :math:`\frac{\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+For minimum hydrogen inflows («``eMinHydInflows2Commitment``»)
+
+:math:`\frac{\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Energy Outflows
 ~~~~~~~~~~~~~~~
