@@ -113,7 +113,7 @@ Total charge of an electricity ESS («``eEleTotalCharge``»)
 
 Total charge of a hydrogen unit («``eHydTotalCharge``»)
 
-:math:`\frac{hc_{nhs}}{\underline{HC}_{nhs}} = 1 \!+\! \frac{hc2b_{nhs}}{\underline{EC}_{nhs}} \quad \forall nhs`
+:math:`\frac{\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Energy Conversion
 ~~~~~~~~~~~~~~~~~
@@ -149,15 +149,15 @@ Maximum ramp up and ramp down for the  second block of a hydrogen unit («``eMax
 
 Maximum ramp down and ramp up for the charge of a hydrogen ESS («``eMaxRampUpHydCharge``, ``eMaxRampDwHydCharge``»)
 
-:math:`\frac{- hc2b_{n-\nu,hs} \!+\! hc2b_{nhs}}{DUR_n RU_hs} \geq \!-\! 1 \quad \forall nhs`
+:math:`\frac{- hc2b_{n-\nu,hs} \!+\! hc2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_n RU_hs} \geq \!-\! 1 \quad \forall nhs`
 
-:math:`\frac{- hc2b_{n-\nu,hs} \!+\! hc2b_{nhs}}{DUR_n RD_hs} \leq   1 \quad \forall nhs`
+:math:`\frac{- hc2b_{n-\nu,hs} \!+\! hc2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_n RD_hs} \leq   1 \quad \forall nhs`
 
 Maximum ramp up and ramp down for the outflows of a hydrogen ESS («``eMaxRampUpHydOutflows``, ``eMaxRampDwHydOutflows``»)
 
-:math:`\frac{- heo_{n-\nu,hs} \!+\! heo_{nhs}}{DUR_n RU_hs} \leq   1 \quad \forall nhs`
+:math:`\frac{- heo_{n-\nu,hs} \!+\! heo_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_n RU_hs} \leq   1 \quad \forall nhs`
 
-:math:`\frac{- heo_{n-\nu,hs} \!+\! heo_{nhs}}{DUR_n RD_hs} \geq \!-\! 1 \quad \forall nhs`
+:math:`\frac{- heo_{n-\nu,hs} \!+\! heo_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_n RD_hs} \geq \!-\! 1 \quad \forall nhs`
 
 Ramp up and ramp down for the provision of demand to the hydrogen customers («``eMaxRampUpHydDemand``, ``eMaxRampDwHydDemand``»)
 
@@ -202,11 +202,11 @@ Minimum up time and down time of hydrogen unit [h] («``eMinUpTimeHyd``, ``eMinD
 
 Decision variable of the operation of the compressor conditioned by the on/off status variable of itself [GWh] («``eCompressorOperStatus``»)
 
-:math:`ec^{Comp}_{nhs} \geq hp_{\periodindex,\scenarioindex,\timeindex,\genindex}/\overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \overline{EC}^{comp}_{nhs} \!-\! 1e-3 (1 \!-\! hcf_{nhs}) \quad \forall nhs`
+:math:`ec^{Comp}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \geq hp_{\periodindex,\scenarioindex,\timeindex,\genindex}/\overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \overline{EC}^{comp}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! 1e-3 (1 \!-\! hcf_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall nhs`
 
 Decision variable of the operation of the compressor conditioned by the status of energy of the hydrogen tank [kgH2] («``eCompressorOperInventory``»)
 
-:math:`hsi_{nhs} \leq \underline{HI}_{nhs} \!+\! (\overline{HI}_{nhs} \!-\! \underline{HI}_{nhs}) hcf_{nhs} \quad \forall nhs`
+:math:`hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \underline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! (\overline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) hcf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
 
 StandBy status of the electrolyzer conditioning its electricity consumption («``eEleStandBy_consumption_UpperBound``, ``eEleStandBy_consumption_LowerBound``»)
 
@@ -264,9 +264,9 @@ The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736
 
 :math:`\frac{esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\underline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq euc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
-:math:`\frac{hsi_{nhs}}{\overline{HI}_{nhs}}  \leq huc_{nhs} \quad \forall nhs`
+:math:`\frac{hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq huc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
 
-:math:`\frac{hsi_{nhs}}{\underline{HI}_{nhs}} \geq huc_{nhs} \quad \forall nhs`
+:math:`\frac{hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\underline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq huc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
 
 
 Energy Inflows
@@ -321,7 +321,7 @@ Incompatibility between charge and outflows use of an electricity ESS [p.u.] («
 
 Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eIncompatibilityHydChargeOutflows``»)
 
-:math:`\frac{heo_{nhs} \!+\! hc2b_{nhs}}{\overline{HC}_{nhs} \!-\! \underline{HC}_{nhs}} \leq 1 \quad \forall nhs`
+:math:`\frac{heo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! hc2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall nhs`
 
 Operating reserves from energy storage systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -498,7 +498,7 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq ec_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                           \quad \forall nhz`
 
-:math:`0 \leq hc_{nhs}   \leq \overline{HC}_{nhs}                                                          \quad \forall nhs`
+:math:`0 \leq hc_{\periodindex,\scenarioindex,\timeindex,\storageindex}   \leq \overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                          \quad \forall nhs`
 
 :math:`0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net`
 
@@ -508,7 +508,7 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq eeo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \max(\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex},\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex})                                 \quad \forall nes`
 
-:math:`0 \leq heo_{nhs} \leq \max(\overline{HP}_{nhs},\overline{HC}_{nhs})                                 \quad \forall nhs`
+:math:`0 \leq heo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \max(\overline{HP}_{\periodindex,\scenarioindex,\timeindex,\storageindex},\overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex})                                 \quad \forall nhs`
 
 :math:`0 \leq up^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex}, dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
@@ -520,21 +520,21 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq ec2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                         \quad \forall nes`
 
-:math:`0 \leq hc2b_{nhs}  \leq \overline{HC}_{nhs}                                                         \quad \forall nhs`
+:math:`0 \leq hc2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                         \quad \forall nhs`
 
 :math:`\underline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                      \quad \forall nes`
 
-:math:`\underline{HI}_{nhs} \leq  hsi_{nhs}  \leq \overline{HI}_{nhs}                                      \quad \forall nhs`
+:math:`\underline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                      \quad \forall nhs`
 
 :math:`0 \leq  ess_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                   \quad \forall nes`
 
-:math:`0 \leq  hss_{nhs}                                                                                   \quad \forall nhs`
+:math:`0 \leq  hss_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                   \quad \forall nhs`
 
 :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                        \quad \forall nes`
 
 :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\genindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                        \quad \forall nhz`
 
-:math:`0 \leq ec^{Comp}_{nhs} \leq \overline{EC}_{nhs}                                                     \quad \forall nhs`
+:math:`0 \leq ec^{Comp}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                     \quad \forall nhs`
 
 :math:`0 \leq ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                  \quad \forall nhz`
 
