@@ -299,19 +299,21 @@ Relationship between electricity outflows and commitment of the units («``eEleM
 
 Relationship between hydrogen outflows and commitment of the units («``eHydMaxOutflows2Commitment``, ``eHydMinOutflows2Commitment``»)
 
-:math:`\frac{heo_{nhs}}{\overline{HEO}_{nhs}} \leq huc_{nhs} \quad \forall nhs`
+:math:`\frac{\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`\frac{heo_{nhs}}{\underline{HEO}_{nhs}} \geq huc_{nhs} \quad \forall nhs`
+:math:`\frac{\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-ESS electricity outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eEleEnergyOutflows``»)
+ESS electricity outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eEleMaxEnergyOutflows``») and («``eEleMinEnergyOutflows``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\rho_e}}^n DUR_{n'} (eeo_{n'es} - EEO_{n'es}) = 0 \quad \forall nes, n \in \rho_e`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\pelestorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\timeindex '} (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \leq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \pelestorageoutflowcycle_{\storageindex}, \storageindex \in \nEE`
 
-ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eHydMinEnergyOutflows``, ``eHydMaxEnergyOutflows``»)
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\pelestorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\timeindex '} (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \peleminoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \pelestorageoutflowcycle_{\storageindex}, \storageindex \in \nEE`
 
-:math:`\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \geq 0 \quad \forall nhs, n \in \rho_h`
+ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied («``eHydMaxEnergyOutflows``») and («``eHydMinEnergyOutflows``»)
 
-:math:`\sum_{n' = n-\frac{\tau_h}{\rho_h}}^n DUR_{n'} (heo_{n'hs} - HEO_{n'hs}) \leq 0 \quad \forall nhs, n \in \rho_h`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\phydstorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\timeindex '} (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \leq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \phydstorageoutflowcycle_{\storageindex}, \storageindex \in \nEH`
+
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\phydstorageoutflowcycle_{\storageindex}}}^{\timeindex} \ptimestepduration_{\timeindex '} (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \phydminoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\timeindex \in \phydstorageoutflowcycle_{\storageindex}, \storageindex \in \nEH`
 
 Incompatibility between charge and outflows use of an electricity ESS [p.u.] («``eIncompatibilityEleChargeOutflows``»)
 
@@ -370,7 +372,7 @@ Energy stored for downward operating reserve in consecutive time steps when ESS 
 Second block of a committed electric generator providing reserves
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eMaxEleOutput2ndBlock``, ``eMinEleOutput2ndBlock``»)
+Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eEleMaxOutput2ndBlock``») and («``eEleMinOutput2ndBlock``»)
 
 * D.A. Tejada-Aranego, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
 
