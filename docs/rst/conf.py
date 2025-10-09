@@ -406,6 +406,7 @@ mathjax3_config = {
             "peleminconsumption": r"\underline{EC}",            # Min electrical consumption
             "phydmaxconsumption": r"\overline{HC}",             # Max hydrogen consumption
             "phydminconsumption": r"\underline{HC}",            # Min hydrogen consumption
+            "peleconscompress": r"\overline{EC}^{compress}",    # Max electrical consumption (compression)
 
             # --- Technical Parameters ---
             "prampuprate": r"RU",                               # Ramp-up rate
@@ -523,6 +524,7 @@ mathjax3_config = {
             "vshutdownbin": r"sd",                              # Shut-down binary
             "veleshutdownbin": r"sd^{e}",                       # Electrical shut-down binary
             "vhydshutdownbin": r"sd^{h}",                       # Hydrogen shut-down binary
+            "vhydcompressbin": r"hc",                             # Hydrogen compression binary
             "vsecondblockproduction": r"p2b",                   # 2nd block production
             "velesecondblockproduction": r"p2b^{e}",            # Electrical 2nd block production
             "vhydsecondblockproduction": r"p2b^{h}",            # Hydrogen 2nd block production
