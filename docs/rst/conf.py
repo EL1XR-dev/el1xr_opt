@@ -408,12 +408,10 @@ mathjax3_config = {
             "phydminconsumption": r"\underline{HC}",            # Min hydrogen consumption
 
             # --- Technical Parameters ---
-            "prampuprate": r"R^{u}",                            # Ramp-up rate
-            "prampdwrate": r"R^{d}",                            # Ramp-down rate
-            "puptime": r"T^{u}",                                # Minimum up time
-            "pdwtime": r"T^{d}",                                # Minimum down time
-            "peleefficiency": r"\eta^{e}",                      # Electrical efficiency
-            "phydefficiency": r"\eta^{h}",                      # Hydrogen efficiency
+            "prampuprate": r"RU",                               # Ramp-up rate
+            "prampdwrate": r"RD",                               # Ramp-down rate
+            "puptime": r"TU",                                   # Minimum up time
+            "pdwtime": r"TD",                                   # Minimum down time
             "peletohydfunction": r"F^{e2h}",                    # Power-to-hydrogen conversion
             "phydtoelefunction": r"F^{h2e}",                    # Hydrogen-to-power conversion
 
