@@ -109,7 +109,7 @@ Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
 Total charge of an electricity ESS («``eEleTotalCharge``»)
 
-:math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemin consumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! URA^{SR}_{n}uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{SR}_{n}dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! URA^{SR}_{n}uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{SR}_{n}dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Total charge of a hydrogen unit («``eHydTotalCharge``»)
 
