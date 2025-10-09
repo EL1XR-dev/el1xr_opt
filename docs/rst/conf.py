@@ -451,11 +451,11 @@ mathjax3_config = {
             "peleinitvolt": r"V^{0}",                           # Initial voltage
 
             # --- Storage Parameters ---
-            "peleessduration": r"\tau^{e}",                     # Electrical Energy storage duration
-            "peleessinflowcycle": r"\tau^{i,e}",                # Electrical Inflow cycle duration
-            "peleessoutflowcycle": r"\tau^{o,e}",               # Electrical Outflow cycle duration
-            "peleessefficiency": r"\eta^{s,e}",                 # Electrical Storage efficiency
-            "peleesscapacity": r"\Psi^{e}",                     # Electrical Storage capacity
+            "pelestoragecycle": r"\tau^{e}",                    # Electrical Energy storage duration
+            "pelestorageinflowcycle": r"\tau^{i,e}",            # Electrical Inflow cycle duration
+            "pelestorageoutflowcycle": r"\tau^{o,e}",           # Electrical Outflow cycle duration
+            "pelestorageefficiency": r"\eta^{s,e}",             # Electrical Storage efficiency
+            "pelestoragecapacity": r"\Psi^{e}",                 # Electrical Storage capacity
             "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
             "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
             "pelemaxoutflow": r"\overline{EO}^{e}",             # Max electrical outflow
@@ -463,11 +463,11 @@ mathjax3_config = {
             "peleminoutflow": r"\underline{EO}^{e}",            # Min electrical outflow
             "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
             "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
-            "phydessduration": r"\tau^{s,h}",                   # Hydrogen Energy storage duration
-            "phydessinflowcycle": r"\tau^{i,h}",                # Hydrogen Inflow cycle duration
-            "phydessoutflowcycle": r"\tau^{o,h}",               # Hydrogen Outflow cycle duration
-            "phydessefficiency": r"\eta^{s,h}",                 # Hydrogen Storage efficiency
-            "phydesscapacity": r"\Psi^{h}",                     # Hydrogen Storage capacity
+            "phydstoragecycle": r"\tau^{s,h}",                  # Hydrogen Energy storage duration
+            "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
+            "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
+            "phydstorageefficiency": r"\eta^{s,h}",             # Hydrogen Storage efficiency
+            "phydstoragecapacity": r"\Psi^{h}",                 # Hydrogen Storage capacity
             "phydmaxinflow": r"\overline{EI}^{h}",              # Max hydrogen inflow
             "phydmaxoutflow": r"\overline{EO}^{h}",             # Max hydrogen outflow
             "phydmininflow": r"\underline{EI}^{h}",             # Min hydrogen inflow

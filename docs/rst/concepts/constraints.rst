@@ -232,9 +232,13 @@ Inventory  Balance (State-of-Charge)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electricity and ``eHydInventory`` for hydrogen, tracks the stored energy level over time.
 
-:math:`esi_{n-\frac{\tau_e}{\nu},es} + \sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (eei_{n'es} - eeo_{n'es} - ep_{n'es} + EF_{es} ec_{n'es}) = esi_{nes} + ess_{nes} \quad \forall nes`
+State-of-Charge balance for electricity storage systems:
 
-:math:`hsi_{n-\frac{\tau_h}{\nu},hs} + \sum_{n' = n-\frac{\tau_h}{\nu}}^n DUR_{n'} (hei_{n'hs} - heo_{n'hs} - hp_{n'hs} + EF_{hs} hc_{n'hs}) = hsi_{nhs} + hss_{nhs} \quad \forall nhs`
+:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecyle_{\storageindex}}{\ptimestepduration}}^{\timeindex} \ptimestepduration_{\timeindex '} (veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \pelestorageefficiency_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+State-of-Charge balance for hydrogen storage systems:
+
+:math:`\vhydinventory_{\timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\phydstoragecyle_{\storageindex}}{\ptimestepduration}}^{\timeindex} \ptimestepduration_{\timeindex '} (\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \phydstorageefficiency_{\storageindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
