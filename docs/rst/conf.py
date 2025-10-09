@@ -463,7 +463,7 @@ mathjax3_config = {
             "peleminoutflow": r"\underline{EO}^{e}",            # Min electrical outflow
             "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
             "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
-            "phydstoragecycle": r"\tau^{s,h}",                  # Hydrogen Energy storage duration
+            "phydstoragecycle": r"\tau^{h}",                  # Hydrogen Energy storage duration
             "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
             "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
             "phydstorageefficiency": r"\eta^{s,h}",             # Hydrogen Storage efficiency
