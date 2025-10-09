@@ -216,10 +216,8 @@ mathjax3_config = {
             "hourindex": r"h",                                  # Index for hour
             "intervalindex": r"u",                              # Index for time interval
             "timeindex": r"n",                                  # Index for time  step
-            "timestepindex": r"\nu",                            # Index for time  step interval
             "storageperiodindex": r"p'",                        # Index for storage period
             "storagetimeindex": r"n'",                          # Index for storage time step
-            "storagetimestepindex": r"\nu'",                    # Index for storage time step interval
             "storageweekindex": r"w'",                          # Index for storage week
             "storagemonthindex": r"m'",                         # Index for storage month
             "storagedayindex": r"d'",                           # Index for storage day
@@ -342,6 +340,7 @@ mathjax3_config = {
             "pfactorfou": r"F4",                                # Generic factor 4
 
             "pdiscountrate": r"\Gamma",                         # Discount rate
+            "ptimestep": r"\nu",                                  # Time step
             "ptimestepduration": r"\delta",                     # Time step duration (hours)
             "pintervalduration": r"\Delta u",                   # Time step interval duration (hours)
             "nintervals": r"N^{u}",                             # Number of time step intervals
