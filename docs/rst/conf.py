@@ -522,6 +522,9 @@ mathjax3_config = {
             "vshutdownbin": r"sd",                              # Shut-down binary
             "veleshutdownbin": r"sd^{e}",                       # Electrical shut-down binary
             "vhydshutdownbin": r"sd^{h}",                       # Hydrogen shut-down binary
+            "vsecondblockproduction": r"p2b",                   # 2nd block production
+            "velesecondblockproduction": r"p2b^{e}",            # Electrical 2nd block production
+            "vhydsecondblockproduction": r"p2b^{h}",            # Hydrogen 2nd block production
             "vmagvolt": r"v^{2}",                               # Squared voltage magnitude
             "vangvolt": r"\theta",                              # Voltage angle
             "vflow": r"f",                                      # Branch flow

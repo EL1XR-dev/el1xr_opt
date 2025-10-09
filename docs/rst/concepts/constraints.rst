@@ -382,15 +382,15 @@ Maximum and minimum electricity generation of the second block of a committed un
 
 * G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
 
-:math:`\frac{ep2b_{net} + up^{SR}_{net} + up^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \leq euc_{net} \quad \forall net`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
-:math:`\frac{ep2b_{net} - dp^{SR}_{net} - dp^{TR}_{net}}{\overline{EP}_{net} - \underline{EP}_{net}} \geq 0         \quad \forall net`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
 Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
 
-:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \leq huc_{nhg} \quad \forall nhg`
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nHGE`
 
-:math:`\frac{hp2b_{nhg}}{\overline{HP}_{nhg} - \underline{HP}_{nhg}} \geq 0         \quad \forall nhg`
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nHGE`
 
 Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («``eMaxEleESSOutput2ndBlock``, ``eMinEleESSOutput2ndBlock``»)
 
