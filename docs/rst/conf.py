@@ -341,7 +341,7 @@ mathjax3_config = {
             "pfactorfou": r"F4",                                # Generic factor 4
 
             "pdiscountrate": r"\Gamma",                         # Discount rate
-            "ptimestepduration": r"\Delta t",                     # Time step duration (hours)
+            "ptimestepduration": r"DUR",                     # Time step duration (hours)
             "pintervalduration": r"\Delta u",                   # Time step interval duration (hours)
             "nintervals": r"N^{u}",                             # Number of time step intervals
             "nperiods": r"N^{p}",                               # Number of periods
