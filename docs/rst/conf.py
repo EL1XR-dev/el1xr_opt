@@ -525,6 +525,9 @@ mathjax3_config = {
             "vsecondblockproduction": r"p2b",                   # 2nd block production
             "velesecondblockproduction": r"p2b^{e}",            # Electrical 2nd block production
             "vhydsecondblockproduction": r"p2b^{h}",            # Hydrogen 2nd block production
+            "vsecondblockconsumption": r"c2b",                  # 2nd block consumption
+            "velesecondblockconsumption": r"c2b^{e}",           # Electrical 2nd block consumption
+            "vhydsecondblockconsumption": r"c2b^{h}",           # Hydrogen 2nd block consumption
             "vmagvolt": r"v^{2}",                               # Squared voltage magnitude
             "vangvolt": r"\theta",                              # Voltage angle
             "vflow": r"f",                                      # Branch flow
