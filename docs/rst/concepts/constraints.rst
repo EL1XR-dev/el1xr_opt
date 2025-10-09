@@ -234,11 +234,11 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
 
 State-of-Charge balance for electricity storage systems:
 
-:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecyle_{\storageindex}}{\ptimestepduration}}^{\timeindex} \ptimestepduration_{\timeindex '} (veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \pelestorageefficiency_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration}}^{\timeindex} \ptimestepduration_{\timeindex '} (veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \veleproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \pelestorageefficiency_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 State-of-Charge balance for hydrogen storage systems:
 
-:math:`\vhydinventory_{\timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\phydstoragecyle_{\storageindex}}{\ptimestepduration}}^{\timeindex} \ptimestepduration_{\timeindex '} (\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \phydstorageefficiency_{\storageindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\vhydinventory_{\timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration},\storageindex} + \sum_{\timeindex ' = \timeindex-\frac{\phydstoragecycle_{\storageindex}}{\ptimestepduration}}^{\timeindex} \ptimestepduration_{\timeindex '} (\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} - \vhydproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} + \phydstorageefficiency_{\storageindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -291,13 +291,13 @@ For minimum hydrogen inflows («``eMinHydInflows2Commitment``»)
 
 Energy Outflows
 ~~~~~~~~~~~~~~~
-Relationship between electricity outflows and commitment of the units («``eMaxEleOutflows2Commitment``, ``eMinEleOutflows2Commitment``»)
+Relationship between electricity outflows and commitment of the units («``eEleMaxOutflows2Commitment``, ``eEleMinOutflows2Commitment``»)
 
-:math:`\frac{eeo_{nes}}{\overline{EEO}_{nes}} \leq euc_{nes} \quad \forall nes`
+:math:`\frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{eeo_{nes}}{\underline{EEO}_{nes}} \geq euc_{nes} \quad \forall nes`
+:math:`\frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-Relationship between hydrogen outflows and commitment of the units («``eMaxHydOutflows2Commitment``, ``eMinHydOutflows2Commitment``»)
+Relationship between hydrogen outflows and commitment of the units («``eHydMaxOutflows2Commitment``, ``eHydMinOutflows2Commitment``»)
 
 :math:`\frac{heo_{nhs}}{\overline{HEO}_{nhs}} \leq huc_{nhs} \quad \forall nhs`
 
