@@ -415,7 +415,7 @@ mathjax3_config = {
             "peleefficiency": r"\eta^{e}",                      # Electrical efficiency
             "phydefficiency": r"\eta^{h}",                      # Hydrogen efficiency
             "peletohydfunction": r"F^{e2h}",                    # Power-to-hydrogen conversion
-            "phydtoelecfunction": r"F^{h2e}",                   # Hydrogen-to-power conversion
+            "phydtoelefunction": r"F^{h2e}",                    # Hydrogen-to-power conversion
 
             # --- Cost Parameters ---
             "pstartupcost": r"CSU",                             # Start-up cost

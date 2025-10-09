@@ -119,9 +119,9 @@ Energy Conversion
 ~~~~~~~~~~~~~~~~~
 Energy conversion from energy from electricity to hydrogen and vice versa («``eAllEnergy2Ele``, ``eAllEnergy2Hyd``»)
 
-:math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \phydtoelecfunction_{\periodindex,\scenarioindex,\timeindex,\genindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGEH`
+:math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \phydtoelefunction_{\periodindex,\scenarioindex,\timeindex,\genindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGEH`
 
-:math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \pelectohydfunction_{\periodindex,\scenarioindex,\timeindex,\genindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \peletohydfunction_{\periodindex,\scenarioindex,\timeindex,\genindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 Ramping Limits
 ~~~~~~~~~~~~~~
