@@ -454,7 +454,7 @@ mathjax3_config = {
             "pelestoragecycle": r"\tau^{e}",                    # Electrical Energy storage duration
             "pelestorageinflowcycle": r"\tau^{i,e}",            # Electrical Inflow cycle duration
             "pelestorageoutflowcycle": r"\tau^{o,e}",           # Electrical Outflow cycle duration
-            "pelestorageefficiency": r"\eta^{s,e}",             # Electrical Storage efficiency
+            "pelestorageefficiency": r"\eta^{e}",             # Electrical Storage efficiency
             "pelestoragecapacity": r"\Psi^{e}",                 # Electrical Storage capacity
             "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
             "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
@@ -466,7 +466,7 @@ mathjax3_config = {
             "phydstoragecycle": r"\tau^{h}",                  # Hydrogen Energy storage duration
             "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
             "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
-            "phydstorageefficiency": r"\eta^{s,h}",             # Hydrogen Storage efficiency
+            "phydstorageefficiency": r"\eta^{h}",             # Hydrogen Storage efficiency
             "phydstoragecapacity": r"\Psi^{h}",                 # Hydrogen Storage capacity
             "phydmaxinflow": r"\overline{EI}^{h}",              # Max hydrogen inflow
             "phydmaxoutflow": r"\overline{EO}^{h}",             # Max hydrogen outflow

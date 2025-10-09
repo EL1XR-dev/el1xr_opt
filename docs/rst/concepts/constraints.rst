@@ -242,7 +242,7 @@ State-of-Charge balance for hydrogen storage systems:
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\velestoroperatbin`).
+The constraints prevent a storage unit from charging and discharging in the same timestep, using binary variables (:math:`\velestoroperatbin`) and (:math:`\vhydstoroperatbin`) to enforce this condition.
 
 Electricity Storage Charge/Discharge Incompatibility
 
