@@ -113,7 +113,7 @@ Total charge of an electricity ESS («``eEleTotalCharge``»)
 
 Total charge of a hydrogen unit («``eHydTotalCharge``»)
 
-:math:`\frac{\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\frac{\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Energy Conversion
 ~~~~~~~~~~~~~~~~~
@@ -317,11 +317,11 @@ ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 2
 
 Incompatibility between charge and outflows use of an electricity ESS [p.u.] («``eIncompatibilityEleChargeOutflows``»)
 
-:math:`\frac{eeo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! ec2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall nes`
+:math:`\frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eIncompatibilityHydChargeOutflows``»)
 
-:math:`\frac{heo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! hc2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall nhs`
+:math:`\frac{\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Operating reserves from energy storage systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
