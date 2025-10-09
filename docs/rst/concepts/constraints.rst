@@ -176,15 +176,11 @@ For dispatchable assets, these constraints model the on/off decisions.
 Logical relation between commitment, startup and shutdown status of a committed electricity unit (all except the VRE units) [p.u.] («``eEleCommitmentStartupShutdown``»)
 Initial commitment of the units is determined by the model based on the merit order loading, including the VRE and ESS units.
 
-:math:`\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \velecommitbin_{n-\timestep,\} = esu_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! esd_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
-
-Maximum commitment of an electricity unit (all except the VRE units) [p.u.] («``eEleMaxCommitment``»)
-
-:math:`euc_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq sum_{n' = n-\nu-TU_t}^n euc^{max}_{n't} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
+:math:`\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \velecommitbin_{\periodindex,\scenarioindex,\timeindex-\timestep,\genindex} = \velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
 Logical relation between commitment, startup and shutdown status of a committed hydrogen unit [p.u.] («``eHydCommitmentStartupShutdown``»)
 
-:math:`huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! huc_{n-\nu,hg} = hsu_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! hsd_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhg`
+:math:`\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\timestep,\genindex} = \velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 Minimum up time and down time of thermal unit [h] («``eMinUpTimeEle``, ``eMinDownTimeEle``»)
 

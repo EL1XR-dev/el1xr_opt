@@ -513,6 +513,9 @@ mathjax3_config = {
             "vstoroperatbin": r"sf",                            # Storage operating binary
             "velestoroperatbin": r"sf^{e}",                     # Electrical storage operating binary
             "vhydstoroperatbin": r"sf^{h}",                     # Hydrogen storage operating binary
+            "vmaxcommitbin": r"muc",                            # Maximum unit commitment binary
+            "velemaxcommitbin": r"muc^{e}",                     # Maximum electrical unit commitment binary
+            "vhydmaxcommitbin": r"muc^{h}",                     # Maximum hydrogen unit commitment binary
             "vcommitbin": r"uc",                                # Unit commitment binary
             "velecommitbin": r"uc^{e}",                         # Electrical unit commitment binary
             "vhydcommitbin": r"uc^{h}",                         # Hydrogen unit commitment binary
