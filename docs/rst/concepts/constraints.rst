@@ -242,13 +242,13 @@ State-of-Charge balance for hydrogen storage systems:
 
 Charge/Discharge Incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``eIncompatibilityEleChargeOutflows`` and related constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\velestoroperatbin`).
+The constraints prevent a storage unit from charging and discharging in the same timestep, using a binary variable (:math:`\velestoroperatbin`).
 
 Electricity Storage Charge/Discharge Incompatibility
 
-:math:`\frac{ec_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
+:math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\frac{ep_{nes}}{\overline{EP}_{nes}} \leq 1 - esf_{nes} \quad \forall nes`
+:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 - \velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Hydrogen Storage Charge/Discharge Incompatibility
 

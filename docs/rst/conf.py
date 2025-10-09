@@ -510,9 +510,9 @@ mathjax3_config = {
             "vspillage": r"es",                                 # Storage spillage
             "velespillage": r"es^{e}",                          # Electrical storage spillage
             "vhydspillage": r"es^{h}",                          # Hydrogen storage spillage
-            "vstoroperatbin": r"so",                            # Storage operating binary
-            "velestoroperatbin": r"so^{e}",                     # Electrical storage operating binary
-            "vhydstoroperatbin": r"so^{h}",                     # Hydrogen storage operating binary
+            "vstoroperatbin": r"sf",                            # Storage operating binary
+            "velestoroperatbin": r"sf^{e}",                     # Electrical storage operating binary
+            "vhydstoroperatbin": r"sf^{h}",                     # Hydrogen storage operating binary
             "vcommitbin": r"uc",                                # Unit commitment binary
             "velecommitbin": r"uc^{e}",                         # Electrical unit commitment binary
             "vhydcommitbin": r"uc^{h}",                         # Hydrogen unit commitment binary
