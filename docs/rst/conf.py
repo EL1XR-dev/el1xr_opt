@@ -147,6 +147,7 @@ mathjax3_config = {
             "nG": r"\mathcal{G}",                               # All generators
             "nGE": r"\mathcal{G}^{e}",                          # All electrical generators
             "nGER": r"\mathcal{G}^{e,res}",                     # All renewable electrical generators
+            "nGVRE": r"\mathcal{G}^{e,vres}",                   # All variable renewable electrical generators
             "nGENR": r"\mathcal{G}^{e,nonres}",                 # All non-renewable electrical generators
             "nGEH": r"\mathcal{G}^{e,h}",                       # All electrical generators consuming hydrogen
             "nGH": r"\mathcal{G}^{h}",                          # All hydrogen generators

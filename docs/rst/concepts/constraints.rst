@@ -34,15 +34,15 @@ Frequency containment reserves in normal operation (FCR-N)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{neg} rp^{FN}_{neg} \!+\! \sum_{nes} rc^{FN}_{nes} \leq R^{FN}_{n} \quad \forall n`
+:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\genindex} rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\periodindex,\scenarioindex,\timeindex,\storageindex} rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq R^{FN}_{n} \quad \forall n`
 
 Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{neg} up^{FD}_{neg} \!+\! \sum_{nes} uc^{FD}_{nes} \leq UR^{FD}_{n} \quad \forall n`
+:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\genindex} up^{FD}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\periodindex,\scenarioindex,\timeindex,\storageindex} uc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq UR^{FD}_{n} \quad \forall n`
 
-:math:`\sum_{neg} dp^{FD}_{neg} \!+\! \sum_{nes} dc^{FD}_{nes} \leq DR^{FD}_{n} \quad \forall n`
+:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\genindex} dp^{FD}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\periodindex,\scenarioindex,\timeindex,\storageindex} dc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq DR^{FD}_{n} \quad \forall n`
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,15 +101,15 @@ Output and Charge Limits
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Total generation of an electricity unit (all except the VRE units) («``eEleTotalOutput``»)
 
-:math:`\frac{ep_{neg}}{\underline{EP}_{neg}} = euc_{neg} \!+\! \frac{ep2b_{neg} \!+\! URA^{SR}_{n}up^{SR}_{nes} \!+\! URA^{TR}_{n}up^{TR}_{nes} \!-\! DRA^{SR}_{n}dp^{SR}_{nes} \!-\! DRA^{TR}_{n}dp^{TR}_{nes}}{\underline{EP}_{neg}} \quad \forall neg`
+:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! URA^{SR}_{n}up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! DRA^{SR}_{n}dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
 Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
-:math:`\frac{hp_{nhg}}{\underline{HP}_{nhg}} = huc_{nhg} \!+\! \frac{hp2b_{nhz}}{\underline{HP}_{nhg}} \quad \forall nh`
+:math:`\frac{\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH`
 
 Total charge of an electricity ESS («``eEleTotalCharge``»)
 
-:math:`\frac{ec_{nes}}{\underline{EC}_{nes}} = 1 \!+\! \frac{ec2b_{nes} \!-\! URA^{SR}_{n}uc^{SR}_{nes} \!-\! URA^{TR}_{n}uc^{TR}_{nes} \!+\! DRA^{SR}_{n}dc^{SR}_{nes} \!+\! DRA^{TR}_{n}dc^{TR}_{nes}}{\underline{EC}_{nes}} \quad \forall nes`
+:math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemin consumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! URA^{SR}_{n}uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{SR}_{n}dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Total charge of a hydrogen unit («``eHydTotalCharge``»)
 
@@ -131,21 +131,21 @@ Maximum ramp up and ramp down for the second block of a non-renewable (thermal, 
 
 * P. Damcı-Kurt, S. Küçükyavuz, D. Rajan, and A. Atamtürk, “A polyhedral study of production ramping,” Math. Program., vol. 158, no. 1–2, pp. 175–205, Jul. 2016. `10.1007/s10107-015-0919-9 <https://doi.org/10.1007/s10107-015-0919-9>`_
 
-:math:`\frac{- ep2b_{n-\nu,g} \!-\! dp^{SR}_{n-\nu,g} \!-\! dp^{TR}_{n-\nu,g} \!+\! ep2b_{neg} \!+\! up^{SR}_{neg} \!+\! up^{TR}_{neg}}{DUR_n RU_g} \leq   euc_{neg}      \!-\! esu_{neg} \quad \forall neg`
+:math:`\frac{- ep2b_{n-\nu,g} \!-\! dp^{SR}_{n-\nu,g} \!-\! dp^{TR}_{n-\nu,g} \!+\! ep2b_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! up^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! up^{TR}_{\periodindex,\scenarioindex,\timeindex,\genindex}}{DUR_n RU_g} \leq   euc_{\periodindex,\scenarioindex,\timeindex,\genindex}      \!-\! esu_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
-:math:`\frac{- ep2b_{n-\nu,g} \!+\! up^{SR}_{n-\nu,g} \!+\! up^{TR}_{n-\nu,g} \!+\! ep2b_{neg} \!-\! dp^{SR}_{neg} \!-\! dp^{TR}_{neg}}{DUR_n RD_g} \geq \!-\! euc_{n-\nu,g} \!+\! esd_{neg} \quad \forall neg`
+:math:`\frac{- ep2b_{n-\nu,g} \!+\! up^{SR}_{n-\nu,g} \!+\! up^{TR}_{n-\nu,g} \!+\! ep2b_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! dp^{TR}_{\periodindex,\scenarioindex,\timeindex,\genindex}}{DUR_n RD_g} \geq \!-\! euc_{n-\nu,g} \!+\! esd_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
 Maximum ramp down and ramp up for the charge of an electricity ESS («``eMaxRampUpEleCharge``, ``eMaxRampDwEleCharge``»)
 
-:math:`\frac{- ec2b_{n-\nu,es} \!+\! dc^{SR}_{n-\nu,es} \!+\! dc^{TR}_{n-\nu,es} \!+\! ec2b_{nes} \!-\! uc^{SR}_{nes} \!-\! uc^{TR}_{nes}}{DUR_n RU_es} \geq \!-\! 1 \quad \forall nes`
+:math:`\frac{- ec2b_{n-\nu,es} \!+\! dc^{SR}_{n-\nu,es} \!+\! dc^{TR}_{n-\nu,es} \!+\! ec2b_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! uc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_n RU_es} \geq \!-\! 1 \quad \forall nes`
 
-:math:`\frac{- ec2b_{n-\nu,es} \!-\! uc^{SR}_{n-\nu,es} \!-\! uc^{TR}_{n-\nu,es} \!+\! ec2b_{nes} \!+\! dc^{SR}_{nes} \!+\! dc^{TR}_{nes}}{DUR_n RD_es} \leq   1 \quad \forall nes`
+:math:`\frac{- ec2b_{n-\nu,es} \!-\! uc^{SR}_{n-\nu,es} \!-\! uc^{TR}_{n-\nu,es} \!+\! ec2b_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_n RD_es} \leq   1 \quad \forall nes`
 
 Maximum ramp up and ramp down for the  second block of a hydrogen unit («``eMaxRampUpHydOutput``, ``eMaxRampDwHydOutput``»)
 
-:math:`\frac{- hp2b_{n-\nu,hg} \!+\! hp2b_{nhg}}{DUR_n RU_hg} \leq   huc_{nhg}      \!-\! hsu_{nhg} \quad \forall nhg`
+:math:`\frac{- hp2b_{n-\nu,hg} \!+\! hp2b_{\periodindex,\scenarioindex,\timeindex,\genindex}}{DUR_n RU_hg} \leq   huc_{\periodindex,\scenarioindex,\timeindex,\genindex}      \!-\! hsu_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhg`
 
-:math:`\frac{- hp2b_{n-\nu,hg} \!+\! hp2b_{nhg}}{DUR_n RD_hg} \geq \!-\! huc_{n-\nu,hg} \!+\! hsd_{nhg} \quad \forall nhg`
+:math:`\frac{- hp2b_{n-\nu,hg} \!+\! hp2b_{\periodindex,\scenarioindex,\timeindex,\genindex}}{DUR_n RD_hg} \geq \!-\! huc_{n-\nu,hg} \!+\! hsd_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhg`
 
 Maximum ramp down and ramp up for the charge of a hydrogen ESS («``eMaxRampUpHydCharge``, ``eMaxRampDwHydCharge``»)
 
@@ -167,7 +167,7 @@ Ramp up and ramp down for the provision of demand to the hydrogen customers («`
 
 Differences between electricity consumption of two consecutive hours [GW] («``eEleConsumptionDiff``»)
 
-:math:`-ec_{n-\nu,es} \!+\! ec_{nes} = RC^{\!+\!}_{hz} \!-\! RC^{-}_{hz}`
+:math:`-ec_{n-\nu,es} \!+\! ec_{\periodindex,\scenarioindex,\timeindex,\storageindex} = RC^{\!+\!}_{hz} \!-\! RC^{-}_{hz}`
 
 Unit Commitment Logic
 ~~~~~~~~~~~~~~~~~~~~~
@@ -176,15 +176,15 @@ For dispatchable assets, these constraints model the on/off decisions.
 Logical relation between commitment, startup and shutdown status of a committed electricity unit (all except the VRE units) [p.u.] («``eEleCommitmentStartupShutdown``»)
 Initial commitment of the units is determined by the model based on the merit order loading, including the VRE and ESS units.
 
-:math:`euc_{neg} \!-\! euc_{n-\nu,g} = esu_{neg} \!-\! esd_{neg} \quad \forall neg`
+:math:`euc_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! euc_{n-\nu,g} = esu_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! esd_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
 Maximum commitment of an electricity unit (all except the VRE units) [p.u.] («``eEleMaxCommitment``»)
 
-:math:`euc_{neg} \leq sum_{n' = n-\nu-TU_t}^n euc^{max}_{n't} \quad \forall neg`
+:math:`euc_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq sum_{n' = n-\nu-TU_t}^n euc^{max}_{n't} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
 Logical relation between commitment, startup and shutdown status of a committed hydrogen unit [p.u.] («``eHydCommitmentStartupShutdown``»)
 
-:math:`huc_{nhg} \!-\! huc_{n-\nu,hg} = hsu_{nhg} \!-\! hsd_{nhg} \quad \forall nhg`
+:math:`huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! huc_{n-\nu,hg} = hsu_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! hsd_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhg`
 
 Minimum up time and down time of thermal unit [h] («``eMinUpTimeEle``, ``eMinDownTimeEle``»)
 
@@ -196,13 +196,13 @@ Minimum up time and down time of thermal unit [h] («``eMinUpTimeEle``, ``eMinDo
 
 Minimum up time and down time of hydrogen unit [h] («``eMinUpTimeHyd``, ``eMinDownTimeHyd``»)
 
-:math:`\sum_{n'=n\!+\!\nu-TU_h}^n hsu_{n'hg} \leq     huc_{nhg} \quad \forall nhg`
+:math:`\sum_{n'=n\!+\!\nu-TU_h}^n hsu_{n'hg} \leq     huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhg`
 
-:math:`\sum_{n'=n\!+\!\nu-TD_h}^n hsd_{n'hg} \leq 1 \!-\! huc_{nhg} \quad \forall nhg`
+:math:`\sum_{n'=n\!+\!\nu-TD_h}^n hsd_{n'hg} \leq 1 \!-\! huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhg`
 
 Decision variable of the operation of the compressor conditioned by the on/off status variable of itself [GWh] («``eCompressorOperStatus``»)
 
-:math:`ec^{Comp}_{nhs} \geq hp_{nhz}/\overline{HP}_{nhz} \overline{EC}^{comp}_{nhs} \!-\! 1e-3 (1 \!-\! hcf_{nhs}) \quad \forall nhs`
+:math:`ec^{Comp}_{nhs} \geq hp_{\periodindex,\scenarioindex,\timeindex,\genindex}/\overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \overline{EC}^{comp}_{nhs} \!-\! 1e-3 (1 \!-\! hcf_{nhs}) \quad \forall nhs`
 
 Decision variable of the operation of the compressor conditioned by the status of energy of the hydrogen tank [kgH2] («``eCompressorOperInventory``»)
 
@@ -210,19 +210,19 @@ Decision variable of the operation of the compressor conditioned by the status o
 
 StandBy status of the electrolyzer conditioning its electricity consumption («``eEleStandBy_consumption_UpperBound``, ``eEleStandBy_consumption_LowerBound``»)
 
-:math:`ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} hsf_{nhz} \quad \forall nhz`
+:math:`ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \geq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex} hsf_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhz`
 
-:math:`ec^{StandBy}_{nhz} \leq \overline{EC}_{nhz} hsf_{nhz} \quad \forall nhz`
+:math:`ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex} hsf_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhz`
 
 StandBy status of the electrolyzer conditioning its hydrogen production («``eHydStandBy_production_UpperBound``, ``eHydStandBy_production_LowerBound``»)
 
-:math:`ec^{StandBy}_{nhz} \geq \overline{EC}_{nhz} (1 \!-\! hsf_{nhz}) \quad \forall nhz`
+:math:`ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \geq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex} (1 \!-\! hsf_{\periodindex,\scenarioindex,\timeindex,\genindex}) \quad \forall nhz`
 
-:math:`ec^{StandBy}_{nhz} \leq \underline{EC}_{nhz} (1 \!-\! hsf_{nhz}) \quad \forall nhz`
+:math:`ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex} (1 \!-\! hsf_{\periodindex,\scenarioindex,\timeindex,\genindex}) \quad \forall nhz`
 
 Avoid transition status from off to StandBy of the electrolyzer («``eHydAvoidTransitionOff2StandBy``»)
 
-:math:`hsf_{nhz} \leq huc_{nhz} \quad \forall nhz`
+:math:`hsf_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhz`
 
 3. Energy Storage Dynamics
 --------------------------
@@ -260,9 +260,9 @@ Maximum and Minimum Relative Inventory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the maximum capacity («``eMaxInventory2Comm``, ``eMinInventory2Comm``»)
 
-:math:`\frac{esi_{nes}}{\overline{EI}_{nes}}  \leq euc_{nes} \quad \forall nes`
+:math:`\frac{esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq euc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
-:math:`\frac{esi_{nes}}{\underline{EI}_{nes}} \geq euc_{nes} \quad \forall nes`
+:math:`\frac{esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\underline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq euc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 :math:`\frac{hsi_{nhs}}{\overline{HI}_{nhs}}  \leq huc_{nhs} \quad \forall nhs`
 
@@ -317,7 +317,7 @@ ESS hydrogen minimum and maximum outflows (only for load levels multiple of 1, 2
 
 Incompatibility between charge and outflows use of an electricity ESS [p.u.] («``eIncompatibilityEleChargeOutflows``»)
 
-:math:`\frac{eeo_{nes} \!+\! ec2b_{nes}}{\overline{EC}_{nes} \!-\! \underline{EC}_{nes}} \leq 1 \quad \forall nes`
+:math:`\frac{eeo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! ec2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall nes`
 
 Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eIncompatibilityHydChargeOutflows``»)
 
@@ -327,54 +327,54 @@ Operating reserves from energy storage systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Operating reserves from ESS can only be if enought energy is available for discharging
 
-:math:`RA^{FN}_{n}rp^{FN}_{nes} \!+\! URA^{FD}_{n}up^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! URA^{FD}_{n}up^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{                      esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
 
-:math:`RA^{FN}_{n}rp^{FN}_{nes} \!+\! DRA^{FD}_{n}dp^{FD}_{nes} \leq \frac{\overline{EI}_{nes} \!-\! esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{FD}_{n}dp^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
 
 or for charging
 
-:math:`RA^{FN}_{n}rc^{FN}_{nes} \!+\! URA^{FD}_{n}uc^{FD}_{nes} \leq \frac{\overline{EI}_{nes} \!-\! esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! URA^{FD}_{n}uc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
 
-:math:`RA^{FN}_{n}rc^{FN}_{nes} \!+\! DRA^{FD}_{n}dc^{FD}_{nes} \leq \frac{                      esi_{nes}}{DUR_{n}} \quad \forall nes`
+:math:`RA^{FN}_{n}rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{FD}_{n}dc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{                      esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
 
 Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
 
-:math:`\frac{uc^{SR}_{nes} \!+\! uc^{TR}_{nes}}{\overline{EC}_{nes}} \leq esf_{nes} \quad \forall nes`
+:math:`\frac{uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! uc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
 
-:math:`\frac{up^{SR}_{nes} \!+\! up^{TR}_{nes}}{\overline{EP}_{nes}} \leq esf_{nes} \quad \forall nes`
+:math:`\frac{up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! up^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
 
-:math:`\frac{dc^{SR}_{nes} \!+\! dc^{TR}_{nes}}{\overline{EC}_{nes}} \leq 1 \!-\! esf_{nes} \quad \forall nes`
+:math:`\frac{dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \!-\! esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
 
-:math:`\frac{dp^{SR}_{nes} \!+\! dp^{TR}_{nes}}{\overline{EP}_{nes}} \leq 1 \!-\! esf_{nes} \quad \forall nes`
+:math:`\frac{dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dp^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \!-\! esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{nes} \!+\! uc^{TR}_{nes}) \leq \overline{EC}_{nes} \!-\! esi_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! uc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{nes} \!+\! dc^{TR}_{nes}) \leq esi_{nes} \!-\! \underline{EC}_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{nes} \!+\! up^{TR}_{nes}) \leq \overline{EP}_{nes} \!-\! esi_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! up^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{nes} \!+\! dp^{TR}_{nes}) \leq esi_{nes} \!-\! \underline{EP}_{nes} \quad \forall nes`
+:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dp^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
 Second block of a committed electric generator providing reserves
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eEleMaxOutput2ndBlock``») and («``eEleMinOutput2ndBlock``»)
 
-* D.A. Tejada-Aranego, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
+* D.A. Tejada-Ara\periodindex,\scenarioindex,\timeindex,\genindexo, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
 
 * C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
 
@@ -490,53 +490,53 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 -----------------------
 To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
 
-:math:`0 \leq ep_{neg}                               \leq \overline{EP}_{neg}                              \quad \forall neg`
+:math:`0 \leq ep_{\periodindex,\scenarioindex,\timeindex,\genindex}                               \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                              \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
-:math:`0 \leq hp_{nhg}   \leq \overline{HP}_{nhg}                                                          \quad \forall nhg`
+:math:`0 \leq hp_{\periodindex,\scenarioindex,\timeindex,\genindex}   \leq \overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                          \quad \forall nhg`
 
-:math:`0 \leq ec_{nes}  \leq \overline{EC}_{nes}                                                           \quad \forall nes`
+:math:`0 \leq ec_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                           \quad \forall nes`
 
-:math:`0 \leq ec_{nhz}  \leq \overline{EC}_{nhz}                                                           \quad \forall nhz`
+:math:`0 \leq ec_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                           \quad \forall nhz`
 
 :math:`0 \leq hc_{nhs}   \leq \overline{HC}_{nhs}                                                          \quad \forall nhs`
 
 :math:`0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net`
 
-:math:`0 \leq ep2b_{neg} \leq \overline{EP}_{neg} \!-\! \underline{EP}_{neg}                                   \quad \forall neg`
+:math:`0 \leq ep2b_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
-:math:`0 \leq hp2b_{nhg} \leq \overline{HP}_{nhg} \!-\! \underline{HP}_{nhg}                                   \quad \forall nh`
+:math:`0 \leq hp2b_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall nh`
 
-:math:`0 \leq eeo_{nes} \leq \max(\overline{EP}_{nes},\overline{EC}_{nes})                                 \quad \forall nes`
+:math:`0 \leq eeo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \max(\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex},\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex})                                 \quad \forall nes`
 
 :math:`0 \leq heo_{nhs} \leq \max(\overline{HP}_{nhs},\overline{HC}_{nhs})                                 \quad \forall nhs`
 
-:math:`0 \leq up^{SR}_{neg}, dp^{SR}_{neg}  \leq \overline{EP}_{neg} \!-\! \underline{EP}_{neg}                \quad \forall neg`
+:math:`0 \leq up^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex}, dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
-:math:`0 \leq up^{TR}_{neg}, dp^{TR}_{neg}  \leq \overline{EP}_{neg} \!-\! \underline{EP}_{neg}                \quad \forall neg`
+:math:`0 \leq up^{TR}_{\periodindex,\scenarioindex,\timeindex,\genindex}, dp^{TR}_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
-:math:`0 \leq uc^{SR}_{nes}, dc^{SR}_{nes} \leq \overline{EC}_{nes} \!-\! \underline{EC}_{nes}                 \quad \forall nes`
+:math:`0 \leq uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                 \quad \forall nes`
 
-:math:`0 \leq uc^{TR}_{nes}, dc^{TR}_{nes} \leq \overline{EC}_{nes} \!-\! \underline{EC}_{nes}                 \quad \forall nes`
+:math:`0 \leq uc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, dc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                 \quad \forall nes`
 
-:math:`0 \leq ec2b_{nes}  \leq \overline{EC}_{nes}                                                         \quad \forall nes`
+:math:`0 \leq ec2b_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                         \quad \forall nes`
 
 :math:`0 \leq hc2b_{nhs}  \leq \overline{HC}_{nhs}                                                         \quad \forall nhs`
 
-:math:`\underline{EI}_{nes} \leq  esi_{nes}  \leq \overline{EI}_{nes}                                      \quad \forall nes`
+:math:`\underline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                      \quad \forall nes`
 
 :math:`\underline{HI}_{nhs} \leq  hsi_{nhs}  \leq \overline{HI}_{nhs}                                      \quad \forall nhs`
 
-:math:`0 \leq  ess_{nes}                                                                                   \quad \forall nes`
+:math:`0 \leq  ess_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                   \quad \forall nes`
 
 :math:`0 \leq  hss_{nhs}                                                                                   \quad \forall nhs`
 
-:math:`0 \leq ec^{R\!+\!}_{nes}, ec^{R-}_{nes} \leq \overline{EC}_{nes}                                        \quad \forall nes`
+:math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                        \quad \forall nes`
 
-:math:`0 \leq ec^{R\!+\!}_{nhz}, ec^{R-}_{nhz} \leq \overline{EC}_{nhz}                                        \quad \forall nhz`
+:math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\genindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                        \quad \forall nhz`
 
 :math:`0 \leq ec^{Comp}_{nhs} \leq \overline{EC}_{nhs}                                                     \quad \forall nhs`
 
-:math:`0 \leq ec^{StandBy}_{nhz} \leq \overline{EC}_{nhz}                                                  \quad \forall nhz`
+:math:`0 \leq ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                  \quad \forall nhz`
 
 :math:`-\overline{ENF}_{nijc} \leq  ef_{nij}  \leq \overline{ENF}_{nijc}                                   \quad \forall nijc`
 
