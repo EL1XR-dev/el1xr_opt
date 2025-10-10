@@ -8,7 +8,7 @@ Python::
     from el1xr_opt.Modules.oM_Sequence import routine
     from el1xr_opt.Modules.oM_LoadCase import load_case
 
-    data = load_case("Home1")
+    data = load_case(case="Home1")
 
     m = routine(**data)
 
