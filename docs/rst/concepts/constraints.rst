@@ -19,13 +19,13 @@ Eletricity bought from the market («``eEleRetMaxBuy``»)
 
 If :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0`
 
-:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex`
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Eletricity sold to the market («``eEleRetMaxSell``»)
 
 If :math:`\pelemaxmarketsell_{\traderindex} >= 0.0`
 
-:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex`
+:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Reserve Electricity Market Participation (to be implemented)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,22 +34,24 @@ Frequency containment reserves in normal operation (FCR-N)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\genindex} rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\periodindex,\scenarioindex,\timeindex,\storageindex} rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq R^{FN}_{n} \quad \forall n`
+:math:`\sum_{\genindex} rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex} rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq R^{FN}_{\periodindex, \scenarioindex,\timeindex} \quad \forall \periodindex, \scenarioindex,\timeindex`
 
 Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\genindex} up^{FD}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\periodindex,\scenarioindex,\timeindex,\storageindex} uc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq UR^{FD}_{n} \quad \forall n`
+:math:`\sum_{\genindex} \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex} \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq UR^{FD}_{\periodindex, \scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
-:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\genindex} dp^{FD}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\periodindex,\scenarioindex,\timeindex,\storageindex} dc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq DR^{FD}_{n} \quad \forall n`
+:math:`\sum_{\genindex} \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex} \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq DR^{FD}_{\periodindex, \scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
 A set of constraints starting with ``eElePeak...`` identify the highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
 
 .. math::
-   \velepeakdemand_{\periodindex,\scenarioindex,\text{m,er,peak}} \ge \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\text{er}} \!-\! 100 \cdot \sum_{\text{peak'} < \text{peak}} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\text{er,peak'}}
+   \velepeakdemand_{\periodindex,\scenarioindex, \monthindex, \traderindex, \peakindex} \geq \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \!-\! 100 \sum_{\peakindex ' < \peakindex} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex '}     \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex|\traderindex \in \nRE, \peakindex \in \nKE
+
+
 
 2. Energy Balance
 -----------------
