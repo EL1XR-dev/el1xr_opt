@@ -64,8 +64,8 @@ Sets
 ------------  ------------------------------------------------------------------------------  -----------------------------------------
 :math:`\nB`   Node or bus bar in the network                                                  :code:`model.nd`
 :math:`\nC`   Electricity connection (from node, to node, circuit ID)                         :code:`model.cc`
-:math:`\nL`   Electricity arc (transmission line)                                             :code:`model.eln`
-:math:`\nH`   Hydrogen arc (pipeline)                                                         :code:`model.hpn`
+:math:`\nLE`  Electricity arc (transmission line)                                             :code:`model.eln`
+:math:`\nLH`  Hydrogen arc (pipeline)                                                         :code:`model.hpn`
 :math:`\nZ`   Zone or region in the network                                                   :code:`model.zn`
 ============  ==============================================================================  =========================================
 
@@ -107,6 +107,38 @@ General Technology Subsets
     *   ``model.e2h``: Technologies that convert **electricity to hydrogen** (e.g., electrolyzers). This is a subset of ``hg``.
     *   ``model.h2e``: Technologies that convert **hydrogen to electricity** (e.g., fuel cells). This is a subset of ``eg``.
 
+.. list-table:: Technology and Asset Set Symbols
+   :widths: 15 60 25
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+     - :code:`oM_InputData.py`
+   * - :math:`\nGE`
+     - All electricity generation units
+     - :code:`model.eg`
+   * - :math:`\nGENR`
+     - Non-renewable electricity generators (subset of :math:`\nGE`)
+     - :code:`model.egnr`
+   * - :math:`\nGVRE`
+     - Variable Renewable Energy (VRE) generators (subset of :math:`\nGE`)
+     - :code:`model.egvre`
+   * - :math:`\nEE`
+     - Electricity energy storage systems (subset of :math:`\nGE`)
+     - :code:`model.egs`
+   * - :math:`\nGH`
+     - All hydrogen production units
+     - :code:`model.hg`
+   * - :math:`\nGHE`
+     - Units converting electricity to hydrogen (e.g., electrolyzers)
+     - :code:`model.e2h`
+   * - :math:`\nGEH`
+     - Units converting hydrogen to electricity (e.g., fuel cells)
+     - :code:`model.h2e`
+   * - :math:`\nEH`
+     - Hydrogen energy storage systems (subset of :math:`\nGH`)
+     - :code:`model.hgs`
+
 ============  =======================================================================================================================
 **Index**     **Description**
 ------------  -----------------------------------------------------------------------------------------------------------------------
@@ -125,6 +157,21 @@ Demand and Retail
 *   ``model.hd``: Hydrogen demands.
 *   ``model.er``: Electricity retail markets (points of common coupling for buying/selling from a wholesale market).
 *   ``model.hr``: Hydrogen retail markets.
+
+.. list-table:: Demand, Retail, and Miscellaneous Set Symbols
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\nDE`
+     - All electricity demands
+   * - :math:`\nDH`
+     - All hydrogen demands
+   * - :math:`\nRE`
+     - All electricity retailers
+   * - :math:`\nKE`
+     - Set of peak indices for demand charge calculation
 
 Node-to-Technology Mappings
 ---------------------------
