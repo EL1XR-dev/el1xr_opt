@@ -4,19 +4,38 @@ Sets
 Acronyms
 --------
 
-===========  ====================================================================
-**Acronym**  **Description**
-===========  ====================================================================
-BESS         Battery Energy Storage System
-DA           Day-Ahead Market
-ESS          Energy Storage System (includes BESS and HESS)
-H-VPP        Hydrogen-based Virtual Power Plant
-HESS         Hydrogen Energy Storage System
-ID           Intraday Markets
-RT           Real Time Market
-SoC          State of Charge
-VRE          Variable Renewable Energy
-===========  ====================================================================
+.. list-table::
+   :widths: 30 50
+   :header-rows: 1
+
+   * - **Acronym**
+     - **Description**
+   * - aFRR
+     - Automatic Frequency Restoration Reserve
+   * - BESS
+     - Battery Energy Storage System
+   * - DA
+     - Day-Ahead
+   * - ESS
+     - Energy Storage System (includes BESS and HESS)
+   * - FCR-D
+     - Frequency Containment Reserve – Disturbance
+   * - FCR-N
+     - Frequency Containment Reserve – Normal
+   * - H-VPP
+     - Hydrogen-based Virtual Power Plant
+   * - HESS
+     - Hydrogen Energy Storage System
+   * - IB
+     - Imbalance
+   * - ID
+     - Intraday
+   * - mFRR
+     - Manual Frequency Restoration Reserve
+   * - SoC
+     - State of Charge
+   * - VRE
+     - Variable Renewable Energy
 
 The optimization model is built upon a series of indexed sets that define its dimensions, including time, space, and technology. These sets are used by Pyomo to create variables and constraints efficiently. Understanding these sets is crucial for interpreting the model's structure and preparing input data.
 
