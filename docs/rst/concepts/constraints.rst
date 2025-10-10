@@ -186,15 +186,15 @@ Minimum up time and down time of thermal unit [h] («``eEleMinUpTime``, ``eEleMi
 
 - D. Rajan and S. Takriti, “Minimum up/down polytopes of the unit commitment problem with start-up costs,” IBM, New York, Technical Report RC23628, 2005. https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf
 
-:math:`\sum_{\timeindex '=\timeindex\!+\!\ptimestep-\puptime_{\genindex}}^{\timeindex} \velestartupbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq     \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
+:math:`\sum_{\timeindex '=\timeindex \!+\! \ptimestep-\puptime_{\genindex}}^{\timeindex} \velestartupbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq     \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
-:math:`\sum_{\timeindex '=\timeindex\!+\!\ptimeindex-\pdwtime_{\genindex}}^{\timeindex} \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq 1 \!-\! \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
+:math:`\sum_{\timeindex '=\timeindex \!+\! \ptimestep-\pdwtime_{\genindex}}^{\timeindex} \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq 1 \!-\! \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
 Minimum up time and down time of hydrogen unit [h] («``eHydMinUpTime``, ``eHydMinDownTime``»)
 
-:math:`\sum_{\timeindex '=\timeindex\!+\!\ptimestep-\puptime_{\genindex}}^{\timeindex} \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq     \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\sum_{\timeindex '=\timeindex \!+\! \ptimestep-\puptime_{\genindex}}^{\timeindex} \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq     \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`\sum_{\timeindex '=\timeindex\!+\!\ptimeindex-\pdwtime_{\genindex}}^{\timeindex} \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq 1 \!-\! \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`\sum_{\timeindex '=\timeindex \!+\! \ptimestep-\pdwtime_{\genindex}}^{\timeindex} \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex ',\genindex} \leq 1 \!-\! \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 ..
     Decision variable of the operation of the compressor conditioned by the on/off status variable of itself [GWh] («``eCompressorOperStatus``»)
