@@ -60,26 +60,39 @@ Sets
      - **Pyomo Component**
    * - :math:`\nP`
      - All periods (e.g., years in a planning horizon)
-     - :code:`model.p`
+     - :code:`model.pp`
    * - :math:`\nS`
      - All scenarios, representing different operational conditions within a period
-     - :code:`model.sc`
+     - :code:`model.scc`
    * - :math:`\nT`
      - All time steps (e.g., hours or sub-hourly intervals)
-     - :code:`model.n`
+     - :code:`model.nn`
 
 Indices
 ~~~~~~~
 
-==========================  ===============================================================================  ========================================
-**Symbol**                  **Description**                                                                  **oM_InputData.py**
---------------------------  -------------------------------------------------------------------------------  ----------------------------------------
-:math:`\periodindex`        Period (e.g., year.)                                                             :code:`model.p`
-:math:`\scenarioindex`      Scenario (e.g., solar generation, spot prices, etc.)                             :code:`model.sc`
-:math:`\timeindex`          Time step (e.g., hours or sub-hourly intervals)                                  :code:`model.n`
-:math:`ps`                  Combination of period and scenario                                               :code:`model.ps`
-:math:`psn`                 Combination of period, scenario, and time step                                   :code:`model.psn`
-==========================  ===============================================================================  ========================================
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Pyomo Component**
+   * - :math:`\periodindex`
+     - Period (e.g., year.)
+     - :code:`model.p`
+   * - :math:`\scenarioindex`
+     - All scenarios, representing different operational conditions within a period
+     - :code:`model.sc`
+   * - :math:`\timeindex`
+     - Time step (e.g., hours or sub-hourly intervals)
+     - :code:`model.n`
+   * - :math:`ps`
+     - Combination of period and scenario
+     - :code:`model.ps`
+   * - :math:`psn`
+     - Combination of period, scenario, and time step
+     - :code:`model.psn`
 
 Spatial Representation
 ----------------------
@@ -89,30 +102,57 @@ The spatial dimension defines the physical layout and regional aggregation of th
 Sets
 ~~~~
 
-============  ==============================================================================  =========================================
-**Symbol**    **Description**                                                                 **oM_InputData.py**
-------------  ------------------------------------------------------------------------------  -----------------------------------------
-:math:`\nB`   Node or bus bar in the network                                                  :code:`model.nd`
-:math:`\nC`   Electricity connection (from node, to node, circuit ID)                         :code:`model.cc`
-:math:`\nLE`  Electricity arc (transmission line)                                             :code:`model.eln`
-:math:`\nLH`  Hydrogen arc (pipeline)                                                         :code:`model.hpn`
-:math:`\nZ`   Zone or region in the network                                                   :code:`model.zn`
-============  ==============================================================================  =========================================
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Pyomo Component**
+   * - :math:`\nB`
+     - Node or bus bar in the network
+     - :code:`model.nd`
+   * - :math:`\nC`
+     - Electricity connection (from node, to node, circuit)
+     - :code:`model.cc`
+   * - :math:`\nLE`
+     - Electricity arc (transmission line)
+     - :code:`model.eln`
+   * - :math:`\nLH`
+     - Hydrogen arc (pipeline)
+     - :code:`model.hpn`
+   * - :math:`\nZ`
+     - Zone or region in the network
+     - :code:`model.zn`
 
 Indices
 ~~~~~~~
 
-========================  ==============================================================================  =========================================
-**Symbol**                **Description**                                                                 **oM_InputData.py**
-------------------------  ------------------------------------------------------------------------------  -----------------------------------------
-:math:`\busindex`         Node or bus bar in the network                                                  :code:`nd`
-:math:`\busindexa`        From node of a connection or arc                                                :code:`i`
-:math:`\busindexb`        To node of a connection or arc                                                  :code:`j`
-:math:`\circuitindex`     Circuit ID of a connection                                                      :code:`cc`
-:math:`\lineindexa`       From node of a transmission line                                                :code:`ijc`
-:math:`\lineindexb`       To node of a transmission line                                                  :code:`jic`
-:math:`\zoneindex`        Zone or region in the network                                                   :code:`z`
-========================  ==============================================================================  =========================================
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Pyomo Component**
+   * - :math:`\busindex`
+     - Node or bus bar in the network
+     - :code:`nd`
+   * - :math:`\busindexa`
+     - From node of a connection or arc
+     - :code:`i`
+   * - :math:`\busindexb`
+     - To node of a connection or arc
+     - :code:`j`
+   * - :math:`\lineindexa`
+     - From node of a transmission line
+     - :code:`ijc`
+   * - :math:`\lineindexb`
+     - To node of a transmission line
+     - :code:`jic`
+   * - :math:`\zoneindex`
+     - Zone or region in the network
+     - :code:`zn`
 
 Technology and Asset Sets
 -------------------------
