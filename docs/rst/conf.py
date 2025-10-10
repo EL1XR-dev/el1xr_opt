@@ -156,6 +156,9 @@ mathjax3_config = {
             "nE": r"\mathcal{E}",                               # All storage units
             "nEE": r"\mathcal{E}^{e}",                          # All electrical storage units
             "nEH": r"\mathcal{E}^{h}",                          # All hydrogen storage units
+            "nEV": r"\mathcal{EV}",                             # All vehicles
+            "nEVE": r"\mathcal{EV}^{e}",                        # All electrical vehicles
+            "nEVH": r"\mathcal{EV}^{h}",                        # All hydrogen vehicles
             "nR": r"\mathcal{R}",                               # All retailers
             "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
             "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
@@ -208,6 +211,8 @@ mathjax3_config = {
             "traderindex": r"r",                                # Index for retailer
             "eletraderindex": r"r^{e}",                         # Index for electrical retailer
             "hydtraderindex": r"r^{h}",                         # Index for hydrogen retailer
+            "elevehicleindex": r"v^{e}",                        # Index for electrical vehicle
+            "hydvehicleindex": r"v^{h}",                        # Index for hydrogen vehicle
             "periodindex": r"p",                                # Index for period
             "scenarioindex": r"s",                              # Index for scenario
             "weekindex": r"w",                                  # Index for week
@@ -453,7 +458,7 @@ mathjax3_config = {
             "pelestoragecycle": r"\tau^{e}",                    # Electrical Energy storage duration
             "pelestorageinflowcycle": r"\tau^{i,e}",            # Electrical Inflow cycle duration
             "pelestorageoutflowcycle": r"\tau^{o,e}",           # Electrical Outflow cycle duration
-            "pelestorageefficiency": r"\eta^{e}",             # Electrical Storage efficiency
+            "pelestorageefficiency": r"\eta^{e}",               # Electrical Storage efficiency
             "pelestoragecapacity": r"\Psi^{e}",                 # Electrical Storage capacity
             "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
             "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
@@ -462,10 +467,10 @@ mathjax3_config = {
             "peleminoutflow": r"\underline{EO}^{e}",            # Min electrical outflow
             "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
             "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
-            "phydstoragecycle": r"\tau^{h}",                  # Hydrogen Energy storage duration
+            "phydstoragecycle": r"\tau^{h}",                    # Hydrogen Energy storage duration
             "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
             "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
-            "phydstorageefficiency": r"\eta^{h}",             # Hydrogen Storage efficiency
+            "phydstorageefficiency": r"\eta^{h}",               # Hydrogen Storage efficiency
             "phydstoragecapacity": r"\Psi^{h}",                 # Hydrogen Storage capacity
             "phydmaxinflow": r"\overline{EI}^{h}",              # Max hydrogen inflow
             "phydmaxoutflow": r"\overline{EO}^{h}",             # Max hydrogen outflow
@@ -473,6 +478,10 @@ mathjax3_config = {
             "phydminoutflow": r"\underline{EO}^{h}",            # Min hydrogen outflow
             "phydmaxinventory": r"\overline{SI}^{h}",           # Max hydrogen inventory
             "phydmininventory": r"\underline{SI}^{h}",          # Min hydrogen inventory
+            "peleminstoragestart": r"S^{e,init}",               # Initial electrical storage inventory
+            "phydminstoragestart": r"S^{h,init}",               # Initial hydrogen storage inventory
+            "peleminstorageend": r"S^{e,end}",                  # End electrical storage inventory
+            "phydminstorageend": r"S^{h,end}",                  # End hydrogen storage inventory
 
             # =======================================================
             #                       VARIABLES

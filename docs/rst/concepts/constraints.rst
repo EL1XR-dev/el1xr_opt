@@ -465,15 +465,31 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 
 *   **Fixed Nodal Connection**: Each EV is assumed to have a fixed charging point at a specific node (``nd``). All its interactions with the grid (charging and vehicle-to-grid discharging) occur at this single location. This means the EV's charging load (``vEleTotalCharge``) is directly added to the demand side of that node's ``eEleBalance`` constraint, while any discharging (``vEleTotalOutput``) is added to the supply side.
 
+*   **Availability Windows**: The availability of the EV for charging or discharging is governed by user behavior patterns, represented through time-dependent constraints:
+
+    *   **Availability for Grid Services**: The :math`:`\pvarfixedavailability` parameter indicates when the EV is parked and thus available for grid services. When this parameter is zero, the EV cannot charge or discharge, effectively making it unavailable to the grid.
+
+        .. math::
+           \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex} \pelestoragecapacity_{\storageindex} \quad (\text{if not available})
+
+    *   **Charging Flexibility**: The model allows for flexible charging schedules within the availability windows. The EV can choose when to charge based on economic signals, as long as it adheres to the overall energy balance and state-of-charge constraints.
+
 *   **Minimum Starting Charge**: The ``eEleMinEnergyStartUp`` constraint enforces a realistic user behavior: an EV must have a minimum state of charge *before* it can be considered "available" to leave its charging station (i.e., before its availability for grid services can change). This ensures the model doesn't fully drain the battery for grid purposes if the user needs it for a trip.
 
     .. math::
-       \vinventory_{\periodindex,\scenarioindex,\timeindex-1,\text{ev}} \ge 0.8 \cdot \peleesscapacity_{\text{ev}} \quad (\text{if starting trip})
+       \veleinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \ge \peleminstoragestart_{\storageindex} \pelestoragecapacity_{\storageindex} \quad (\text{if starting trip})
+
+*   **Minimum Ending Charge**: The ``eEleMinEnergyEnd`` constraint ensures that by the end of the modeling horizon (e.g., end of the day), the EV has a minimum required charge level. This reflects practical considerations such as ensuring enough range for evening trips or overnight needs.
+
+    .. math::
+       \veleinventory_{\periodindex,\scenarioindex,\timeindex=\text{end},\storageindex} \ge \peleminstorageend_{\storageindex} \pelestoragecapacity_{\storageindex} \quad (\text{if ending trip})
 
 *   **Driving Consumption (``vEleEnergyOutflows``)**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
 
     *   **Fixed Consumption**: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., ``pEleMinOutflows`` and ``pEleMaxOutflows``), driving patterns can be treated as a fixed, pre-defined schedule. This is useful for modeling commuters with predictable travel needs.
-    *   **Variable Consumption**: Setting different upper and lower bounds allows the model to optimize the driving schedule. This can represent flexible travel plans, uncertain trip lengths, or scenarios where the timing of a trip is part of the optimization problem.
+    *   **Variable Consumption**: Setting different upper and lower bounds allows the model to optimize the driving schedule. This can represent flexible travel plans, uncertain trip lengths, or scenarios where the timing of a trip is part of the optimization problem but having a fixed total daily consumption.
+
+    Both approaches are ensure by the constraints ``eEleMaxEnergyOutflows`` and ``eEleMinEnergyOutflows``.
 
 *   **Economic-Driven Charging (Tariff Response)**: The model does not use direct constraints to force EV charging at specific times. Instead, charging behavior is an *emergent property* driven by the objective to minimize total costs. This optimization is influenced by two main types of tariffs:
 
@@ -487,25 +503,25 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 -----------------------
 To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
 
-:math:`0 \leq ep_{\periodindex,\scenarioindex,\timeindex,\genindex}                               \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                              \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
+:math:`0 \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                               \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                                                               \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
 
-:math:`0 \leq hp_{\periodindex,\scenarioindex,\timeindex,\genindex}   \leq \overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                          \quad \forall nhg`
+:math:`0 \leq \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                               \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                                                               \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH`
 
-:math:`0 \leq ec_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                           \quad \forall nes`
+:math:`0 \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}                          \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                          \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`0 \leq ec_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                           \quad \forall nhz`
+:math:`0 \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                              \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                                                              \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`0 \leq hc_{\periodindex,\scenarioindex,\timeindex,\storageindex}   \leq \overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                          \quad \forall nhs`
+:math:`0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}                          \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                          \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`0 \leq hc_{net}   \leq \overline{HC}_{net}                                                          \quad \forall net`
+:math:`0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                              \leq \phydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                                                                 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`0 \leq ep2b_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
+:math:`0 \leq \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                    \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
-:math:`0 \leq hp2b_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{HP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall nh`
+:math:`0 \leq \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                    \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-:math:`0 \leq eeo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \max(\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex},\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex})                                 \quad \forall nes`
+:math:`0 \leq \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}                        \leq \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                              \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`0 \leq heo_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \max(\overline{HP}_{\periodindex,\scenarioindex,\timeindex,\storageindex},\overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex})                                 \quad \forall nhs`
+:math:`0 \leq \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}                        \leq \max(\overline{HP}_{\periodindex,\scenarioindex,\timeindex,\storageindex},\overline{HC}_{\periodindex,\scenarioindex,\timeindex,\storageindex})                                 \quad \forall nhs`
 
 :math:`0 \leq up^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex}, dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\genindex}  \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\genindex}                \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex`
 
