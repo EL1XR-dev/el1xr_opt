@@ -162,28 +162,13 @@ The model uses a rich set of indices to differentiate between various types of t
 General Technology Subsets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*   **Electricity Generation** (:math:`\elegenindex`):
-
-    *   ``model.egt``: Dispatchable generators that can be committed (turned on/off), like gas turbines.
-    *   ``model.egs``: Electricity storage units, like batteries.
-    *   ``model.egnr``: Non-renewable generators.
-
-*   **Hydrogen Production** (:math:`\hydgenindex`):
-
-    *   ``model.hgt``: Dispatchable hydrogen producers.
-    *   ``model.hgs``: Hydrogen storage units, like salt caverns or tanks.
-
-*   **Energy Conversion**:
-    *   ``model.e2h``: Technologies that convert **electricity to hydrogen** (e.g., electrolyzers). This is a subset of ``hg``.
-    *   ``model.h2e``: Technologies that convert **hydrogen to electricity** (e.g., fuel cells). This is a subset of ``eg``.
-
-.. list-table:: Technology and Asset Set Symbols
-   :widths: 15 60 25
+.. list-table::
+   :widths: 30 50 30
    :header-rows: 1
 
    * - Symbol
      - Description
-     - :code:`oM_InputData.py`
+     - **Pyomo Component**
    * - :math:`\nGE`
      - All electricity generation units
      - :code:`model.eg`
@@ -209,39 +194,67 @@ General Technology Subsets
      - Hydrogen energy storage systems (subset of :math:`\nGH`)
      - :code:`model.hgs`
 
-============  =======================================================================================================================
-**Index**     **Description**
-------------  -----------------------------------------------------------------------------------------------------------------------
-:math:`eg`    Electricity unit (thermal or hydro unit or ESS)
-:math:`et`    Electricity thermal unit
-:math:`es`    Electricity energy storage system (eESS)
-:math:`hg`    Hydrogen unit (e.g., electrolyzer, hydrogen tank)
-:math:`hz`    Hydrogen electrolyzer
-:math:`hs`    Hydrogen energy storage system (e.g., hydrogen tank)
-============  =======================================================================================================================
+Indices
+~~~~~~~
 
-Demand and Retail
-~~~~~~~~~~~~~~~~~
-
-*   ``model.ed``: Electricity demands.
-*   ``model.hd``: Hydrogen demands.
-*   ``model.er``: Electricity retail markets (points of common coupling for buying/selling from a wholesale market).
-*   ``model.hr``: Hydrogen retail markets.
-
-.. list-table:: Demand, Retail, and Miscellaneous Set Symbols
-   :widths: 20 80
+.. list-table::
+   :widths: 30 50 30
    :header-rows: 1
 
    * - Symbol
      - Description
+     - **Pyomo Component**
+   * - :math:`\genindex`
+     - Generation units
+     - :code:`g`
+   * - :math:`\storageindex`
+     - Energy storage systems
+     - :code:`e`
+   * - :math:`\traderindex`
+     - Retailers
+     - :code:`r`
+
+Demand and Retail
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+     - **Pyomo Component**
    * - :math:`\nDE`
      - All electricity demands
+     - :code:`model.ed`
    * - :math:`\nDH`
      - All hydrogen demands
+     - :code:`model.hd`
    * - :math:`\nRE`
      - All electricity retailers
+     - :code:`model.er`
+   * - :math:`\nRH`
+     - All hydrogen retailers
+     - :code:`model.hr`
    * - :math:`\nKE`
      - Set of peak indices for demand charge calculation
+
+Indices
+~~~~~~~
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+     - **Pyomo Component**
+   * - :math:`\demandindex`
+     - Consumer
+     - :code:`d`
+   * - :math:`\traderindex`
+     - Retailer
+     - :code:`r`
 
 Node-to-Technology Mappings
 ---------------------------
