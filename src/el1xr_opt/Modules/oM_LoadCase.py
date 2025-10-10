@@ -31,8 +31,9 @@ def load_case(
 
     # Set defaults
     dir_name = directory or os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../site-packages/el1xr_opt")
+        os.path.join(os.path.dirname(__file__), "../")
     )
+    print("Dir: ",dir_name)
     case_name = case or "Grid1"
 
     # Handle date input

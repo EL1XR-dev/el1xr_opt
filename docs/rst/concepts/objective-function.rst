@@ -149,7 +149,7 @@ The formulation is defined by «``eTotalHydCCost``».
 
 Reliability Costs
 ~~~~~~~~~~~~~~~~~
-This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (:math:`\ploadsheddingcost_{\loadindex}`), ensuring the model prioritizes meeting demand.
+This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (:math:`\ploadsheddingcost_{\demandindex}`), ensuring the model prioritizes meeting demand.
 *   Associated variables: :math:`\veleloadshed` (Electricity Not Served), :math:`\vhydloadshed` (Hydrogen Not Served).
 
 Electricity Energy-not-served Costs
@@ -157,14 +157,14 @@ Electricity Energy-not-served Costs
 The formulation is defined by «``eTotalEleRCost``».
 
 .. math::
-    \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\loadindex \in \nDE} \ploadsheddingcost_{\loadindex} \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}
+    \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDE} \ploadsheddingcost_{\demandindex} \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
 
 Hydrogen Energy-not-served Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydRCost``».
 
 .. math::
-    \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\loadindex \in \nDH} \ploadsheddingcost_{\loadindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\loadindex}
+    \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDH} \ploadsheddingcost_{\demandindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
 
 Electricity Peak Demand Costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
