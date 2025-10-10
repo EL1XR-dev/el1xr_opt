@@ -484,7 +484,7 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
     .. math::
        \veleinventory_{\periodindex,\scenarioindex,\timeindex=\text{end},\storageindex} \ge \peleminstorageend_{\storageindex} \pelestoragecapacity_{\storageindex} \quad (\text{if ending trip})
 
-*   **Driving Consumption (``vEleEnergyOutflows``)**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
+*   **Driving Consumption**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
 
     *   **Fixed Consumption**: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., ``pEleMinOutflows`` and ``pEleMaxOutflows``), driving patterns can be treated as a fixed, pre-defined schedule. This is useful for modeling commuters with predictable travel needs.
     *   **Variable Consumption**: Setting different upper and lower bounds allows the model to optimize the driving schedule. This can represent flexible travel plans, uncertain trip lengths, or scenarios where the timing of a trip is part of the optimization problem but having a fixed total daily consumption.
@@ -533,11 +533,11 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`\pelemininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                               \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\underline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \overline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                      \quad \forall nhs`
+:math:`\phydmininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \phydmaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                               \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`0 \leq  ess_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                   \quad \forall nes`
+:math:`0 \leq  \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                                                                                                                                                                                \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`0 \leq  hss_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                   \quad \forall nhs`
+:math:`0 \leq  \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                                                                                                                                                                                \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                        \quad \forall nes`
 
@@ -547,6 +547,6 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                  \quad \forall nhz`
 
-:math:`-\overline{ENF}_{nijc} \leq  ef_{nij}  \leq \overline{ENF}_{nijc}                                   \quad \forall nijc`
+:math:`-\pelemaxrealpower_{nijc} \leq  ef_{nij}  \leq \pelemaxrealpower_{nijc}                                   \quad \forall nijc`
 
-:math:`-\overline{HNF}_{nijc} \leq  hf_{nij}  \leq \overline{HNF}_{nijc}                                   \quad \forall nijc`
+:math:`-\phydmaxflow_{nijc} \leq  hf_{nij}  \leq \phydmaxflow_{nijc}                                   \quad \forall nijc`

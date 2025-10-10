@@ -448,11 +448,17 @@ mathjax3_config = {
             "peleshuntsuscepline": r"B^{l}",                    # Line shunt susceptance
             "pelemaxcurrent": r"\overline{I}",                  # Max current
             "pelemaxapparentpower": r"\overline{S}",            # Max apparent power
+            "pelemaxrealpower": r"\overline{P}",                # Max real power
+            "peleminrealpower": r"\underline{P}",               # Min real power
+            "pelemaxreactivepower": r"\overline{Q}",            # Max reactive power
+            "peleminreactivepower": r"\underline{Q}",           # Min reactive power
             "pelemaxvolt": r"\overline{V}",                     # Max voltage magnitude
             "peleminvolt": r"\underline{V}",                    # Min voltage magnitude
             "pelemaxvoltageangle": r"\overline{\theta}",        # Max voltage angle
             "peleminvoltageangle": r"\underline{\theta}",       # Min voltage angle
             "peleinitvolt": r"V^{0}",                           # Initial voltage
+            "phydmaxflow": r"\overline{H}",                     # Max hydrogen flow
+            "phydminflow": r"\underline{H}",                    # Min hydrogen flow
 
             # --- Storage Parameters ---
             "pelestoragecycle": r"\tau^{e}",                    # Electrical Energy storage duration
