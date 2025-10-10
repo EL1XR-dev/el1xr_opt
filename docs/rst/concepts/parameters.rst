@@ -26,6 +26,10 @@ These parameters define the temporal structure and general constants for the mod
      - A utility conversion factor (e.g., 1,000)
      - -
      - ``factor1``
+   * - :math:`\pfactortwo`
+     - A utility conversion factor (e.g., 100)
+     - -
+     - ``factor2``
    * - :math:`\pdiscountrate_{\periodindex}`
      - Annual discount rate for NPV calculations
      - %
@@ -329,15 +333,15 @@ Parameters related to network infrastructure.
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`\overline{ENF}_{nijc}` / :math:`\underline{ENF}_{nijc}`
+   * - :math:`\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\peleminrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
      - Max/min electricity network flow
-     - MWh
+     - kWh
      - ``pEleNetTTC``, ``pEleNetTTCBck``
-   * - :math:`\overline{HNF}_{nijc}` / :math:`\underline{HNF}_{nijc}`
+   * - :math:`\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\phydminflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
      - Max/min hydrogen network flow
-     - MWh
+     - kWh
      - ``pHydNetTTC``, ``pHydNetTTCBck``
-   * - :math:`\overline{X}_{nijc}`
+   * - :math:`\pelereactanceline_{\busindexa,\busindexb,\circuitindex}`
      - Reactance of an electricity line
      - p.u.
      - ``pEleNetReactance``
