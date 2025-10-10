@@ -258,8 +258,8 @@ Hydrogen Storage Charge/Discharge Incompatibility:  «``eHydChargingDecision``»
 
 :math:`\frac{\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \!-\! \vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-Maximum and Minimum Relative Inventory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Maximum and Minimum Relative Inventory  (to be implemented)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the maximum capacity («``eMaxInventory2Comm``, ``eMinInventory2Comm``»)
 
 :math:`\frac{esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq euc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
@@ -325,8 +325,8 @@ Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eI
 
 :math:`\frac{\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-Operating reserves from energy storage systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Operating reserves from energy storage systems (to be implemented)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Operating reserves from ESS can only be if enought energy is available for discharging
 
 :math:`RA^{FN}_{n}rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! URA^{FD}_{n}up^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{                      esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
