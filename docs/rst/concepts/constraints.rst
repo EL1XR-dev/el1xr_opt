@@ -513,7 +513,7 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                     \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                          \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                         \leq \phydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                                                                 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+:math:`0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                         \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                                                                              \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 :math:`0 \leq \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                               \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}                                   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
@@ -539,14 +539,15 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 
 :math:`0 \leq  \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                                                                                                                                                                                                                                \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                        \quad \forall nes`
+..
+    :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                        \quad \forall nes`
 
-:math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\genindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                        \quad \forall nhz`
+    :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\genindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                        \quad \forall nhz`
 
-:math:`0 \leq ec^{Comp}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                     \quad \forall nhs`
+    :math:`0 \leq ec^{Comp}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                     \quad \forall nhs`
 
-:math:`0 \leq ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                  \quad \forall nhz`
+    :math:`0 \leq ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                  \quad \forall nhz`
 
-:math:`-\pelemaxrealpower_{nijc} \leq  ef_{nij}  \leq \pelemaxrealpower_{nijc}                                   \quad \forall nijc`
+:math:`-\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}                                           \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLE`
 
-:math:`-\phydmaxflow_{nijc} \leq  hf_{nij}  \leq \phydmaxflow_{nijc}                                   \quad \forall nijc`
+:math:`-\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}                                                     \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLH`

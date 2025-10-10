@@ -169,6 +169,8 @@ mathjax3_config = {
             "nKE": r"\mathcal{K}^{e}",                          # All electrical peak demands
             "nKH": r"\mathcal{K}^{h}",                          # All hydrogen peak demands
             "nL": r"\mathcal{L}",                               # All lines
+            "nLE": r"\mathcal{LE}",                             # All electrical lines
+            "nLH": r"\mathcal{LH}",                             # All hydrogen lines
             "nX": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
             "nA": r"\mathcal{A}",                               # All areas
