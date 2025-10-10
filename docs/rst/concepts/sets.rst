@@ -51,13 +51,22 @@ The model uses a nested temporal structure to represent time, from long-term pla
 Sets
 ~~~~
 
-==========================  ===============================================================================  ========================================
-**Symbol**                  **Description**                                                                  **oM_InputData.py**
---------------------------  -------------------------------------------------------------------------------  ----------------------------------------
-:math:`\nP`                  All periods (e.g., years in a planning horizon)                                 :code:`model.p`
-:math:`\nS`                  All scenarios, representing different operational conditions within a period    :code:`model.sc`
-:math:`\nT`                  All time steps (e.g., hours or sub-hourly intervals)                            :code:`model.n`
-==========================  ===============================================================================  ========================================
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Pyomo Component**
+   * - :math:`\nP`
+     - All periods (e.g., years in a planning horizon)
+     - :code:`model.p`
+   * - :math:`\nS`
+     - All scenarios, representing different operational conditions within a period
+     - :code:`model.sc`
+   * - :math:`\nT`
+     - All time steps (e.g., hours or sub-hourly intervals)
+     - :code:`model.n`
 
 Indices
 ~~~~~~~
