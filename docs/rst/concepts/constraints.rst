@@ -54,7 +54,7 @@ A set of constraints starting with ``eElePeak...`` identify the three highest po
 
 :math:`\velepeakdemand_{\periodindex,\scenarioindex, \monthindex, \traderindex, \peakindex} \leq \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \!+\! \pfactortwo (1 \!-\! \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex|\traderindex \in \nRE, \peakindex \in \nKE`
 
-:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\traderindex|\tradeindex \in \nRE} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex '} == 1.0 \quad \forall \monthindex,\peakindex`
+:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex '} == 1.0 \quad \forall \monthindex,\peakindex`
 
 2. Energy Balance
 -----------------
