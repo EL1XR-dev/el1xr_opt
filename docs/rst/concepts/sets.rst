@@ -166,8 +166,8 @@ General Technology Subsets
    :widths: 30 50 30
    :header-rows: 1
 
-   * - Symbol
-     - Description
+   * - **Symbol**
+     - **Description**
      - **Pyomo Component**
    * - :math:`\nGE`
      - All electricity generation units
@@ -201,8 +201,8 @@ Indices
    :widths: 30 50 30
    :header-rows: 1
 
-   * - Symbol
-     - Description
+   * - **Symbol**
+     - **Description**
      - **Pyomo Component**
    * - :math:`\genindex`
      - Generation units
@@ -221,8 +221,8 @@ Demand and Retail
    :widths: 30 50 30
    :header-rows: 1
 
-   * - Symbol
-     - Description
+   * - **Symbol**
+     - **Description**
      - **Pyomo Component**
    * - :math:`\nDE`
      - All electricity demands
@@ -246,8 +246,8 @@ Indices
    :widths: 30 50 30
    :header-rows: 1
 
-   * - Symbol
-     - Description
+   * - **Symbol**
+     - **Description**
      - **Pyomo Component**
    * - :math:`\demandindex`
      - Consumer
