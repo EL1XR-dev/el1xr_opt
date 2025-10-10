@@ -26,6 +26,10 @@ These parameters define the temporal structure and general constants for the mod
      - A utility conversion factor (e.g., 1,000)
      - -
      - ``factor1``
+   * - :math:`\pfactortwo`
+     - A utility conversion factor (e.g., 100)
+     - -
+     - ``factor2``
    * - :math:`\pdiscountrate_{\periodindex}`
      - Annual discount rate for NPV calculations
      - %
@@ -88,6 +92,18 @@ These parameters define the economic environment, including energy prices, tarif
      - Capacity-based tariff
      - €/kW
      - ``pEleRetTariff``
+   * - :math:`\pelemaxmarketbuy_{\traderindex}`
+     - Maximum electricity purchase from a trader
+     - kWh
+     - ``pEleMaxMarketBuy``
+   * - :math:`\pelemaxmarketsell_{\traderindex}`
+     - Maximum electricity sale to a trader
+     - kWh
+     - ``pEleMaxMarketSell``
+   * - :math:`\pfactortwo`
+     - A large number for big-M constraints
+     - -
+     - ``factor2``
    * - :math:`CF_g, CV_g`
      - Fixed and variable costs of a generator
      - €/h, €/kWh
@@ -181,10 +197,26 @@ These parameters define the operational characteristics, capacities, and limitat
      - Max ramp-up/down rate of an electric unit
      - kW/h
      - ``pGenRampUp``, ``pGenRampDown``
+   * - :math:`\prampuprate`
+     - Ramp-up rate for assets
+     - p.u./h
+     - ``pGenRampUpRate``
+   * - :math:`\prampdwrate`
+     - Ramp-down rate for assets
+     - p.u./h
+     - ``pGenRampDownRate``
    * - :math:`RC^{+}_{hz}, RC^{-}_{hz}`
      - Max ramp-up/down rate of a hydrogen unit
      - kgH2/h
      - ``pGenRampUp``, ``pGenRampDown``
+   * - :math:`\puptime`
+     - Minimum up-time for a unit
+     - h
+     - ``pGenMinUpTime``
+   * - :math:`\pdwtime`
+     - Minimum down-time for a unit
+     - h
+     - ``pGenMinDownTime``
    * - :math:`TU_t, TD_t`
      - Minimum up-time and down-time
      - h
@@ -245,6 +277,26 @@ These parameters define the operational characteristics, capacities, and limitat
      - Round-trip efficiency (Elec/H2)
      - p.u.
      - ``pGenEfficiency``
+   * - :math:`\pelestoragecycle`
+     - Storage cycle time for electricity
+     - h
+     - ``pEleStorageCycle``
+   * - :math:`\phydstoragecycle`
+     - Storage cycle time for hydrogen
+     - h
+     - ``pHydStorageCycle``
+   * - :math:`\pelestorageoutflowcycle`
+     - Outflow cycle time for electricity storage
+     - h
+     - ``pEleStorageOutflowCycle``
+   * - :math:`\phydstorageoutflowcycle`
+     - Outflow cycle time for hydrogen storage
+     - h
+     - ``pHydStorageOutflowCycle``
+   * - :math:`\peleconscompress`
+     - Electricity consumption of a compressor
+     - kWh
+     - ``pEleConsCompress``
 
 Ancillary Services
 ~~~~~~~~~~~~~~~~~~
@@ -281,15 +333,63 @@ Parameters related to network infrastructure.
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`\overline{ENF}_{nijc}` / :math:`\underline{ENF}_{nijc}`
+   * - :math:`\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\peleminrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
      - Max/min electricity network flow
-     - MWh
+     - kWh
      - ``pEleNetTTC``, ``pEleNetTTCBck``
-   * - :math:`\overline{HNF}_{nijc}` / :math:`\underline{HNF}_{nijc}`
+   * - :math:`\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\phydminflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
      - Max/min hydrogen network flow
-     - MWh
+     - kWh
      - ``pHydNetTTC``, ``pHydNetTTCBck``
-   * - :math:`\overline{X}_{nijc}`
+   * - :math:`\pelereactanceline_{\busindexa,\busindexb,\circuitindex}`
      - Reactance of an electricity line
      - p.u.
      - ``pEleNetReactance``
+
+Demand
+~~~~~~
+
+Parameters related to energy demand.
+
+.. list-table::
+   :widths: 30 50 10 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Unit**
+     - **Pyomo Component**
+   * - :math:`\peledemflexible`
+     - Flag for flexible electricity demand
+     - -
+     - ``pEleDemFlexible``
+   * - :math:`\peledemshiftedsteps`
+     - Number of steps for demand shifting
+     - -
+     - ``pEleDemShiftedSteps``
+
+EV Specific
+~~~~~~~~~~~
+
+Parameters specific to Electric Vehicle (EV) modeling.
+
+.. list-table::
+   :widths: 30 50 10 30
+   :header-rows: 1
+
+   * - **Symbol**
+     - **Description**
+     - **Unit**
+     - **Pyomo Component**
+   * - :math:`\pvarfixedavailability`
+     - Availability of EV for grid services
+     - -
+     - ``pVarFixedAvailability``
+   * - :math:`\peleminstoragestart`
+     - Minimum EV battery state-of-charge at trip start
+     - kWh
+     - ``pEleMinStorageStart``
+   * - :math:`\peleminstorageend`
+     - Minimum EV battery state-of-charge at trip end
+     - kWh
+     - ``pEleMinStorageEnd``
