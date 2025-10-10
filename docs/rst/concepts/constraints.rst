@@ -46,13 +46,15 @@ FCR-D is modeled through the upward and downward reserve constraints, which ensu
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
-A set of constraints starting with ``eElePeak...`` identify the highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
+A set of constraints starting with ``eElePeak...`` identify the three highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
 
 :math:`\velepeakdemand_{\periodindex,\scenarioindex, \monthindex, \traderindex, \peakindex} \geq \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \!-\! \pfactortwo \sum_{\peakindex ' \in \nKE | \peakindex ' \leq \peakindex} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex '}     \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex|\traderindex \in \nRE, \peakindex \in \nKE`
 
 :math:`\velepeakdemand_{\periodindex,\scenarioindex, \monthindex, \traderindex, \peakindex} \geq \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \!-\! \pfactortwo (1 \!-\! \pfactortwo \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex|\traderindex \in \nRE, \peakindex \in \nKE`
 
+:math:`\velepeakdemand_{\periodindex,\scenarioindex, \monthindex, \traderindex, \peakindex} \leq \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \!+\! \pfactortwo (1 \!-\! \pfactortwo \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex|\traderindex \in \nRE, \peakindex \in \nKE`
 
+:math:`\sum_{\periodindex,\scenarioindex,\timeindex,\traderindex|\tradeindex \in \nRE} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex '} == 1.0 \quad \forall \monthindex,\peakindex`
 
 2. Energy Balance
 -----------------
