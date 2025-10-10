@@ -18,6 +18,8 @@ Acronyms
      - Day-Ahead
    * - ESS
      - Energy Storage System (includes BESS and HESS)
+   * - EV
+     - Electric Vehicle
    * - FCR-D
      - Frequency Containment Reserve – Disturbance
    * - FCR-N
