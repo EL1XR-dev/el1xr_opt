@@ -114,6 +114,10 @@ These variables represent the interactions with external energy markets.
      - Electricity peak demand for tariff calculation
      - kW
      - ``vElePeak``
+   * - :math:`\velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
+     - Binary indicator for electricity peak demand
+     - '{0,1}'
+     - ``vElePeakHourInd``
 
 Asset Operations (Generation, Storage, and Demand)
 --------------------------------------------------
@@ -223,6 +227,34 @@ These variables control the physical operation of all assets in the system.
      - Unserved hydrogen (hydrogen not supplied)
      - kgH2
      - ``vHNS``
+   * - :math:`\veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
+     - Flexible electricity demand
+     - kWh
+     - ``vEleDemFlex``
+   * - :math:`\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Electricity consumption of a compressor
+     - kWh
+     - ``vHydCompressorConsumption``
+   * - :math:`\veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Electricity consumption of an electrolyzer in standby
+     - kWh
+     - ``vHydStandByConsumption``
+   * - :math:`\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Elec. production above min. stable level
+     - kW
+     - ``vEleTotalOutput2ndBlock``
+   * - :math:`\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Hyd. production above min. stable level
+     - kgH2
+     - ``vHydTotalOutput2ndBlock``
+   * - :math:`\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Elec. charge above min. stable level
+     - kW
+     - ``vEleTotalCharge2ndBlock``
+   * - :math:`\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Hyd. charge above min. stable level
+     - kgH2
+     - ``vHydTotalCharge2ndBlock``
 
 **Storage**
 ~~~~~~~~~~~
@@ -353,6 +385,66 @@ These binary (0 or 1) variables model on/off decisions, operational states, and 
      - Standby mode of an electrolyzer (on/off)
      - {0,1}
      - ``vHydStandBy``
+   * - :math:`\vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}`
+     - Electricity flow on a transmission line
+     - kW
+     - ``vEleNetFlow``
+   * - :math:`\vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
+     - Hydrogen flow in a pipeline
+     - kgH2
+     - ``vHydNetFlow``
+   * - :math:`\vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Upward reserve from a consumer
+     - kW
+     - ``vEleReserveCons_Up_FD``
+   * - :math:`\vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Downward reserve from a consumer
+     - kW
+     - ``vEleReserveCons_Down_FD``
+   * - :math:`\vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Upward reserve from a producer
+     - kW
+     - ``vEleReserveProd_Up_FD``
+   * - :math:`\vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Downward reserve from a producer
+     - kW
+     - ``vEleReserveProd_Down_FD``
+   * - :math:`\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Commitment of an elec. unit
+     - {0,1}
+     - ``vGenCommitment``
+   * - :math:`\velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Startup of an elec. unit
+     - {0,1}
+     - ``vGenStartup``
+   * - :math:`\vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Shutdown of an elec. unit
+     - {0,1}
+     - ``vGenShutdown``
+   * - :math:`\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Commitment of a hydrogen unit
+     - {0,1}
+     - ``vHydCommitment``
+   * - :math:`\vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Startup of a hydrogen unit
+     - {0,1}
+     - ``vHydStartup``
+   * - :math:`\vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Shutdown of a hydrogen unit
+     - {0,1}
+     - ``vHydShutdown``
+   * - :math:`\velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Operating state of an elec. ESS (charge/discharge)
+     - {0,1}
+     - ``vEleStorOperat``
+   * - :math:`\vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Operating state of a hyd. ESS (charge/discharge)
+     - {0,1}
+     - ``vHydStorOperat``
+   * - :math:`\vhydcompressbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Operating state of a hydrogen compressor (on/off)
+     - {0,1}
+     - ``vHydCompressorOperat``
 
 Variable Bounding and Fixing
 ----------------------------
