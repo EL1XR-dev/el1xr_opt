@@ -187,10 +187,12 @@ This category focuses on improvements to the underlying code structure and mathe
     *   **Challenge**: The current implementation relies on a procedural approach with functions spread across multiple modules. This can make the code harder to navigate, debug, and extend as the model complexity grows.
     *   **To-Do**: Refactor the codebase into a more object-oriented structure. A central `OptimizationModel` class could encapsulate the data, Pyomo model, and methods for building, solving, and post-processing.
     *   **Benefits**:
+
         *   **Encapsulation**: Grouping related data and functions into a single class improves organization.
         *   **Maintainability**: Changes to the model are localized within the class, reducing the risk of unintended side effects.
         *   **Scalability**: A class-based structure is easier to extend with new components (e.g., new assets, new market products).
     *   **Potential Integration**:
+
         *   Create a new class in a module like `oM_ModelClass.py`.
         *   Methods of this class would wrap the existing functions from `oM_ModelFormulation.py`, `oM_InputData.py`, etc.
         *   The main script `el1xr_Main.py` would then instantiate this class to run the optimisation.
@@ -201,9 +203,11 @@ This category focuses on improvements to the underlying code structure and mathe
     *   **To-Do**: Use Pyomo's `Block` feature to encapsulate the variables and constraints for each physical or financial component. Each block would represent a self-contained model of an asset.
     *   **Example**: A `BESS` block could contain all variables (state of charge, charge/discharge power) and constraints (energy balance, power limits) related to the battery.
     *   **Benefits**:
+
         *   **Modularity**: Makes it easy to add, remove, or swap different implementations of a component (e.g., a simple BESS model vs. an advanced one with degradation).
         *   **Readability**: The main model becomes a cleaner composition of these blocks, rather than a long list of constraints.
         *   **Scalability**: Simplifies the management of models with many individual assets of the same type (e.g., multiple battery units).
     *   **Potential Integration**:
+
         *   In `oM_ModelFormulation.py`, define a separate function for each component that returns a `Block` (e.g., `def create_bess_block(...)`).
         *   The main `create_constraints` function would then call these functions to attach the blocks to the main model.
