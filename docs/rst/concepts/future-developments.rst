@@ -8,7 +8,12 @@ This section outlines potential future enhancements to the optimisation model, b
 To-Do List
 ----------
 
-The following is a list of key areas for future development:
+The following is a list of key areas for future development, divided into modelling enhancements and computational/structural improvements.
+
+Modelling Enhancements
+----------------------
+
+This category includes improvements that add new features, constraints, or more detailed representations of physical or financial systems to the model.
 
 1.  **Sequential Market Participation**:
 
@@ -171,3 +176,34 @@ The following is a list of key areas for future development:
 
         *   Add new parameters to `oM_InputData.py` for degradation cost factors (e.g., :math:`pBESS_{cycle\_cost}`, :math:`pHyd_{op\_cost}`).
         *   Add these new cost components to the objective function in `oM_ModelFormulation.py`, linking them to existing variables for power dispatch and commitment status.
+
+Computational and Structural Enhancements
+-----------------------------------------
+
+This category focuses on improvements to the underlying code structure and mathematical formulation to enhance computational efficiency, scalability, and maintainability.
+
+1.  **Code Restructuring with Python Classes**:
+
+    *   **Challenge**: The current implementation relies on a procedural approach with functions spread across multiple modules. This can make the code harder to navigate, debug, and extend as the model complexity grows.
+    *   **To-Do**: Refactor the codebase into a more object-oriented structure. A central `OptimizationModel` class could encapsulate the data, Pyomo model, and methods for building, solving, and post-processing.
+    *   **Benefits**:
+        *   **Encapsulation**: Grouping related data and functions into a single class improves organization.
+        *   **Maintainability**: Changes to the model are localized within the class, reducing the risk of unintended side effects.
+        *   **Scalability**: A class-based structure is easier to extend with new components (e.g., new assets, new market products).
+    *   **Potential Integration**:
+        *   Create a new class in a module like `oM_ModelClass.py`.
+        *   Methods of this class would wrap the existing functions from `oM_ModelFormulation.py`, `oM_InputData.py`, etc.
+        *   The main script `el1xr_Main.py` would then instantiate this class to run the optimisation.
+
+2.  **Modular Component Implementation with Pyomo Blocks**:
+
+    *   **Challenge**: As more assets (like V2G, electrolyzers, different PPA types) are added, the main model formulation in `create_constraints` can become monolithic and difficult to manage. Adding or removing a component requires manually editing a large function.
+    *   **To-Do**: Use Pyomo's `Block` feature to encapsulate the variables and constraints for each physical or financial component. Each block would represent a self-contained model of an asset.
+    *   **Example**: A `BESS` block could contain all variables (state of charge, charge/discharge power) and constraints (energy balance, power limits) related to the battery.
+    *   **Benefits**:
+        *   **Modularity**: Makes it easy to add, remove, or swap different implementations of a component (e.g., a simple BESS model vs. an advanced one with degradation).
+        *   **Readability**: The main model becomes a cleaner composition of these blocks, rather than a long list of constraints.
+        *   **Scalability**: Simplifies the management of models with many individual assets of the same type (e.g., multiple battery units).
+    *   **Potential Integration**:
+        *   In `oM_ModelFormulation.py`, define a separate function for each component that returns a `Block` (e.g., `def create_bess_block(...)`).
+        *   The main `create_constraints` function would then call these functions to attach the blocks to the main model.
