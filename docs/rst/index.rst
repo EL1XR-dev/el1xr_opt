@@ -58,6 +58,7 @@ Index
    concepts/objective-function
    concepts/constraints
    concepts/results-and-postprocessing
+   concepts/future-developments
 
 .. toctree::
    :maxdepth: 2
