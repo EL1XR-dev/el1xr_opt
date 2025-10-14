@@ -1,0 +1,96 @@
+.. _future_developments:
+
+Future Developments
+===================
+
+This section outlines potential future enhancements to the optimization model, based on a number of identified challenges and opportunities for more detailed modeling. These items represent a roadmap for increasing the model's accuracy and applicability to real-world scenarios.
+
+To-Do List
+----------
+
+The following is a list of key areas for future development:
+
+1.  **Sequential Market Participation**:
+    *   **Challenge**: The current model does not fully capture the sequential nature of day-ahead (DA), intraday (ID), and imbalance (IMB) markets. It assumes perfect foresight for intraday markets.
+    *   **To-Do**: Implement a deterministic MILP model that can handle the sequential decision-making process across these markets. This could involve a rolling horizon approach or the use of penalty factors to represent the uncertainty of intraday prices.
+    *   **Prototype Equations**: The objective function would be expanded to include revenues and costs from each market stage:
+
+        .. math::
+           \max \pi = \sum_{t \in T} (R_{DA,t} + R_{ID,t} - C_{DA,t} - C_{ID,t})
+
+        where bids in later markets adjust the position from earlier ones:
+
+        .. math::
+           P_{dispatch,t} = B_{DA,t} + B_{ID,t}
+
+    *   **Potential Integration**:
+        *   Introduce new decision variables in `oM_ModelFormulation.py` for bids in each market (e.g., :math:`vBidDA_t`, :math:`vBidID_t`).
+        *   Add new parameters for the prices in each market.
+        *   Implement new constraints to link the market positions sequentially.
+
+2.  **LER (Limited Energy Reservoir) Constraints Implementation**:
+    *   **Challenge**: The model needs to incorporate the hysteresis logic for Normal/Alert Energy Management (NEM/AEM) for BESS participating in Frequency Containment Reserve (FCR) markets, as per Swedish TSO requirements.
+    *   **To-Do**: Implement the state-dependent enable/disable logic for NEM/AEM activation states using binary variables and state transition constraints.
+    *   **Prototype Equations**: The hysteresis logic can be modeled using Big-M constraints. For example, for the NEM-low mode activation:
+
+        .. math::
+           SOC_t - SOC_{lower,enable} \leq M \cdot (1 - b_{NEM-low,t})
+        .. math::
+           SOC_{lower,disable} - SOC_t \leq M \cdot b_{NEM-low,t}
+
+    *   **Potential Integration**:
+        *   Add new binary variables in `oM_ModelFormulation.py` for each NEM/AEM state (e.g., :math:`vNEM_{low,t}`).
+        *   Define new parameters for the SOC thresholds (e.g., :math:`pSOC_{lower,enable}`).
+        *   Add the Big-M constraints to `create_constraints` in `oM_ModelFormulation.py`.
+
+3.  **PPA Inclusion in the Model**:
+    *   **Challenge**: The model currently lacks the functionality to incorporate a virtual Power Purchase Agreement (PPA) or a Contract for Difference (CfD) into the financial model and technical constraints.
+    *   **To-Do**: Develop the necessary mathematical formulations to represent the financial settlements of a virtual PPA and integrate them into the objective function.
+    *   **Prototype Equation**: The trading revenue from a two-way CfD can be formulated as:
+
+        .. math::
+           R_{trad,t} = (p_{market,t} - p_{strike}) \cdot B_{PPA,t}
+
+    *   **Potential Integration**:
+        *   Modify the objective function in `oM_ModelFormulation.py` to include this revenue component.
+        *   Add a new parameter for the PPA strike price (:math:`pPPA_{strike}`) and a variable for the PPA volume (:math:`vPPA_{volume,t}`).
+
+4.  **Multiple Timescales Modeling**:
+    *   **Challenge**: The model needs to handle both high-resolution frequency regulation signals (second/minute-level) and energy market data (hour-level) simultaneously.
+    *   **To-Do**: Investigate and implement the best time resolution to handle both frequency and energy markets, potentially using time-aggregation techniques.
+    *   **Prototype Equation**: This is primarily a structural change. Equations would need to be defined over different time sets, for example energy balance over hourly steps :math:`t` and FCR provision over minute-steps :math:`\tau`:
+
+        .. math::
+           E_{balance,t} = ...
+        .. math::
+           P_{FCR, \tau} = ...
+
+    *   **Potential Integration**:
+        *   Requires a significant change to the temporal structure in `oM_InputData.py` to handle multiple time resolutions.
+        *   All time-indexed variables and constraints in `oM_ModelFormulation.py` would need to be updated to use the appropriate time sets.
+
+5.  **Market Participation Exclusion Rules**:
+    *   **Challenge**: The model uses a Big-M formulation to allow flexible participation in multiple frequency services, but it does not yet incorporate specific exclusion rules that may be imposed by TSOs (e.g., for Swedish frequency markets).
+    *   **To-Do**: Implement the necessary logical constraints to enforce any exclusion rules between different frequency services, such as FCR-N and aFRR.
+    *   **Prototype Equation**: Mutual exclusivity can be enforced with a simple linear constraint on the binary participation variables:
+
+        .. math::
+           b_{FCR-N,t} + b_{aFRR,t} \leq 1
+
+    *   **Potential Integration**:
+        *   Add this new constraint to `create_constraints` in `oM_ModelFormulation.py`, linking the existing binary variables for market participation.
+
+6.  **Grid Fees and COMA Costs**:
+    *   **Challenge**: The model's cost structure for grid usage and operations is not yet fully defined.
+    *   **To-Do**: Define and implement a realistic cost structure for grid usage fees (MWh imported/exported) and COMA (Operating, Maintenance, Administration) costs, whether as fixed annual costs or usage-based.
+    *   **Prototype Equations**: These costs would be added to the objective function:
+
+        .. math::
+           C_{grid,t} = c_{grid,import} \cdot P_{import,t} + c_{grid,export} \cdot P_{export,t}
+        .. math::
+           C_{COMA} = C_{fixed\_O\&M}
+
+    *   **Potential Integration**:
+        *   Update the objective function in `oM_ModelFormulation.py`.
+        *   Add new parameters for the grid fee rates (:math:`pGridFee_{import}`) and fixed O&M costs (:math:`pCOMA_{cost}`).
+        *   The grid cost would use the existing variables for grid import/export (:math:`vElecImport_t`, :math:`vElecExport_t`).
