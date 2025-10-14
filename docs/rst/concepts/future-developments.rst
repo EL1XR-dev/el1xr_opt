@@ -146,7 +146,7 @@ The following is a list of key areas for future development:
         .. math::
            C_{BESS\_deg,t} = c_{cycle} \cdot (P_{chg,t} + P_{dis,t}) + c_{calendar}
 
-    *   **Advanced Model**: Depth of Discharge (DoD) Penalization*: A more accurate approach recognizes that deeper discharge cycles cause more stress than shallow ones. This non-linear cost can be approximated in a linear model using a piecewise function.
+    *   **Advanced Model**: *Depth of Discharge (DoD) Penalization* - A more accurate approach recognizes that deeper discharge cycles cause more stress than shallow ones. This non-linear cost can be approximated in a linear model using a piecewise function.
 
         *   **Prototype Equation**: The total degradation cost is the sum of costs incurred in different SOC segments, each with a different penalty.
 
