@@ -16,7 +16,7 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 :math:`\alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
-\sum_{\scenarioindex \in \nS} \marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex}`
+\sum_{\scenarioindex \in \nS}\( \marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex} \)`
 
 :math:`\marketcost_{\periodindex,\scenarioindex} = \elemarketcostgrid_{\periodindex,\scenarioindex}
 \!+\! \sum_{\timeindex \in \nT} \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
@@ -27,12 +27,25 @@ And the total cost is the sum of all operational costs, discounted to present va
 \!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}`
 
 :math:`\marketrevenue_{\periodindex,\scenarioindex} =
-\!+\! \sum_{\timeindex \in \nT} \elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
+\sum_{\timeindex \in \nT} \elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
 
 Key Cost Components
 -------------------
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
+
+Electricity Grid Usage Costs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This component models capacity-based tariffs, where costs are determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
+
+:math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex}`
+
+The formulation is defined by «``eTotalElePeakCost``».
+
+.. math::
+    \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\nKE|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\peakindex \in \nKE} \velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}
+
+By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
 
 Market Costs
 ~~~~~~~~~~~~
@@ -183,13 +196,3 @@ The formulation is defined by «``eTotalHydRCost``».
 
 .. math::
     \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDH} \ploadsheddingcost_{\demandindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
-
-Electricity Peak Demand Costs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This component models capacity-based tariffs, where costs are determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
-The formulation is defined by «``eTotalElePeakCost``».
-
-.. math::
-    \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\nKE|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\peakindex \in \nKE} \velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}
-
-By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
