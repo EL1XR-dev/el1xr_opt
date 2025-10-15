@@ -16,7 +16,7 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 :math:`\alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
-\sum_{\scenarioindex \in \nS}\( \marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex} \)`
+\sum_{\scenarioindex \in \nS}(\marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex})`
 
 :math:`\marketcost_{\periodindex,\scenarioindex} = \elemarketcostgrid_{\periodindex,\scenarioindex}
 \!+\! \sum_{\timeindex \in \nT} \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
@@ -36,9 +36,13 @@ The total cost is broken down into several components, each represented by a spe
 
 Electricity Grid Usage Costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This component models capacity-based tariffs, where costs are determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
+This component models capacity-based tariffs for now, and consider the power peak penalization cost.
 
 :math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex}`
+
+Peak Demand
+^^^^^^^^^^^
+This cost subcomponent is determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
 
 The formulation is defined by «``eTotalElePeakCost``».
 
