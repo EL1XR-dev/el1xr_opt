@@ -242,6 +242,7 @@ mathjax3_config = {
             "elemarketcostIMB": r"C^{IMB,e}",                   # Electrical market trading cost IMB
             "elemarketcostPPA": r"C^{PPA,e}",                   # Electrical market PPA cost
             "elemarketcostgrid": r"C^{grid,e}",                 # Electrical market grid fee cost
+            "elemarketcosttax": r"C^{tax,e}",                   # Electrical market grid tax cost
             "hydmarketcost": r"C^{trade,h}",                    # Hydrogen market trading cost
             "hydmarketcostPPA": r"C^{PPA,h}",                   # Hydrogen market trading PPA
             "importcost": r"C^{imp}",                           # Total Import cost
@@ -251,9 +252,10 @@ mathjax3_config = {
             "elemarketrevenue": r"R^{trade,e}",                 # Electrical market trading revenue
             "elemarketrevenueDA": r"R^{DA,e}",                  # Electrical market selling profit DA
             "elemarketrevenueancillary": r"R^{f,e}",            # Electrical market selling profit ancillary services
-            "elemarketrevenuePPA": r"R^{PPA,e}",                # Electrical market selling profit ancillary services
+            "elemarketrevenuePPA": r"R^{PPA,e}",                # Electrical market selling profit PPA
+            "elemarketrevenuetax": r"R^{tax,e}",                # Electrical market selling profit tax
             "hydmarketrevenue": r"R^{trade,h}",                 # Hydrogen market trading cost
-            "hydmarketrevenuePPA": r"R^{PPA,h}",                # Hydrogen market selling
+            "hydmarketrevenuePPA": r"R^{PPA,h}",                # Hydrogen market selling PPA
             "exportrevenue": r"R^{exp}",                        # Total Export cost
 
             # --- Generation Costs ---
@@ -385,8 +387,8 @@ mathjax3_config = {
             "phydimportprice": r"\Pi^{imp,h}",                  # Hydrogen import price
             "peleexportprice": r"\Pi^{exp,e}",                  # Electrical export price
             "phydexportprice": r"\Pi^{exp,h}",                  # Hydrogen export price
-            "pelemarketbuyingratio": r"\Upsilon^{b,e}",                # Electrical market buying ratio
-            "pelemarketsellingratio": r"\Upsilon^{s,e}",               # Electrical market selling ratio
+            "pelemarketbuyingratio": r"\Upsilon^{b,e}",         # Electrical market buying ratio
+            "pelemarketsellingratio": r"\Upsilon^{s,e}",        # Electrical market selling ratio
             "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
             "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
             "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
