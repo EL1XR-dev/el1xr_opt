@@ -352,7 +352,7 @@ mathjax3_config = {
             "pfactorfou": r"F4",                                # Generic factor 4
 
             "pdiscountrate": r"\Gamma",                         # Discount rate
-            "ptimestep": r"\nu",                                  # Time step
+            "ptimestep": r"\nu",                                # Time step
             "ptimestepduration": r"\delta",                     # Time step duration (hours)
             "pintervalduration": r"\Delta u",                   # Time step interval duration (hours)
             "nintervals": r"N^{u}",                             # Number of time step intervals
@@ -373,8 +373,8 @@ mathjax3_config = {
             "phydimportprice": r"\Pi^{imp,h}",                  # Hydrogen import price
             "peleexportprice": r"\Pi^{exp,e}",                  # Electrical export price
             "phydexportprice": r"\Pi^{exp,h}",                  # Hydrogen export price
-            "pelemarketbuyingratio": r"Gamma^{b,e}",                # Electrical market buying ratio
-            "pelemarketsellingratio": r"Gamma^{s,e}",               # Electrical market selling ratio
+            "pelemarketbuyingratio": r"\Upsilon^{b,e}",                # Electrical market buying ratio
+            "pelemarketsellingratio": r"\Upsilon^{s,e}",               # Electrical market selling ratio
             "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
             "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
             "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
