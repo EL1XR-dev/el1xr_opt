@@ -32,7 +32,7 @@ These high-level variables are used to structure the objective function, represe
      - Cost of electricity market purchases
      - €
      - ``vTotalEleTradeCost``
-   * - :math:`\elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
      - Revenue from electricity market sales
      - €
      - ``vTotalEleTradeProfit``
@@ -44,7 +44,7 @@ These high-level variables are used to structure the objective function, represe
      - Cost of hydrogen market purchases
      - €
      - ``vTotalHydTradeCost``
-   * - :math:`\hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\hydmarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
      - Revenue from hydrogen market sales
      - €
      - ``vTotalHydTradeProfit``

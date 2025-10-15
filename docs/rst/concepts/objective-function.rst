@@ -37,13 +37,13 @@ Market Costs
 This represents the net cost of trading with external markets. It is calculated as the cost of buying energy minus the revenue from selling energy.
 
 *   Cost components: :math:`\elemarketcostbuy`, :math:`\hydmarketcostbuy`
-*   Revenue components: :math:`\elemarketcostsell`, :math:`\hydmarketcostsell`
+*   Revenue components: :math:`\elemarketrevenuesell`, :math:`\hydmarketrevenuesell`
 
 Electricity Market Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalEleMCost``».
 
-:math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+:math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
 
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
@@ -54,13 +54,13 @@ The formulation is defined by «``eTotalEleMCost``».
 #.  **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
     .. math::
-       \elemarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
+       \elemarketrevenuesell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
 Hydrogen Market Costs
 ^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydMCost``».
 
-:math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex}`
+:math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \hydmarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
 
 #.  **Hydrogen Purchase**: The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
 
@@ -70,7 +70,7 @@ The formulation is defined by «``eTotalHydMCost``».
 #.  **Hydrogen Sales**: The revenue generated from selling hydrogen to the market, as defined by ``eTotalHydTradeProfit``.
 
     .. math::
-       \hydmarketcostsell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
+       \hydmarketrevenuesell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
 Generation Costs
 ~~~~~~~~~~~~~~~~
