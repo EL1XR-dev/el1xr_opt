@@ -373,8 +373,8 @@ mathjax3_config = {
             "phydimportprice": r"\Pi^{imp,h}",                  # Hydrogen import price
             "peleexportprice": r"\Pi^{exp,e}",                  # Electrical export price
             "phydexportprice": r"\Pi^{exp,h}",                  # Hydrogen export price
-            "pelemarketbuyingratio": r"R^{b,e}",                # Electrical market buying ratio
-            "pelemarketsellingratio": r"R^{s,e}",               # Electrical market selling ratio
+            "pelemarketbuyingratio": r"Gamma^{b,e}",                # Electrical market buying ratio
+            "pelemarketsellingratio": r"Gamma^{s,e}",               # Electrical market selling ratio
             "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
             "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
             "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
