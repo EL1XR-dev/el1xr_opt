@@ -236,14 +236,14 @@ mathjax3_config = {
             # === FUNCTIONS ===
             # --- Market Costs ---
             "marketcost": r"C",                                 # Total market trading cost
-            "elemarkettradcost": r"C^{trade,e}",                # Electrical market trading cost (DA, ID, IMB)
-            "elemarkettradcostDA": r"C^{DA,e}",                 # Electrical market trading cost DA
-            "elemarkettradcostID": r"C^{ID,e}",                 # Electrical market trading cost ID
-            "elemarkettradcostIMB": r"C^{IMB,e}",               # Electrical market trading cost IMB
-            "elemarkettradcostPPA": r"C^{PPA,e}",               # Electrical market PPA cost
-            "elemarkettradcostgrid": r"C^{grid,e}",             # Electrical market grid fee cost
-            "hydmarkettradcost": r"C^{trade,h}",                # Hydrogen market trading cost
-            "hydmarkettradcostPPA": r"C^{PPA,h}",               # Hydrogen market trading PPA
+            "elemarketcost": r"C^{trade,e}",                    # Electrical market trading cost (DA, ID, IMB)
+            "elemarketcostDA": r"C^{DA,e}",                     # Electrical market trading cost DA
+            "elemarketcostID": r"C^{ID,e}",                     # Electrical market trading cost ID
+            "elemarketcostIMB": r"C^{IMB,e}",                   # Electrical market trading cost IMB
+            "elemarketcostPPA": r"C^{PPA,e}",                   # Electrical market PPA cost
+            "elemarketcostgrid": r"C^{grid,e}",                 # Electrical market grid fee cost
+            "hydmarketcost": r"C^{trade,h}",                    # Hydrogen market trading cost
+            "hydmarketcostPPA": r"C^{PPA,h}",                   # Hydrogen market trading PPA
             "importcost": r"C^{imp}",                           # Total Import cost
 
             # --- Market Revenues ---
