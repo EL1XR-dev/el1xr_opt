@@ -24,30 +24,78 @@ These high-level variables are used to structure the objective function, represe
      - Total system cost (the main objective function)
      - €
      - ``vTotalSCost``
+   * - :math:`\marketcost_{\periodindex,\scenarioindex}`
+     - Total market cost
+     - €
+     - ``vMarketCost``
+   * - :math:`\marketrevenue_{\periodindex,\scenarioindex}`
+     - Total market revenue
+     - €
+     - ``vMarketRevenue``
+   * - :math:`\elemarketcostgrid_{\periodindex,\scenarioindex}`
+     - Cost of electricity grid usage
+     - €
+     - ``vTotalEleMCostGrid``
+   * - :math:`\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of electricity assets degradation
+     - €
+     - ``vTotalEleDegCost``
+   * - :math:`\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of electricity assets maintenance and operation
+     - €
+     - ``vTotalEleMaintOperCost``
+   * - :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of hydrogen market transactions
+     - €
+     - ``vTotalHydMCost``
+   * - :math:`\hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of hydrogen assets degradation
+     - €
+     - ``vTotalHydDegCost``
+   * - :math:`\hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of hydrogen assets maintenance and operation
+     - €
+     - ``vTotalHydMaintOperCost``
+   * - :math:`\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
+     - Revenue from electricity market transactions
+     - €
+     - ``vTotalEleMRevenue``
+   * - :math:`\hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
+     - Revenue from hydrogen market transactions
+     - €
+     - ``vTotalHydMRevenue``
    * - :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex}`
      - Net cost of electricity market transactions
      - €
      - ``vTotalEleMCost``
-   * - :math:`\elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of electricity market purchases
+   * - :math:`\elemarketcostDA_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of electricity day-ahead market purchases
      - €
-     - ``vTotalEleTradeCost``
-   * - :math:`\elemarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from electricity market sales
+     - ``vTotalEleMCostDA``
+   * - :math:`\elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of electricity PPA market purchases
      - €
-     - ``vTotalEleTradeProfit``
-   * - :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Net cost of hydrogen market transactions
+     - ``vTotalEleMCostPPA``
+   * - :math:`\elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex}`
+     - Revenue from electricity day-ahead market sales
      - €
-     - ``vTotalHydMCost``
-   * - :math:`\hydmarketcostbuy_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of hydrogen market purchases
+     - ``vTotalEleMRevenueDA``
+   * - :math:`\elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
+     - Revenue from electricity PPA market sales
      - €
-     - ``vTotalHydTradeCost``
-   * - :math:`\hydmarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from hydrogen market sales
+     - ``vTotalEleMRevenuePPA``
+   * - :math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
+     - Revenue from electricity ancillary services
      - €
-     - ``vTotalHydTradeProfit``
+     - ``vTotalEleMRevenueAncillary``
+   * - :math:`\hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of hydrogen PPA market purchases
+     - €
+     - ``vTotalHydMCostPPA``
+   * - :math:`\hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
+     - Revenue from hydrogen PPA market sales
+     - €
+     - ``vTotalHydMRevenuePPA``
    * - :math:`\elegenerationcost_{\periodindex,\scenarioindex,\timeindex}`
      - Total cost of electricity generation
      - €
@@ -68,11 +116,11 @@ These high-level variables are used to structure the objective function, represe
      - Total cost of hydrogen consumption
      - €
      - ``vTotalHydCCost``
-   * - :math:`\eleunservedenergycost_{\periodindex,\scenarioindex}`
+   * - :math:`\eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
      - Cost of unserved electricity (reliability penalty)
      - €
      - ``vTotalEleRCost``
-   * - :math:`\hydunservedenergycost_{\periodindex,\scenarioindex}`
+   * - :math:`\hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
      - Cost of unserved hydrogen (reliability penalty)
      - €
      - ``vTotalHydRCost``
