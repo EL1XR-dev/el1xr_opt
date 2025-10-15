@@ -268,8 +268,8 @@ mathjax3_config = {
             "maintenancecost": r"C^{maint}",                    # Maintenance cost
             "operationcost": r"C^{op}",                         # Operation cost
             "maintopercost": r"C^{0\& M}",                      # O&M cost
-            "elemaintopercost": r"C^{0\& M,e}",                 # Electrical O&M cost
-            "hydmaintopercost": r"C^{0\& M,h}",                 # Hydrogen O&M cost
+            "elemaintopercost": r"C^{O\& M,e}",                 # Electrical O&M cost
+            "hydmaintopercost": r"C^{O\& M,h}",                 # Hydrogen O&M cost
             "degradationcost": r"C^{deg}",                      # Degradation cost
             "eledegradationcost": r"C^{deg,e}",                 # Electrical degradation cost
             "hyddegradationcost": r"C^{deg,h}",                 # Hydrogen degradation cost
