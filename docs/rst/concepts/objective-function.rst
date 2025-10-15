@@ -20,6 +20,7 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 :math:`\marketcost_{\periodindex,\scenarioindex} = \elemarketcostgrid_{\periodindex,\scenarioindex}
 \!+\! \sum_{\timeindex \in \nT} \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \elemarketcosttax_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
@@ -28,20 +29,21 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 :math:`\marketrevenue_{\periodindex,\scenarioindex} =
 \sum_{\timeindex \in \nT} \elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \elemarketrevenuetax_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
 
 Key Cost Components
 -------------------
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-Electricity Grid Usage Costs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Electricity Grid Usage
+~~~~~~~~~~~~~~~~~~~~~~
 This component models capacity-based tariffs for now, and consider the power peak penalization cost.
 
 :math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex}`
 
-Peak Demand
-^^^^^^^^^^^
+Peak Demand Cost
+^^^^^^^^^^^^^^^^
 This cost subcomponent is determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
 
 The formulation is defined by «``eTotalElePeakCost``».
@@ -51,8 +53,8 @@ The formulation is defined by «``eTotalElePeakCost``».
 
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
 
-Market Costs
-~~~~~~~~~~~~
+Market
+~~~~~~
 This represents the costs and revenues in the electricity and hydrogen markets.
 
 Electricity Market Costs
