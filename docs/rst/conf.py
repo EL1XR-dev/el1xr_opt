@@ -235,19 +235,25 @@ mathjax3_config = {
 
             # === FUNCTIONS ===
             # --- Market Costs ---
-            "marketcost": r"C^{trade}",                         # Total market trading cost
-            "elemarketcost": r"C^{trade,e}",                    # Electrical market trading cost
-            "elemarketcostbuy": r"C^{trade,b,e}",               # Electrical market buying cost
-            "hydmarketcost": r"C^{trade,h}",                    # Hydrogen market trading cost
-            "hydmarketcostbuy": r"C^{trade,b,h}",               # Hydrogen market buying cost
+            "marketcost": r"C",                                 # Total market trading cost
+            "elemarkettradcost": r"C^{trade,e}",                # Electrical market trading cost (DA, ID, IMB)
+            "elemarkettradcostDA": r"C^{DA,e}",                 # Electrical market trading cost DA
+            "elemarkettradcostID": r"C^{ID,e}",                 # Electrical market trading cost ID
+            "elemarkettradcostIMB": r"C^{IMB,e}",               # Electrical market trading cost IMB
+            "elemarkettradcostPPA": r"C^{PPA,e}",               # Electrical market PPA cost
+            "elemarkettradcostgrid": r"C^{grid,e}",             # Electrical market grid fee cost
+            "hydmarkettradcost": r"C^{trade,h}",                # Hydrogen market trading cost
+            "hydmarkettradcostPPA": r"C^{PPA,h}",               # Hydrogen market trading PPA
             "importcost": r"C^{imp}",                           # Total Import cost
 
             # --- Market Revenues ---
-            "marketrevenue": r"R^{trade}",                      # Total market trading revenue
+            "marketrevenue": r"R",                              # Total market trading revenue
             "elemarketrevenue": r"R^{trade,e}",                 # Electrical market trading revenue
-            "elemarketrevenuesell": r"R^{trade,s,e}",           # Electrical market selling profit
+            "elemarketrevenueDA": r"R^{DA,e}",                  # Electrical market selling profit DA
+            "elemarketrevenueancillary": r"R^{f,e}",            # Electrical market selling profit ancillary services
+            "elemarketrevenuePPA": r"R^{PPA,e}",                # Electrical market selling profit ancillary services
             "hydmarketrevenue": r"R^{trade,h}",                 # Hydrogen market trading cost
-            "hydmarketrevenuesell": r"R^{trade,s,h}",           # Hydrogen market selling
+            "hydmarketrevenuePPA": r"R^{PPA,h}",                # Hydrogen market selling
             "exportrevenue": r"R^{exp}",                        # Total Export cost
 
             # --- Generation Costs ---
@@ -261,6 +267,12 @@ mathjax3_config = {
             "watercost": r"C^{water}",                          # Water cost
             "maintenancecost": r"C^{maint}",                    # Maintenance cost
             "operationcost": r"C^{op}",                         # Operation cost
+            "maintopercost": r"C^{0\& M}",                      # O&M cost
+            "elemaintopercost": r"C^{0\& M,e}",                 # Electrical O&M cost
+            "hydmaintopercost": r"C^{0\& M,h}",                 # Hydrogen O&M cost
+            "degradationcost": r"C^{deg}",                      # Degradation cost
+            "eledegradationcost": r"C^{deg,e}",                 # Electrical degradation cost
+            "hyddegradationcost": r"C^{deg,h}",                 # Hydrogen degradation cost
 
             # --- Storage Costs ---
             "storagecost": r"C^{str}",                          # Storage cost

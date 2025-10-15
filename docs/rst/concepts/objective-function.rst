@@ -16,17 +16,19 @@ Total system cost («``eTotalSCost``»)
 And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
 
 :math:`\alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
-\sum_{\scenarioindex \in \nS} \elepeakdemandcost_{\periodindex,\scenarioindex}
-\!+\! \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}
-( \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}`
+\sum_{\scenarioindex \in \nS} \marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex}`
 
-:math:`\!+\! \carboncost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} \\
-\!+\! \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} )`
+:math:`\marketcost_{\periodindex,\scenarioindex} = \elemarkettradcostgrid_{\periodindex,\scenarioindex}
+\!+\! \sum_{\timeindex \in \nT} \elemarkettradcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmarkettradcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}`
+
+:math:`\marketrevenue_{\periodindex,\scenarioindex} =
+\!+\! \sum_{\timeindex \in \nT} \elemarkettradrevenue_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmarkettradrevenue_{\periodindex,\scenarioindex,\timeindex}`
 
 Key Cost Components
 -------------------
@@ -43,18 +45,23 @@ Electricity Market Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalEleMCost``».
 
-:math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} - \elemarketrevenuesell_{\periodindex,\scenarioindex,\timeindex}`
+:math:`\elemarkettradcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} + \elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
 
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
     .. math::
-       \elemarketcostbuy_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketbuyingratio_{\traderindex} + \pelemarketcertrevenue_{\traderindex} \pfactorone + \pelemarketpassthrough_{\traderindex} \pfactorone) \\
+       \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketbuyingratio_{\traderindex} + \pelemarketcertrevenue_{\traderindex} \pfactorone + \pelemarketpassthrough_{\traderindex} \pfactorone) \\
        & (1 + \pelemarketmoms_{\traderindex} \pfactorone) + \pelemarketnetfee_{\traderindex} \pfactorone) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+
+Electricity Market Revenues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:math:`\elemarkettradrevenue_{\periodindex,\scenarioindex,\timeindex} = \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} + \elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} + \elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
 
 #.  **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
     .. math::
-       \elemarketrevenuesell_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
+       \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
 Hydrogen Market Costs
 ^^^^^^^^^^^^^^^^^^^^^
@@ -80,6 +87,15 @@ This is the operational cost of running the generation and production assets. It
 *   **Start-up and Shut-down Costs**: Costs incurred when changing a unit's commitment state.
 
 The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost`` for hydrogen.
+
+:math:`\elemaintopercost_{\periodindex,\scenarioindex,\timeindex} = \elegenerationcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \carboncost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
+
+:math:`\hydmaintopercost_{\periodindex,\scenarioindex,\timeindex} = \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
 
 Electricity Generation Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
