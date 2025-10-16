@@ -134,6 +134,7 @@ The formulation is defined by «``eTotalEleIncentiveCost``».
 Operation and Maintenance
 -------------------------
 This is the operational cost of running the generation and production assets. It typically includes:
+
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
 *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
 *   **Start-up and Shut-down Costs**: Costs incurred when changing a unit's commitment state.
