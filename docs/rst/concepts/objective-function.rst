@@ -38,7 +38,7 @@ Electricity Grid Usage
 ----------------------
 This component models capacity-based tariffs for now, and consider the power peak penalization cost.
 
-:math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex}`
+:math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex} + \elenetusecost_{\periodindex,\scenarioindex} + \elecaptariffcost_{\periodindex,\scenarioindex}`
 
 Peak Demand Cost
 ~~~~~~~~~~~~~~~~
@@ -48,6 +48,22 @@ The formulation is defined by «``eTotalElePeakCost``».
 
 .. math::
     \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\nKE|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\peakindex \in \nKE} \velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}
+
+Network Usage Cost
+~~~~~~~~~~~~~~~~~~
+This cost subcomponent captures the expenses associated with using the electricity distribution or transmission network. It is typically based on the amount of energy consumed or injected into the grid over a billing period.
+The formulation is defined by «``eTotalEleNetUseCost``».
+
+.. math::
+    \elenetusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketnetfee_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\timeindex \in \nT_{\monthindex}} \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+
+Capacity Tariff Cost
+~~~~~~~~~~~~~~~~~~~~
+This cost subcomponent represents fixed charges based on the capacity of the connection to the electricity network. It is usually a monthly fee that depends on the contracted capacity.
+The formulation is defined by «``eTotalEleCapTariffCost``».
+
+.. math::
+    \elecaptariffcost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarkettariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\timeindex \in \nT_{\monthindex}} \pelecontractedcapacity_{\periodindex,\scenarioindex,\traderindex}
 
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
 
