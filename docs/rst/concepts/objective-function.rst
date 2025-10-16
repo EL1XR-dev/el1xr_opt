@@ -32,18 +32,16 @@ And the total cost is the sum of all operational costs, discounted to present va
 \!+\! \elemarketrevenuetax_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
 
-Key Cost Components
--------------------
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
 Electricity Grid Usage
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 This component models capacity-based tariffs for now, and consider the power peak penalization cost.
 
 :math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex}`
 
 Peak Demand Cost
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 This cost subcomponent is determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
 
 The formulation is defined by «``eTotalElePeakCost``».
@@ -54,11 +52,11 @@ The formulation is defined by «``eTotalElePeakCost``».
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
 
 Market
-~~~~~~
+------
 This represents the costs and revenues in the electricity and hydrogen markets.
 
 Electricity Market Costs
-^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eTotalEleMCost``».
 
 :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} + \elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
@@ -70,7 +68,7 @@ The formulation is defined by «``eTotalEleMCost``».
        & (1 + \pelemarketmoms_{\traderindex} \pfactorone) + \pelemarketnetfee_{\traderindex} \pfactorone) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Electricity Market Revenues
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :math:`\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex} = \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} + \elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} + \elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
 
@@ -80,7 +78,7 @@ Electricity Market Revenues
        \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
 Hydrogen Market Costs
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eTotalHydMCost``».
 
 :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
@@ -91,7 +89,7 @@ The formulation is defined by «``eTotalHydMCost``».
        \hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} (\phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
 Hydrogen Market Costs
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 
 :math:`\hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex} = \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
 
@@ -101,10 +99,10 @@ Hydrogen Market Costs
        \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
 Taxes and Pass-Throughs
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Operation and Maintenance
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 This is the operational cost of running the generation and production assets. It typically includes:
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
 *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
@@ -120,6 +118,9 @@ The cost is defined by ``eTotalEleGCost`` for electricity and ``eTotalHydGCost``
 :math:`\hydmaintopercost_{\periodindex,\scenarioindex,\timeindex} = \hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
+
+Generation
+~~~~~~~~~~
 
 Electricity Generation Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,8 +170,8 @@ The formulation is defined by «``eTotalECost``».
 .. math::
     \carboncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGENR} \pcarbonprice_{\genindex} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
-Consumption Costs
-~~~~~~~~~~~~~~~~~
+Consumption
+~~~~~~~~~~~
 This represents the costs associated with operating energy consumers within the system, most notably the cost of power used to charge energy storage devices.
 
 Electricity Consumption Costs
@@ -187,8 +188,8 @@ The formulation is defined by «``eTotalHydCCost``».
 .. math::
     \hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\storageindex \in \nEH} \pvariablecost_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
-Reliability Costs
-~~~~~~~~~~~~~~~~~
+Reliability
+~~~~~~~~~~~
 This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (:math:`\ploadsheddingcost_{\demandindex}`), ensuring the model prioritizes meeting demand.
 *   Associated variables: :math:`\veleloadshed` (Electricity Not Served), :math:`\vhydloadshed` (Hydrogen Not Served).
 
@@ -207,4 +208,4 @@ The formulation is defined by «``eTotalHydRCost``».
     \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDH} \ploadsheddingcost_{\demandindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
 
 Degradation
-~~~~~~~~~~~
+-----------
