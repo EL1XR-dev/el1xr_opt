@@ -289,6 +289,12 @@ mathjax3_config = {
             "peakdemandcost": r"C^{peak}",                      # Peak demand cost
             "elepeakdemandcost": r"C^{peak,e}",                 # Electrical peak demand cost
             "hydpeakdemandcost": r"C^{peak,h}",                 # Hydrogen peak demand cost
+            "netusecost": r"C^{netuse}",                        # Network use cost
+            "elenetusecost": r"C^{netuse,e}",                   # Electrical network use cost
+            "hydnetusecost": r"C^{netuse,h}",                   # Hydrogen network use cost
+            "captariffcost": r"C^{cap}",                        # Capacity tariff cost
+            "elecaptariffcost": r"C^{cap,e}",                   # Electrical capacity tariff cost
+            "hydcaptariffcost": r"C^{cap,h}",                   # Hydrogen capacity tariff cost
 
             # --- Transmission & Infrastructure Costs ---
             "transmissioncost": r"C^{tr}",                      # Transmission system cost
@@ -424,6 +430,9 @@ mathjax3_config = {
             "phyddemshiftedsteps": r"N^{h,shift}",              # Hydrogen demand shifted time steps
 
             # --- Generation and Consumption Limits ---
+            "pcontractedcapacity": r"\hat{E}",                  # Contracted capacity (generic)
+            "pelecontractedcapacity": r"\hat{E}^{e}",           # Contracted electrical capacity
+            "phydcontractedcapacity": r"\hat{E}^{h}",           # Contracted hydrogen capacity
             "pelemaxproduction": r"\overline{EP}",              # Max electrical generation
             "peleminproduction": r"\underline{EP}",             # Min electrical generation
             "phydmaxproduction": r"\overline{HP}",              # Max hydrogen generation
