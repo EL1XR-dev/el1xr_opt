@@ -20,17 +20,17 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 :math:`\marketcost_{\periodindex,\scenarioindex} = \underbrace{\elemarketcostgrid_{\periodindex,\scenarioindex}}_{\text{Network usage}}
 \!+\! \sum_{\timeindex \in \nT} \underbrace{\elemarketcost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases/sales}}
-\!+\! \elemarketcosttax_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}`
+\!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}
+\!+\! \underbrace{\elemarketcosttax_{\periodindex,\scenarioindex,\timeindex}}_{\text{Surcharges/taxes}}
+\!+\! \underbrace{\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Generation/consumption}}
+\!+\! \underbrace{\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Degradation}}`
 
 :math:`\marketrevenue_{\periodindex,\scenarioindex} =
-\sum_{\timeindex \in \nT} \elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \elemarketrevenuetax_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
+\sum_{\timeindex \in \nT} \underbrace{\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}
+\!+\! \elemarketrevenuetax_{\periodindex,\scenarioindex,\timeindex}`
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
