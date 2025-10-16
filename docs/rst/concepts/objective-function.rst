@@ -100,8 +100,11 @@ Hydrogen Market Costs
     .. math::
        \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
 
-Generation Costs
-~~~~~~~~~~~~~~~~
+Taxes and Pass-Throughs
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Operation and Maintenance
+~~~~~~~~~~~~~~~~~~~~~~~~~
 This is the operational cost of running the generation and production assets. It typically includes:
 *   **Variable Costs**: Proportional to the energy produced (e.g., fuel costs).
 *   **No-Load Costs**: The cost of keeping a unit online, even at minimum output.
@@ -202,3 +205,6 @@ The formulation is defined by «``eTotalHydRCost``».
 
 .. math::
     \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDH} \ploadsheddingcost_{\demandindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+
+Degradation
+~~~~~~~~~~~
