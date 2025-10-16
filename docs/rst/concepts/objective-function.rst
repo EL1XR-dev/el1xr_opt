@@ -79,8 +79,7 @@ The formulation is defined by «``eTotalEleMCost``».
 #.  **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
 
     .. math::
-       \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (&(\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketbuyingratio_{\traderindex} + \pelemarketcertrevenue_{\traderindex} \pfactorone + \pelemarketpassthrough_{\traderindex} \pfactorone) \\
-       & (1 + \pelemarketmoms_{\traderindex} \pfactorone) + \pelemarketnetfee_{\traderindex} \pfactorone) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+       \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} \pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketbuyingratio_{\traderindex}\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Electricity Market Revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +89,7 @@ Electricity Market Revenues
 #.  **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eTotalEleTradeProfit``.
 
     .. math::
-       \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
+       \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} \pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Hydrogen Market Costs
 ~~~~~~~~~~~~~~~~~~~~~
