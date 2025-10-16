@@ -18,7 +18,7 @@ And the total cost is the sum of all operational costs, discounted to present va
 :math:`\alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
 \sum_{\scenarioindex \in \nS}(\marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex})`
 
-:math:`\marketcost_{\periodindex,\scenarioindex} = \elemarketcostgrid_{\periodindex,\scenarioindex}
+:math:`\marketcost_{\periodindex,\scenarioindex} = \underbrace{\elemarketcostgrid_{\periodindex,\scenarioindex}}_{\text{Market purchases/sales}}
 \!+\! \sum_{\timeindex \in \nT} \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \elemarketcosttax_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
