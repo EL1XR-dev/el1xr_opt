@@ -19,18 +19,17 @@ And the total cost is the sum of all operational costs, discounted to present va
 \sum_{\scenarioindex \in \nS}(\marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex})`
 
 :math:`\marketcost_{\periodindex,\scenarioindex} = \underbrace{\elemarketcostgrid_{\periodindex,\scenarioindex}}_{\text{Network usage}}
+\!+\! \underbrace{\elemarketcosttax_{\periodindex,\scenarioindex}}_{\text{Surcharges/taxes}}
 \!+\! \sum_{\timeindex \in \nT} \underbrace{\elemarketcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}
-\!+\! \underbrace{\elemarketcosttax_{\periodindex,\scenarioindex,\timeindex}}_{\text{Surcharges/taxes}}
 \!+\! \underbrace{\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Generation/consumption}}
 \!+\! \underbrace{\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Degradation}}`
 
-:math:`\marketrevenue_{\periodindex,\scenarioindex} =
-\sum_{\timeindex \in \nT} \underbrace{\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}
-\!+\! \elemarketrevenuetax_{\periodindex,\scenarioindex,\timeindex}`
+:math:`\marketrevenue_{\periodindex,\scenarioindex} = \underbrace{\elemarketrevenuetax_{\periodindex,\scenarioindex}}_{\text{Incentives}}
+\!+\! \sum_{\timeindex \in \nT} \underbrace{\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}`
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
@@ -63,7 +62,7 @@ This cost subcomponent represents fixed charges based on the capacity of the con
 The formulation is defined by «``eTotalEleCapTariffCost``».
 
 .. math::
-    \elecaptariffcost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarkettariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\timeindex \in \nT_{\monthindex}} \pelecontractedcapacity_{\periodindex,\scenarioindex,\traderindex}
+    \elecaptariffcost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarkettariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\timeindex \in \nT_{\monthindex}} \pelecontractedcapacity_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
 
@@ -116,6 +115,21 @@ Hydrogen Market Costs
 
 Taxes and Pass-Throughs
 -----------------------
+This component accounts for various taxes, surcharges, pass-through costs and incentives associated with electricity market transactions. These can include:
+
+Tax Costs
+^^^^^^^^^
+The formulation is defined by «``eTotalEleTaxCost``».
+
+.. math::
+    \elemarketcosttax_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketmoms_{\traderindex} \sum_{\timeindex \in \nT} (\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} + \pelemarketpassthrough_{\traderindex}\pfactorone + \pelemarketnetfee_{\traderindex}\pfactorone)  \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+
+Incentives and Certificate Revenues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The formulation is defined by «``eTotalEleIncentiveCost``».
+
+.. math::
+    \elemarketrevenuetax_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketcertrevenue_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Operation and Maintenance
 -------------------------
