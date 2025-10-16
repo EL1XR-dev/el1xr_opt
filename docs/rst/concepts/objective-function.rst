@@ -117,14 +117,14 @@ Taxes and Pass-Throughs
 This component accounts for various taxes, surcharges, pass-through costs and incentives associated with electricity market transactions. These can include:
 
 Tax Costs
-^^^^^^^^^
+~~~~~~~~~
 The formulation is defined by «``eTotalEleTaxCost``».
 
 .. math::
     \elemarketcosttax_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketmoms_{\traderindex} \sum_{\timeindex \in \nT} (\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} + \pelemarketpassthrough_{\traderindex}\pfactorone + \pelemarketnetfee_{\traderindex}\pfactorone)  \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Incentives and Certificate Revenues
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eTotalEleIncentiveCost``».
 
 .. math::
