@@ -18,12 +18,12 @@ And the total cost is the sum of all operational costs, discounted to present va
 :math:`\alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex}
 \sum_{\scenarioindex \in \nS}(\marketcost_{\periodindex,\scenarioindex} - \marketrevenue_{\periodindex,\scenarioindex})`
 
-:math:`\marketcost_{\periodindex,\scenarioindex} = \underbrace{\elemarketcostgrid_{\periodindex,\scenarioindex}}_{\text{Market purchases/sales}}
-\!+\! \sum_{\timeindex \in \nT} \elemarketcost_{\periodindex,\scenarioindex,\timeindex}
+:math:`\marketcost_{\periodindex,\scenarioindex} = \underbrace{\elemarketcostgrid_{\periodindex,\scenarioindex}}_{\text{Network usage}}
+\!+\! \sum_{\timeindex \in \nT} \underbrace{\elemarketcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases/sales}}
 \!+\! \elemarketcosttax_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}`
 
