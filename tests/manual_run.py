@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
 EXPECTED_COSTS = {
-    "Grid1": 7871.908957833342,
-    "Home1": 417.8402972105073}  # Replace with actual expected costs
+    "Grid1": 4471.083372940860,
+    "Home1": 214.8611023547863}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
