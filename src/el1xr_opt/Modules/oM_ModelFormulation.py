@@ -25,7 +25,7 @@ def create_objective_function(model, optmodel):
     optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [MEUR]'))
 
     def eTotalTCost(optmodel):
-        return optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.psn)
+        return (optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [MEUR]'))
 
     # Cost components of the objective function
