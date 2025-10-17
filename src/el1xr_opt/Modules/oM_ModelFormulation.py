@@ -56,7 +56,7 @@ def create_objective_function_components(model, optmodel):
 
     # Total electricity peak costs
     def eTotalElePeakCost(optmodel, p,sc):
-        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(optmodel.vElePeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) for er in model.er) / len(model.Peaks))
+        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) for er in model.er) / len(model.Peaks))
     optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [MEUR]'))
 
     # Total electricity net usage costs
@@ -80,7 +80,7 @@ def create_objective_function_components(model, optmodel):
 
     #%% Total electricity market revenues
     def eEleMarketRevenue(optmodel, p,sc,n):
-        return (optmodel.vTotalEleMRevenue[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n])
+        return (optmodel.vTotalEleMRev[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n])
     optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [MEUR]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
