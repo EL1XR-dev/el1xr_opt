@@ -24,110 +24,134 @@ These high-level variables are used to structure the objective function, represe
      - Total system cost (the main objective function)
      - €
      - ``vTotalSCost``
-   * - :math:`\marketcost_{\periodindex,\scenarioindex}`
-     - Total market cost
+   * - :math:`\chi_{\periodindex,\scenarioindex}`
+     - Total system component cost
      - €
-     - ``vMarketCost``
-   * - :math:`\marketrevenue_{\periodindex,\scenarioindex}`
-     - Total market revenue
+     - ``vTotalCComponent``
+   * - :math:`\rho_{\periodindex,\scenarioindex}`
+     - Total system component revenue
      - €
-     - ``vMarketRevenue``
-   * - :math:`\elemarketcostgrid_{\periodindex,\scenarioindex}`
-     - Cost of electricity grid usage
+     - ``vTotalRComponent``
+   * - :math:`\chi^{Net^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total fixed electricity network cost
      - €
-     - ``vTotalEleMCostGrid``
-   * - :math:`\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of electricity assets degradation
+     - ``vTotalEleNCost``
+   * - :math:`\chi^{Tax^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total tax and surcharges electricity cost
      - €
-     - ``vTotalEleDegCost``
-   * - :math:`\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of electricity assets maintenance and operation
-     - €
-     - ``vTotalEleMaintOperCost``
-   * - :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of hydrogen market transactions
-     - €
-     - ``vTotalHydMCost``
-   * - :math:`\hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of hydrogen assets degradation
-     - €
-     - ``vTotalHydDegCost``
-   * - :math:`\hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of hydrogen assets maintenance and operation
-     - €
-     - ``vTotalHydMaintOperCost``
-   * - :math:`\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from electricity market transactions
-     - €
-     - ``vTotalEleMRevenue``
-   * - :math:`\hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from hydrogen market transactions
-     - €
-     - ``vTotalHydMRevenue``
-   * - :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Net cost of electricity market transactions
+     - ``vTotalEleXCost``
+   * - :math:`\chi^{Mkt^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable electricity market cost
      - €
      - ``vTotalEleMCost``
-   * - :math:`\elemarketcostDA_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of electricity day-ahead market purchases
+   * - :math:`\chi^{Mkt^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable hydrogen market cost
      - €
-     - ``vTotalEleMCostDA``
-   * - :math:`\elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of electricity PPA market purchases
+     - ``vTotalHydMCost``
+   * - :math:`\chi^{Opr^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity operational cost
      - €
-     - ``vTotalEleMCostPPA``
-   * - :math:`\elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from electricity day-ahead market sales
+     - ``vTotalEleOCost``
+   * - :math:`\chi^{Opr^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total hydrogen operational cost
      - €
-     - ``vTotalEleMRevenueDA``
-   * - :math:`\elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from electricity PPA market sales
+     - ``vTotalHydOCost``
+   * - :math:`\chi^{Dgd^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity degradation cost
      - €
-     - ``vTotalEleMRevenuePPA``
-   * - :math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from electricity ancillary services
+     - ``vTotalEleDCost``
+   * - :math:`\chi^{Dgd^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total hydrogen degradation cost
      - €
-     - ``vTotalEleMRevenueAncillary``
-   * - :math:`\hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of hydrogen PPA market purchases
+     - ``vTotalHydDCost``
+   * - :math:`\rho^{Tax^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total tax electricity revenue
      - €
-     - ``vTotalHydMCostPPA``
-   * - :math:`\hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
-     - Revenue from hydrogen PPA market sales
+     - ``vTotalEleXRev``
+   * - :math:`\rho^{Mkt^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable electricity market revenue
      - €
-     - ``vTotalHydMRevenuePPA``
-   * - :math:`\elegenerationcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Total cost of electricity generation
+     - ``vTotalEleMRev``
+   * - :math:`\rho^{Mkt^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable hydrogen market revenue
      - €
-     - ``vTotalEleGCost``
-   * - :math:`\hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}`
-     - Total cost of hydrogen generation
-     - €
-     - ``vTotalHydGCost``
-   * - :math:`\carboncost_{\periodindex,\scenarioindex,\timeindex}`
-     - Total cost of CO2 emissions
-     - €
-     - ``vTotalECost``
-   * - :math:`\eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`
-     - Total cost of electricity consumption
-     - €
-     - ``vTotalEleCCost``
-   * - :math:`\hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}`
-     - Total cost of hydrogen consumption
-     - €
-     - ``vTotalHydCCost``
-   * - :math:`\eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of unserved electricity (reliability penalty)
-     - €
-     - ``vTotalEleRCost``
-   * - :math:`\hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}`
-     - Cost of unserved hydrogen (reliability penalty)
-     - €
-     - ``vTotalHydRCost``
-   * - :math:`\elepeakdemandcost_{\periodindex,\scenarioindex}`
-     - Cost of electricity peak demand (capacity tariff)
+     - ``vTotalHydMRev``
+   * - :math:`\chi^{Peak^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total electricity peak cost
      - €
      - ``vTotalElePeakCost``
+   * - :math:`\chi^{NetUse^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total electricity network usage cost
+     - €
+     - ``vTotalEleNetUseCost``
+   * - :math:`\chi^{CapTariff^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total electricity capacity tariff cost
+     - €
+     - ``vTotalEleCapTariffCost``
+   * - :math:`\chi^{DA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity day-ahead market cost
+     - €
+     - ``vTotalEleMrkDACost``
+   * - :math:`\chi^{PPA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity PPA market cost
+     - €
+     - ``vTotalEleMrkPPACost``
+   * - :math:`\rho^{DA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity day-ahead market revenue
+     - €
+     - ``vTotalEleMrkDARev``
+   * - :math:`\rho^{PPA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity PPA market revenue
+     - €
+     - ``vTotalEleMrkPPARev``
+   * - :math:`\rho^{Frq^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity frequency market revenue
+     - €
+     - ``vTotalEleMrkFrqRev``
+   * - :math:`\chi^{PPA^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total hydrogen PPA market cost
+     - €
+     - ``vTotalHydMrkPPACost``
+   * - :math:`\rho^{PPA^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total hydrogen PPA market revenue
+     - €
+     - ``vTotalHydMrkPPARev``
+   * - :math:`\chi^{VAT^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total electricity VAT cost
+     - €
+     - ``vTotalEleVATCost``
+   * - :math:`\rho^{IS^{Ele}}_{\periodindex,\scenarioindex}`
+     - Total electricity incentives revenue
+     - €
+     - ``vTotalEleISRev``
+   * - :math:`\chi^{Prod^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable electricity production cost
+     - €
+     - ``vTotalEleGCost``
+   * - :math:`\chi^{Prod^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable hydrogen production cost
+     - €
+     - ``vTotalHydGCost``
+   * - :math:`\chi^{CO_2}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total electricity emission cost
+     - €
+     - ``vTotalEleECost``
+   * - :math:`\chi^{Cons^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable electricity consumption cost
+     - €
+     - ``vTotalEleCCost``
+   * - :math:`\chi^{Cons^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total variable hydrogen consumption cost
+     - €
+     - ``vTotalHydCCost``
+   * - :math:`\chi^{Rel^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total system electricity reliability cost
+     - €
+     - ``vTotalEleRCost``
+   * - :math:`\chi^{Rel^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+     - Total system hydrogen reliability cost
+     - €
+     - ``vTotalHydRCost``
 
 Market & Trading
 ----------------
@@ -142,30 +166,38 @@ These variables represent the interactions with external energy markets.
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
+   * - :math:`\velebuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
      - Electricity bought from the market
-     - kWh
+     - kW
      - ``vEleBuy``
-   * - :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
+   * - :math:`\velesell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
      - Electricity sold to the market
-     - kWh
+     - kW
      - ``vEleSell``
-   * - :math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
+   * - :math:`\vhydbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
      - Hydrogen bought from the market
      - kgH2
      - ``vHydBuy``
-   * - :math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
+   * - :math:`\vhydsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}`
      - Hydrogen sold to the market
      - kgH2
      - ``vHydSell``
    * - :math:`\velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
      - Electricity peak demand for tariff calculation
      - kW
-     - ``vElePeak``
-   * - :math:`\velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
+     - ``vEleDemPeak``
+   * - :math:`\vhydpeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
+     - Hydrogen peak demand for tariff calculation
+     - kgH2
+     - ``vHydDemPeak``
+   * - :math:`\velepeakdemandbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
      - Binary indicator for electricity peak demand
      - '{0,1}'
      - ``vElePeakHourInd``
+   * - :math:`\vhydpeakdemandbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
+     - Binary indicator for hydrogen peak demand
+     - '{0,1}'
+     - ``vHydPeakHourInd``
 
 Asset Operations (Generation, Storage, and Demand)
 --------------------------------------------------
@@ -185,28 +217,20 @@ These variables control the physical operation of all assets in the system.
      - **Pyomo Component**
    * - :math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Electricity output from a generator
-     - kWh
+     - kW
      - ``vEleTotalOutput``
    * - :math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Hydrogen output from a generator
      - kgH2
      - ``vHydTotalOutput``
-   * - :math:`ep2b_{neg}`
+   * - :math:`\veleprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Elec. production above min. stable level
      - kW
      - ``vEleTotalOutput2ndBlock``
-   * - :math:`hp2b_{nhg}`
+   * - :math:`\vhydprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Hyd. production above min. stable level
      - kgH2
      - ``vHydTotalOutput2ndBlock``
-   * - :math:`ep^{\Delta}_{neg}`
-     - Elec. production for market correction
-     - kW
-     - ``vEleTotalOutputDelta``
-   * - :math:`hp^{\Delta}_{nhg}`
-     - Hyd. production for market correction
-     - kgH2
-     - ``vHydTotalOutputDelta``
 
 **Consumption & Demand**
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,49 +243,25 @@ These variables control the physical operation of all assets in the system.
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`ec_{nes}, ec_{nhz}`
+   * - :math:`\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\eleconsindex}`
      - Electricity consumption (ESS & electrolyzer)
      - kW
      - ``vEleTotalCharge``
-   * - :math:`hc_{nhs}, hc_{neg}`
+   * - :math:`\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\hydconsindex}`
      - Hydrogen consumption (ESS & thermal units)
      - kgH2
      - ``vHydTotalCharge``
-   * - :math:`ec2b_{nes}, ec2b_{nhz}`
+   * - :math:`\veleconssecondblock_{\periodindex,\scenarioindex,\timeindex,\eleconsindex}`
      - Elec. charge above min. stable level
      - kW
      - ``vEleTotalCharge2ndBlock``
-   * - :math:`hc2b_{nhs}, hc2b_{neg}`
+   * - :math:`\vhydconssecondblock_{\periodindex,\scenarioindex,\timeindex,\hydconsindex}`
      - Hyd. charge above min. stable level
      - kgH2
      - ``vHydTotalCharge2ndBlock``
-   * - :math:`ec^{\Delta}_{nes}, ec^{\Delta}_{nhz}`
-     - Elec. consumption for market correction
-     - kW
-     - ``vEleTotalChargeDelta``
-   * - :math:`hc^{\Delta}_{nhs}, hc^{\Delta}_{neg}`
-     - Hyd. consumption for market correction
-     - kgH2
-     - ``vHydTotalChargeDelta``
-   * - :math:`ec^{R+}_{nes}, ec^{R+}_{nhz}`
-     - Positive ramp of electricity consumption
-     - kW
-     - ``vEleTotalChargeRampPos``
-   * - :math:`ec^{R-}_{nes}, ec^{R-}_{nhz}`
-     - Negative ramp of electricity consumption
-     - kW
-     - ``vEleTotalChargeRampNeg``
-   * - :math:`ec^{Comp}_{nhs}`
-     - Elec. consumption of a compressor
-     - kgH2
-     - ``vHydCompressorConsumption``
-   * - :math:`ec^{StandBy}_{nhz}`
-     - Elec. consumption of an electrolyzer in standby
-     - kgH2
-     - ``vHydStandByConsumption``
    * - :math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Electricity demand served
-     - kWh
+     - kW
      - ``vEleDemand``
    * - :math:`\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Hydrogen demand served
@@ -269,7 +269,7 @@ These variables control the physical operation of all assets in the system.
      - ``vHydDemand``
    * - :math:`\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Unserved electricity (energy not supplied)
-     - kWh
+     - kW
      - ``vENS``
    * - :math:`\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Unserved hydrogen (hydrogen not supplied)
@@ -277,32 +277,8 @@ These variables control the physical operation of all assets in the system.
      - ``vHNS``
    * - :math:`\veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
      - Flexible electricity demand
-     - kWh
+     - kW
      - ``vEleDemFlex``
-   * - :math:`\veleconsumptioncompress_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Electricity consumption of a compressor
-     - kWh
-     - ``vHydCompressorConsumption``
-   * - :math:`\veleconsumptionstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Electricity consumption of an electrolyzer in standby
-     - kWh
-     - ``vHydStandByConsumption``
-   * - :math:`\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Elec. production above min. stable level
-     - kW
-     - ``vEleTotalOutput2ndBlock``
-   * - :math:`\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Hyd. production above min. stable level
-     - kgH2
-     - ``vHydTotalOutput2ndBlock``
-   * - :math:`\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Elec. charge above min. stable level
-     - kW
-     - ``vEleTotalCharge2ndBlock``
-   * - :math:`\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Hyd. charge above min. stable level
-     - kgH2
-     - ``vHydTotalCharge2ndBlock``
 
 **Storage**
 ~~~~~~~~~~~
@@ -321,23 +297,23 @@ These variables control the physical operation of all assets in the system.
      - ``vEleInventory``
    * - :math:`\vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Stored energy in a hyd. ESS (State of Charge)
-     - kWh
+     - kgH2
      - ``vHydInventory``
-   * - :math:`\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+   * - :math:`\veleinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Inflows of an electricity ESS
      - kWh
      - ``vEleEnergyInflows``
-   * - :math:`\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+   * - :math:`\veleoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Outflows of an electricity ESS
      - kWh
      - ``vEleEnergyOutflows``
-   * - :math:`\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+   * - :math:`\vhydinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Inflows of a hydrogen ESS
-     - kWh
+     - kgH2
      - ``vHydEnergyInflows``
-   * - :math:`\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+   * - :math:`\vhydoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Outflows of a hydrogen ESS
-     - kWh
+     - kgH2
      - ``vHydEnergyOutflows``
    * - :math:`\velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Spilled energy from an electricity ESS
@@ -345,7 +321,7 @@ These variables control the physical operation of all assets in the system.
      - ``vEleSpillage``
    * - :math:`\vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Spilled energy from a hydrogen ESS
-     - kWh
+     - kgH2
      - ``vHydSpillage``
 
 Ancillary Services
@@ -419,40 +395,44 @@ These binary (0 or 1) variables model on/off decisions, operational states, and 
      - **Pyomo Component**
    * - :math:`\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Commitment of an elec. unit
-     - {0,1}
-     - ``vGenCommitment``
+     - '{0,1}'
+     - ``vEleGenCommitment``
    * - :math:`\velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Startup of an elec. unit
-     - {0,1}
-     - ``vGenStartup``
+     - '{0,1}'
+     - ``vEleGenStartUp``
    * - :math:`\veleshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Shutdown of an elec. unit
-     - {0,1}
-     - ``vGenShutdown``
+     - '{0,1}'
+     - ``vEleGenShutDown``
    * - :math:`\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Commitment of a hydrogen unit
-     - {0,1}
-     - ``vHydCommitment``
+     - '{0,1}'
+     - ``vHydGenCommitment``
    * - :math:`\vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Startup of a hydrogen unit
-     - {0,1}
-     - ``vHydStartup``
+     - '{0,1}'
+     - ``vHydGenStartUp``
    * - :math:`\vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Shutdown of a hydrogen unit
-     - {0,1}
-     - ``vHydShutdown``
+     - '{0,1}'
+     - ``vHydGenShutDown``
    * - :math:`\velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Operating state of an elec. ESS (charge/discharge)
-     - {0,1}
+     - '{0,1}'
      - ``vEleStorOperat``
    * - :math:`\vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Operating state of a hyd. ESS (charge/discharge)
-     - {0,1}
+     - '{0,1}'
      - ``vHydStorOperat``
-   * - :math:`\vhydcompressbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Operating state of a hydrogen compressor (on/off)
-     - {0,1}
-     - ``vHydCompressorOperat``
+   * - :math:`\velenetcommitbin_{\periodindex,\scenarioindex,\timeindex,\lineindex}`
+     - Commitment of an elec. line
+     - '{0,1}'
+     - ``vEleNetCommit``
+   * - :math:`\vhydnetcommitbin_{\periodindex,\scenarioindex,\timeindex,\pipelineindex}`
+     - Commitment of a hyd. pipeline
+     - '{0,1}'
+     - ``vHydNetCommit``
 
 Variable Bounding and Fixing
 ----------------------------
