@@ -932,7 +932,7 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vEleBuy',                 Var(model.psner,   within=NonNegativeReals, doc='electricity retail  buy                     [GW]'))
     setattr(optmodel, 'vEleSell',                Var(model.psner,   within=NonNegativeReals, doc='electricity retail  sell                    [GW]'))
     setattr(optmodel, 'vEleDemand',              Var(model.psned,   within=NonNegativeReals, doc='electricity demand                          [GW]'))
-    setattr(optmodel, 'vEleNotServed',           Var(model.psned,   within=NonNegativeReals, doc='electricity not served                      [GW]'))
+    setattr(optmodel, 'vENS',                    Var(model.psned,   within=NonNegativeReals, doc='electricity not served                      [GW]'))
     setattr(optmodel, 'vEleTotalOutput',         Var(model.psneg,   within=NonNegativeReals, doc='total electricity output of the unit        [GW]'))
     setattr(optmodel, 'vEleTotalOutput2ndBlock', Var(model.psnegnr, within=NonNegativeReals, doc='second block of the unit                    [GW]'))
     setattr(optmodel, 'vEleTotalCharge',         Var(model.psneh,   within=NonNegativeReals, doc='ESS total charge power                      [GW]'))
