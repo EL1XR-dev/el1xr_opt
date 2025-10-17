@@ -142,46 +142,64 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Output_vDemand = Output_vDemand.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Demand'}, inplace=False)
         Output_vDemand.to_csv(_path+'/oM_Result_00_rElectricityDemand_'+CaseName+'.csv', index=False, sep=',')
 
-    # Define the cost types and corresponding attribute names in a dictionary
     cost_components = {
-        'Electricity Market Cost'     : 'vTotalEleMCost',
-        'Electricity Generation Cost' : 'vTotalEleGCost',
-        'Electricity Emission Cost'   : 'vTotalECost',
-        'Electricity Consumption Cost': 'vTotalEleCCost',
-        'Electricity Reliability Cost': 'vTotalEleRCost',
-        'Hydrogen    Market Cost'     : 'vTotalHydMCost',
-        'Hydrogen    Generation Cost' : 'vTotalHydGCost',
-        'Hydrogen    Consumption Cost': 'vTotalHydCCost',
-        'Hydrogen    Reliability Cost': 'vTotalHydRCost'
+        'Electricity Network Usage Cost': 'vTotalEleNCost',
+        'Electricity Tax Cost'          : 'vTotalEleXCost',
+        'Electricity Market Cost'       : 'vTotalEleMCost',
+        'Electricity O&M Cost'          : 'vTotalEleOCost',
+        'Electricity Degradation Cost'  : 'vTotalEleDCost',
+        'Hydrogen Market Cost'          : 'vTotalHydMCost',
+        'Hydrogen O&M Cost'             : 'vTotalHydOCost',
+        'Hydrogen Degradation Cost'     : 'vTotalHydDCost',
+        'Electricity Tax Revenue'       : 'vTotalEleXRev',
+        'Electricity Market Revenue'    : 'vTotalEleMRev',
+        'Hydrogen Market Revenue'       : 'vTotalHydMRev',
     }
 
-    # Initialize a dictionary to store each output DataFrame
-    output_results = {}
+    static_components = {k: v for k, v in cost_components.items() if any(x in k for x in ['Tax', 'Network'])}
+    dynamic_components = {k: v for k, v in cost_components.items() if not any(x in k for x in ['Tax', 'Network'])}
 
-    # Iterate through each component, calculate the result and store in the dictionary
-    for name, attr in cost_components.items():
-        output_results[name] = pd.Series(
-            data=[getattr(optmodel, attr)[p,sc,n]() * model.Par['pDuration'][p,sc,n] for p,sc,n in model.psn],
-            index=pd.Index(model.psn)
-        ).to_frame(name=name)
+    static_results = {}
+    for name, attr in static_components.items():
+        var_object = getattr(optmodel, attr)
+        data = [var_object[p, sc]() for p, sc in model.ps]
+        index = pd.MultiIndex.from_tuples(model.ps, names=['Period', 'Scenario'])
+        static_results[name] = pd.Series(data, index=index, name=name).to_frame()
 
-    # Concatenate all results into a single DataFrame and reshape
-    OutputResults = pd.concat(output_results.values(), axis=1).stack().to_frame(name='EUR')
+    # Combine all static results
+    OutputResults_static = pd.concat(static_results.values(), axis=1).stack().to_frame(name='EUR')
 
-    # select the third level of the index and create a new column date using the Date as a initial date with format YYYY-MM-DD HH:MM:SS
-    OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+    dynamic_results = {}
+    for name, attr in dynamic_components.items():
+        var_object = getattr(optmodel, attr)
+        data = [var_object[p, sc, n]() * model.Par['pDuration'][p, sc, n] for p, sc, n in model.psn]
+        index = pd.MultiIndex.from_tuples(model.psn, names=['Period', 'Scenario', 'LoadLevel'])
+        dynamic_results[name] = pd.Series(data, index=index, name=name).to_frame()
 
-    Output_TotalCost = OutputResults.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Component', 'Date'], axis=0).reset_index().rename(columns={0: 'EUR'}, inplace=False)
-    Output_TotalCost.to_csv(_path+'/oM_Result_01_rTotalCost_Hourly_'+CaseName+'.csv', index=False, sep=',')
-    model.Output_TotalCost = Output_TotalCost
+    # Combine all dynamic results
+    OutputResults_dynamic = pd.concat(dynamic_results.values(), axis=1).stack().to_frame(name='EUR')
 
-    OutputTotalCost1 = Output_TotalCost.pivot_table(index=['Period', 'Scenario', 'Component'], values='EUR', aggfunc='sum').reset_index()
-    OutputTotalCost2 = pd.Series(data=[optmodel.vTotalElePeakCost[idx]() for idx in model.ps], index=pd.Index(model.ps)).to_frame(name='EUR').reset_index()
-    OutputTotalCost2['Component'] = 'Electricity Peak Cost'
-    OutputTotalCost2 = OutputTotalCost2.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'Component': 'Component', 0: 'EUR'}, inplace=False)
+    def compute_date(x):
+        """Compute datetime for load levels, handle 'All' or invalid entries safely."""
+        try:
+            if isinstance(x, str) and x.startswith('t'):
+                return Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))
+            else:
+                return pd.NaT
+        except Exception:
+            return pd.NaT
 
-    OutputTotalCost = pd.concat([OutputTotalCost1, OutputTotalCost2], axis=0)
-    OutputTotalCost.to_csv(_path+'/oM_Result_01_rTotalCost_General_'+CaseName+'.csv', index=False, sep=',')
+    OutputResults_dynamic['Date'] = OutputResults_dynamic.index.get_level_values('LoadLevel').map(compute_date).strftime('%Y-%m-%d %H:%M:%S')
+
+    # ---- Dynamic (hourly) results ----
+    Output_TotalCost_Hourly = OutputResults_dynamic.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Component', 'Date'], axis=0).reset_index()
+
+    Output_TotalCost_Hourly.to_csv(f"{_path}/oM_Result_01_rTotalCost_Hourly_{CaseName}.csv", index=False, sep=',')
+
+    # ---- Static (total) results ----
+    Output_TotalCost_Static = OutputResults_static.rename_axis(['Period', 'Scenario', 'Component'], axis=0).reset_index()
+
+    Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
 
     # %% outputting the electrical energy balance
     #%%  Power balance per period, scenario, and load level
