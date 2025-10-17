@@ -37,8 +37,8 @@ def create_objective_function(model, optmodel):
 
     # Revenue components of the objective function
     def eTotalRComponent(optmodel, p,sc):
-        return (optmodel.vTotalRComponent[p,sc] == optmodel.vTotalEleXRevenue[p,sc] +
-                sum(model.Par['pDuration'][p,sc,n] * (optmodel.vTotalEleMRevenue[p,sc,n] + optmodel.vTotalHydMRevenue[p,sc,n]) for n in model.n))
+        return (optmodel.vTotalRComponent[p,sc] == optmodel.vTotalEleXRev[p,sc] +
+                sum(model.Par['pDuration'][p,sc,n] * (optmodel.vTotalEleMRev[p,sc,n] + optmodel.vTotalHydMRev[p,sc,n]) for n in model.n))
     optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [MEUR]'))
 
     print('--- Declaring the totals components of the ObjFunc:                    {} seconds'.format(round(time.time() - StartTime)))
@@ -71,48 +71,58 @@ def create_objective_function_components(model, optmodel):
 
     #%% Total electricity market costs
     def eEleMarketCost(optmodel, p,sc,n):
-        return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkCostDA[p,sc,n] + optmodel.vTotalEleMrkCostPPA[p,sc,n])
+        return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkDACost[p,sc,n] + optmodel.vTotalEleMrkPPACost[p,sc,n])
     optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [MEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkCostDA[p,sc,n] == sum(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * optmodel.vEleBuy [p,sc,n,er] for er in model.er)
+        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * optmodel.vEleBuy [p,sc,n,er] for er in model.er)
     optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [MEUR]'))
 
     #%% Total electricity market revenues
     def eEleMarketRevenue(optmodel, p,sc,n):
-        return (optmodel.vTotalEleMRevenue[p,sc,n] == optmodel.vTotalEleMrkRevDA[p,sc,n] + optmodel.vTotalEleMrkRevPPA[p,sc,n] + optmodel.vTotalEleMrkRevFrq[p,sc,n])
+        return (optmodel.vTotalEleMRevenue[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n])
     optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [MEUR]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkRevDA[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * optmodel.vEleSell[p,sc,n,er] for er in model.er)
+        return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * optmodel.vEleSell[p,sc,n,er] for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [MEUR]'))
 
     #%% Total hydrogen market costs
     def eHydMarketCost(optmodel, p,sc,n):
-        return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkCostPPA[p,sc,n])
+        return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkPPACost[p,sc,n])
     optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [MEUR]'))
 
     def eHydMarketDayAheadCost(optmodel, p,sc,n):
-        return optmodel.vTotalHydMrkCostPPA[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
+        return optmodel.vTotalHydMrkPPACost[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
     optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [MEUR]'))
 
     #%% Total hydrogen market revenues
     def eHydMarketRevenue(optmodel, p,sc,n):
-        return (optmodel.vTotalHydMRevenue[p,sc,n] == optmodel.vTotalHydMrkRevPPA[p,sc,n])
+        return (optmodel.vTotalHydMRevenue[p,sc,n] == optmodel.vTotalHydMrkPPARev[p,sc,n])
     optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [MEUR]'))
 
     def eHydMarketDayAheadRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalHydMrkRevPPA[p,sc,n] == sum(model.Par['pVarEnergyPrice'][hr][p,sc,n] * optmodel.vHydSell[p,sc,n,hr] for hr in model.hr)
+        return optmodel.vTotalHydMrkPPARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][hr][p,sc,n] * optmodel.vHydSell[p,sc,n,hr] for hr in model.hr)
     optmodel.__setattr__('eHydMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eHydMarketDayAheadRevenue, doc='Total hydrogen market day-ahead revenues [MEUR]'))
 
     #%% Total electricity taxes costs
     def eEleTaxCost(optmodel, p,sc):
-        return (optmodel.vTotalEleXCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleXCost[p,sc] == optmodel.vTotalEleVATCost[p,sc])
     optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [MEUR]'))
 
+    # VAT on electricity taxes costs
+    def eEleTaxVATCost(optmodel, p,sc):
+        return (optmodel.vTotalEleVATCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
+    optmodel.__setattr__('eEleTaxVATCost', Constraint(optmodel.ps, rule=eEleTaxVATCost, doc='Total electricity taxes costs [MEUR]'))
+
     def eEleTaxRevenue(optmodel, p,sc):
-        return (optmodel.vTotalEleXRevenue[p,sc] == sum(model.Par['pEleRetelcertifikat'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleXRevenue[p,sc] == optmodel.vTotalEleISRev[p,sc])
     optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [MEUR]'))
+
+    # Incentives on electricity taxes revenues
+    def eEleTaxISRevenue(optmodel, p,sc):
+        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetelcertifikat'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
+    optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [MEUR]'))
 
     #%% Total electricity operation and maintenance costs
     def eEleOpMaintCost(optmodel, p,sc,n):
