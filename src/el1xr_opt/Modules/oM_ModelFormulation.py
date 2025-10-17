@@ -25,18 +25,21 @@ def create_objective_function(model, optmodel):
     optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [MEUR]'))
 
     def eTotalTCost(optmodel):
-        return (optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]]
-                                           * (optmodel.__getattribute__('vTotalEleMCost')[idx]
-                                              + optmodel.__getattribute__('vTotalHydMCost')[idx]
-                                              + optmodel.__getattribute__('vTotalEleGCost')[idx]
-                                              + optmodel.__getattribute__('vTotalHydGCost')[idx]
-                                              + optmodel.__getattribute__('vTotalECost')[idx]
-                                              + optmodel.__getattribute__('vTotalEleCCost')[idx]
-                                              + optmodel.__getattribute__('vTotalHydCCost')[idx]
-                                              + optmodel.__getattribute__('vTotalEleRCost')[idx]
-                                              + optmodel.__getattribute__('vTotalHydRCost')[idx]) for idx in model.psn)
-                                      + sum(optmodel.__getattribute__('vTotalElePeakCost')[idx] for idx in model.ps))
+        return optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.psn)
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [MEUR]'))
+
+    # Cost components of the objective function
+    def eTotalCComponent(optmodel, p,sc):
+        return (optmodel.vTotalCComponent[p,sc] == optmodel.vTotalEleNCost[p,sc] + optmodel.vTotalEleXCost[p,sc] +
+                sum(model.Par['pDuration'][p,sc,n] * (optmodel.__getattribute__(f'vTotal{eng}MCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}OCost')[p,sc,n] +
+                                                      optmodel.__getattribute__(f'vTotal{eng}DCost')[p,sc,n] for eng in ['Ele','Hyd']) for n in model.n))
+    optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [MEUR]'))
+
+    # Revenue components of the objective function
+    def eTotalRComponent(optmodel, p,sc):
+        return (optmodel.vTotalRComponent[p,sc] == optmodel.vTotalEleXRevenue[p,sc] +
+                sum(model.Par['pDuration'][p,sc,n] * (optmodel.vTotalEleMRevenue[p,sc,n] + optmodel.vTotalHydMRevenue[p,sc,n]) for n in model.n))
+    optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [MEUR]'))
 
     print('--- Declaring the totals components of the ObjFunc:                    {} seconds'.format(round(time.time() - StartTime)))
 
@@ -45,75 +48,124 @@ def create_objective_function(model, optmodel):
 def create_objective_function_components(model, optmodel):
     #
     StartTime = time.time() # to compute elapsed time
-    # Market variable cost [M€]
-    def eTotalEleMCost(optmodel, p,sc,n):
-        return (optmodel.vTotalEleMCost[p,sc,n] ==   optmodel.vTotalEleTradeCost[p,sc,n] - optmodel.vTotalEleTradeProfit[p,sc,n])
-    optmodel.__setattr__('eTotalEleMCost', Constraint(optmodel.psn, rule=eTotalEleMCost, doc='Total electricity market cost [MEUR]'))
 
-    def eTotalHydMCost(optmodel, p,sc,n):
-        return (optmodel.vTotalHydMCost[p,sc,n] ==   optmodel.vTotalHydTradeCost[p,sc,n] - optmodel.vTotalHydTradeProfit[p,sc,n])
-    optmodel.__setattr__('eTotalHydMCost', Constraint(optmodel.psn, rule=eTotalHydMCost, doc='Total hydrogen market cost [MEUR]'))
+    #%% Total electricity grid usage cost [M€]
+    def eEleNetGridUsageCost(optmodel, p,sc):
+        return optmodel.vTotalEleNCost[p,sc] == optmodel.vTotalElePeakCost[p,sc] + optmodel.vTotalEleNetUseCost[p,sc] + optmodel.vTotalEleCapTariffCost[p,sc]
+    optmodel.__setattr__('eNetGridUsageCost', Constraint(optmodel.ps, rule=eEleNetGridUsageCost, doc='Total electricity grid usage cost [MEUR]'))
 
-    def eTotalEleTradeCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleTradeCost  [p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetelcertifikat'][er] * model.factor1 + model.Par['pEleRetpaslag'][er] * model.factor1) * (1+model.Par['pEleRetmoms'][er] * model.factor1) + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy [p,sc,n,er]) for er in model.er)
-    optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eTotalEleTradeCost, doc='Total electricity trade cost [MEUR]'))
+    # Total electricity peak costs
+    def eTotalElePeakCost(optmodel, p,sc):
+        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(optmodel.vElePeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) for er in model.er) / len(model.Peaks))
+    optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [MEUR]'))
 
-    def eTotalEleTradeProfit(optmodel, p,sc,n):
-        return optmodel.vTotalEleTradeProfit[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] *   (model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er]                                                                                                                                                                                                                 * optmodel.vEleSell[p,sc,n,er]) for er in model.er)
-    optmodel.__setattr__('eTotalEleTradeProfit', Constraint(optmodel.psn, rule=eTotalEleTradeProfit, doc='Total electricity trade profit [MEUR]'))
+    # Total electricity net usage costs
+    def eTotalEleNetUseCost(optmodel, p,sc):
+        return (optmodel.vTotalEleNetUseCost[p,sc] == sum(model.Par['pEleRetnetavgift'][er] * model.factor1 * sum(optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
+    optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseCost, doc='Total electricity net usage cost [MEUR]'))
 
-    def eTotalHydTradeCost(optmodel, p,sc,n):
-        return optmodel.vTotalHydTradeCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr]) for hr in model.hr)
-    optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eTotalHydTradeCost, doc='Total hydrogen trade cost [MEUR]'))
+    # Total electricity capacity tariff costs
+    def eTotalEleCapTariffCost(optmodel, p,sc):
+        return (optmodel.vTotalEleCapTariffCost[p,sc] == sum(sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(model.Par['pEleMaxPower'][egs][p,sc,n] for n in model.n for egs in model.egs if (nd,egs) in model.n2eg) for er in model.er if (nd,er) in model.n2er) for nd in model.nd))
+    optmodel.__setattr__('eTotalEleCapTariffCost', Constraint(optmodel.ps, rule=eTotalEleCapTariffCost, doc='Total electricity capacity tariff cost [MEUR]'))
 
-    def eTotalHydTradeProfit(optmodel, p,sc,n):
-        return optmodel.vTotalHydTradeProfit[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pVarEnergyPrice'][hr][p,sc,n] * optmodel.vHydSell[p,sc,n,hr]) for hr in model.hr)
-    optmodel.__setattr__('eTotalHydTradeProfit', Constraint(optmodel.psn, rule=eTotalHydTradeProfit, doc='Total hydrogen trade profit [MEUR]'))
+    #%% Total electricity market costs
+    def eEleMarketCost(optmodel, p,sc,n):
+        return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkCostDA[p,sc,n] + optmodel.vTotalEleMrkCostPPA[p,sc,n])
+    optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [MEUR]'))
 
-    # Generation operation cost [M€]
+    def eEleMarketDayAheadCost(optmodel, p,sc,n):
+        return optmodel.vTotalEleMrkCostDA[p,sc,n] == sum(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * optmodel.vEleBuy [p,sc,n,er] for er in model.er)
+    optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [MEUR]'))
+
+    #%% Total electricity market revenues
+    def eEleMarketRevenue(optmodel, p,sc,n):
+        return (optmodel.vTotalEleMRevenue[p,sc,n] == optmodel.vTotalEleMrkRevDA[p,sc,n] + optmodel.vTotalEleMrkRevPPA[p,sc,n] + optmodel.vTotalEleMrkRevFrq[p,sc,n])
+    optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [MEUR]'))
+
+    def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleMrkRevDA[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * optmodel.vEleSell[p,sc,n,er] for er in model.er)
+    optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [MEUR]'))
+
+    #%% Total hydrogen market costs
+    def eHydMarketCost(optmodel, p,sc,n):
+        return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkCostPPA[p,sc,n])
+    optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [MEUR]'))
+
+    def eHydMarketDayAheadCost(optmodel, p,sc,n):
+        return optmodel.vTotalHydMrkCostPPA[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
+    optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [MEUR]'))
+
+    #%% Total hydrogen market revenues
+    def eHydMarketRevenue(optmodel, p,sc,n):
+        return (optmodel.vTotalHydMRevenue[p,sc,n] == optmodel.vTotalHydMrkRevPPA[p,sc,n])
+    optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [MEUR]'))
+
+    def eHydMarketDayAheadRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalHydMrkRevPPA[p,sc,n] == sum(model.Par['pVarEnergyPrice'][hr][p,sc,n] * optmodel.vHydSell[p,sc,n,hr] for hr in model.hr)
+    optmodel.__setattr__('eHydMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eHydMarketDayAheadRevenue, doc='Total hydrogen market day-ahead revenues [MEUR]'))
+
+    #%% Total electricity taxes costs
+    def eEleTaxCost(optmodel, p,sc):
+        return (optmodel.vTotalEleXCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
+    optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [MEUR]'))
+
+    def eEleTaxRevenue(optmodel, p,sc):
+        return (optmodel.vTotalEleXRevenue[p,sc] == sum(model.Par['pEleRetelcertifikat'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
+    optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [MEUR]'))
+
+    #%% Total electricity operation and maintenance costs
+    def eEleOpMaintCost(optmodel, p,sc,n):
+        return (optmodel.vTotalEleOCost[p,sc,n] == sum(optmodel.__getattribute__(f'vTotal{eng}GCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}ECost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}CCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}RCost')[p,sc,n] for eng in ['Ele']))
+    optmodel.__setattr__('eEleOpMaintCost', Constraint(optmodel.psn, rule=eEleOpMaintCost, doc='Total electricity operation and maintenance costs [MEUR]'))
+
+    # Electricity generation operation cost [M€]
     def eTotalEleGCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleGCost[p,sc,n] == (sum(model.Par['pDuration'][p,sc,n] * model.Par['pEleGenLinearVarCost'  ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pEleGenConstantVarCost'][egt] *       optmodel.vEleGenCommitment     [p,sc,n,egt] for egt in model.egt) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pEleGenStartUpCost'    ][egt] *       optmodel.vEleGenStartUp        [p,sc,n,egt] for egt in model.egt) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pEleGenShutDownCost'   ][egt] *       optmodel.vEleGenShutDown       [p,sc,n,egt] for egt in model.egt) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pEleGenOMVariableCost' ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ))
+        return optmodel.vTotalEleGCost[p,sc,n] == (sum(model.Par['pEleGenLinearVarCost'  ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ) +
+                                                   sum(model.Par['pEleGenConstantVarCost'][egt] *       optmodel.vEleGenCommitment     [p,sc,n,egt] for egt in model.egt) +
+                                                   sum(model.Par['pEleGenStartUpCost'    ][egt] *       optmodel.vEleGenStartUp        [p,sc,n,egt] for egt in model.egt) +
+                                                   sum(model.Par['pEleGenShutDownCost'   ][egt] *       optmodel.vEleGenShutDown       [p,sc,n,egt] for egt in model.egt) +
+                                                   sum(model.Par['pEleGenOMVariableCost' ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ))
     optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [MEUR]'))
 
-    # Generation operation cost [M€]
-    def eTotalHydGCost(optmodel, p,sc,n):
-        return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pDuration'][p,sc,n] * model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pHydGenStartUpCost'    ][hgt] *       optmodel.vHydGenStartUp        [p,sc,n,hgt] for hgt in model.hgt) +
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) -
-                                                   sum(model.Par['pDuration'][p,sc,n] * model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
-    optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [MEUR]'))
+    # Electricity generation emission cost [M€]
+    def eTotalEleECost(optmodel, p,sc,n):
+        return optmodel.vTotalEleECost[p,sc,n] == sum(model.Par['pGenCO2EmissionCost'][egt] * optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt)
+    optmodel.__setattr__('eTotalECost', Constraint(optmodel.psn, rule=eTotalEleECost, doc='Total emission cost [MEUR]'))
 
-    # Generation emission cost [M€]
-    def eTotalECost(optmodel, p,sc,n):
-        return optmodel.vTotalECost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * model.Par['pGenCO2EmissionCost'][egt] * optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt)
-    optmodel.__setattr__('eTotalECost', Constraint(optmodel.psn, rule=eTotalECost, doc='Total emission cost [MEUR]'))
-
-    # Consumption operation cost [M€]
+    # Electricity consumption operation cost [M€]
     def eTotalEleCCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleCCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * model.Par['pEleGenLinearTerm'][egs] * optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs)
+        return optmodel.vTotalEleCCost[p,sc,n] == sum(model.Par['pEleGenLinearTerm'][egs] * optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs)
     optmodel.__setattr__('eTotalEleCCost', Constraint(optmodel.psn, rule=eTotalEleCCost, doc='Total consumption cost in electricity units [MEUR]'))
 
-    def eTotalHydCCost(optmodel, p,sc,n):
-        return optmodel.vTotalHydCCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * model.Par['pHydGenLinearTerm'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs)
-    optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [MEUR]'))
-
-    # Reliability cost [M€]
+    # Electricity reliability cost [M€]
     def eTotalEleRCost(optmodel, p,sc,n):
         return (optmodel.vTotalEleRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParENSCost'] * optmodel.vENS[p,sc,n,ed]) for ed in model.ed))
     optmodel.__setattr__('eTotalEleRCost', Constraint(optmodel.psn, rule=eTotalEleRCost, doc='Total reliability cost in electricity consumers [MEUR]'))
 
+    #%% Total hydrogen operation and maintenance costs
+    def eHydOpMaintCost(optmodel, p,sc,n):
+        return (optmodel.vTotalHydOCost[p,sc,n] == sum(optmodel.__getattribute__(f'vTotal{eng}GCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}CCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}RCost')[p,sc,n] for eng in ['Hyd']))
+    optmodel.__setattr__('eHydOpMaintCost', Constraint(optmodel.psn, rule=eHydOpMaintCost, doc='Total hydrogen operation and maintenance costs [MEUR]'))
+
+    # Hydrogen generation operation cost [M€]
+    def eTotalHydGCost(optmodel, p,sc,n):
+        return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
+                                                   sum(model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
+                                                   sum(model.Par['pHydGenStartUpCost'    ][hgt] *       optmodel.vHydGenStartUp        [p,sc,n,hgt] for hgt in model.hgt) +
+                                                   sum(model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) -
+                                                   sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
+    optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [MEUR]'))
+
+    # Hydrogen consumption operation cost [M€]
+    def eTotalHydCCost(optmodel, p,sc,n):
+        return optmodel.vTotalHydCCost[p,sc,n] == sum(model.Par['pHydGenLinearTerm'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs)
+    optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [MEUR]'))
+
+    # Hydrogen reliability cost [M€]
     def eTotalHydRCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd]) for hd in model.hd))
     optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [MEUR]'))
-
-    def eTotalElePeakCost(optmodel, p,sc):
-        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(optmodel.vElePeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) for er in model.er) / len(model.Peaks))
-    optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [MEUR]'))
 
     print('--- Declaring the ObjFunc components:                                  {} seconds'.format(round(time.time() - StartTime)))
 
