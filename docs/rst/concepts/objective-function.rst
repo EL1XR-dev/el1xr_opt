@@ -20,16 +20,16 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 :math:`\marketcost_{\periodindex,\scenarioindex} = \underbrace{\elemarketcostgrid_{\periodindex,\scenarioindex}}_{\text{Network usage}}
 \!+\! \underbrace{\elemarketcosttax_{\periodindex,\scenarioindex}}_{\text{Surcharges/taxes}}
-\!+\! \sum_{\timeindex \in \nT} \underbrace{\elemarketcost_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}(\underbrace{\elemarketcost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmarketcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}
 \!+\! \underbrace{\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}
 \!+\! \hydmaintopercost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Generation/consumption}}
 \!+\! \underbrace{\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Degradation}}`
+\!+\! \hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}}_{\text{Degradation}})`
 
 :math:`\marketrevenue_{\periodindex,\scenarioindex} = \underbrace{\elemarketrevenuetax_{\periodindex,\scenarioindex}}_{\text{Incentives}}
-\!+\! \sum_{\timeindex \in \nT} \underbrace{\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}`
+\!+\! \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}(\underbrace{\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
+\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}})`
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
