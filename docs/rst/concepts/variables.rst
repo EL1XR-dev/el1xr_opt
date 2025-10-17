@@ -24,95 +24,95 @@ These high-level variables are used to structure the objective function, represe
      - Total system cost (the main objective function)
      - €
      - ``vTotalSCost``
-   * - :math:`\chi_{\periodindex,\scenarioindex}`
+   * - :math:`\marketcost_{\periodindex,\scenarioindex}`
      - Total system component cost
      - €
      - ``vTotalCComponent``
-   * - :math:`\rho_{\periodindex,\scenarioindex}`
+   * - :math:`\marketrevenue_{\periodindex,\scenarioindex}`
      - Total system component revenue
      - €
      - ``vTotalRComponent``
-   * - :math:`\chi^{Net^{Ele}}_{\periodindex,\scenarioindex}`
+   * - :math:`\elemarketcostgrid_{\periodindex,\scenarioindex}`
      - Total fixed electricity network cost
      - €
      - ``vTotalEleNCost``
-   * - :math:`\chi^{Tax^{Ele}}_{\periodindex,\scenarioindex}`
+   * - :math:`\elemarketcosttax_{\periodindex,\scenarioindex}`
      - Total tax and surcharges electricity cost
      - €
      - ``vTotalEleXCost``
-   * - :math:`\chi^{Mkt^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketcost_{\periodindex,\scenarioindex,\timeindex}`
      - Total variable electricity market cost
      - €
      - ``vTotalEleMCost``
-   * - :math:`\chi^{Mkt^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}`
      - Total variable hydrogen market cost
      - €
      - ``vTotalHydMCost``
-   * - :math:`\chi^{Opr^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity operational cost
      - €
      - ``vTotalEleOCost``
-   * - :math:`\chi^{Opr^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}`
      - Total hydrogen operational cost
      - €
      - ``vTotalHydOCost``
-   * - :math:`\chi^{Dgd^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity degradation cost
      - €
      - ``vTotalEleDCost``
-   * - :math:`\chi^{Dgd^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}`
      - Total hydrogen degradation cost
      - €
      - ``vTotalHydDCost``
-   * - :math:`\rho^{Tax^{Ele}}_{\periodindex,\scenarioindex}`
+   * - :math:`\elemarketrevenuetax_{\periodindex,\scenarioindex}`
      - Total tax electricity revenue
      - €
      - ``vTotalEleXRev``
-   * - :math:`\rho^{Mkt^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
      - Total variable electricity market revenue
      - €
      - ``vTotalEleMRev``
-   * - :math:`\rho^{Mkt^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}`
      - Total variable hydrogen market revenue
      - €
      - ``vTotalHydMRev``
-   * - :math:`\chi^{Peak^{Ele}}_{\periodindex,\scenarioindex}`
+   * - :math:`\elepeakdemandcost_{\periodindex,\scenarioindex}`
      - Total electricity peak cost
      - €
      - ``vTotalElePeakCost``
-   * - :math:`\chi^{NetUse^{Ele}}_{\periodindex,\scenarioindex}`
+   * - :math:`\elenetusecost_{\periodindex,\scenarioindex}`
      - Total electricity network usage cost
      - €
      - ``vTotalEleNetUseCost``
-   * - :math:`\chi^{CapTariff^{Ele}}_{\periodindex,\scenarioindex}`
+   * - :math:`\elecaptariffcost_{\periodindex,\scenarioindex}`
      - Total electricity capacity tariff cost
      - €
      - ``vTotalEleCapTariffCost``
-   * - :math:`\chi^{DA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketcostDA_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity day-ahead market cost
      - €
      - ``vTotalEleMrkDACost``
-   * - :math:`\chi^{PPA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity PPA market cost
      - €
      - ``vTotalEleMrkPPACost``
-   * - :math:`\rho^{DA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity day-ahead market revenue
      - €
      - ``vTotalEleMrkDARev``
-   * - :math:`\rho^{PPA^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity PPA market revenue
      - €
      - ``vTotalEleMrkPPARev``
-   * - :math:`\rho^{Frq^{Ele}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity frequency market revenue
      - €
      - ``vTotalEleMrkFrqRev``
-   * - :math:`\chi^{PPA^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
      - Total hydrogen PPA market cost
      - €
      - ``vTotalHydMrkPPACost``
-   * - :math:`\rho^{PPA^{Hyd}}_{\periodindex,\scenarioindex,\timeindex}`
+   * - :math:`\hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}`
      - Total hydrogen PPA market revenue
      - €
      - ``vTotalHydMrkPPARev``
