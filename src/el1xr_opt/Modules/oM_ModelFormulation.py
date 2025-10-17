@@ -98,7 +98,7 @@ def create_objective_function_components(model, optmodel):
 
     #%% Total hydrogen market revenues
     def eHydMarketRevenue(optmodel, p,sc,n):
-        return (optmodel.vTotalHydMRevenue[p,sc,n] == optmodel.vTotalHydMrkPPARev[p,sc,n])
+        return (optmodel.vTotalHydMRev[p,sc,n] == optmodel.vTotalHydMrkPPARev[p,sc,n])
     optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [MEUR]'))
 
     def eHydMarketDayAheadRevenue(optmodel, p,sc,n):
@@ -116,7 +116,7 @@ def create_objective_function_components(model, optmodel):
     optmodel.__setattr__('eEleTaxVATCost', Constraint(optmodel.ps, rule=eEleTaxVATCost, doc='Total electricity taxes costs [MEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
-        return (optmodel.vTotalEleXRevenue[p,sc] == optmodel.vTotalEleISRev[p,sc])
+        return (optmodel.vTotalEleXRev[p,sc] == optmodel.vTotalEleISRev[p,sc])
     optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [MEUR]'))
 
     # Incentives on electricity taxes revenues
@@ -924,23 +924,23 @@ def create_constraints(model, optmodel):
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m:
             if peak == model.Peaks.first():
-                return optmodel.vElePeak[p,sc,m,er,peak] >= optmodel.vEleBuy[p,sc,n,er]
+                return optmodel.vEleDemPeak[p,sc,m,er,peak] >= optmodel.vEleBuy[p,sc,n,er]
             else:
-                return optmodel.vElePeak[p,sc,m,er,peak] >= optmodel.vEleBuy[p,sc,n,er] - 1e2 * sum(optmodel.vElePeakHourInd[p,sc,n,er,peak2] for peak2 in model.Peaks if peak2 < peak)
+                return optmodel.vEleDemPeak[p,sc,m,er,peak] >= optmodel.vEleBuy[p,sc,n,er] - 1e2 * sum(optmodel.vElePeakHourInd[p,sc,n,er,peak2] for peak2 in model.Peaks if peak2 < peak)
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakHourValue', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourValue, doc='peak hour selection'))
 
     def eElePeakHourInd_C1(optmodel, p,sc,n,er,m,peak):
         if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m:
-            return optmodel.vElePeak[p,sc,m,er,peak] >= optmodel.vEleBuy[p,sc,n,er] - 1e2 * (1 - optmodel.vElePeakHourInd[p,sc,n,er,peak])
+            return optmodel.vEleDemPeak[p,sc,m,er,peak] >= optmodel.vEleBuy[p,sc,n,er] - 1e2 * (1 - optmodel.vElePeakHourInd[p,sc,n,er,peak])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakHourInd_C1', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C1, doc='peak hour indicator'))
 
     def eElePeakHourInd_C2(optmodel, p,sc,n,er,m,peak):
         if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m:
-            return optmodel.vElePeak[p,sc,m,er,peak] <= optmodel.vEleBuy[p,sc,n,er] + 1e2 * (1 - optmodel.vElePeakHourInd[p,sc,n,er,peak])
+            return optmodel.vEleDemPeak[p,sc,m,er,peak] <= optmodel.vEleBuy[p,sc,n,er] + 1e2 * (1 - optmodel.vElePeakHourInd[p,sc,n,er,peak])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakHourInd_C2', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C2, doc='peak hour indicator'))
