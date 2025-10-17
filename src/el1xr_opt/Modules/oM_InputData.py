@@ -881,9 +881,9 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vTotalHydDCost',          Var(model.psn,   within=             Reals, doc='total hydrogen       degradation      cost [MEUR]'))
 
     # electricity and hydrogen revenue components
-    setattr(optmodel, 'vTotalEleXReve',          Var(model.ps ,   within=             Reals, doc='total tax             electricity  revenue [MEUR]'))
-    setattr(optmodel, 'vTotalEleMReve',          Var(model.psn,   within=             Reals, doc='total variable electricity market  revenue [MEUR]'))
-    setattr(optmodel, 'vTotalHydMReve',          Var(model.psn,   within=             Reals, doc='total variable hydrogen    market  revenue [MEUR]'))
+    setattr(optmodel, 'vTotalEleXRev',           Var(model.ps ,   within=             Reals, doc='total tax             electricity  revenue [MEUR]'))
+    setattr(optmodel, 'vTotalEleMRev',           Var(model.psn,   within=             Reals, doc='total variable electricity market  revenue [MEUR]'))
+    setattr(optmodel, 'vTotalHydMRev',           Var(model.psn,   within=             Reals, doc='total variable hydrogen    market  revenue [MEUR]'))
 
     # electricity network/grid cost such capacity and peak costs
     setattr(optmodel, 'vTotalElePeakCost',       Var(model.ps ,   within=             Reals, doc='total electricity peak                cost [MEUR]'))
@@ -892,17 +892,17 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vTotalEleCapTariffCost',  Var(model.ps ,   within=             Reals, doc='total electricity capacity tariff     cost [MEUR]'))
 
     # electricity market costs
-    setattr(optmodel, 'vTotalEleMrkCostDA',      Var(model.psn,   within=             Reals, doc='total electricity day-ahead market   cost [MEUR]'))
-    setattr(optmodel, 'vTotalEleMrkCostPPA',     Var(model.psn,   within=             Reals, doc='total electricity PPA market         cost [MEUR]'))
+    setattr(optmodel, 'vTotalEleMrkDACost',      Var(model.psn,   within=             Reals, doc='total electricity day-ahead market   cost [MEUR]'))
+    setattr(optmodel, 'vTotalEleMrkPPACost',     Var(model.psn,   within=             Reals, doc='total electricity PPA market         cost [MEUR]'))
 
     # electricity market revenues
-    setattr(optmodel, 'vTotalEleMrkRevDA',       Var(model.psn,   within=             Reals, doc='total electricity day-ahead market revenu [MEUR]'))
-    setattr(optmodel, 'vTotalEleMrkRevPPA',      Var(model.psn,   within=             Reals, doc='total electricity PPA market       revenu [MEUR]'))
-    setattr(optmodel, 'vTotalEleMrkRevFrq',      Var(model.psn,   within=             Reals, doc='total electricity frequency market revenu [MEUR]'))
+    setattr(optmodel, 'vTotalEleMrkDARev',       Var(model.psn,   within=             Reals, doc='total electricity day-ahead market revenu [MEUR]'))
+    setattr(optmodel, 'vTotalEleMrkPPARev',      Var(model.psn,   within=             Reals, doc='total electricity PPA market       revenu [MEUR]'))
+    setattr(optmodel, 'vTotalEleMrkFrqRev',      Var(model.psn,   within=             Reals, doc='total electricity frequency market revenu [MEUR]'))
 
     # hydrogen market costs and revenues
-    setattr(optmodel, 'vTotalHydMrkCostPPA',     Var(model.psn,   within=             Reals, doc='total hydrogen    PPA market         cost [MEUR]'))
-    setattr(optmodel, 'vTotalHydMrkRevPPA',      Var(model.psn,   within=             Reals, doc='total hydrogen    PPA market       revenu [MEUR]'))
+    setattr(optmodel, 'vTotalHydMrkPPACost',     Var(model.psn,   within=             Reals, doc='total hydrogen    PPA market         cost [MEUR]'))
+    setattr(optmodel, 'vTotalHydMrkPPARev',      Var(model.psn,   within=             Reals, doc='total hydrogen    PPA market       revenu [MEUR]'))
 
     # electricity tax costs and revenues
     setattr(optmodel, 'vTotalEleVATCost',        Var(model.ps ,   within=             Reals, doc='total electricity VAT                cost [MEUR]'))
@@ -1001,20 +1001,42 @@ def create_variables(model, optmodel):
     # psn
     std_upper_bound = 1e4
     std_lower_bound = -1e4
+    zero_upper_bound = 0.0
+    zero_lower_bound = 0.0
 
     # List of variables to set bounds
-    cost_vars = [optmodel.vTotalEleMCost, optmodel.vTotalEleGCost, optmodel.vTotalEleCCost, optmodel.vTotalEleRCost,
-                 optmodel.vTotalHydMCost, optmodel.vTotalHydGCost, optmodel.vTotalHydCCost, optmodel.vTotalHydRCost,
-                 optmodel.vTotalECost, optmodel.vTotalEleTradeCost, optmodel.vTotalEleTradeProfit,
-                 optmodel.vTotalHydTradeCost, optmodel.vTotalHydTradeProfit, optmodel.vTotalElePeakCost, optmodel.vTotalHydPeakCost]
+    cost_vars = [optmodel.vTotalEleNCost, optmodel.vTotalEleXCost, optmodel.vTotalEleMCost, optmodel.vTotalHydMCost, optmodel.vTotalEleOCost, optmodel.vTotalHydOCost]
+
+    zero_cost_vars = [optmodel.vTotalEleDCost, optmodel.vTotalHydDCost,
+                      optmodel.vTotalEleMrkPPACost,
+                      optmodel.vTotalEleMrkPPARev, optmodel.vTotalEleMrkFrqRev,]
+
+    rev_vars = [optmodel.vTotalEleXRev, optmodel.vTotalEleMRev, optmodel.vTotalHydMRev]
+
+    sub_cost_vars = [optmodel.vTotalElePeakCost, optmodel.vTotalEleNetUseCost, optmodel.vTotalEleCapTariffCost,
+                     optmodel.vTotalEleMrkDACost,
+                     optmodel.vTotalHydMrkPPACost,
+                     optmodel.vTotalEleVATCost,
+                     optmodel.vTotalEleGCost, optmodel.vTotalHydGCost,
+                     optmodel.vTotalEleECost,
+                     optmodel.vTotalEleCCost, optmodel.vTotalHydCCost,
+                     optmodel.vTotalEleRCost, optmodel.vTotalHydRCost]
+
+    sub_rev_vars = [optmodel.vTotalEleMrkDARev,
+                    optmodel.vTotalHydMrkPPARev,
+                    optmodel.vTotalEleISRev]
 
     # ed_vars = [optmodel.vENS]
 
     # Set bounds for each variable
     # Objective function
-    for var in cost_vars:
+    for var in cost_vars + rev_vars + sub_cost_vars + sub_rev_vars:
         var.setlb(std_lower_bound)
         var.setub(std_upper_bound)
+
+    for var in zero_cost_vars:
+        var.setlb(zero_lower_bound)
+        var.setub(zero_upper_bound)
 
     # Electricity
     for idx in model.psner:
