@@ -12,3 +12,4 @@ streamlit
 networkx
 ausankey
 amplpy
+duckdb

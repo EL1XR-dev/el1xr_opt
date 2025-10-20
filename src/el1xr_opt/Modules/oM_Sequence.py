@@ -13,6 +13,7 @@ from .oM_InputData        import data_processing, create_variables
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .oM_ProblemSolving   import solving_model
 from .oM_OutputData       import saving_results
+from .oM_OutputData_duckdb import save_to_duckdb
 from .oM_SolverSetup      import ensure_ampl_solvers
 
 def routine(dir, case, solver, date, rawresults, plots):
@@ -59,6 +60,10 @@ def routine(dir, case, solver, date, rawresults, plots):
     # outputting the results
     model = saving_results(dir, case, date, model, model)
     print('- Total time for outputting the results:                               {} seconds\n'.format(round(time.time() - start_time  )))
+    start_time = time.time()
+    # outputting the results to duckdb
+    save_to_duckdb(dir, case, model, model)
+    print('- Total time for outputting the results to duckdb:                     {} seconds\n'.format(round(time.time() - start_time  )))
     for i in range(0, 117):
         print('-', end="")
     print('\n')
