@@ -243,6 +243,7 @@ mathjax3_config = {
             "elemarketcostPPA": r"C^{PPA,e}",                   # Electrical market PPA cost
             "elemarketcostgrid": r"C^{grid,e}",                 # Electrical market grid fee cost
             "elemarketcosttax": r"C^{tax,e}",                   # Electrical market grid tax cost
+            "elemarketcostVAT": r"C^{VAT,e}",                   # Electrical market VAT cost
             "hydmarketcost": r"C^{trade,h}",                    # Hydrogen market trading cost
             "hydmarketcostPPA": r"C^{PPA,h}",                   # Hydrogen market trading PPA
             "importcost": r"C^{imp}",                           # Total Import cost
@@ -254,6 +255,7 @@ mathjax3_config = {
             "elemarketrevenueancillary": r"R^{f,e}",            # Electrical market selling profit ancillary services
             "elemarketrevenuePPA": r"R^{PPA,e}",                # Electrical market selling profit PPA
             "elemarketrevenuetax": r"R^{tax,e}",                # Electrical market selling profit tax
+            "elemarketrevenueincentive": r"R^{inc,e}",          # Electrical market selling profit incentive
             "hydmarketrevenue": r"R^{trade,h}",                 # Hydrogen market trading cost
             "hydmarketrevenuePPA": r"R^{PPA,h}",                # Hydrogen market selling PPA
             "exportrevenue": r"R^{exp}",                        # Total Export cost
@@ -326,6 +328,7 @@ mathjax3_config = {
             "emissionpermitcost": r"C^{emiss,perm}",            # Emission permit (ETS) cost
             "emissiontaxcost": r"C^{emiss,tax}",                # Emission tax cost
             "carboncost": r"C^{carb}",                          # Carbon cost (if modeled separately)
+            "eleemissioncost": r"C^{emiss,e}",                  # Electrical emission cost
 
             # --- Investment & Financial Costs ---
             "investmentcost": r"C^{inv}",                       # Investment cost
