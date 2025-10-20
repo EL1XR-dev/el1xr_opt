@@ -7,6 +7,7 @@
 
 # Importing Libraries
 import os
+import re
 import duckdb
 import pandas as pd
 from pyomo.environ import Var, Param, Set, Constraint
@@ -28,6 +29,9 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
     db_path = os.path.join(_path, "results.duckdb")
     con = duckdb.connect(database=db_path, read_only=False)
 
+    def safe_identifier(name: str) -> str:
+        return re.sub(r'[^0-9a-zA-Z_]+', '_', name)
+
     # Save sets
     for s in optmodel.component_objects(Set, active=True):
         if not s.is_constructed() or not s:
@@ -40,7 +44,8 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
             df.columns = [s.name]
 
         con.register('tmp_view', df)
-        con.execute(f'CREATE OR REPLACE TABLE "{s.name}" AS SELECT * FROM tmp_view')
+        table_name = safe_identifier(s.name)
+        con.execute(f'CREATE OR REPLACE TABLE "{table_name}" AS SELECT * FROM tmp_view')
         con.unregister('tmp_view')
 
     # Save parameters
@@ -55,7 +60,8 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
             df = pd.DataFrame({'value': [p.value]})
 
         con.register('tmp_view', df)
-        con.execute(f'CREATE OR REPLACE TABLE "{p.name}" AS SELECT * FROM tmp_view')
+        table_name = safe_identifier(p.name)
+        con.execute(f'CREATE OR REPLACE TABLE "{table_name}" AS SELECT * FROM tmp_view')
         con.unregister('tmp_view')
 
     # Save variables
@@ -78,7 +84,8 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
             df = pd.DataFrame({'value': [v.value], 'lb': [v.lb], 'ub': [v.ub]})
 
         con.register('tmp_view', df)
-        con.execute(f'CREATE OR REPLACE TABLE "{v.name}" AS SELECT * FROM tmp_view')
+        table_name = safe_identifier(v.name)
+        con.execute(f'CREATE OR REPLACE TABLE "{table_name}" AS SELECT * FROM tmp_view')
         con.unregister('tmp_view')
 
     # Save duals of constraints
@@ -86,7 +93,8 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
         if not hasattr(model, 'dual'):
             continue
 
-        table_name = f"{c.name}_dual"
+        raw_table_name = f"{c.name}_dual"
+        table_name = safe_identifier(raw_table_name)
         if c.is_indexed():
             data = []
             for index, con_data in c.items():
