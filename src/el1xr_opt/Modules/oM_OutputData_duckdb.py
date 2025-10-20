@@ -39,7 +39,9 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
         else:
             df.columns = [s.name]
 
-        con.execute(f'CREATE OR REPLACE TABLE "{s.name}" AS SELECT * FROM df')
+        con.register('tmp_view', df)
+        con.execute(f'CREATE OR REPLACE TABLE "{s.name}" AS SELECT * FROM tmp_view')
+        con.unregister('tmp_view')
 
     # Save parameters
     for p in optmodel.component_objects(Param, active=True):
@@ -51,7 +53,10 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
             df = df.rename(columns=rename_dict)
         else:
             df = pd.DataFrame({'value': [p.value]})
-        con.execute(f'CREATE OR REPLACE TABLE "{p.name}" AS SELECT * FROM df')
+
+        con.register('tmp_view', df)
+        con.execute(f'CREATE OR REPLACE TABLE "{p.name}" AS SELECT * FROM tmp_view')
+        con.unregister('tmp_view')
 
     # Save variables
     for v in optmodel.component_objects(Var, active=True):
@@ -62,17 +67,19 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
                 row.extend([var_data.value, var_data.lb, var_data.ub])
                 data.append(row)
 
-                if data:
-                    num_indices = len(data[0]) - 3
-                    columns = [f'index_{i}' for i in range(num_indices)]
-                    columns.extend(['value', 'lb', 'ub'])
-                    df = pd.DataFrame(data, columns=columns)
-                else:
-                    df = pd.DataFrame(columns=['value', 'lb', 'ub'])
+            if data:
+                num_indices = len(data[0]) - 3
+                columns = [f'index_{i}' for i in range(num_indices)]
+                columns.extend(['value', 'lb', 'ub'])
+                df = pd.DataFrame(data, columns=columns)
+            else:
+                df = pd.DataFrame(columns=['value', 'lb', 'ub'])
         else:
             df = pd.DataFrame({'value': [v.value], 'lb': [v.lb], 'ub': [v.ub]})
 
-        con.execute(f'CREATE OR REPLACE TABLE "{v.name}" AS SELECT * FROM df')
+        con.register('tmp_view', df)
+        con.execute(f'CREATE OR REPLACE TABLE "{v.name}" AS SELECT * FROM tmp_view')
+        con.unregister('tmp_view')
 
     # Save duals of constraints
     for c in optmodel.component_objects(Constraint, active=True):
@@ -105,7 +112,9 @@ def save_to_duckdb(DirName, CaseName, model, optmodel):
                 dual_value = None
             df = pd.DataFrame({'dual': [dual_value]})
 
-        con.execute(f'CREATE OR REPLACE TABLE "{table_name}" AS SELECT * FROM df')
+        con.register('tmp_view', df)
+        con.execute(f'CREATE OR REPLACE TABLE "{table_name}" AS SELECT * FROM tmp_view')
+        con.unregister('tmp_view')
 
     con.close()
     print(f"Data saved to {db_path}")
