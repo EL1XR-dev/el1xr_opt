@@ -29,7 +29,8 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 :math:`\marketrevenue_{\periodindex,\scenarioindex} = \underbrace{\elemarketrevenuetax_{\periodindex,\scenarioindex}}_{\text{Incentives}}
 \!+\! \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}(\underbrace{\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}
-\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}})`
+\!+\! \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}}_{\text{Market purchases}}
+\!+\! \underbrace{\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}}_{\text{Ancillary services}})`
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
