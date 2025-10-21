@@ -425,14 +425,6 @@ These binary (0 or 1) variables model on/off decisions, operational states, and 
      - Operating state of a hyd. ESS (charge/discharge)
      - '{0,1}'
      - ``vHydStorOperat``
-   * - :math:`\velenetcommitbin_{\periodindex,\scenarioindex,\timeindex,\lineindex}`
-     - Commitment of an elec. line
-     - '{0,1}'
-     - ``vEleNetCommit``
-   * - :math:`\vhydnetcommitbin_{\periodindex,\scenarioindex,\timeindex,\pipelineindex}`
-     - Commitment of a hyd. pipeline
-     - '{0,1}'
-     - ``vHydNetCommit``
 
 Variable Bounding and Fixing
 ----------------------------
