@@ -313,6 +313,8 @@ mathjax3_config = {
             "regulationdowncost": r"C^{reg,d}",                 # Regulation-down cost
             "reserveprocurementcost": r"C^{res,proc}",          # Reserve procurement cost
             "reserveactivationcost": r"C^{res,act}",            # Reserve activation cost
+            "freqcontainmentnormalcost": r"C^{FCR-N}",          # Frequency containment reserve normal cost
+            "freqcontainmentdisturbancecost": r"C^{FCR-D}",     # Frequency containment reserve disturbance cost
 
             # --- Curtailment & Reliability Costs ---
             "unservedenergycost": r"C^{ue}",                    # Unserved energy cost
@@ -386,16 +388,25 @@ mathjax3_config = {
             "nhours": r"N^{h}",                                 # Number of hours in a day
 
             # --- Prices (use uppercase Pi for market prices) ---
-            "pelespotprice": r"\Pi^{e}",                        # Electrical spot price
-            "phydspotprice": r"\Pi^{h}",                        # Hydrogen spot price
-            "pelebuyprice": r"\Pi^{b,e}",                       # Electrical buy price
-            "phydbuyprice": r"\Pi^{b,h}",                       # Hydrogen buy price
-            "pelesellprice": r"\Pi^{s,e}",                      # Electrical sell price
-            "phydsellprice": r"\Pi^{s,h}",                      # Hydrogen sell price
-            "peleimportprice": r"\Pi^{imp,e}",                  # Electrical import price
-            "phydimportprice": r"\Pi^{imp,h}",                  # Hydrogen import price
-            "peleexportprice": r"\Pi^{exp,e}",                  # Electrical export price
-            "phydexportprice": r"\Pi^{exp,h}",                  # Hydrogen export price
+            "pelespotprice": r"\lambda^{e}",                    # Electrical spot price
+            "phydspotprice": r"\lambda^{h}",                    # Hydrogen spot price
+            "pelebuyprice": r"\lambda^{b,e}",                   # Electrical buy price
+            "phydbuyprice": r"\lambda^{b,h}",                   # Hydrogen buy price
+            "pelesellprice": r"\lambda^{s,e}",                  # Electrical sell price
+            "phydsellprice": r"\lambda^{s,h}",                  # Hydrogen sell price
+            "peleimportprice": r"\lambda^{imp,e}",              # Electrical import price
+            "phydimportprice": r"\lambda^{imp,h}",              # Hydrogen import price
+            "peleexportprice": r"\lambda^{exp,e}",              # Electrical export price
+            "phydexportprice": r"\lambda^{exp,h}",              # Hydrogen export price
+            "peleppaprice": r"\lambda^{PPA,e}",                 # Electrical PPA price
+            "phydppaprice": r"\lambda^{PPA,h}",                 # Hydrogen PPA price
+            "pelefcrnprice": r"\Pi^{N,e}",                      # Electrical grid FCR-N price
+            "pelefcrdupprice": r"\Pi^{D-UP,e}",                 # Electrical grid FCR-D upwards price
+            "pelefcrddwprice": r"\Pi^{D-DW,e}",                 # Electrical grid FCR-D downwards price
+            "pelegridaFRRUPprice": r"\Pi^{A-REG-UP,e}",         # Electrical grid aFRR upwards price
+            "pelegridaFRDDWprice": r"\Pi^{A-REG-DW,e}",         # Electrical grid aFRR downwards price
+            "pelegridmFRRUPprice": r"\Pi^{M-REG-UP,e}",         # Electrical grid mFRR upwards price
+            "pelegridmFRDDWprice": r"\Pi^{M-REG-DW,e}",         # Electrical grid mFRR downwards price
             "pelemarketbuyingratio": r"\Upsilon^{b,e}",         # Electrical market buying ratio
             "pelemarketsellingratio": r"\Upsilon^{s,e}",        # Electrical market selling ratio
             "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
@@ -521,6 +532,17 @@ mathjax3_config = {
             "phydminstoragestart": r"S^{h,init}",               # Initial hydrogen storage inventory
             "peleminstorageend": r"S^{e,end}",                  # End electrical storage inventory
             "phydminstorageend": r"S^{h,end}",                  # End hydrogen storage inventory
+
+            # --- Frequency Containment Parameters ---
+            "pfcrnrequirement": r"FCRN",                        # Frequency containment reserve
+            "pfcrduprequirement": r"FCRD^{UP}",                 # Frequency containment reserve - upwards
+            "pfcrddwrequirement": r"FCRD^{DW}",                 # Frequency containment reserve - downwards
+            "pafrruprequirement": r"REG^{A,UP}",                # Automatic frequency restoration reserve - upwards
+            "pafrddwrequirement": r"REG^{A,DW}",                # Automatic frequency restoration reserve - downwards
+            "pmfrruprequirement": r"REG^{M,UP}",                # Manual frequency restoration reserve - upwards
+            "pmfrddwrequirement": r"REG^{M,DW}",                # Manual frequency restoration reserve - downwards
+            "pfcrdupreqactivation": r"FCRD^{UP,act}",           # FCR-D upwards reserve activation
+            "pfcrddwreqactivation": r"FCRD^{DW,act}",           # FCR-D downwards reserve activation
 
             # =======================================================
             #                       VARIABLES
