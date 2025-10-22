@@ -36,7 +36,7 @@ The total cost is broken down into several components, each represented by a spe
 
 Electricity Grid Usage
 ----------------------
-This component models capacity-based tariffs for now, and consider the power peak penalization cost.
+This component models capacity-based and tariffs, and consider the power peak penalization cost.
 
 :math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex} + \elenetusecost_{\periodindex,\scenarioindex} + \elecaptariffcost_{\periodindex,\scenarioindex}`
 
@@ -112,6 +112,20 @@ Hydrogen Market Costs
 
     .. math::
        \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} (\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex})
+
+Electricity Grid Services
+-------------------------
+This component captures revenues from providing ancillary services to the electricity grid, such as frequency regulation, spinning reserves, and voltage support.
+The total revenue from ancillary services (:math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`) is defined by the constraint «``eTotalEleAncillaryRevenue``».
+
+:math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex} = \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex}`
+
+Frequency Containment Reserve for Disturbance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This revenue subcomponent is earned by providing frequency containment reserves to manage disturbances in the grid.
+
+.. math::
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nG} \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \sum_{\storageindex \in \nEE} \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
 Taxes and Pass-Throughs
 -----------------------
