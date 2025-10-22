@@ -48,9 +48,9 @@ The bids are submitted for upward and downward reserves separately and are not g
 
 The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
 
-:math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrdupact_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
+:math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
 
-:math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrddwact_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
+:math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
 
 And for an electric ESS:
 
@@ -80,7 +80,7 @@ A set of constraints starting with ``eElePeak...`` identify the three highest po
 
 :math:`\sum_{\periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE} \velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex '} == 1.0 \quad \forall \monthindex,\peakindex`
 
-2. Energy Balance
+3. Energy Balance
 -----------------
 These are the most fundamental constraints, ensuring that at every node (:math:`\busindexa`) and at every timestep (:math:`\timeindex`), energy supply equals energy demand.
 
@@ -128,13 +128,13 @@ These constraints model the physical limitations of generation and storage asset
 
 Output and Charge Limits
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Total generation of an electricity unit (all except the VRE units) («``eEleTotalOutput``»)
+Total generation of an electricity unit (all except the VRE and ESS units) («``eEleTotalOutput``»)
 
-:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! URA^{SR}_{n}up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! DRA^{SR}_{n}dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
+:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! URA^{SR}_{n}up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! DRA^{SR}_{n}dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
 Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
-:math:`\frac{\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH`
+:math:`\frac{\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH`
 
 Total charge of an electricity ESS («``eEleTotalCharge``»)
 
@@ -249,6 +249,29 @@ Minimum up time and down time of hydrogen unit [h] («``eHydMinUpTime``, ``eHydM
     Avoid transition status from off to StandBy of the electrolyzer («``eHydAvoidTransitionOff2StandBy``»)
 
     :math:`hsf_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhz`
+
+Second block of a committed electric generator providing reserves
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eEleMaxOutput2ndBlock``») and («``eEleMinOutput2ndBlock``»)
+
+* D.A. Tejada-Ara\periodindex,\scenarioindex,\timeindex,\genindexo, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
+
+* C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
+
+* G. Morales-España, A. Ramos, and J. Garcia-Gonzalez "An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling" IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. `10.1109/TPWRS.2013.2259601 <https://doi.org/10.1109/TPWRS.2013.2259601>`_
+
+* G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
+
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
+
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
+
+Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
+
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+
+:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
 3. Energy Storage Dynamics
 --------------------------
@@ -366,7 +389,7 @@ Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eI
 :math:`\frac{\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 Operating reserves from energy storage systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Operating reserves from ESS can only be if enought energy is available for charging
 
 :math:`\veleconsumptionact_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
@@ -420,9 +443,9 @@ Maximum and minimum electricity generation of the second block of a committed un
 
 * G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
 
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
+:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
 
 Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
 
