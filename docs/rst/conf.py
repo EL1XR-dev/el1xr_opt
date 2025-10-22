@@ -581,11 +581,16 @@ mathjax3_config = {
             "vproduction": r"p",                                # Generation
             "veleproduction": r"p^{e}",                         # Electrical generation
             "vhydproduction": r"p^{h}",                         # Hydrogen production
+            "veleproductionact": r"p^{a,e}",                    # Electrical activated generation
+            "vhydproductionact": r"p^{a,h}",                    # Hydrogen activated generation
             "vconsumption": r"c",                               # Consumption
             "veleconsumption": r"c^{e}",                        # Electrical consumption
             "veleconsumptionstandby": r"c^{e,standby}",         # Electrical consumption (standby)
             "veleconsumptioncompress": r"c^{e,compress}",       # Electrical consumption (compression)
             "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
+            "veleconsumptionact": r"c^{a,e}",                   # Electrical activated consumption
+            "vhydconsumptionact": r"c^{a,h}",                   # Hydrogen activated consumption
+            "vinventorystart": r"s^{init}",                     # Storage initial inventory
             "vinventory": r"si",                                # Storage inventory
             "veleinventory": r"si^{e}",                         # Electrical storage inventory
             "vhydinventory": r"si^{h}",                         # Hydrogen storage inventory
@@ -653,14 +658,14 @@ mathjax3_config = {
             "vstoroperatbin": r"sf",                            # Storage operating binary
             "velestoroperatbin": r"sf^{e}",                     # Electrical storage operating binary
             "vhydstoroperatbin": r"sf^{h}",                     # Hydrogen storage operating binary
-            "velestorchargebasebin": r"sc^{b,e}",               # Electrical storage charging binary
-            "velestorchargedefinebin": r"sc^{d,e}",             # Electrical storage charging definite binary
-            "vhydstorchargebasebin": r"sc^{b,h}",               # Hydrogen storage charging binary
-            "vhydstorchargedefinebin": r"sc^{d,h}",             # Hydrogen storage charging definite binary
-            "velestordischargebasebin": r"sd^{b,e}",            # Electrical storage discharging binary
-            "velestordischargedefinebin": r"sd^{d,e}",          # Electrical storage discharging definite binary
-            "vhydstordischargebasebin": r"sd^{b,h}",            # Hydrogen storage discharging binary
-            "vhydstordischargedefinebin": r"sd^{d,h}",          # Hydrogen storage discharging definite binary
+            "velestorchargebin": r"sc^{e}",                   # Electrical storage charging binary
+            "velestorchargeactbin": r"sc^{a,e}",                # Electrical storage charging definite binary
+            "vhydstorchargebin": r"sc^{h}",                   # Hydrogen storage charging binary
+            "vhydstorchargeactbin": r"sc^{a,h}",                # Hydrogen storage charging definite binary
+            "velestordischargebin": r"sd^{e}",                # Electrical storage discharging binary
+            "velestordischargeactin": r"sd^{a,e}",              # Electrical storage discharging definite binary
+            "vhydstordischargebin": r"sd^{h}",                # Hydrogen storage discharging binary
+            "vhydstordischargeactbin": r"sd^{a,h}",             # Hydrogen storage discharging definite binary
             "vmaxcommitbin": r"muc",                            # Maximum unit commitment binary
             "velemaxcommitbin": r"muc^{e}",                     # Maximum electrical unit commitment binary
             "vhydmaxcommitbin": r"muc^{h}",                     # Maximum hydrogen unit commitment binary
