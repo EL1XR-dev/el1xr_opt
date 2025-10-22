@@ -663,7 +663,7 @@ mathjax3_config = {
             "vhydstorchargebin": r"sc^{h}",                   # Hydrogen storage charging binary
             "vhydstorchargeactbin": r"sc^{a,h}",                # Hydrogen storage charging definite binary
             "velestordischargebin": r"sd^{e}",                # Electrical storage discharging binary
-            "velestordischargeactin": r"sd^{a,e}",              # Electrical storage discharging definite binary
+            "velestordischargeactbin": r"sd^{a,e}",              # Electrical storage discharging definite binary
             "vhydstordischargebin": r"sd^{h}",                # Hydrogen storage discharging binary
             "vhydstordischargeactbin": r"sd^{a,h}",             # Hydrogen storage discharging definite binary
             "vmaxcommitbin": r"muc",                            # Maximum unit commitment binary
