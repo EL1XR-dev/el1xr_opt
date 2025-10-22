@@ -46,13 +46,19 @@ The bids are submitted for upward and downward reserves separately and are not g
 
 :math:`\sum_{\genindex \in \nGE} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pfcrddwrequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
-The relation between the upward and downward bids and the provision of FCR-D reserves from an electric ESS is defined as follows:
+The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
+
+:math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrdupact_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
+
+:math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrddwact_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
+
+And for an electric ESS:
 
 :math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 :math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-And the tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
+The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
 
 :math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
