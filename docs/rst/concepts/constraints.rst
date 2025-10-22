@@ -377,35 +377,35 @@ or for discharging:
 
 Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
 
-:math:`\frac{uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! uc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\frac{\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
 
-:math:`\frac{up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! up^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\frac{\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
 
-:math:`\frac{dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \!-\! esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\frac{\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
 
-:math:`\frac{dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dp^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \!-\! esf_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\frac{\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! uc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dc^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! up^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \overline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
 
-:math:`\sum_{n' = n-\frac{\tau_e}{\nu}}^n DUR_{n'} (dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! dp^{TR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq esi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \underline{EP}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Second block of a committed electric generator providing reserves
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
