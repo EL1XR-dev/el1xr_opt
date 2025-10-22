@@ -373,7 +373,7 @@ Operating reserves from ESS can only be if enought energy is available for charg
 
 or for discharging:
 
-:math:`\veleproductionact_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrdupactdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrddwactdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\veleproductionact_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
 
