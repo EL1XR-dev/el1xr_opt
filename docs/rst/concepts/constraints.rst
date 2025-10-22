@@ -367,17 +367,13 @@ Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eI
 
 Operating reserves from energy storage systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Operating reserves from ESS can only be if enought energy is available for discharging
+Operating reserves from ESS can only be if enought energy is available for charging
 
-:math:`RA^{FN}_{n}rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! URA^{FD}_{n}up^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{                      esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
+:math:`\veleconsumptionact_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`RA^{FN}_{n}rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{FD}_{n}dp^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
+or for discharging:
 
-or for charging
-
-:math:`RA^{FN}_{n}rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! URA^{FD}_{n}uc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
-
-:math:`RA^{FN}_{n}rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{FD}_{n}dc^{FD}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \frac{                      esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{DUR_{n}} \quad \forall nes`
+:math:`\veleproductionact_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrdupactdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrddwactdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
 
