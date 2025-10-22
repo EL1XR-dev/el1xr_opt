@@ -662,13 +662,13 @@ mathjax3_config = {
             "vstoroperatbin": r"sf",                            # Storage operating binary
             "velestoroperatbin": r"sf^{e}",                     # Electrical storage operating binary
             "vhydstoroperatbin": r"sf^{h}",                     # Hydrogen storage operating binary
-            "velestorchargebin": r"sc^{e}",                   # Electrical storage charging binary
+            "velestorchargebin": r"sc^{e}",                     # Electrical storage charging binary
             "velestorchargeactbin": r"sc^{a,e}",                # Electrical storage charging definite binary
-            "vhydstorchargebin": r"sc^{h}",                   # Hydrogen storage charging binary
+            "vhydstorchargebin": r"sc^{h}",                     # Hydrogen storage charging binary
             "vhydstorchargeactbin": r"sc^{a,h}",                # Hydrogen storage charging definite binary
-            "velestordischargebin": r"sd^{e}",                # Electrical storage discharging binary
-            "velestordischargeactbin": r"sd^{a,e}",              # Electrical storage discharging definite binary
-            "vhydstordischargebin": r"sd^{h}",                # Hydrogen storage discharging binary
+            "velestordischargebin": r"sd^{e}",                  # Electrical storage discharging binary
+            "velestordischargeactbin": r"sd^{a,e}",             # Electrical storage discharging definite binary
+            "vhydstordischargebin": r"sd^{h}",                  # Hydrogen storage discharging binary
             "vhydstordischargeactbin": r"sd^{a,h}",             # Hydrogen storage discharging definite binary
             "vmaxcommitbin": r"muc",                            # Maximum unit commitment binary
             "velemaxcommitbin": r"muc^{e}",                     # Maximum electrical unit commitment binary
