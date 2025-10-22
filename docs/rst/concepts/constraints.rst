@@ -276,13 +276,13 @@ Electricity Storage Charge/Discharge Incompatibility: «``eEleChargingDecision``
 
 :math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \velecommitbin \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 :math:`\frac{\veleconsumptionact_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 :math:`\frac{\veleproductionact_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velestordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velestorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velestordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velestorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \velecommitbin \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Hydrogen Storage Charge/Discharge Incompatibility:  «``eHydChargingDecision``» and «``eHydDischargingDecision``»
 
@@ -290,25 +290,25 @@ Hydrogen Storage Charge/Discharge Incompatibility:  «``eHydChargingDecision``»
 
 :math:`\frac{\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`\vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \vhydcommitbin \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 :math:`\frac{\vhydconsumptionact_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydstorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 :math:`\frac{\vhydproductionact_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydstordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-:math:`\vhydstordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydstorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\vhydstordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \vhydstorchargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \vhydcommitbin \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-Maximum and Minimum Relative Inventory  (to be implemented)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Maximum and Minimum Relative Inventory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the maximum capacity («``eMaxInventory2Comm``, ``eMinInventory2Comm``»)
 
-:math:`\frac{esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq euc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\frac{\veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
-:math:`\frac{esi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\underline{EI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq euc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
+:math:`\frac{\veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemininventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nes`
 
-:math:`\frac{hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\overline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq huc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
+:math:`\frac{\vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
 
-:math:`\frac{hsi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\underline{HI}_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq huc_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
+:math:`\frac{\vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmininventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
 
 
 Energy Inflows
