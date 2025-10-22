@@ -40,7 +40,7 @@ This component models capacity-based and tariffs, and consider the power peak pe
 
 :math:`\elemarketcostgrid_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex} + \elenetusecost_{\periodindex,\scenarioindex} + \elecaptariffcost_{\periodindex,\scenarioindex}`
 
-Peak Demand Cost
+Peak Power Cost
 ~~~~~~~~~~~~~~~~
 This cost subcomponent is determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
 
