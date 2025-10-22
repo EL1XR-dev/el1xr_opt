@@ -420,8 +420,8 @@ mathjax3_config = {
             "peleppaprice": r"\lambda^{PPA,e}",                 # Electrical PPA price
             "phydppaprice": r"\lambda^{PPA,h}",                 # Hydrogen PPA price
             "pelefcrnprice": r"\Pi^{N,e}",                      # Electrical grid FCR-N price
-            "pelefcrdupprice": r"\Pi^{D-UP,e}",                 # Electrical grid FCR-D upwards price
-            "pelefcrddwprice": r"\Pi^{D-DW,e}",                 # Electrical grid FCR-D downwards price
+            "pelefcrdupprice": r"\Pi^{DUP,e}",                  # Electrical grid FCR-D upwards price
+            "pelefcrddwprice": r"\Pi^{DDW,e}",                  # Electrical grid FCR-D downwards price
             "pelegridaFRRUPprice": r"\Pi^{A-REG-UP,e}",         # Electrical grid aFRR upwards price
             "pelegridaFRDDWprice": r"\Pi^{A-REG-DW,e}",         # Electrical grid aFRR downwards price
             "pelegridmFRRUPprice": r"\Pi^{M-REG-UP,e}",         # Electrical grid mFRR upwards price
