@@ -650,6 +650,10 @@ mathjax3_config = {
             # activated power from FCR-D DW
             "velefcrddwactch": r"p^{DW,ch}",                    # Electrical FCR-D DW activation when charging
             "velefcrddwactdi": r"p^{DW,di}",                    # Electrical FCR-D DW activation when discharging
+            # activation fractions for FCR-D
+            "velefcrdupfraction": r"\Lambda^{UP}",              # Electrical FCR-D UP activation fraction
+            "velefcrddwfraction": r"\Lambda^{DW}",              # Electrical FCR-D DW activation fraction
+
 
             # --- Binary Variables ---
             "vpeakdemandindbin": r"kd",                         # Peak demand indicator binary
