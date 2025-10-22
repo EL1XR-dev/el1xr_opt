@@ -528,6 +528,8 @@ mathjax3_config = {
             "pelestorageinflowcycle": r"\tau^{i,e}",            # Electrical Inflow cycle duration
             "pelestorageoutflowcycle": r"\tau^{o,e}",           # Electrical Outflow cycle duration
             "pelestorageefficiency": r"\eta^{e}",               # Electrical Storage efficiency
+            "pelestorchargeefficiency": r"\eta^{c,e}",          # Electrical Storage charging efficiency
+            "pelestordischargeefficiency": r"\eta^{d,e}",       # Electrical Storage discharging efficiency
             "pelestoragecapacity": r"\Psi^{e}",                 # Electrical Storage capacity
             "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
             "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
