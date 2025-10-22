@@ -125,7 +125,7 @@ Frequency Containment Reserve for Disturbance
 This revenue subcomponent is earned by providing frequency containment reserves to manage disturbances in the grid.
 
 .. math::
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nG} \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \sum_{\storageindex \in \nEE} \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nG} \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
 Taxes and Pass-Throughs
 -----------------------
