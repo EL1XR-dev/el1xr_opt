@@ -286,7 +286,7 @@ Electricity Storage Charge/Discharge Incompatibility: «``eEleChargingDecision``
 
 Hydrogen Storage Charge/Discharge Incompatibility:  «``eHydChargingDecision``» and «``eHydDischargingDecision``»
 
-:match:`\frac{\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+:math:`\frac{\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 :math:`\frac{\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
