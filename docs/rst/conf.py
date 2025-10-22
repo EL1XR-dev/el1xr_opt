@@ -162,7 +162,6 @@ mathjax3_config = {
             "nR": r"\mathcal{R}",                               # All retailers
             "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
             "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
-            "nD": r"\mathcal{D}",                               # All demands
             "nDE": r"\mathcal{D}^{e}",                          # All electrical demands
             "nDH": r"\mathcal{D}^{h}",                          # All hydrogen demands
             "nK": r"\mathcal{K}",                               # All peak demands
@@ -178,12 +177,18 @@ mathjax3_config = {
             "nV": r"\mathcal{V}",                               # All time step intervals
             "nP": r"\mathcal{P}",                               # All periods
             "nS": r"\mathcal{S}",                               # All scenarios
-            "nW": r"\mathcal{W}",                               # All weeks in a year
             "nM": r"\mathcal{M}",                               # All months in a year
+            "nW": r"\mathcal{W}",                               # All weeks in a year
+            "nD": r"\mathcal{D}",                               # All days in a week
             "nH": r"\mathcal{H}",                               # All hours in a day
+            "nWI": r"\mathcal{H}^{w}",                          # All 20 minute intervals in an hour
+            "nQ": r"\mathcal{H}^{q}",                           # All quarters in an hour
+            "nTI": r"\mathcal{H}^{t}",                          # All 10 minute intervals in an hour
+            "nMIN": r"\mathcal{H}^{m}",                         # All minutes in an hour
+
 
             # === INDEXES ===
-            "busindex": r"nd",                                   # Index for buses
+            "busindex": r"nd",                                  # Index for buses
             "busindexa": r"i",                                  # Index for "from" bus of a branch
             "busindexb": r"j",                                  # Index for "to" bus of a branch
             "branchindex": r"ij",                               # Index for branch between bus i and j
@@ -221,6 +226,10 @@ mathjax3_config = {
             "monthindex": r"m",                                 # Index for month
             "dayindex": r"d",                                   # Index for day
             "hourindex": r"h",                                  # Index for hour
+            "twentyminuteindex": r"w",                          # Index for 20 minute interval
+            "quarterindex": r"q",                               # Index for quarter
+            "tenminuteindex": r"t",                             # Index for 10 minute interval
+            "minuteindex": r"m",                                # Index for minute
             "intervalindex": r"u",                              # Index for time interval
             "timeindex": r"n",                                  # Index for time  step
             "storageperiodindex": r"p'",                        # Index for storage period
@@ -313,8 +322,18 @@ mathjax3_config = {
             "regulationdowncost": r"C^{reg,d}",                 # Regulation-down cost
             "reserveprocurementcost": r"C^{res,proc}",          # Reserve procurement cost
             "reserveactivationcost": r"C^{res,act}",            # Reserve activation cost
-            "freqcontainmentnormalcost": r"C^{FCR-N}",          # Frequency containment reserve normal cost
-            "freqcontainmentdisturbancecost": r"C^{FCR-D}",     # Frequency containment reserve disturbance cost
+
+            # --- Flexibility & Ancillary Services Revenues ---
+            "flexibilityrevenue": r"R^{flex}",                  # Flexibility provision revenue
+            "ancillaryservicesrevenue": r"R^{as}",              # Ancillary services total revenue
+            "spinningreserverevenue": r"R^{sp}",                # Spinning reserve revenue
+            "nonspinningreserverevenue": r"R^{ns}",             # Non-spinning reserve revenue
+            "regulationuprevenue": r"R^{reg,u}",                # Regulation-up revenue
+            "regulationdownrevenue": r"R^{reg,d}",              # Regulation-down revenue
+            "reserveprocurementrevenue": r"R^{res,proc}",       # Reserve procurement revenue
+            "reserveactivationrevenue": r"R^{res,act}",         # Reserve activation revenue
+            "freqcontnormalrevenue": r"R^{FCR-N}",              # Frequency containment reserve normal revenue
+            "freqcontdisturbrevenue": r"R^{FCR-D}",             # Frequency containment reserve disturbance revenue
 
             # --- Curtailment & Reliability Costs ---
             "unservedenergycost": r"C^{ue}",                    # Unserved energy cost
@@ -579,22 +598,6 @@ mathjax3_config = {
             "vspillage": r"es",                                 # Storage spillage
             "velespillage": r"es^{e}",                          # Electrical storage spillage
             "vhydspillage": r"es^{h}",                          # Hydrogen storage spillage
-            "vstoroperatbin": r"sf",                            # Storage operating binary
-            "velestoroperatbin": r"sf^{e}",                     # Electrical storage operating binary
-            "vhydstoroperatbin": r"sf^{h}",                     # Hydrogen storage operating binary
-            "vmaxcommitbin": r"muc",                            # Maximum unit commitment binary
-            "velemaxcommitbin": r"muc^{e}",                     # Maximum electrical unit commitment binary
-            "vhydmaxcommitbin": r"muc^{h}",                     # Maximum hydrogen unit commitment binary
-            "vcommitbin": r"uc",                                # Unit commitment binary
-            "velecommitbin": r"uc^{e}",                         # Electrical unit commitment binary
-            "vhydcommitbin": r"uc^{h}",                         # Hydrogen unit commitment binary
-            "vstartupbin": r"su",                               # Start-up binary
-            "velestartupbin": r"su^{e}",                        # Electrical start-up binary
-            "vhydstartupbin": r"su^{h}",                        # Hydrogen start-up binary
-            "vshutdownbin": r"sd",                              # Shut-down binary
-            "veleshutdownbin": r"sd^{e}",                       # Electrical shut-down binary
-            "vhydshutdownbin": r"sd^{h}",                       # Hydrogen shut-down binary
-            "vhydcompressbin": r"hc",                             # Hydrogen compression binary
             "vsecondblockproduction": r"p2b",                   # 2nd block production
             "velesecondblockproduction": r"p2b^{e}",            # Electrical 2nd block production
             "vhydsecondblockproduction": r"p2b^{h}",            # Hydrogen 2nd block production
@@ -620,15 +623,58 @@ mathjax3_config = {
             "vpeakdemand": r"d^{peak}",                         # Peak demand
             "velepeakdemand": r"d^{e,peak}",                    # Electrical peak demand
             "vhydpeakdemand": r"d^{h,peak}",                    # Hydrogen peak demand
-            "vpeakdemandindbin": r"kd",                         # Peak demand indicator binary
-            "velepeakdemandindbin": r"kd^{e}",                  # Electrical peak demand indicator binary
-            "vhydpeakdemandindbin": r"kd^{h}",                  # Hydrogen peak demand indicator binary
 
             # --- Reserves ---
             "vPupward": r"r^{p,u}",                             # Upward power reserve
             "vPdownward": r"r^{p,d}",                           # Downward power reserve
             "vCupward": r"r^{c,u}",                             # Upward consumption reserve
             "vCdownward": r"r^{c,d}",                           # Downward consumption reserve
+            # power bids to FCR-N
+            "velefcrnbid": r"p^{\Thetha,N}",                    # Electrical FCR-N bid
+            # power bids to FCR-D UP
+            "velefcrdupbid": r"p^{\Theta,DU}",                  # Electrical FCR-D UP bid
+            # power bids to FCR-D DW
+            "velefcrddwbid": r"p^{\Theta,DW}",                  # Electrical FCR-D DW bid
+            # activated power from FCR-N UP
+            "velefcrnupact": r"p^{NU}",                         # Electrical FCR-N activation
+            # activated power from FCR-N DW
+            "velefcrndwact": r"p^{ND}",                         # Electrical FCR-N DW activation
+            # activated power from FCR-D UP
+            "velefcrdupact": r"p^{UP}",                         # Electrical FCR-D UP activation
+            # activated power from FCR-D DW
+            "velefcrddwact": r"p^{DW}",                         # Electrical FCR-D DW activation
+
+            # --- Binary Variables ---
+            "vpeakdemandindbin": r"kd",                         # Peak demand indicator binary
+            "velepeakdemandindbin": r"kd^{e}",                  # Electrical peak demand indicator binary
+            "vhydpeakdemandindbin": r"kd^{h}",                  # Hydrogen peak demand indicator binary
+            "vstoroperatbin": r"sf",                            # Storage operating binary
+            "velestoroperatbin": r"sf^{e}",                     # Electrical storage operating binary
+            "vhydstoroperatbin": r"sf^{h}",                     # Hydrogen storage operating binary
+            "velestorchargebasebin": r"sc^{b,e}",               # Electrical storage charging binary
+            "velestorchargedefinebin": r"sc^{d,e}",             # Electrical storage charging definite binary
+            "vhydstorchargebasebin": r"sc^{b,h}",               # Hydrogen storage charging binary
+            "vhydstorchargedefinebin": r"sc^{d,h}",             # Hydrogen storage charging definite binary
+            "velestordischargebasebin": r"sd^{b,e}",            # Electrical storage discharging binary
+            "velestordischargedefinebin": r"sd^{d,e}",          # Electrical storage discharging definite binary
+            "vhydstordischargebasebin": r"sd^{b,h}",            # Hydrogen storage discharging binary
+            "vhydstordischargedefinebin": r"sd^{d,h}",          # Hydrogen storage discharging definite binary
+            "vmaxcommitbin": r"muc",                            # Maximum unit commitment binary
+            "velemaxcommitbin": r"muc^{e}",                     # Maximum electrical unit commitment binary
+            "vhydmaxcommitbin": r"muc^{h}",                     # Maximum hydrogen unit commitment binary
+            "vcommitbin": r"uc",                                # Unit commitment binary
+            "velecommitbin": r"uc^{e}",                         # Electrical unit commitment binary
+            "vhydcommitbin": r"uc^{h}",                         # Hydrogen unit commitment binary
+            "vstartupbin": r"su",                               # Start-up binary
+            "velestartupbin": r"su^{e}",                        # Electrical start-up binary
+            "vhydstartupbin": r"su^{h}",                        # Hydrogen start-up binary
+            "vshutdownbin": r"sd",                              # Shut-down binary
+            "veleshutdownbin": r"sd^{e}",                       # Electrical shut-down binary
+            "vhydshutdownbin": r"sd^{h}",                       # Hydrogen shut-down binary
+            "vhydcompressbin": r"hc",                           # Hydrogen compression binary
+            "velefcrncommitbin": r"uc^{FCR-N,e}",               # Electrical FCR-N commitment binary
+            "velefcrdupreqcommitbin": r"uc^{FCR-D,UP,e}",       # Electrical FCR-D UP commitment binary
+            "velefcrddwreqcommitbin": r"uc^{FCR-D,DW,e}",       # Electrical FCR-D DW commitment binary
 
             # =======================================================
             #               Robustness / Uncertainty Terms
