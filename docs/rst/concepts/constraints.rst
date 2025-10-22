@@ -48,9 +48,19 @@ The bids are submitted for upward and downward reserves separately and are not g
 
 The relation between the upward and downward bids and the provision of FCR-D reserves from an electric ESS is defined as follows:
 
-:math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \eq \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \eq \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+And the tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
+
+:math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+:math:`\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+:math:`\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+:math:`\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
