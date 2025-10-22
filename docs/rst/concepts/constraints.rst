@@ -40,9 +40,17 @@ Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-:math:`\sum_{\genindex} \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex} \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq UR^{FD}_{\periodindex, \scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
+The bids are submitted for upward and downward reserves separately and are not greater than the maximum upward and downward reserve required.
 
-:math:`\sum_{\genindex} \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex} \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq DR^{FD}_{\periodindex, \scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
+:math:`\sum_{\genindex \in \nGE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} leq \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
+
+:math:`\sum_{\genindex \in \nGE} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} leq \pfcrddwrequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
+
+The relation between the upward and downward bids and the provision of FCR-D reserves from an electric ESS is defined as follows:
+
+:math:`\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \eq \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+:math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \eq \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Peak Demand Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
