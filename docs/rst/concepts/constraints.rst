@@ -42,9 +42,9 @@ FCR-D is modeled through the upward and downward reserve constraints, which ensu
 
 The bids are submitted for upward and downward reserves separately and are not greater than the maximum upward and downward reserve required.
 
-:math:`\sum_{\genindex \in \nGE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
+:math:`\sum_{\genindex \in \nGE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex \in \nEE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
-:math:`\sum_{\genindex \in \nGE} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pfcrddwrequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
+:math:`\sum_{\genindex \in \nGE} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex \in \nEE} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pfcrddwrequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
 The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
 
@@ -68,7 +68,7 @@ The tight headroom bounds for FCR-D provision from an electric ESS is defined as
 
 :math:`\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-Peak Demand Calculation
+Peak Power Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
 A set of constraints starting with ``eElePeak...`` identify the three highest power peak within a billing period for tariff calculations. ``eElePeakHourValue`` uses binary variables to select the peak consumption hour.
 
@@ -253,9 +253,9 @@ Minimum up time and down time of hydrogen unit [h] («``eHydMinUpTime``, ``eHydM
 Second block of a committed electric generator providing reserves
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eEleMaxOutput2ndBlock``») and («``eEleMinOutput2ndBlock``»)
+Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE) [p.u.] («``eEleMaxOutput2ndBlock``») and («``eEleMinOutput2ndBlock``»)
 
-* D.A. Tejada-Ara\periodindex,\scenarioindex,\timeindex,\genindexo, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
+* D.A. Tejada-Arango, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
 
 * C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
 
@@ -283,7 +283,7 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
 
 State-of-Charge balance for electricity storage systems:
 
-:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}},\storageindex} \!+\! \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \veleproduction_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!+\! \pelestorageefficiency_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\veleinventory_{\timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}},\storageindex} \!+\! \sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex ',\storageindex} \!-\! \frac{\veleproductionact_{\periodindex,\scenarioindex,\timeindex ',\storageindex}}{\pelestordischargeefficiency_{\storageindex}} \!+\! \pelestorchargeefficiency_{\storageindex} \veleconsumptionact_{\periodindex,\scenarioindex,\timeindex ',\storageindex}) = \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 State-of-Charge balance for hydrogen storage systems:
 
@@ -413,75 +413,6 @@ Downward operating reserve decision of an ESS when it is consuming and constrain
 Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
 
 :math:`\frac{\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargeactbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Energy stored for upward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsUpConsecutiveTime``»)
-
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Energy stored for downward operating reserve in consecutive time steps when ESS is consuming («``eReserveConsDwConsecutiveTime``»)
-
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Energy stored for upward operating reserve in consecutive time steps when ESS is producing («``eReserveProdUpConsecutiveTime``»)
-
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Energy stored for downward operating reserve in consecutive time steps when ESS is producing («``eReserveProdDwConsecutiveTime``»)
-
-:math:`\sum_{\timeindex ' = \timeindex-\frac{\pelestoragecycle_{\storageindex}}{\ptimestep}}^{\timeindex} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex '} (\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \leq \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Second block of a committed electric generator providing reserves
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Maximum and minimum electricity generation of the second block of a committed unit (all except the VRE and ESS units) [p.u.] («``eEleMaxOutput2ndBlock``») and («``eEleMinOutput2ndBlock``»)
-
-* D.A. Tejada-Ara\periodindex,\scenarioindex,\timeindex,\genindexo, S. Lumbreras, P. Sánchez-Martín, and A. Ramos "Which Unit-Commitment Formulation is Best? A Systematic Comparison" IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 `10.1109/TPWRS.2019.2962024 <https://doi.org/10.1109/TPWRS.2019.2962024>`_
-
-* C. Gentile, G. Morales-España, and A. Ramos "A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints" EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. `10.1007/s13675-016-0066-y <https://doi.org/10.1007/s13675-016-0066-y>`_
-
-* G. Morales-España, A. Ramos, and J. Garcia-Gonzalez "An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling" IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. `10.1109/TPWRS.2013.2259601 <https://doi.org/10.1109/TPWRS.2013.2259601>`_
-
-* G. Morales-España, J.M. Latorre, and A. Ramos "Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem" IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. `10.1109/TPWRS.2013.2251373 <https://doi.org/10.1109/TPWRS.2013.2251373>`_
-
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
-
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR`
-
-Maximum and minimum hydrogen generation of the second block of a committed unit [p.u.] («``eMaxHydOutput2ndBlock``, ``eMinHydOutput2ndBlock``»)
-
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
-
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
-
-Maximum and minimum discharge of the second block of an electricity ESS [p.u.] («``eMaxEleESSOutput2ndBlock``, ``eMinEleESSOutput2ndBlock``»)
-
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vPupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-:math:`\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \vPdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Maximum and minimum discharge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSOutput2ndBlock``, ``eMinHydESSOutput2ndBlock``»)
-
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-:math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-Maximum and minimum charge of the second block of an electricity ESS [p.u.] («``eMaxEleESSCharge2ndBlock``, ``eMinEleESSCharge2ndBlock``»)
-
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Maximum and minimum charge of the second block of a hydrogen unit due to the energy conversion [p.u.] («``eMaxEle2HydCharge2ndBlock``, ``eMinEle2HydCharge2ndBlock``»)
-
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \vCdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
-
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \vCupward_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
-
-Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eMaxHydESSCharge2ndBlock``, ``eMinHydESSCharge2ndBlock``»)
-
-:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
 4. Network Constraints
 ----------------------
