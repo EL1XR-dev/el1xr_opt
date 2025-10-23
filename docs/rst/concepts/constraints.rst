@@ -488,7 +488,7 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 
 *   **Availability Windows**: The availability of the EV for charging or discharging is governed by user behavior patterns, represented through time-dependent constraints:
 
-    *   **Availability for Grid Services**: The :math`:`\pvarfixedavailability` parameter indicates when the EV is parked and thus available for grid services. When this parameter is zero, the EV cannot charge or discharge, effectively making it unavailable to the grid.
+    *   **Availability for Grid Services**: The :math:`\pvarfixedavailability` parameter indicates when the EV is parked and thus available for grid services. When this parameter is zero, the EV cannot charge or discharge, effectively making it unavailable to the grid.
 
         .. math::
            \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex} \pelestoragecapacity_{\storageindex} \quad (\text{if not available})
