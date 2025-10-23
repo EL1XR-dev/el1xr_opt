@@ -41,7 +41,7 @@ If :math:`\phydmaxmarketbuy_{\traderindex} >= 0.0`
 
 :math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \phydmaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
-:math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}(\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
+:math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
 Hydrogen sold to the market («``eHydRetMaxSell``»)
 
@@ -49,7 +49,7 @@ If :math:`\phydmaxmarketsell_{\traderindex} >= 0.0`
 
 :math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \phydmaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
-:math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}(\vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
+:math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}\vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
 Reserve Electricity Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
