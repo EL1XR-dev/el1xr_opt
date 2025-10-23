@@ -21,7 +21,7 @@ If :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0`
 
 :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
-:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum{\demandindex \in \nDE_{\traderindex}} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum{\storageindex \in \nEE_{\traderindex}} (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\demandindex \in \nDE_{\traderindex}} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum_{\storageindex \in \nEE_{\traderindex}} (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Eletricity sold to the market («``eEleRetMaxSell``»)
 
@@ -29,7 +29,7 @@ If :math:`\pelemaxmarketsell_{\traderindex} >= 0.0`
 
 :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
-:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum{\genindex \in \nGE_{\traderindex}} (\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}) + \sum{\storageindex \in \nEE_{\traderindex}} (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\genindex \in \nGE_{\traderindex}} (\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}) + \sum_{\storageindex \in \nEE_{\traderindex}} (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Day-ahead Hydrogen Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
