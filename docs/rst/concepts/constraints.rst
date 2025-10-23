@@ -130,7 +130,7 @@ Output and Charge Limits
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Total generation of an electricity unit (all except the VRE and ESS units) («``eEleTotalOutput``»)
 
-:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! URA^{SR}_{n}up^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! DRA^{SR}_{n}dp^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
+:math:`\frac{\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\genindex}\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\genindex}\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
 Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
@@ -138,7 +138,7 @@ Total generation of a hydrogen unit («``eHydTotalOutput``»)
 
 Total charge of an electricity ESS («``eEleTotalCharge``»)
 
-:math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! URA^{SR}_{n}uc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! DRA^{SR}_{n}dc^{SR}_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} = 1 \!+\! \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \velefcrdupfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwfraction_{\periodindex,\scenarioindex,\timeindex,\storageindex}\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Total charge of a hydrogen unit («``eHydTotalCharge``»)
 
