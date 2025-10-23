@@ -188,39 +188,11 @@ Maximum ramp up and ramp down for the second block of a non-renewable (thermal, 
 
 :math:`\frac{- \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \!+\! \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\genindex}} \geq \!-\! \velecommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \!+\! \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE \setminus \nGVRE`
 
-Maximum ramp down and ramp up for the charge of an electricity ESS («``eEleMaxRampUpCharge``, ``eEleMaxRampDwCharge``»)
-
-:math:`\frac{- \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-:math:`\frac{- \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!-\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
 Maximum ramp up and ramp down for the  second block of a hydrogen unit («``eHydMaxRampUpOutput``, ``eHydMaxRampDwOutput``»)
 
 :math:`\frac{- \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \!+\! \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\genindex}} \leq   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}      \!-\! \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH`
 
 :math:`\frac{- \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \!+\! \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\genindex}} \geq \!-\! \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \!+\! \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH`
-
-Maximum ramp down and ramp up for the charge of a hydrogen ESS («``eHydMaxRampUpCharge``, ``eHydMaxRampDwCharge``»)
-
-:math:`\frac{- \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-:math:`\frac{- \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-Maximum ramp up and ramp down for the outflows of a hydrogen ESS («``eHydMaxRampUpOutflows``, ``eHydMaxRampDwOutflows``»)
-
-:math:`\frac{- \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-:math:`\frac{- \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-Ramp up and ramp down for the provision of demand to the hydrogen customers («``eHydMaxRampUpDemand``, ``eHydMaxRampDwDemand``»)
-
-:math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\demandindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
-
-:math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\demandindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
-
-Differences between electricity consumption of two consecutive hours [GW] («``eEleConsumptionDiff``»)
-
-:math:`- \veleconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} = RC^{\!+\!}_{\genindex} \!-\! RC^{-}_{\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex,\genindex|\storageindex \in \nEE, \genindex \in \nGEH`
 
 Unit Commitment Logic
 ~~~~~~~~~~~~~~~~~~~~~
@@ -297,18 +269,6 @@ Maximum and minimum hydrogen generation of the second block of a committed unit 
 
 :math:`\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} \geq 0         \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-Maximum and minimum charge of the second block of a committed electricity ESS [p.u.] («``eEleMaxCharge2ndBlock`», ``eEleMinCharge2ndBlock``»)
-
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
-
-Maximum and minimum charge of the second block of a committed hydrogen ESS [p.u.] («``eHydMaxCharge2ndBlock`», ``eHydMinCharge2ndBlock``»)
-
-:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
-:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
-
 3. Energy Storage Dynamics
 --------------------------
 These constraints specifically model the behavior of energy storage systems.
@@ -356,7 +316,6 @@ The relative inventory of ESS (only for load levels multiple of 1, 24, 168, 8736
 :math:`\frac{\vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}  \leq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
 
 :math:`\frac{\vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmininventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall nhs`
-
 
 Energy Inflows
 ~~~~~~~~~~~~~~
@@ -412,23 +371,60 @@ Incompatibility between charge and outflows use of a hydrogen ESS [p.u.] («``eI
 
 :math:`\frac{\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
 
-Operating reserves from energy storage systems
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Operation Ramping Constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+These constraints limit the rate of change in charging and discharging power for ESS to ensure smooth transitions and prevent abrupt changes in operation.
+Maximum ramp down and ramp up for the charge of an electricity ESS («``eEleMaxRampUpCharge``, ``eEleMaxRampDwCharge``»)
+
+:math:`\frac{- \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+:math:`\frac{- \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!-\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+Maximum ramp down and ramp up for the charge of a hydrogen ESS («``eHydMaxRampUpCharge``, ``eHydMaxRampDwCharge``»)
+
+:math:`\frac{- \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+:math:`\frac{- \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+Maximum ramp up and ramp down for the outflows of a hydrogen ESS («``eHydMaxRampUpOutflows``, ``eHydMaxRampDwOutflows``»)
+
+:math:`\frac{- \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+:math:`\frac{- \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+Second Block Constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~
+These constraints define the operation of the second block of ESS, including maximum and minimum charge levels, as well as reserve provision capabilities.
+Maximum and minimum charge of the second block of a electricity ESS [p.u.] («``eEleMaxCharge2ndBlock`», ``eEleMinCharge2ndBlock``»)
+
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+:math:`\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+
+Maximum and minimum charge of the second block of a hydrogen ESS [p.u.] («``eHydMaxCharge2ndBlock`», ``eHydMinCharge2ndBlock``»)
+
+:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+:math:`\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \geq 0 \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH`
+
+Reserve Provision Constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+These constraints ensure that ESS can provide operating reserves while respecting their charging and discharging limitations.
 Upward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Up``»)
 
-:math:`\frac{\velefcrdupch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Upward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Up``»)
 
-:math:`\frac{\velefcrdupdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Downward operating reserve decision of an ESS when it is consuming and constrained by charging and discharging itself («``eReserveConsChargingDecision_Dw``»)
 
-:math:`\frac{\velefcrddwch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Downward operating reserve decision of an ESS when it is producing and constrained by charging and discharging itself («``eReserveProdDischargingDecision_Dw``»)
 
-:math:`\frac{\velefcrddwdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\frac{\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 4. Network Constraints
 ----------------------
@@ -443,8 +439,22 @@ For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model,
 
 6. Demand-Side and Reliability Constraints
 ------------------------------------------
+*   **Ramping Limits**: Constraints such as ``eHydMaxRampUpDemand`` and ``eHydMaxRampDwDemand`` limit the rate of change in hydrogen demand, preventing abrupt fluctuations that could destabilize the system.
+*   ``eEleConsumptionDiff``: Limits the rate of change in electricity consumption for flexible loads, ensuring that sudden spikes or drops in demand are avoided.
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
 *   **Unserved Energy**: The model allows for unserved energy through slack variables (``vENS``, ``vHNS``). The high penalty cost in the objective function acts as a soft constraint to meet demand.
+
+Ramping Limits
+~~~~~~~~~~~~~~
+Ramp up and ramp down for the provision of demand to the hydrogen customers («``eHydMaxRampUpDemand``, ``eHydMaxRampDwDemand``»)
+
+:math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\demandindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
+
+:math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\demandindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
+
+Differences between electricity consumption of two consecutive hours [GW] («``eEleConsumptionDiff``»)
+
+:math:`- \veleconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \!+\! \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} = RC^{\!+\!}_{\genindex} \!-\! RC^{-}_{\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex,\genindex|\storageindex \in \nEE, \genindex \in \nGEH`
 
 Demand Shifting Balance
 ~~~~~~~~~~~~~~~~~~~~~~~
