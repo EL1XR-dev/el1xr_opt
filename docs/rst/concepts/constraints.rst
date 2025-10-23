@@ -21,7 +21,7 @@ If :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0`
 
 :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
-:math:`\elemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum{\demandindex \in \nDE_{\traderindex}} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum{\storageindex \in \nEE_{\traderindex}} (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum{\demandindex \in \nDE_{\traderindex}} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum{\storageindex \in \nEE_{\traderindex}} (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Eletricity sold to the market («``eEleRetMaxSell``»)
 
@@ -29,7 +29,7 @@ If :math:`\pelemaxmarketsell_{\traderindex} >= 0.0`
 
 :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
-:math:`\elemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum{\genindex \in \nGE_{\traderindex}} (\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}) + \sum{\storageindex \in \nEE_{\traderindex}} (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
+:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum{\genindex \in \nGE_{\traderindex}} (\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}) + \sum{\storageindex \in \nEE_{\traderindex}} (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Day-ahead Hydrogen Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,7 +41,7 @@ If :math:`\phydmaxmarketbuy_{\traderindex} >= 0.0`
 
 :math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \phydmaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
-:math:`\hydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}(\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
+:math:`\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}(\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
 Hydrogen sold to the market («``eHydRetMaxSell``»)
 
@@ -49,7 +49,7 @@ If :math:`\phydmaxmarketsell_{\traderindex} >= 0.0`
 
 :math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \phydmaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
-:math:`\hydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}(\vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
+:math:`\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\busindex \in \nBHP}(\vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRH`
 
 Reserve Electricity Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -139,7 +139,7 @@ It is represented by «``eHydrogenBalance``») as follows:
    &\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \!-\! \sum_{\storageindex \in \nEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \!-\! \sum_{\genindex \in \nGEH_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
-   &\!+\! \sum_{\busindex ' \in \nBHP|\busindex ' \!=\!\busindex}}(\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex '} \!-\! \vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex '}) \\
+   &\!+\! \sum_{\busindex ' \in \nBHP|\busindex ' \!=\!\busindex}(\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex '} \!-\! \vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex '}) \\
    &= \sum_{\demandindex \in \nDH_{\busindex}} (\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} \!-\! \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
    \!+\! \sum_{\busindexb,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
    \!-\! \sum_{\busindexa,\circuitindex} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex}
