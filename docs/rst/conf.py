@@ -141,7 +141,9 @@ mathjax3_config = {
         "macros": {
             # === SETS ===
             "nB": r"\mathcal{B}",                               # All buses
+            "nBEP": r"\mathcal{B}^{pcc,e}",                     # Buses at point of common coupling (PCC) with electrical connections
             "nBE": r"\mathcal{B}^{e}",                          # Buses with electrical connections
+            "nBHP": r"\mathcal{B}^{pcc,h}",                     # Buses at point of common coupling (PCC) with hydrogen connections
             "nBH": r"\mathcal{B}^{h}",                          # Buses with hydrogen connections
             "nC": r"\mathcal{C}",                               # All circuits
             "nG": r"\mathcal{G}",                               # All generators
@@ -446,6 +448,19 @@ mathjax3_config = {
             "peleminmarketsell": r"\underline{MS}^{e}",         # Min electrical market selling
             "phydminmarketsell": r"\underline{MS}^{h}",         # Min hydrogen market selling
 
+            # --- System Balancing ---
+            "pbalanceerror": r"E^{bal}",                        # System balance error
+            "pelebalanceerror": r"E^{bal,e}",                   # Electrical system balance error
+            "phydbalanceerror": r"E^{bal,h}",                   # Hydrogen system balance balance error
+            "pbalanceerrorlimit": r"\overline{E}^{bal}",        # System balance error limit
+            "pelebalanceerrorlimit": r"\overline{E}^{bal,e}",   # Electrical system balance error limit
+            "phydbalanceerrorlimit": r"\overline{E}^{bal,h}",   # Hydrogen system balance error limit
+            # --- Point of Common Coupling (PCC) ---
+            "peleppccmaximport": r"\overline{P}^{PCC,imp,e}",   # Max active power import at PCC
+            "peleppccmaxexport": r"\overline{P}^{PCC,exp,e}",   # Max active power export at PCC
+            "peleqpccmaximport": r"\overline{Q}^{PCC,imp,e}",   # Max reactive power import at PCC
+            "peleqpccmaxexport": r"\overline{Q}^{PCC,exp,e}",   # Max reactive power export at PCC
+            
             # --- Demand ---
             "peledemand": r"D^{e}",                             # Electrical demand
             "phyddemand": r"D^{h}",                             # Hydrogen demand
@@ -575,9 +590,9 @@ mathjax3_config = {
             "velemarketsell": r"ms^{e}",                        # Electrical market selling
             "vhydmarketsell": r"ms^{h}",                        # Hydrogen market selling
             "vmarketsell": r"ms",                               # Market selling
-            "veleimport": r"imp^{e}",                           # Electrical import
+            "veleppccimport": r"imp^{e}",                       # Electrical import at PCC
+            "veleppccexport": r"exp^{e}",                       # Electrical export at PCC
             "vhydimport": r"imp^{h}",                           # Hydrogen import
-            "veleexport": r"exp^{e}",                           # Electrical export
             "vhydexport": r"exp^{h}",                           # Hydrogen export
 
             "vproduction": r"p",                                # Generation
