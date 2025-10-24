@@ -49,7 +49,7 @@ def routine(dir, case, solver, date, rawresults, plots):
     print('- Total time for defining the constraints:                             {} seconds\n'.format(round(time.time() - start_time  )))
     start_time = time.time()
     # solving the model
-    pWrittingLPFile = 0
+    pWrittingLPFile = 1
     model = solving_model(dir, case, solver, model, pWrittingLPFile)
     print('- Total time for solving the model:                                    {} seconds\n'.format(round(time.time() - start_time  )))
     start_time = time.time()

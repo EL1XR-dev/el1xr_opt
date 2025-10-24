@@ -321,7 +321,8 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.ela  = Set(doc='all real lines               ', initialize=[el for el in model.eln if parameters_dict['pEleNetReactance'][el] != 0.0 and  parameters_dict['pEleNetTTC'][el] > 0.0 and parameters_dict['pEleNetTTCBck'][el] > 0.0 and parameters_dict['pEleNetInitialPeriod'][el] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pEleNetFinalPeriod'][el] >= parameters_dict['pParEconomicBaseYear']])
     model.els  = Set(doc='all real switch lines        ', initialize=[el for el in model.ela if parameters_dict['pEleNetSwitching'][el]])
     model.elc  = Set(doc='candidate lines              ', initialize=[el for el in model.ela if parameters_dict['pEleNetFixedInvestmentCost'][el] > 0.0])
-    model.ndrf = Set(doc='reference node               ', initialize=[nd for nd in model.nd  if nd in parameters_dict['pParReferenceNode']])
+    model.endrf= Set(doc='electricity reference node   ', initialize=[nd for nd in model.nd  if nd in parameters_dict['pParEleReferenceNode']])
+    model.hndrf= Set(doc='hydrogen    reference node   ', initialize=[nd for nd in model.nd  if nd in parameters_dict['pParHydReferenceNode']])
     model.hbr  = Set(doc='all input branches           ', initialize=[(ni,nf) for ni,nf in sHydBrList])
     model.hpn  = Set(doc='all input H2 pipelines       ', initialize=data_frames['dfHydrogenNetwork'].index.to_list())
     model.hpa  = Set(doc='all real H2 pipelines        ', initialize=[hp for hp in model.hpn if parameters_dict['pHydNetTTC'][hp] > 0.0 and parameters_dict['pHydNetTTCBck'][hp] > 0.0 and parameters_dict['pHydNetInitialPeriod'][hp] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pHydNetFinalPeriod'][hp] >= parameters_dict['pParEconomicBaseYear']])
@@ -441,17 +442,17 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.t2hg       = Set(initialize=sorted((parameters_dict['pHydGenTechnology'][hg],hg) for     hg     in model.hg              if parameters_dict['pHydGenTechnology'][hg] in model.gt), ordered=False, doc='technology to generator')
 
     # inverse index node to electricity/hydrogen demand
-    model.n2ed       = Set(initialize=sorted((parameters_dict['pEleDemNode'][ed], ed)   for     ed     in model.ed                                                                ), ordered=False, doc='node to demand'         )
+    model.n2ed       = Set(initialize=sorted((parameters_dict['pEleDemNode'][ed], ed)  for     ed     in model.ed                                                                 ), ordered=False, doc='node to demand'         )
     model.z2ed       = Set(initialize=sorted((zn,ed)                                   for (nd,ed,zn) in model.n2ed * model.zn if (nd,zn) in model.ndzn                           ), ordered=False, doc='zone to demand'         )
 
-    model.n2hd       = Set(initialize=sorted((parameters_dict['pHydDemNode'][hd], hd)   for     hd     in model.hd                                                                ), ordered=False, doc='node to demand'         )
+    model.n2hd       = Set(initialize=sorted((parameters_dict['pHydDemNode'][hd], hd)  for     hd     in model.hd                                                                 ), ordered=False, doc='node to demand'         )
     model.z2hd       = Set(initialize=sorted((zn,hd)                                   for (nd,hd,zn) in model.n2hd * model.zn if (nd,zn) in model.ndzn                           ), ordered=False, doc='zone to demand'         )
 
     # inverse index node to electricity/hydrogen retail
-    model.n2er       = Set(initialize=sorted((parameters_dict['pEleRetNode'][er], er)   for     er     in model.er                                                                ), ordered=False, doc='node to retail'         )
+    model.n2er       = Set(initialize=sorted((parameters_dict['pEleRetNode'][er], er)  for     er     in model.er                                                                 ), ordered=False, doc='node to retail'         )
     model.z2er       = Set(initialize=sorted((zn,er)                                   for (nd,er,zn) in model.n2er * model.zn if (nd,zn) in model.ndzn                           ), ordered=False, doc='zone to retail'         )
 
-    model.n2hr       = Set(initialize=sorted((parameters_dict['pHydRetNode'][hr], hr)   for     hr     in model.hr                                                                ), ordered=False, doc='node to retail'         )
+    model.n2hr       = Set(initialize=sorted((parameters_dict['pHydRetNode'][hr], hr)  for     hr     in model.hr                                                                 ), ordered=False, doc='node to retail'         )
     model.z2hr       = Set(initialize=sorted((zn,hr)                                   for (nd,hr,zn) in model.n2hr * model.zn if (nd,zn) in model.ndzn                           ), ordered=False, doc='zone to retail'         )
 
     # ESS and RES technologies
@@ -941,6 +942,8 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vEleEnergyOutflows',      Var(model.psnegs,  within=NonNegativeReals, doc='scheduled   outflows of all ESS units      [GWh]'))
     setattr(optmodel, 'vEleInventory',           Var(model.psnegs,  within=NonNegativeReals, doc='ESS inventory                              [GWh]'))
     setattr(optmodel, 'vEleSpillage',            Var(model.psnegs,  within=NonNegativeReals, doc='ESS spillage                               [GWh]'))
+    setattr(optmodel, 'vEleExport',              Var(model.psnnd,   within=NonNegativeReals, doc='electricity export   in node                [GW]'))
+    setattr(optmodel, 'vEleImport',              Var(model.psnnd,   within=NonNegativeReals, doc='electricity import   in node                [GW]'))
 
     setattr(optmodel, 'vHydBuy',                 Var(model.psnhr,   within=NonNegativeReals, doc='hydrogen buy        in node                [tH2]'))
     setattr(optmodel, 'vHydSell',                Var(model.psnhr,   within=NonNegativeReals, doc='hydrogen sell       in node                [tH2]'))
@@ -954,6 +957,8 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vHydEnergyOutflows',      Var(model.psnhgs,  within=NonNegativeReals, doc='scheduled   outflows of all H2S units      [tH2]'))
     setattr(optmodel, 'vHydInventory',           Var(model.psnhgs,  within=NonNegativeReals, doc='H2S inventory                              [tH2]'))
     setattr(optmodel, 'vHydSpillage',            Var(model.psnhgs,  within=NonNegativeReals, doc='H2S spillage                               [tH2]'))
+    setattr(optmodel, 'vHydExport',              Var(model.psnnd,   within=NonNegativeReals, doc='hydrogen    export   in node               [tH2]'))
+    setattr(optmodel, 'vHydImport',              Var(model.psnnd,   within=NonNegativeReals, doc='hydrogen    import   in node               [tH2]'))
 
     setattr(optmodel, 'vEleNetFlow',             Var(model.psnela,  within=           Reals, doc='electricity net flow                        [GW]'))
     setattr(optmodel, 'vHydNetFlow',             Var(model.psnhpa,  within=           Reals, doc='hydrogen    net flow                       [tH2]'))
@@ -970,6 +975,8 @@ def create_variables(model, optmodel):
         setattr(optmodel, 'vEleGenStartUp',      Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vEleGenShutDown',     Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
         setattr(optmodel, 'vEleStorOperat',      Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
+        setattr(optmodel, 'vEleStorCharge',      Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
+        setattr(optmodel, 'vEleStorDischarge',   Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vElePeakHourInd',     Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
         setattr(optmodel, 'vHydGenCommitment',   Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',      Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary start-up             '))
@@ -981,6 +988,8 @@ def create_variables(model, optmodel):
         setattr(optmodel, 'vEleGenStartUp',      Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vEleGenShutDown',     Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary shut-down            '))
         setattr(optmodel, 'vEleStorOperat',      Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
+        setattr(optmodel, 'vEleStorCharge',      Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
+        setattr(optmodel, 'vEleStorDischarge',   Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vElePeakHourInd',     Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
         setattr(optmodel, 'vHydGenCommitment',   Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',      Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary start-up             '))
@@ -1247,8 +1256,20 @@ def create_variables(model, optmodel):
     # fixing the voltage angle of the reference node for each scenario, period, and load level
     if model.Par['pOptIndBinSingleNode'] == 0:
         for p,sc,n in model.psn:
-            optmodel.__getattribute__('vEleNetTheta')[p,sc,n,model.ndrf.first()].fix(0.0)
+            optmodel.__getattribute__('vEleNetTheta')[p,sc,n,model.endrf.first()].fix(0.0)
             nFixedVariables += 1
+
+    # fixing the electricity and hydrogen imports/exports in nodes that are not reference nodes
+    if model.Par['pOptIndBinSingleNode'] == 0:
+        for idx in model.psnnd:
+            if idx[-1] not in model.endrf:
+                optmodel.__getattribute__('vEleImport')[idx].fix(0.0)
+                optmodel.__getattribute__('vEleExport')[idx].fix(0.0)
+                nFixedVariables += 2
+            if idx[-1] not in model.hndrf:
+                optmodel.__getattribute__('vHydImport')[idx].fix(0.0)
+                optmodel.__getattribute__('vHydExport')[idx].fix(0.0)
+                nFixedVariables += 2
 
     # fixing the ENS in nodes with no electricity and hydrogen demand in market
     for idx in model.psned:
