@@ -345,9 +345,87 @@ def create_constraints(model, optmodel):
 
     #%%% Operating Reserves
     # FCR-D required
-    def eFreqContReserveDisUpward(optmodel, p,sc,n):
+    def eEleFreqContReserveDisUpward(optmodel, p,sc,n):
         if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0:
-            return sum(optmodel.vEleFreqContReserveDisUpward[p,sc,n,eg] for eg in model.eg) >= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
+            return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs) <= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqContReserveDisUpward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisUpward, doc='Frequency containment reserve - downward'))
+
+    def eEleFreqContReserveDisDownward(optmodel, p,sc,n):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0:
+            return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs) <= model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqContReserveDisDownward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisDownward, doc='Frequency containment reserve - downward'))
+
+    # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
+    def eEleRelationFreqDisUpBid2Gen(optmodel, p,sc,n,egt):
+        if model.Par['pOperatingReserveProvide_FCRD_Up'][egt] > 0:
+            return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] == optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egt]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisUpBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqDisUpBid2Gen, doc='Relation FCR-D upward bid to generation'))
+
+    def eEleRelationFreqDisDownBid2Gen(optmodel, p,sc,n,egt):
+        if model.Par['pOperatingReserveProvide_FCRD_Down'][egt] > 0:
+            return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] == optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egt]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisDownBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqDisDownBid2Gen, doc='Relation FCR-D downward bid to generation'))
+
+    # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric storage system is defined as follows:
+    def eEleRelationFreqDisUpBid2Stor(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveProvide_FCRD_Up'][egs] > 0:
+            return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] == optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisUpBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqDisUpBid2Stor, doc='Relation FCR-D upward bid to storage'))
+
+    def eEleRelationFreqDisDownBid2Stor(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveProvide_FCRD_Down'][egs] > 0:
+            return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] == optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisDownBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqDisDownBid2Stor, doc='Relation FCR-D downward bid to storage'))
+
+    # The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
+    def eEleFreqDisUpDischargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveProvide_FCRD_Up'][egs] > 0:
+            return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] - (optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisUpDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisUpDischargeHeadroom, doc='FCR-D upward discharge headroom'))
+
+    def eEleFreqDisUpChargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveProvide_FCRD_Up'][egs] > 0:
+            return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] <= optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisUpChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisUpChargeHeadroom, doc='FCR-D upward charge headroom'))
+
+    def eEleFreqDisDownDischargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveProvide_FCRD_Down'][egs] > 0:
+            return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] <= optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisDownDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisDownDischargeHeadroom, doc='FCR-D downward discharge headroom'))
+
+    def eEleFreqDisDownChargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveProvide_FCRD_Down'][egs] > 0:
+            return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] <= model.Par['pEleMaxCharge'][egs][p,sc,n] - (optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisDownChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisDownChargeHeadroom, doc='FCR-D downward charge headroom'))
+
+    # print if the constraints object len is greater than 0
+    if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
+        len(optmodel.eEleRelationFreqDisUpBid2Gen) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Gen) > 0 or
+        len(optmodel.eEleRelationFreqDisUpBid2Stor) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Stor) > 0 or
+        len(optmodel.eEleFreqDisUpDischargeHeadroom) > 0 or len(optmodel.eEleFreqDisUpChargeHeadroom) > 0 or
+        len(optmodel.eEleFreqDisDownDischargeHeadroom) > 0 or len(optmodel.eEleFreqDisDownChargeHeadroom) > 0):
+        print('--- Declaring the frequency containment reserve (FCR-D) constraints:        {} seconds'.format(round(time.time() - StartTime)))
+    StartTime = time.time() # to compute elapsed time
 
     # Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data [p.u.]
     def eEleMaxInflows2Commitment(optmodel, p,sc,n,egs):
