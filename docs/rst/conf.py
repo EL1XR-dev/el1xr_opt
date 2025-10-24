@@ -662,14 +662,14 @@ mathjax3_config = {
             # activated power from FCR-N DW
             "velefcrndwact": r"p^{ND}",                         # Electrical FCR-N DW activation
             # activated power from FCR-D UP
-            "velefcrdupactch": r"p^{UP,ch}",                    # Electrical FCR-D UP activation when charging
-            "velefcrdupactdi": r"p^{UP,di}",                    # Electrical FCR-D UP activation when discharging
+            "velefcrdupactch": r"p^{DU,ch}",                    # Electrical FCR-D UP activation when charging
+            "velefcrdupactdi": r"p^{DU,di}",                    # Electrical FCR-D UP activation when discharging
             # activated power from FCR-D DW
-            "velefcrddwactch": r"p^{DW,ch}",                    # Electrical FCR-D DW activation when charging
-            "velefcrddwactdi": r"p^{DW,di}",                    # Electrical FCR-D DW activation when discharging
+            "velefcrddwactch": r"p^{DD,ch}",                    # Electrical FCR-D DW activation when charging
+            "velefcrddwactdi": r"p^{DD,di}",                    # Electrical FCR-D DW activation when discharging
             # activation fractions for FCR-D
-            "velefcrdupfraction": r"\Lambda^{UP}",              # Electrical FCR-D UP activation fraction
-            "velefcrddwfraction": r"\Lambda^{DW}",              # Electrical FCR-D DW activation fraction
+            "velefcrdupfraction": r"\Lambda^{DU}",              # Electrical FCR-D UP activation fraction
+            "velefcrddwfraction": r"\Lambda^{DD}",              # Electrical FCR-D DW activation fraction
 
 
             # --- Binary Variables ---

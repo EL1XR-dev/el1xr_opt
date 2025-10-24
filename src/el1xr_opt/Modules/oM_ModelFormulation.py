@@ -343,6 +343,12 @@ def create_constraints(model, optmodel):
         print('--- Declaring the energy balance:                                      {} seconds'.format(round(time.time() - StartTime)))
     StartTime = time.time() # to compute elapsed time
 
+    #%%% Operating Reserves
+    # FCR-D required
+    def eFreqContReserveDisUpward(optmodel, p,sc,n):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0:
+            return sum(optmodel.vEleFreqContReserveDisUpward[p,sc,n,eg] for eg in model.eg) >= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
+
     # Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data [p.u.]
     def eEleMaxInflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxStorage'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMaxInflows'][egs][p,sc,n] and (n,egs) in model.negs:
