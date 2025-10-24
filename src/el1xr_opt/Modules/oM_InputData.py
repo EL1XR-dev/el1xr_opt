@@ -441,12 +441,20 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.t2eg       = Set(initialize=sorted((parameters_dict['pEleGenTechnology'][eg],eg) for     eg     in model.eg              if parameters_dict['pEleGenTechnology'][eg] in model.gt), ordered=False, doc='technology to generator')
     model.t2hg       = Set(initialize=sorted((parameters_dict['pHydGenTechnology'][hg],hg) for     hg     in model.hg              if parameters_dict['pHydGenTechnology'][hg] in model.gt), ordered=False, doc='technology to generator')
 
+    # inverse index generator to retailer
+    model.r2eg       = Set(initialize=sorted((parameters_dict['pEleGenRetailer'][eg], eg)  for     eg     in model.eg                                                             ), ordered=False, doc='retailer to generator'  )
+    model.r2hg       = Set(initialize=sorted((parameters_dict['pHydGenRetailer'][hg], hg)  for     hg     in model.hg                                                             ), ordered=False, doc='retailer to generator'  )
+
     # inverse index node to electricity/hydrogen demand
     model.n2ed       = Set(initialize=sorted((parameters_dict['pEleDemNode'][ed], ed)  for     ed     in model.ed                                                                 ), ordered=False, doc='node to demand'         )
     model.z2ed       = Set(initialize=sorted((zn,ed)                                   for (nd,ed,zn) in model.n2ed * model.zn if (nd,zn) in model.ndzn                           ), ordered=False, doc='zone to demand'         )
 
     model.n2hd       = Set(initialize=sorted((parameters_dict['pHydDemNode'][hd], hd)  for     hd     in model.hd                                                                 ), ordered=False, doc='node to demand'         )
     model.z2hd       = Set(initialize=sorted((zn,hd)                                   for (nd,hd,zn) in model.n2hd * model.zn if (nd,zn) in model.ndzn                           ), ordered=False, doc='zone to demand'         )
+
+    # inverse index demand to retailer
+    model.r2ed       = Set(initialize=sorted((parameters_dict['pEleDemRetailer'][ed], ed)  for     ed     in model.ed                                                             ), ordered=False, doc='retailer to demand'     )
+    model.r2hd       = Set(initialize=sorted((parameters_dict['pHydDemRetailer'][hd], hd)  for     hd     in model.hd                                                             ), ordered=False, doc='retailer to demand'     )
 
     # inverse index node to electricity/hydrogen retail
     model.n2er       = Set(initialize=sorted((parameters_dict['pEleRetNode'][er], er)  for     er     in model.er                                                                 ), ordered=False, doc='node to retail'         )
