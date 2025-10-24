@@ -67,7 +67,7 @@ Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-The bids are submitted for upward and downward reserves separately and are not greater than the maximum upward and downward reserve required.
+The bids are submitted for upward and downward reserves separately and are not greater than the maximum upward and downward reserve required. These constraints are represented by («``eEleFreqContReserveDisUpward``», ``eEleFreqContReserveDisDownward``»):
 
 :math:`\sum_{\genindex \in \nGE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex \in \nEE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
@@ -87,13 +87,13 @@ And for an electric ESS:
 
 The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
 
-:math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Peak Power Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
