@@ -85,7 +85,7 @@ And for an electric ESS:
 
 :math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
+The tight headroom bounds for FCR-D provision from an electric ESS is defined by the constraints
 
 :math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
