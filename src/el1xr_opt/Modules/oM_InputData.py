@@ -972,14 +972,14 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vHydNetFlow',                       Var(model.psnhpa,  within=           Reals, doc='hydrogen    net flow                                                  [kgH2]'))
     setattr(optmodel, 'vEleNetTheta',                      Var(model.psnnd,   within=           Reals, doc='electricity net theta                                                   [kW]'))
 
-    setattr(optmodel, 'vEleFreqContReserveDisUpwardBid',   Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve upward bid                   [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownwardBid', Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve downward bid                 [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisUpwardAct',   Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve upward fraction activation   [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownwardAct', Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve downward fraction activation [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisUpCha',       Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve upward charge                [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisUpDis',       Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve upward discharge             [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownDis',     Var(model.psner,   within=NonNegativeReals, doc='electricity frequency containment reserve downward discharge           [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpwardBid',   Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward bid                   [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownwardBid', Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward bid                 [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpwardAct',   Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward fraction activation   [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownwardAct', Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward fraction activation [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpCha',       Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward charge                [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpDis',       Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward discharge             [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownDis',     Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward discharge           [kW]'))
 
     if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
         setattr(optmodel, 'vEleDemFlex',                   Var(model.psned,  within=           Reals, doc='flexible electricity demand                 [kW]'))
