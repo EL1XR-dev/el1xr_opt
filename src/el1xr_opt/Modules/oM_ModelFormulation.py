@@ -346,14 +346,14 @@ def create_constraints(model, optmodel):
     #%%% Operating Reserves
     # FCR-D required
     def eEleFreqContReserveDisUpward(optmodel, p,sc,n):
-        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0):
             return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqContReserveDisUpward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisUpward, doc='Frequency containment reserve - downward'))
 
     def eEleFreqContReserveDisDownward(optmodel, p,sc,n):
-        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0):
             return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n]
         else:
             return Constraint.Skip
