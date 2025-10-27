@@ -13,16 +13,12 @@ import datetime
 import altair as alt
 import numpy as np
 import pandas as pd
-# import ausankey as sky
 import matplotlib.pyplot as plt
+import ausankey as sky
 # import altair_saver
 from  collections import defaultdict
 from  pyomo.environ import Var, Param, Constraint
 from .utils.oM_Utils import log_time
-try:
-    import ausankey as sky
-except Exception:
-    sky = None
 
 def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
     """
@@ -214,15 +210,38 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
 
     # Generate and save Sankey diagram
     if sky is not None:
-        sankey_plot_data = pd.DataFrame({
-            "Stage1": df_sankey["Source"],
-            "Value1": df_sankey["Value"].abs(),
-            "Stage2": df_sankey["Target"],
-            "Value2": df_sankey["Value"].abs(),
-        })
+        plot_data = []
 
-        plt.figure(figsize=(10, 6))
-        sky.sankey(sankey_plot_data, sort="top", titles=["Source", "Target"], valign="center")
+        # Path 1
+        value = df_static['EleNCost'].sum()
+        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'SystemCost', 'Value3': value, 'Stage4': 'EleNCost', 'Value4': value})
+
+        # Path 2
+        value = df_static['EleXCost'].sum()
+        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'SystemCost', 'Value3': value, 'Stage4': 'EleXCost', 'Value4': value})
+
+        # Path 3
+        value = operational_cost.sum()
+        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'OperationalCost', 'Value3': value})
+
+        # Path 4
+        value = market_cost.sum()
+        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'MarketCost', 'Value3': value})
+
+        # Path 5
+        value = abs(df_static['EleXRev'].sum())
+        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalRevenue', 'Value2': value, 'Stage3': 'SystemRevenue', 'Value3': value, 'Stage4': 'EleXRev', 'Value4': value})
+
+        # Path 6
+        value = abs(market_revenue.sum())
+        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalRevenue', 'Value2': value, 'Stage3': 'MarketRevenue', 'Value3': value})
+
+        sankey_plot_data = pd.DataFrame(plot_data)
+
+        titles = ['Level 1', 'Level 2', 'Level 3', 'Level 4']
+
+        plt.figure(figsize=(12, 8))
+        sky.sankey(sankey_plot_data, titles=titles)
         plt.title('Cost and Revenue Flow')
         plt.savefig(f"{_path}/oM_Plot_01_rSankey_Diagram_{CaseName}.png", dpi=300, bbox_inches="tight")
         plt.close()
