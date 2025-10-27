@@ -142,64 +142,77 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Output_vDemand = Output_vDemand.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Demand'}, inplace=False)
         Output_vDemand.to_csv(_path+'/oM_Result_00_rElectricityDemand_'+CaseName+'.csv', index=False, sep=',')
 
-    cost_components = {
-        'Electricity Network Usage Cost': 'vTotalEleNCost',
-        'Electricity Tax Cost'          : 'vTotalEleXCost',
-        'Electricity Market Cost'       : 'vTotalEleMCost',
-        'Electricity O&M Cost'          : 'vTotalEleOCost',
-        'Electricity Degradation Cost'  : 'vTotalEleDCost',
-        'Hydrogen Market Cost'          : 'vTotalHydMCost',
-        'Hydrogen O&M Cost'             : 'vTotalHydOCost',
-        'Hydrogen Degradation Cost'     : 'vTotalHydDCost',
-        'Electricity Tax Revenue'       : 'vTotalEleXRev',
-        'Electricity Market Revenue'    : 'vTotalEleMRev',
-        'Hydrogen Market Revenue'       : 'vTotalHydMRev',
+    granular_components = {
+        'EleNCost': 'vTotalEleNCost', 'EleXCost': 'vTotalEleXCost', 'EleMCost': 'vTotalEleMCost',
+        'EleOCost': 'vTotalEleOCost', 'EleDCost': 'vTotalEleDCost', 'HydMCost': 'vTotalHydMCost',
+        'HydOCost': 'vTotalHydOCost', 'HydDCost': 'vTotalHydDCost', 'EleXRev': 'vTotalEleXRev',
+        'EleMRev': 'vTotalEleMRev', 'HydMRev': 'vTotalHydMRev',
     }
+    static_vars = ['vTotalEleNCost', 'vTotalEleXCost', 'vTotalEleXRev']
+    static_components = {k: v for k, v in granular_components.items() if v in static_vars}
+    dynamic_components = {k: v for k, v in granular_components.items() if v not in static_vars}
 
-    static_components = {k: v for k, v in cost_components.items() if any(x in k for x in ['Tax', 'Network'])}
-    dynamic_components = {k: v for k, v in cost_components.items() if not any(x in k for x in ['Tax', 'Network'])}
-
-    static_results = {}
+    # Fetch static data
+    static_data = {}
     for name, attr in static_components.items():
         var_object = getattr(optmodel, attr)
         data = [var_object[p, sc]() for p, sc in model.ps]
         index = pd.MultiIndex.from_tuples(model.ps, names=['Period', 'Scenario'])
-        static_results[name] = pd.Series(data, index=index, name=name).to_frame()
+        static_data[name] = pd.Series(data, index=index)
+    df_static = pd.DataFrame(static_data)
 
-    # Combine all static results
-    OutputResults_static = pd.concat(static_results.values(), axis=1).stack().to_frame(name='EUR')
-
-    dynamic_results = {}
+    # Fetch dynamic data
+    dynamic_data = {}
     for name, attr in dynamic_components.items():
         var_object = getattr(optmodel, attr)
         data = [var_object[p, sc, n]() * model.Par['pDuration'][p, sc, n] for p, sc, n in model.psn]
         index = pd.MultiIndex.from_tuples(model.psn, names=['Period', 'Scenario', 'LoadLevel'])
-        dynamic_results[name] = pd.Series(data, index=index, name=name).to_frame()
+        dynamic_data[name] = pd.Series(data, index=index)
+    df_dynamic = pd.DataFrame(dynamic_data)
 
-    # Combine all dynamic results
-    OutputResults_dynamic = pd.concat(dynamic_results.values(), axis=1).stack().to_frame(name='EUR')
+    # Aggregate dynamic data to static level (by Period, Scenario)
+    df_dynamic_agg = df_dynamic.groupby(['Period', 'Scenario']).sum()
 
+    # --- Create Hierarchical Aggregations ---
+    # Level 3: Cost/Revenue Categories
+    market_cost = df_dynamic_agg['EleMCost'] + df_dynamic_agg['HydMCost']
+    operational_cost = (df_dynamic_agg['EleOCost'] + df_dynamic_agg['HydOCost'] +
+                        df_dynamic_agg['EleDCost'] + df_dynamic_agg['HydDCost'])
+    system_cost = df_static['EleNCost'] + df_static['EleXCost']
+    market_revenue = df_dynamic_agg['EleMRev'] + df_dynamic_agg['HydMRev']
+    system_revenue = df_static['EleXRev']
+
+    # Level 2: Total Cost/Revenue
+    total_cost = market_cost + operational_cost + system_cost
+    total_revenue = market_revenue + system_revenue
+
+    # Combine all results into a single DataFrame for static output
+    df_results = pd.DataFrame({
+        'MarketCost': market_cost,
+        'OperationalCost': operational_cost,
+        'SystemCost': system_cost,
+        'MarketRevenue': market_revenue,
+        'SystemRevenue': system_revenue,
+        'TotalCost': total_cost,
+        'TotalRevenue': total_revenue
+    }).join(df_static) # aappend original static granular components
+
+    Output_TotalCost_Static = df_results.stack().to_frame(name='EUR').rename_axis(['Period', 'Scenario', 'Component']).reset_index()
+    Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
+
+    # --- Prepare Hourly (Dynamic) Output ---
     def compute_date(x):
-        """Compute datetime for load levels, handle 'All' or invalid entries safely."""
         try:
             if isinstance(x, str) and x.startswith('t'):
                 return Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))
-            else:
-                return pd.NaT
-        except Exception:
-            return pd.NaT
+            else: return pd.NaT
+        except Exception: return pd.NaT
 
-    OutputResults_dynamic['Date'] = OutputResults_dynamic.index.get_level_values('LoadLevel').map(compute_date).strftime('%Y-%m-%d %H:%M:%S')
+    df_dynamic_output = df_dynamic.stack().to_frame(name='EUR').rename_axis(['Period', 'Scenario', 'LoadLevel', 'Component']).reset_index()
+    df_dynamic_output['Date'] = df_dynamic_output['LoadLevel'].map(compute_date).dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    # ---- Dynamic (hourly) results ----
-    Output_TotalCost_Hourly = OutputResults_dynamic.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Component', 'Date'], axis=0).reset_index()
-
+    Output_TotalCost_Hourly = df_dynamic_output
     Output_TotalCost_Hourly.to_csv(f"{_path}/oM_Result_01_rTotalCost_Hourly_{CaseName}.csv", index=False, sep=',')
-
-    # ---- Static (total) results ----
-    Output_TotalCost_Static = OutputResults_static.rename_axis(['Period', 'Scenario', 'Component'], axis=0).reset_index()
-
-    Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
 
     # %% outputting the electrical energy balance
     #%%  Power balance per period, scenario, and load level
