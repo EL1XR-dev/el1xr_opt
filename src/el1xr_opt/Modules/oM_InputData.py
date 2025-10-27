@@ -1041,7 +1041,7 @@ def create_variables(model, optmodel):
 
     zero_cost_vars = [optmodel.vTotalEleDCost, optmodel.vTotalHydDCost,
                       optmodel.vTotalEleMrkPPACost,
-                      optmodel.vTotalEleMrkPPARev, optmodel.vTotalEleMrkFrqRev,]
+                      optmodel.vTotalEleMrkPPARev]
 
     rev_vars = [optmodel.vTotalEleXRev, optmodel.vTotalEleMRev, optmodel.vTotalHydMRev]
 
@@ -1056,7 +1056,7 @@ def create_variables(model, optmodel):
 
     sub_rev_vars = [optmodel.vTotalEleMrkDARev,
                     optmodel.vTotalHydMrkPPARev,
-                    optmodel.vTotalEleISRev]
+                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev,]
 
     # ed_vars = [optmodel.vENS]
 
