@@ -212,6 +212,17 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     df_sankey = pd.DataFrame(sankey_data)
     df_sankey.to_csv(f"{_path}/oM_Result_01_rSankey_Data_{CaseName}.csv", index=False, sep=',')
 
+    # Generate and save Sankey diagram
+    if sky is not None:
+        sankey_plot_data = df_sankey.copy()
+        sankey_plot_data['Value'] = sankey_plot_data['Value'].abs()
+
+        plt.figure(figsize=(10, 6))
+        sky.sankey(sankey_plot_data, left='Source', right='Target', right_w='Value', left_w='Value')
+        plt.title('Cost and Revenue Flow')
+        plt.savefig(f"{_path}/oM_Plot_01_rSankey_Diagram_{CaseName}.png", dpi=300, bbox_inches="tight")
+        plt.close()
+
     # --- Prepare Hourly (Dynamic) Output ---
     def compute_date(x):
         try:
