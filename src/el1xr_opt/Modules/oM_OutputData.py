@@ -237,6 +237,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalRevenue', 'Value2': value, 'Stage3': 'MarketRevenue', 'Value3': value})
 
         sankey_plot_data = pd.DataFrame(plot_data)
+        sankey_plot_data.replace({np.nan: None}, inplace=True)
 
         titles = ['Level 1', 'Level 2', 'Level 3', 'Level 4']
 
