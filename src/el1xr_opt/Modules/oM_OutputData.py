@@ -214,11 +214,15 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
 
     # Generate and save Sankey diagram
     if sky is not None:
-        sankey_plot_data = df_sankey.copy()
-        sankey_plot_data['Value'] = sankey_plot_data['Value'].abs()
+        sankey_plot_data = pd.DataFrame({
+            "Stage1": df_sankey["Source"],
+            "Value1": df_sankey["Value"].abs(),
+            "Stage2": df_sankey["Target"],
+            "Value2": df_sankey["Value"].abs(),
+        })
 
         plt.figure(figsize=(10, 6))
-        sky.sankey(sankey_plot_data, left='Source', right='Target', right_w='Value', left_w='Value')
+        sky.sankey(sankey_plot_data, sort="top", titles=["Source", "Target"], valign="center")
         plt.title('Cost and Revenue Flow')
         plt.savefig(f"{_path}/oM_Plot_01_rSankey_Diagram_{CaseName}.png", dpi=300, bbox_inches="tight")
         plt.close()
