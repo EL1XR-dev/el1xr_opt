@@ -87,6 +87,14 @@ def create_objective_function_components(model, optmodel):
         return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * optmodel.vEleSell[p,sc,n,er] for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
 
+    def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleMrkFrqRev[p,sc,n] == optmodel.vTotalEleFCRDRev[p,sc,n]
+    optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [kEUR]'))
+
+    def eEleMarketFCRDRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleFCRDRev[p,sc,n] == sum(model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr] + model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr] for egnr in model.egnr)
+    optmodel.__setattr__('eEleMarketFCRDRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDRevenue, doc='Total electricity market FCR-D revenues [kEUR]'))
+
     #%% Total hydrogen market costs
     def eHydMarketCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkPPACost[p,sc,n])
