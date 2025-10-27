@@ -976,10 +976,12 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vEleFreqContReserveDisDownwardBid', Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward bid                 [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisUpwardAct',   Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward fraction activation   [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisDownwardAct', Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward fraction activation [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisUpCha',       Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward charge                [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisUpDis',       Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward discharge             [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownDis',     Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward discharge           [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpGen',       Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency containment reserve upward generation            [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownGen',     Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency containment reserve downward generation          [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpCha',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve upward charge                [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpDis',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve upward discharge             [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownDis',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve downward discharge           [kW]'))
 
     if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
         setattr(optmodel, 'vEleDemFlex',                   Var(model.psned,  within=           Reals, doc='flexible electricity demand                 [kW]'))
@@ -999,6 +1001,8 @@ def create_variables(model, optmodel):
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
         setattr(optmodel, 'vHydStorOperat',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
+        setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
+        setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vHydPeakHourInd',               Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
     else:
         setattr(optmodel, 'vEleGenCommitment',             Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary commitment           '))
@@ -1012,6 +1016,8 @@ def create_variables(model, optmodel):
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary shut-down            '))
         setattr(optmodel, 'vHydStorOperat',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
+        setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
+        setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vHydPeakHourInd',               Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
 
     if model.Par['pOptIndBinNetOperat'] == 0:
