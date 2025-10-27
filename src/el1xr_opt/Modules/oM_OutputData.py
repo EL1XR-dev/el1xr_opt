@@ -143,21 +143,33 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Output_vDemand.to_csv(_path+'/oM_Result_00_rElectricityDemand_'+CaseName+'.csv', index=False, sep=',')
 
     cost_components = {
-        'Electricity Network Usage Cost': 'vTotalEleNCost',
-        'Electricity Tax Cost'          : 'vTotalEleXCost',
-        'Electricity Market Cost'       : 'vTotalEleMCost',
-        'Electricity O&M Cost'          : 'vTotalEleOCost',
-        'Electricity Degradation Cost'  : 'vTotalEleDCost',
-        'Hydrogen Market Cost'          : 'vTotalHydMCost',
-        'Hydrogen O&M Cost'             : 'vTotalHydOCost',
-        'Hydrogen Degradation Cost'     : 'vTotalHydDCost',
-        'Electricity Tax Revenue'       : 'vTotalEleXRev',
-        'Electricity Market Revenue'    : 'vTotalEleMRev',
-        'Hydrogen Market Revenue'       : 'vTotalHydMRev',
+        'ElePeakCost'           : 'vTotalElePeakCost',
+        'EleNetUseCost'         : 'vTotalEleNetUseCost',
+        'EleCapTariffCost'      : 'vTotalEleCapTariffCost',
+        'EleMrkDACost'          : 'vTotalEleMrkDACost',
+        'EleMrkPPACost'         : 'vTotalEleMrkPPACost',
+        'EleMrkDARev'           : 'vTotalEleMrkDARev',
+        'EleMrkPPARev'          : 'vTotalEleMrkPPARev',
+        'EleMrkFrqRev'          : 'vTotalEleMrkFrqRev',
+        'HydMrkPPACost'         : 'vTotalHydMrkPPACost',
+        'HydMrkPPARev'          : 'vTotalHydMrkPPARev',
+        'EleVATCost'            : 'vTotalEleVATCost',
+        'EleISRev'              : 'vTotalEleISRev',
+        'EleGenCost'            : 'vTotalEleGCost',
+        'EleEmiCost'            : 'vTotalEleECost',
+        'EleConsCost'           : 'vTotalEleCCost',
+        'EleReliabCost'         : 'vTotalEleRCost',
+        'HydGenCost'            : 'vTotalHydGCost',
+        'HydConsCost'           : 'vTotalHydCCost',
+        'HydReliabCost'         : 'vTotalHydRCost',
     }
 
-    static_components = {k: v for k, v in cost_components.items() if any(x in k for x in ['Tax', 'Network'])}
-    dynamic_components = {k: v for k, v in cost_components.items() if not any(x in k for x in ['Tax', 'Network'])}
+    static_vars = [
+        'vTotalElePeakCost', 'vTotalEleNetUseCost', 'vTotalEleCapTariffCost',
+        'vTotalEleVATCost', 'vTotalEleISRev'
+    ]
+    static_components = {k: v for k, v in cost_components.items() if v in static_vars}
+    dynamic_components = {k: v for k, v in cost_components.items() if v not in static_vars}
 
     static_results = {}
     for name, attr in static_components.items():
