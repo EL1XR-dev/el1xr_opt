@@ -210,16 +210,30 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
 
     # Generate and save Sankey diagram
     labels = list(pd.unique(df_sankey[['Source', 'Target']].values.ravel('K')))
+
+    node_positions = {
+        'Objective Function': (0.01, 0.5), 'TotalCost': (0.2, 0.2), 'TotalRevenue': (0.2, 0.8),
+        'SystemCost': (0.4, 0.1), 'OperationalCost': (0.4, 0.2), 'MarketCost': (0.4, 0.3),
+        'SystemRevenue': (0.4, 0.7), 'MarketRevenue': (0.4, 0.8),
+        'EleNCost': (0.6, 0.05), 'EleXCost': (0.6, 0.15), 'EleXRev': (0.6, 0.7)
+    }
+
+    x_coords = [node_positions.get(label, (0, 0))[0] for label in labels]
+    y_coords = [node_positions.get(label, (0, 0))[1] for label in labels]
+
     source_indices = [labels.index(s) for s in df_sankey['Source']]
     target_indices = [labels.index(t) for t in df_sankey['Target']]
 
     fig = go.Figure(data=[go.Sankey(
+        arrangement = "fixed",
         node=dict(
             pad=15,
             thickness=20,
             line=dict(color="black", width=0.5),
             label=labels,
-            color="blue"
+            color="blue",
+            x=x_coords,
+            y=y_coords
         ),
         link=dict(
             source=source_indices,
