@@ -14,15 +14,11 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-# import ausankey as sky
+import plotly.graph_objects as go
 # import altair_saver
 from  collections import defaultdict
 from  pyomo.environ import Var, Param, Constraint
 from .utils.oM_Utils import log_time
-try:
-    import ausankey as sky
-except Exception:
-    sky = None
 
 def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
     """
@@ -191,7 +187,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
 
     # Objective Function -> TotalCost / TotalRevenue
     sankey_data.append({'Source': 'Objective Function', 'Target': 'TotalCost', 'Value': total_cost.sum()})
-    sankey_data.append({'Source': 'Objective Function', 'Target': 'TotalRevenue', 'Value': -total_revenue.sum()})
+    sankey_data.append({'Source': 'Objective Function', 'Target': 'TotalRevenue', 'Value': abs(total_revenue.sum())})
 
     # TotalCost -> SystemCost / OperationalCost / MarketCost
     sankey_data.append({'Source': 'TotalCost', 'Target': 'SystemCost', 'Value': system_cost.sum()})
@@ -213,222 +209,26 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     df_sankey.to_csv(f"{_path}/oM_Result_01_rSankey_Data_{CaseName}.csv", index=False, sep=',')
 
     # Generate and save Sankey diagram
-    if sky is not None:
-        plot_data = []
+    labels = list(pd.unique(df_sankey[['Source', 'Target']].values.ravel('K')))
+    source_indices = [labels.index(s) for s in df_sankey['Source']]
+    target_indices = [labels.index(t) for t in df_sankey['Target']]
 
-        # Path 1
-        value = df_static['EleNCost'].sum()
-        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'SystemCost', 'Value3': value, 'Stage4': 'EleNCost', 'Value4': value})
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color="black", width=0.5),
+            label=labels,
+            color="blue"
+        ),
+        link=dict(
+            source=source_indices,
+            target=target_indices,
+            value=df_sankey['Value']
+        ))])
 
-        # Path 2
-        value = df_static['EleXCost'].sum()
-        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'SystemCost', 'Value3': value, 'Stage4': 'EleXCost', 'Value4': value})
-
-        # Path 3
-        value = operational_cost.sum()
-        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'OperationalCost', 'Value3': value})
-
-        # Path 4
-        value = market_cost.sum()
-        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalCost', 'Value2': value, 'Stage3': 'MarketCost', 'Value3': value})
-
-        # Path 5
-        value = abs(df_static['EleXRev'].sum())
-        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalRevenue', 'Value2': value, 'Stage3': 'SystemRevenue', 'Value3': value, 'Stage4': 'EleXRev', 'Value4': value})
-
-        # Path 6
-        value = abs(market_revenue.sum())
-        plot_data.append({'Stage1': 'Objective Function', 'Value1': value, 'Stage2': 'TotalRevenue', 'Value2': value, 'Stage3': 'MarketRevenue', 'Value3': value})
-
-        print(plot_data)
-        # Build the frame with fixed columns
-        # sankey_plot_data = pd.DataFrame(
-        #     plot_data,
-        #     columns=["Stage1", "Value1", "Stage2", "Value2", "Stage3", "Value3", "Stage4", "Value4"]
-        # )
-        #
-        # # --- Clean types
-        # for v in ["Value1", "Value2", "Value3", "Value4"]:
-        #     sankey_plot_data[v] = pd.to_numeric(sankey_plot_data[v], errors="coerce").fillna(0.0)
-        #
-        # for s in ["Stage1", "Stage2", "Stage3", "Stage4"]:
-        #     sankey_plot_data[s] = sankey_plot_data[s].astype("string").fillna("").str.strip()
-        #
-        # # --- Prune at the last *positive* stage so the branch ends there
-        # EPS = 1e-9
-        #
-        # def prune_row(row):
-        #     stages = ["Stage1", "Stage2", "Stage3", "Stage4"]
-        #     values = ["Value1", "Value2", "Value3", "Value4"]
-        #
-        #     # find last stage with a non-empty label AND positive value
-        #     last = -1
-        #     for k in range(4):
-        #         if row[stages[k]] != "" and float(row[values[k]]) > EPS:
-        #             last = k
-        #
-        #     # drop rows that don't reach Level 2 with a positive value
-        #     if last < 1:
-        #         return None
-        #
-        #     # zero-out anything after the last positive stage and blank its label
-        #     for k in range(last + 1, 4):
-        #         row[stages[k]] = ""
-        #         row[values[k]] = 0.0
-        #     return row
-        #
-        # sankey_plot_data = sankey_plot_data.apply(prune_row, axis=1)
-        # sankey_plot_data = sankey_plot_data.dropna(how="any")  # drops rows where prune_row returned None
-        #
-        # # --- Build per-level totals for node labels ("Name (value)")
-        # def totals_for(level):
-        #     sc = f"Stage{level}"
-        #     vc = f"Value{level}"
-        #     df = sankey_plot_data[sankey_plot_data[sc] != ""]
-        #     return df.groupby(sc, as_index=True)[vc].sum()
-        #
-        # fmt = lambda x: f"{x:,.2f}"
-        # lab_maps = {lvl: {k: f"{k} ({fmt(v)})"} for lvl, tot in
-        #             ((1, totals_for(1)), (2, totals_for(2)), (3, totals_for(3)), (4, totals_for(4)))
-        #             for k, v in tot.items()}
-        #
-        # for lvl in [1, 2, 3, 4]:
-        #     sc = f"Stage{lvl}"
-        #     mask = sankey_plot_data[sc] != ""
-        #     sankey_plot_data.loc[mask, sc] = sankey_plot_data.loc[mask, sc].map(lab_maps[lvl])
-        #
-        # # --- Plot
-        # titles = ["Level 1", "Level 2", "Level 3", "Level 4"]
-        #
-        # fig = plt.figure(figsize=(12, 8))
-        # ax = plt.gca()
-        # sky.sankey(sankey_plot_data, titles=titles)
-        # plt.title("Cost and Revenue Flow")
-        #
-        # # --- Hide any numeric labels that are exactly 0 (ausankey adds them for empty end-nodes)
-        # for t in list(ax.texts):
-        #     txt = t.get_text().replace(",", "").strip()
-        #     try:
-        #         if float(txt) == 0.0:
-        #             t.set_visible(False)
-        #     except ValueError:
-        #         pass
-        #
-        # plt.savefig(f"{_path}/oM_Plot_01_rSankey_Diagram_{CaseName}.png", dpi=300, bbox_inches="tight")
-        # plt.close()
-
-        # --- Plotly Sankey replacement for ausankey ----------------------------------
-        import math
-        import plotly.graph_objects as go
-        import numpy as np
-        # import pandas as pd
-
-        def sankey_plotly_from_stages(plot_data, file_base, titles=None):
-            # plot_data is your list of dicts with Stage1..Stage4, Value1..Value4
-            df = pd.DataFrame(plot_data, columns=[
-                "Stage1","Value1","Stage2","Value2","Stage3","Value3","Stage4","Value4"
-            ])
-
-            # Clean types
-            for v in ["Value1","Value2","Value3","Value4"]:
-                df[v] = pd.to_numeric(df[v], errors="coerce").fillna(0.0)
-            for s in ["Stage1","Stage2","Stage3","Stage4"]:
-                df[s] = df[s].astype("string").fillna("").str.strip()
-
-            EPS = 1e-9
-
-            # Prune each row at last positive stage (so branches STOP there)
-            def prune_row(row):
-                stages = ["Stage1","Stage2","Stage3","Stage4"]
-                values = ["Value1","Value2","Value3","Value4"]
-                last = -1
-                for k in range(4):
-                    if row[stages[k]] != "" and float(row[values[k]]) > EPS:
-                        last = k
-                # drop rows that never reach Stage2 with a positive value
-                if last < 1:
-                    return None
-                for k in range(last+1, 4):
-                    row[stages[k]] = ""
-                    row[values[k]] = 0.0
-                return row
-
-            df = df.apply(prune_row, axis=1).dropna(how="any")
-
-            # Compute totals per visible node (per level)
-            def totals_for(level):
-                sc, vc = f"Stage{level}", f"Value{level}"
-                sub = df[df[sc] != ""]
-                return sub.groupby(sc, as_index=True)[vc].sum()
-
-            # totals: {level -> Series(index=node_name, value=total)}
-            totals = {lvl: totals_for(lvl) for lvl in [1, 2, 3, 4]}
-            fmt = lambda x: f"{x:,.2f}"
-
-            # ✅ correct nested structure: {1:{...}, 2:{...}, 3:{...}, 4:{...}}
-            label_maps = {}
-            for lvl in [1, 2, 3, 4]:
-                series = totals.get(lvl)
-                if series is None or series.empty:
-                    label_maps[lvl] = {}
-                else:
-                    label_maps[lvl] = {name: f"{name} ({fmt(val)})" for name, val in series.items()}
-
-            # Assign global node indices in stage order (uses the same totals keys, so no KeyError)
-            node_labels = []
-            node_idx = {}
-            for lvl in [1, 2, 3, 4]:
-                for name in totals[lvl].index:
-                    node_idx[(lvl, name)] = len(node_labels)
-                    node_labels.append(label_maps[lvl][name])
-
-            # Build links between consecutive levels, skipping empty/zero
-            sources, targets, values, link_labels = [], [], [], []
-            for (l_from, l_to) in [(1,2),(2,3),(3,4)]:
-                s_from, v_from = f"Stage{l_from}", f"Value{l_from+1}"  # Value at the *right* of the link
-                s_to           = f"Stage{l_to}"
-                # rows that actually have both ends and positive value
-                mask = (df[s_from] != "") & (df[s_to] != "") & (df[v_from] > EPS)
-                for _, r in df.loc[mask, [s_from, s_to, v_from]].iterrows():
-                    i = node_idx[(l_from, r[s_from])]
-                    j = node_idx[(l_to,   r[s_to])]
-                    val = float(r[v_from])
-                    sources.append(i); targets.append(j); values.append(val)
-                    link_labels.append(fmt(val))
-
-            fig = go.Figure(go.Sankey(
-                arrangement="snap",
-                node=dict(
-                    label=node_labels,
-                    pad=18,
-                    thickness=18
-                ),
-                link=dict(
-                    source=sources,
-                    target=targets,
-                    value=values,
-                    label=link_labels
-                )
-            ))
-
-            fig.update_layout(
-                title_text="Cost and Revenue Flow" if not titles else " – ".join(titles),
-                font_size=12
-            )
-
-            html_path = f"{file_base}.html"
-            fig.write_html(html_path, include_plotlyjs="cdn")
-            # Optional PNG (requires kaleido)
-            try:
-                fig.write_image(f"{file_base}.png", scale=2)
-            except Exception:
-                pass
-            return html_path
-
-        # ---- Usage inside your saving_results() in place of ausankey call -----------
-        file_base = f"{_path}/oM_Plot_01_rSankey_Diagram_{CaseName}"
-        sankey_plotly_from_stages(plot_data, file_base, titles=["Level 1","Level 2","Level 3","Level 4"])
-
+    fig.update_layout(title_text="Cost and Revenue Flow", font_size=10)
+    fig.write_html(f"{_path}/oM_Plot_01_rSankey_Diagram_{CaseName}.html")
 
     # --- Prepare Hourly (Dynamic) Output ---
     def compute_date(x):
@@ -899,89 +699,6 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     dfEnergyBalance = pd.DataFrame({"Period": idx_p})
     for name, s in flows.items():
         dfEnergyBalance[name] = sum_by_p(s).values
-
-    # ===== Sankey: always save a figure (even if all flows are zero) =============
-    ALLOWED = {"SolarPV", "Market", "EV", "ENS", "BESS", "Demand"}
-
-    def _normalize(df):
-        if "Period" not in df.columns: raise ValueError("dfEnergyBalance needs 'Period'")
-        m = df.melt(id_vars="Period", var_name="Component", value_name="flow_value")
-        # strip units and normalize names
-        m["Component"] = m["Component"].str.replace(r"\s*\[.*\]$", "", regex=True)
-        m["Component"] = (m["Component"]
-                          .str.replace("FV", "SolarPV", regex=False)
-                          .str.replace("Mkt", "Market", regex=False)
-                          .str.replace("Dem", "Demand", regex=False))
-        # extract edges
-        split = m["Component"].str.extract(r"^(?P<Source>[^_]+)_to_(?P<Target>.+)$")
-        m = pd.concat([m, split], axis=1).dropna(subset=["Source", "Target"])
-        # keep allowed that actually appear (if any)
-        present = set(m["Source"]).union(m["Target"])
-        allowed_present = ALLOWED & present
-        if allowed_present:
-            m = m[m["Source"].isin(allowed_present) & m["Target"].isin(allowed_present)]
-        return m
-
-    def _percentify(m):
-        if m.empty:
-            m = m.copy()
-            m["Source_%"] = 0.0;
-            m["Target_%"] = 0.0
-            return m
-        g_src = m.groupby(["Period", "Source"])["flow_value"].transform("sum").replace(0, np.nan)
-        g_tgt = m.groupby(["Period", "Target"])["flow_value"].transform("sum").replace(0, np.nan)
-        m = m.assign(**{"Source_%": (m["flow_value"] / g_src * 100).fillna(0.0),
-                        "Target_%": (m["flow_value"] / g_tgt * 100).fillna(0.0)})
-        return m
-
-    def save_sankey_always(dfEnergyBalance, out_dir, case_name, mode="percent", prefix="oM_Plot_rSankey"):
-        os.makedirs(out_dir, exist_ok=True)
-        m = _normalize(dfEnergyBalance)
-        # Plot per period, always save a PNG
-        for per in dfEnergyBalance["Period"]:
-            d = m[m["Period"] == per]
-            outfile = os.path.join(out_dir, f"{prefix}_{case_name}_{per}.png")
-            if sky is None:
-                # Fallback: save a placeholder
-                plt.figure(figsize=(6, 4))
-                plt.title(f"Case: {case_name}, Period: {per}\n(ausankey not available)")
-                plt.text(0.5, 0.5, "Install 'ausankey' to draw Sankey", ha='center', va='center')
-                plt.axis('off');
-                plt.savefig(outfile, dpi=150, bbox_inches="tight");
-                plt.close()
-                print(f"Sankey placeholder saved: {outfile}")
-                continue
-
-            d = d[d["flow_value"].fillna(0) > 0]
-            if d.empty:
-                # Save an empty-note figure for this period
-                plt.figure(figsize=(6, 4))
-                plt.title(f"Case: {case_name}, Period: {per}")
-                plt.text(0.5, 0.5, "No non-zero flows", ha='center', va='center')
-                plt.axis('off');
-                plt.savefig(outfile, dpi=150, bbox_inches="tight");
-                plt.close()
-                print(f"Sankey (no flows) saved: {outfile}")
-                continue
-
-            if mode == "percent":
-                d = _percentify(d)
-                vals1, vals2, unit = d["Source_%"], d["Target_%"], "%"
-            else:
-                vals1, vals2, unit = d["flow_value"], d["flow_value"], "KWh"
-
-            sankey_data = pd.DataFrame({"Stage1": d["Source"], "Value1": vals1,
-                                        "Stage2": d["Target"], "Value2": vals2})
-            plt.figure(figsize=(7, 5))
-            sky.sankey(sankey_data, sort="top", titles=["Source", "Target"], valign="center")
-            plt.title(f"Case: {case_name}, Period: {per} ({unit})")
-            plt.savefig(outfile, format="png", dpi=150, bbox_inches="tight");
-            plt.close()
-            print(f"Sankey saved: {outfile}")
-
-    # --- Save CSVs & plots -------------------------------------------------------
-    dfEnergyBalance.to_csv(os.path.join(_path, f"oM_Result_08_rEnergyBalance_{CaseName}.csv"), index=False)
-    save_sankey_always(dfEnergyBalance, out_dir=_path, case_name=CaseName, mode="percent")
 
     log_time('-- Sankey diagrams output time:', StartTime)
     StartTime = time.time()
