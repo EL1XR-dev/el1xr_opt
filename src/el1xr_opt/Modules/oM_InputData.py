@@ -905,13 +905,16 @@ def create_variables(model, optmodel):
     setattr(optmodel, 'vTotalEleMrkPPACost',               Var(model.psn,     within=             Reals, doc='total electricity PPA market         cost                            [EUR]'))
 
     # electricity market revenues
-    setattr(optmodel, 'vTotalEleMrkDARev',                 Var(model.psn,     within=             Reals, doc='total electricity day-ahead market revenu                            [EUR]'))
-    setattr(optmodel, 'vTotalEleMrkPPARev',                Var(model.psn,     within=             Reals, doc='total electricity PPA market       revenu                            [EUR]'))
-    setattr(optmodel, 'vTotalEleMrkFrqRev',                Var(model.psn,     within=             Reals, doc='total electricity frequency market revenu                            [EUR]'))
+    setattr(optmodel, 'vTotalEleMrkDARev',                 Var(model.psn,     within=             Reals, doc='total electricity day-ahead market revenue                           [EUR]'))
+    setattr(optmodel, 'vTotalEleMrkPPARev',                Var(model.psn,     within=             Reals, doc='total electricity PPA market       revenue                           [EUR]'))
+    setattr(optmodel, 'vTotalEleMrkFrqRev',                Var(model.psn,     within=             Reals, doc='total electricity frequency market revenue                           [EUR]'))
+
+    # ancillary services revenues
+    setattr(optmodel, 'vTotalEleFCRDRev',                  Var(model.psn,     within=             Reals, doc='total electricity FCR-D     market revenue                           [EUR]'))
 
     # hydrogen market costs and revenues
     setattr(optmodel, 'vTotalHydMrkPPACost',               Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market         cost                            [EUR]'))
-    setattr(optmodel, 'vTotalHydMrkPPARev',                Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market       revenu                            [EUR]'))
+    setattr(optmodel, 'vTotalHydMrkPPARev',                Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market       revenue                           [EUR]'))
 
     # electricity tax costs and revenues
     setattr(optmodel, 'vTotalEleVATCost',                  Var(model.ps ,     within=             Reals, doc='total electricity VAT                cost                            [EUR]'))
@@ -1056,7 +1059,7 @@ def create_variables(model, optmodel):
 
     sub_rev_vars = [optmodel.vTotalEleMrkDARev,
                     optmodel.vTotalHydMrkPPARev,
-                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev,]
+                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev, optmodel.vTotalEleFCRDRev]
 
     # ed_vars = [optmodel.vENS]
 
@@ -1267,6 +1270,20 @@ def create_variables(model, optmodel):
                 if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
+
+    # if pEleGenNoFCRD == 1, fix the frequency containment reserve variables to zero
+    for idx in model.psnegnr:
+        if model.Par['pEleGenNoFCRD'][idx[-1]] == 1:
+            if idx[-1] in model.egt:
+                optmodel.vEleFreqContReserveDisUpGen[idx].fix(0.0)
+                optmodel.vEleFreqContReserveDisDownGen[idx].fix(0.0)
+                nFixedVariables += 2
+            if idx[-1] in model.egs:
+                optmodel.vEleFreqContReserveDisUpCha[idx].fix(0.0)
+                optmodel.vEleFreqContReserveDisUpDis[idx].fix(0.0)
+                optmodel.vEleFreqContReserveDisDownCha[idx].fix(0.0)
+                optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
+                nFixedVariables += 4
 
     # if there are no energy outflows no variable is needed
     iset = model.psn
