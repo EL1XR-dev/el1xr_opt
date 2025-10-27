@@ -11,6 +11,7 @@ import os
 import psutil        # access the number of CPUs
 from pyomo.environ import Var, Suffix, SolverFactory
 from .oM_SolverSetup import pick_solver
+from .utils.oM_Utils import log_time
 
 
 def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
@@ -158,8 +159,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP):
             SolverResults = Solver.solve(optmodel, tee=False, report_timing=True)
         SolverResults.write()  # summary of the solver results
 
-    SolvingTime = time.time() - StartTime
-    print('Solving                               ... ', round(SolvingTime), 's')
+    log_time('-- Total time for solving the model:', StartTime)
 
     print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), 'M€')
 
