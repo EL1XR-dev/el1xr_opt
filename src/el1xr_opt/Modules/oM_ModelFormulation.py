@@ -9,6 +9,7 @@
 import time          # count clock time
 from   pyomo.environ     import Constraint, Objective, minimize
 from   collections       import defaultdict
+from  .utils.oM_Utils    import log_time
 
 def create_objective_function(model, optmodel):
     # this function declares constraints
@@ -22,26 +23,26 @@ def create_objective_function(model, optmodel):
     # defining the objective function
     def eTotalSCost(optmodel):
         return optmodel.vTotalSCost
-    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [MEUR]'))
+    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [kEUR]'))
 
     def eTotalTCost(optmodel):
         return (optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
-    optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [MEUR]'))
+    optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [kEUR]'))
 
     # Cost components of the objective function
     def eTotalCComponent(optmodel, p,sc):
         return (optmodel.vTotalCComponent[p,sc] == optmodel.vTotalEleNCost[p,sc] + optmodel.vTotalEleXCost[p,sc] +
                 sum(model.Par['pDuration'][p,sc,n] * sum(optmodel.__getattribute__(f'vTotal{eng}MCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}OCost')[p,sc,n] +
                                                       optmodel.__getattribute__(f'vTotal{eng}DCost')[p,sc,n] for eng in ['Ele','Hyd']) for n in model.n))
-    optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [MEUR]'))
+    optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [kEUR]'))
 
     # Revenue components of the objective function
     def eTotalRComponent(optmodel, p,sc):
         return (optmodel.vTotalRComponent[p,sc] == optmodel.vTotalEleXRev[p,sc] +
                 sum(model.Par['pDuration'][p,sc,n] * (optmodel.vTotalEleMRev[p,sc,n] + optmodel.vTotalHydMRev[p,sc,n]) for n in model.n))
-    optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [MEUR]'))
+    optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [kEUR]'))
 
-    print('--- Declaring the totals components of the ObjFunc:                    {} seconds'.format(round(time.time() - StartTime)))
+    log_time('--- Declaring the totals components of the ObjFunc:', StartTime)
 
     return model
 
@@ -52,82 +53,90 @@ def create_objective_function_components(model, optmodel):
     #%% Total electricity grid usage cost [M€]
     def eEleNetGridUsageCost(optmodel, p,sc):
         return optmodel.vTotalEleNCost[p,sc] == optmodel.vTotalElePeakCost[p,sc] + optmodel.vTotalEleNetUseCost[p,sc] + optmodel.vTotalEleCapTariffCost[p,sc]
-    optmodel.__setattr__('eNetGridUsageCost', Constraint(optmodel.ps, rule=eEleNetGridUsageCost, doc='Total electricity grid usage cost [MEUR]'))
+    optmodel.__setattr__('eNetGridUsageCost', Constraint(optmodel.ps, rule=eEleNetGridUsageCost, doc='Total electricity grid usage cost [kEUR]'))
 
     # Total electricity peak costs
     def eTotalElePeakCost(optmodel, p,sc):
         return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) for er in model.er) / len(model.Peaks))
-    optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [MEUR]'))
+    optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [kEUR]'))
 
     # Total electricity net usage costs
     def eTotalEleNetUseCost(optmodel, p,sc):
         return (optmodel.vTotalEleNetUseCost[p,sc] == sum(model.Par['pEleRetnetavgift'][er] * model.factor1 * sum(optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseCost, doc='Total electricity net usage cost [MEUR]'))
+    optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
     def eTotalEleCapTariffCost(optmodel, p,sc):
         return (optmodel.vTotalEleCapTariffCost[p,sc] == sum(sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(model.Par['pEleMaxPower'][egs][p,sc,n] for n in model.n for egs in model.egs if (nd,egs) in model.n2eg) for er in model.er if (nd,er) in model.n2er) for nd in model.nd))
-    optmodel.__setattr__('eTotalEleCapTariffCost', Constraint(optmodel.ps, rule=eTotalEleCapTariffCost, doc='Total electricity capacity tariff cost [MEUR]'))
+    optmodel.__setattr__('eTotalEleCapTariffCost', Constraint(optmodel.ps, rule=eTotalEleCapTariffCost, doc='Total electricity capacity tariff cost [kEUR]'))
 
     #%% Total electricity market costs
     def eEleMarketCost(optmodel, p,sc,n):
         return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkDACost[p,sc,n] + optmodel.vTotalEleMrkPPACost[p,sc,n])
-    optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [MEUR]'))
+    optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
         return optmodel.vTotalEleMrkDACost[p,sc,n] == sum(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * optmodel.vEleBuy [p,sc,n,er] for er in model.er)
-    optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [MEUR]'))
+    optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
 
     #%% Total electricity market revenues
     def eEleMarketRevenue(optmodel, p,sc,n):
         return (optmodel.vTotalEleMRev[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n])
-    optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [MEUR]'))
+    optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [kEUR]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
         return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * optmodel.vEleSell[p,sc,n,er] for er in model.er)
-    optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [MEUR]'))
+    optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
+
+    def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleMrkFrqRev[p,sc,n] == optmodel.vTotalEleFCRDRev[p,sc,n]
+    optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [kEUR]'))
+
+    def eEleMarketFCRDRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleFCRDRev[p,sc,n] == sum(model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr] + model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr] for egnr in model.egnr)
+    optmodel.__setattr__('eEleMarketFCRDRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDRevenue, doc='Total electricity market FCR-D revenues [kEUR]'))
 
     #%% Total hydrogen market costs
     def eHydMarketCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkPPACost[p,sc,n])
-    optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [MEUR]'))
+    optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [kEUR]'))
 
     def eHydMarketDayAheadCost(optmodel, p,sc,n):
         return optmodel.vTotalHydMrkPPACost[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
-    optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [MEUR]'))
+    optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [kEUR]'))
 
     #%% Total hydrogen market revenues
     def eHydMarketRevenue(optmodel, p,sc,n):
         return (optmodel.vTotalHydMRev[p,sc,n] == optmodel.vTotalHydMrkPPARev[p,sc,n])
-    optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [MEUR]'))
+    optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [kEUR]'))
 
     def eHydMarketDayAheadRevenue(optmodel, p,sc,n):
         return optmodel.vTotalHydMrkPPARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][hr][p,sc,n] * optmodel.vHydSell[p,sc,n,hr] for hr in model.hr)
-    optmodel.__setattr__('eHydMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eHydMarketDayAheadRevenue, doc='Total hydrogen market day-ahead revenues [MEUR]'))
+    optmodel.__setattr__('eHydMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eHydMarketDayAheadRevenue, doc='Total hydrogen market day-ahead revenues [kEUR]'))
 
     #%% Total electricity taxes costs
     def eEleTaxCost(optmodel, p,sc):
         return (optmodel.vTotalEleXCost[p,sc] == optmodel.vTotalEleVATCost[p,sc])
-    optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [MEUR]'))
+    optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [kEUR]'))
 
     # VAT on electricity taxes costs
     def eEleTaxVATCost(optmodel, p,sc):
         return (optmodel.vTotalEleVATCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eEleTaxVATCost', Constraint(optmodel.ps, rule=eEleTaxVATCost, doc='Total electricity taxes costs [MEUR]'))
+    optmodel.__setattr__('eEleTaxVATCost', Constraint(optmodel.ps, rule=eEleTaxVATCost, doc='Total electricity taxes costs [kEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
         return (optmodel.vTotalEleXRev[p,sc] == optmodel.vTotalEleISRev[p,sc])
-    optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [MEUR]'))
+    optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [kEUR]'))
 
     # Incentives on electricity taxes revenues
     def eEleTaxISRevenue(optmodel, p,sc):
         return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetelcertifikat'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [MEUR]'))
+    optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [kEUR]'))
 
     #%% Total electricity operation and maintenance costs
     def eEleOpMaintCost(optmodel, p,sc,n):
         return (optmodel.vTotalEleOCost[p,sc,n] == sum(optmodel.__getattribute__(f'vTotal{eng}GCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}ECost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}CCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}RCost')[p,sc,n] for eng in ['Ele']))
-    optmodel.__setattr__('eEleOpMaintCost', Constraint(optmodel.psn, rule=eEleOpMaintCost, doc='Total electricity operation and maintenance costs [MEUR]'))
+    optmodel.__setattr__('eEleOpMaintCost', Constraint(optmodel.psn, rule=eEleOpMaintCost, doc='Total electricity operation and maintenance costs [kEUR]'))
 
     # Electricity generation operation cost [M€]
     def eTotalEleGCost(optmodel, p,sc,n):
@@ -136,27 +145,27 @@ def create_objective_function_components(model, optmodel):
                                                    sum(model.Par['pEleGenStartUpCost'    ][egt] *       optmodel.vEleGenStartUp        [p,sc,n,egt] for egt in model.egt) +
                                                    sum(model.Par['pEleGenShutDownCost'   ][egt] *       optmodel.vEleGenShutDown       [p,sc,n,egt] for egt in model.egt) +
                                                    sum(model.Par['pEleGenOMVariableCost' ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ))
-    optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [MEUR]'))
+    optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [kEUR]'))
 
     # Electricity generation emission cost [M€]
     def eTotalEleECost(optmodel, p,sc,n):
         return optmodel.vTotalEleECost[p,sc,n] == sum(model.Par['pGenCO2EmissionCost'][egt] * optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt)
-    optmodel.__setattr__('eTotalECost', Constraint(optmodel.psn, rule=eTotalEleECost, doc='Total emission cost [MEUR]'))
+    optmodel.__setattr__('eTotalECost', Constraint(optmodel.psn, rule=eTotalEleECost, doc='Total emission cost [kEUR]'))
 
     # Electricity consumption operation cost [M€]
     def eTotalEleCCost(optmodel, p,sc,n):
         return optmodel.vTotalEleCCost[p,sc,n] == sum(model.Par['pEleGenLinearTerm'][egs] * optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs)
-    optmodel.__setattr__('eTotalEleCCost', Constraint(optmodel.psn, rule=eTotalEleCCost, doc='Total consumption cost in electricity units [MEUR]'))
+    optmodel.__setattr__('eTotalEleCCost', Constraint(optmodel.psn, rule=eTotalEleCCost, doc='Total consumption cost in electricity units [kEUR]'))
 
     # Electricity reliability cost [M€]
     def eTotalEleRCost(optmodel, p,sc,n):
         return (optmodel.vTotalEleRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParENSCost'] * optmodel.vENS[p,sc,n,ed]) for ed in model.ed))
-    optmodel.__setattr__('eTotalEleRCost', Constraint(optmodel.psn, rule=eTotalEleRCost, doc='Total reliability cost in electricity consumers [MEUR]'))
+    optmodel.__setattr__('eTotalEleRCost', Constraint(optmodel.psn, rule=eTotalEleRCost, doc='Total reliability cost in electricity consumers [kEUR]'))
 
     #%% Total hydrogen operation and maintenance costs
     def eHydOpMaintCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydOCost[p,sc,n] == sum(optmodel.__getattribute__(f'vTotal{eng}GCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}CCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}RCost')[p,sc,n] for eng in ['Hyd']))
-    optmodel.__setattr__('eHydOpMaintCost', Constraint(optmodel.psn, rule=eHydOpMaintCost, doc='Total hydrogen operation and maintenance costs [MEUR]'))
+    optmodel.__setattr__('eHydOpMaintCost', Constraint(optmodel.psn, rule=eHydOpMaintCost, doc='Total hydrogen operation and maintenance costs [kEUR]'))
 
     # Hydrogen generation operation cost [M€]
     def eTotalHydGCost(optmodel, p,sc,n):
@@ -165,19 +174,19 @@ def create_objective_function_components(model, optmodel):
                                                    sum(model.Par['pHydGenStartUpCost'    ][hgt] *       optmodel.vHydGenStartUp        [p,sc,n,hgt] for hgt in model.hgt) +
                                                    sum(model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) -
                                                    sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
-    optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [MEUR]'))
+    optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
 
     # Hydrogen consumption operation cost [M€]
     def eTotalHydCCost(optmodel, p,sc,n):
         return optmodel.vTotalHydCCost[p,sc,n] == sum(model.Par['pHydGenLinearTerm'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs)
-    optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [MEUR]'))
+    optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [kEUR]'))
 
     # Hydrogen reliability cost [M€]
     def eTotalHydRCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd]) for hd in model.hd))
-    optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [MEUR]'))
+    optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [kEUR]'))
 
-    print('--- Declaring the ObjFunc components:                                  {} seconds'.format(round(time.time() - StartTime)))
+    log_time('--- Declaring the ObjFunc components:', StartTime)
 
     return model
 
@@ -231,7 +240,14 @@ def create_constraints(model, optmodel):
             return optmodel.vEleBuy[p,sc,n,er] <= model.Par['pEleRetMaxBuy'][er]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleRetMaxBuy', Constraint(optmodel.psner, rule=eEleRetMaxBuy, doc='Maximum electricity buys [MWh]'))
+    optmodel.__setattr__('eEleRetMaxBuy', Constraint(optmodel.psner, rule=eEleRetMaxBuy, doc='Maximum electricity buys [kWh]'))
+
+    def eEleBuyComposition(optmodel, p,sc,n,er):
+        if model.Par['pEleRetMaxBuy'][er] > 0:
+            return optmodel.vEleBuy[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleBuyComposition', Constraint(optmodel.psner, rule=eEleBuyComposition, doc='Electricity buy composition [kWh]'))
 
     # Maximum electricity sells
     def eEleRetMaxSell(optmodel, p,sc,n,er):
@@ -239,12 +255,54 @@ def create_constraints(model, optmodel):
             return optmodel.vEleSell[p,sc,n,er] <= model.Par['pEleRetMaxSell'][er]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleRetMaxSell', Constraint(optmodel.psner, rule=eEleRetMaxSell, doc='Maximum electricity sells [MWh]'))
+    optmodel.__setattr__('eEleRetMaxSell', Constraint(optmodel.psner, rule=eEleRetMaxSell, doc='Maximum electricity sells [kWh]'))
+
+    def eEleSellComposition(optmodel, p,sc,n,er):
+        if model.Par['pEleRetMaxSell'][er] > 0:
+            return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleSellComposition', Constraint(optmodel.psner, rule=eEleSellComposition, doc='Electricity sell composition [kWh]'))
 
     # print if the max buy or sell is greater than 0
     if len(optmodel.eEleRetMaxBuy) > 0 or len(optmodel.eEleRetMaxSell) > 0:
-        print('--- Declaring the maximum electricity buys and sells:                  {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum electricity buys and sells:', StartTime)
+        StartTime = time.time() # to compute elapsed time
+
+    # Maximum hydrogen buys
+    def eHydRetMaxBuy(optmodel, p,sc,n,hr):
+        if model.Par['pHydRetMaxBuy'][hr] > 0:
+            return optmodel.vHydBuy[p,sc,n,hr] <= model.Par['pHydRetMaxBuy'][hr]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydRetMaxBuy', Constraint(optmodel.psnhr, rule=eHydRetMaxBuy, doc='Maximum hydrogen buys [kgH2]'))
+
+    def eHydBuyComposition(optmodel, p,sc,n,hr):
+        if model.Par['pHydRetMaxBuy'][hr] > 0:
+            return optmodel.vHydBuy[p,sc,n,hr] == sum(optmodel.vHydImport[p,sc,n,nd] for nd in model.nd if (nd,hr) in model.n2hr)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydBuyComposition', Constraint(optmodel.psnhr, rule=eHydBuyComposition, doc='Hydrogen buy composition [kgH2]'))
+
+    # Maximum hydrogen sells
+    def eHydRetMaxSell(optmodel, p,sc,n,hr):
+        if model.Par['pHydRetMaxSell'][hr] > 0:
+            return optmodel.vHydSell[p,sc,n,hr] <= model.Par['pHydRetMaxSell'][hr]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydRetMaxSell', Constraint(optmodel.psnhr, rule=eHydRetMaxSell, doc='Maximum hydrogen sells [kgH2]'))
+
+    def eHydSellComposition(optmodel, p,sc,n,hr):
+        if model.Par['pHydRetMaxSell'][hr] > 0:
+            return optmodel.vHydSell[p,sc,n,hr] == sum(optmodel.vHydExport[p,sc,n,nd] for nd in model.nd if (nd,hr) in model.n2hr)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydSellComposition', Constraint(optmodel.psnhr, rule=eHydSellComposition, doc='Hydrogen sell composition [kgH2]'))
+
+    # print if the max buy or sell is greater than 0
+    if len(optmodel.eHydRetMaxBuy) > 0 or len(optmodel.eHydRetMaxSell) > 0:
+        log_time('--- Declaring the maximum hydrogen buys and sells:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     #%% shifting demand constraints
     # electricity demand balance: ensure the total electricity consumed before and after the shift is the same within the shift time
@@ -268,14 +326,14 @@ def create_constraints(model, optmodel):
 
     # print the constraints object len is greater than 0
     if len(optmodel.eEleDemandShiftBalance) > 0 or len(optmodel.eEleDemandShifted) > 0:
-        print('--- Declaring the electricity demand shift constraints:                {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the electricity demand shift constraints:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # electrical energy conservation or balance
     def eEleBalance(optmodel, p,sc,n,nd):
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
             return (sum(optmodel.vEleTotalOutput[p,sc,n,eg] for eg in model.eg  if (nd,eg) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (nd,egs) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (nd,e2h) in model.n2hg)
-                  - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + sum(optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] for er in model.er if (nd,er) in model.n2er) == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
+                  - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + optmodel.vEleImport[p,sc,n,nd] - optmodel.vEleExport[p,sc,n,nd] == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleBalance', Constraint(optmodel.psnnd, rule=eEleBalance, doc='Electricity balance in the DA market'))
@@ -284,49 +342,163 @@ def create_constraints(model, optmodel):
     def eHydBalance(optmodel, p,sc,n,nd):
         if sum(1 for hg in hg2n[nd]) + sum(1 for hgs in hgs2n[nd]) + sum(1 for nf, cc in hout[nd]) + sum(1 for ni, cc in hin[nd]):
             return (sum(optmodel.vHydTotalOutput[p,sc,n,hg] for hg in model.hg if (nd,hg) in model.n2hg) - sum(optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs if (nd,hgs) in model.n2hg) - sum(optmodel.vHydTotalCharge[p,sc,n,h2e] for h2e in model.h2e if (nd,h2e) in model.n2g)
-                  - sum(optmodel.vHydNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in hout[nd]) + sum(optmodel.vHydNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in hin[nd]) + sum(optmodel.vHydBuy[p,sc,n,hr] - optmodel.vHydSell[p,sc,n,hr] for hr in model.hr if (nd,hr) in model.n2hr) == sum(optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd))
+                  - sum(optmodel.vHydNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in hout[nd]) + sum(optmodel.vHydNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in hin[nd]) + optmodel.vHydImport[p,sc,n,nd] - optmodel.vHydExport[p,sc,n,nd] == sum(optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd))
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydBalance', Constraint(optmodel.psnnd, rule=eHydBalance, doc='Hydrogen balance in the DA market'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleBalance) > 0 or len(optmodel.eHydBalance) > 0:
-        print('--- Declaring the energy balance:                                      {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the energy balance constraints:', StartTime)
+        StartTime = time.time() # to compute elapsed time
+
+    #%%% Operating Reserves
+    # FCR-D required
+    def eEleFreqContReserveDisUpward(optmodel, p,sc,n):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0):
+            return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqContReserveDisUpward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisUpward, doc='Frequency containment reserve - upward'))
+
+    def eEleFreqContReserveDisDownward(optmodel, p,sc,n):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0):
+            return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqContReserveDisDownward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisDownward, doc='Frequency containment reserve - downward'))
+
+    # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
+    def eEleRelationFreqDisUpBid2Gen(optmodel, p,sc,n,egt):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
+            return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] == optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisUpBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqDisUpBid2Gen, doc='Relation FCR-D upward bid to generation'))
+
+    def eEleRelationFreqDisDownBid2Gen(optmodel, p,sc,n,egt):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
+            return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] == optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisDownBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqDisDownBid2Gen, doc='Relation FCR-D downward bid to generation'))
+
+    # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric storage system is defined as follows:
+    def eEleRelationFreqDisUpBid2Stor(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] == optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisUpBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqDisUpBid2Stor, doc='Relation FCR-D upward bid to storage'))
+
+    def eEleRelationFreqDisDownBid2Stor(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] == optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRelationFreqDisDownBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqDisDownBid2Stor, doc='Relation FCR-D downward bid to storage'))
+
+    # The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
+    def eEleFreqDisUpDischargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] - (optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisUpDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisUpDischargeHeadroom, doc='FCR-D upward discharge headroom'))
+
+    def eEleFreqDisUpChargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] <= optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisUpChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisUpChargeHeadroom, doc='FCR-D upward charge headroom'))
+
+    def eEleFreqDisDownDischargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0 > 0:
+            return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] <= optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisDownDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisDownDischargeHeadroom, doc='FCR-D downward discharge headroom'))
+
+    def eEleFreqDisDownChargeHeadroom(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] <= model.Par['pEleMaxCharge'][egs][p,sc,n] - (optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisDownChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDisDownChargeHeadroom, doc='FCR-D downward charge headroom'))
+
+    def eEleFreqDisUpChargeBound(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisUpChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDisUpChargeBound, doc='FCR-D upward charge bound'))
+
+    def eEleFreqDisUpDischargeBound(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] / model.Par['pEleMaxPower'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisUpDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDisUpDischargeBound, doc='FCR-D upward discharge bound'))
+
+    def eEleFreqDisDownChargeBound(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisDownChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDisDownChargeBound, doc='FCR-D downward charge bound'))
+
+    def eEleFreqDisDownDischargeBound(optmodel, p,sc,n,egs):
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+            return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] / model.Par['pEleMaxPower'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDisDownDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDisDownDischargeBound, doc='FCR-D downward discharge bound'))
+
+    # print if the constraints object len is greater than 0
+    if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
+        len(optmodel.eEleRelationFreqDisUpBid2Gen) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Gen) > 0 or
+        len(optmodel.eEleRelationFreqDisUpBid2Stor) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Stor) > 0 or
+        len(optmodel.eEleFreqDisUpDischargeHeadroom) > 0 or len(optmodel.eEleFreqDisUpChargeHeadroom) > 0 or
+        len(optmodel.eEleFreqDisDownDischargeHeadroom) > 0 or len(optmodel.eEleFreqDisDownChargeHeadroom) > 0 or
+        len(optmodel.eEleFreqDisUpChargeBound) > 0 or len(optmodel.eEleFreqDisUpDischargeBound) > 0 or
+        len(optmodel.eEleFreqDisDownChargeBound) > 0 or len(optmodel.eEleFreqDisDownDischargeBound) > 0):
+        log_time('--- Declaring the frequency containment reserve (FCR-D) constraints:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data [p.u.]
     def eEleMaxInflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxStorage'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMaxInflows'][egs][p,sc,n] and (n,egs) in model.negs:
-            return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMaxInflows'][egs][p,sc,n] <= 1.0
+            return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMaxInflows'][egs][p,sc,n] <= 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxInflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMaxInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
 
     def eEleMinInflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMinStorage'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMinInflows'][egs][p,sc,n] and (n,egs) in model.negs:
-            return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMinInflows'][egs][p,sc,n] >= 1.0
+            return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMinInflows'][egs][p,sc,n] >= 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinInflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMinInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
 
     def eHydMaxInflows2Commitment(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxStorage'][hgs][p,sc,n] and model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and model.Par['pHydMaxInflows'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
-            return optmodel.vHydEnergyInflows[p,sc,n,hgs] / model.Par['pHydMaxInflows'][hgs][p,sc,n] <= 1.0
+            return optmodel.vHydEnergyInflows[p,sc,n,hgs] / model.Par['pHydMaxInflows'][hgs][p,sc,n] <= 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxInflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMaxInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
 
     def eHydMinInflows2Commitment(optmodel, p,sc,n,hgs):
         if model.Par['pHydMinStorage'][hgs][p,sc,n] and model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and model.Par['pHydMinInflows'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
-            return optmodel.vHydEnergyInflows[p,sc,n,hgs] / model.Par['pHydMinInflows'][hgs][p,sc,n] >= 1.0
+            return optmodel.vHydEnergyInflows[p,sc,n,hgs] / model.Par['pHydMinInflows'][hgs][p,sc,n] >= 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMinInflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMinInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxInflows2Commitment) > 0 or len(optmodel.eEleMinInflows2Commitment) > 0 or len(optmodel.eHydMaxInflows2Commitment) > 0 or len(optmodel.eHydMinInflows2Commitment) > 0:
-        print('--- Declaring the energy inflows of ESS:                               {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the energy inflows of ESS:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # ESS energy inventory (only for load levels multiple of 1, 24, 168 h depending on the ESS storage type) [GWh]
     def eEleInventory(optmodel, p,sc,n,egs):
@@ -355,8 +527,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleInventory) > 0 or len(optmodel.eHydInventory) > 0:
-        print('--- Declaring the ESS energy inventory:                                {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the ESS energy inventory:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Energy conversion from energy from electricity to hydrogen and vice versa [p.u.]
     def eAllEnergy2Hyd(optmodel, p,sc,n,e2h):
@@ -432,22 +604,22 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxOutflows2Commitment) > 0 or len(optmodel.eEleMinOutflows2Commitment) > 0 or len(optmodel.eHydMaxOutflows2Commitment) > 0 or len(optmodel.eHydMinOutflows2Commitment) > 0 or len(optmodel.eEleMaxEnergyOutflows) > 0 or len(optmodel.eEleMinEnergyOutflows) > 0 or len(optmodel.eHydMaxEnergyOutflows) > 0 or len(optmodel.eHydMinEnergyOutflows) > 0:
-        print('--- Declaring the ESS outflows:                                        {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the ESS outflows:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Maximum and minimum output of the second block of a committed unit (all except the VRES and ESS units) [p.u.]
     def eEleMaxOutput2ndBlock(optmodel, p,sc,n,egt):
-        if   model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] and egt not in model.egs and n != model.n.last():
-            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] / model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] <= optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt] - optmodel.vEleGenShutDown[p,sc,model.n.next(n),egt]
+        if   model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] and egt not in model.egs and n != model.n.last() and model.Par['pEleGenNoFCRD'][egt] == 0:
+            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] <= optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt] - optmodel.vEleGenShutDown[p,sc,model.n.next(n),egt]
         elif model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] and egt not in model.egs and n == model.n.last():
-            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] / model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] <= optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
+            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] <= optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxOutput2ndBlock', Constraint(optmodel.psnegt, rule=eEleMaxOutput2ndBlock, doc='max output of the second block of a committed unit [p.u.]'))
 
     def eEleMinOutput2ndBlock(optmodel, p,sc,n,egt):
-        if model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] and egt not in model.egs:
-            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] / model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] >= 0.0
+        if model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n] and egt not in model.egs and model.Par['pEleGenNoFCRD'][egt] == 0:
+            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] - optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt] >= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinOutput2ndBlock', Constraint(optmodel.psnegt, rule=eEleMinOutput2ndBlock, doc='min output of the second block of a committed unit [p.u.]'))
@@ -470,31 +642,27 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxOutput2ndBlock) > 0 or len(optmodel.eEleMinOutput2ndBlock) > 0 or len(optmodel.eHydMaxOutput2ndBlock) > 0 or len(optmodel.eHydMinOutput2ndBlock) > 0:
-        print('--- Declaring the maximum and minimum output of the second block:      {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum and minimum output of the second block:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Maximum and minimum output of the second block of an electricity ESS [p.u.]
     def eEleMaxESSOutput2ndBlock(optmodel, p,sc,n,egs):
-        if model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and n != model.n.last():
-            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] / model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
-        elif model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and n == model.n.last():
-            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] / model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
+        if model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n]:
+            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxESSOutput2ndBlock', Constraint(optmodel.psnegs, rule=eEleMaxESSOutput2ndBlock, doc='max output of the second block of an ESS [p.u.]'))
 
     def eEleMinESSOutput2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n]:
-            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] / model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] >= 0.0
+            return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] >= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinESSOutput2ndBlock', Constraint(optmodel.psnegs, rule=eEleMinESSOutput2ndBlock, doc='min output of the second block of an ESS [p.u.]'))
 
     def eHydMaxESSOutput2ndBlock(optmodel, p,sc,n,hgs):
-        if model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and n != model.n.last():
-            return optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] <= model.Par['pVarFixedAvailability'][hgs][p,sc,n]
-        elif model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and n == model.n.last():
-            return optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] <= model.Par['pVarFixedAvailability'][hgs][p,sc,n]
+        if model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n]:
+            return optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] <= optmodel.vHydStorCharge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxESSOutput2ndBlock', Constraint(optmodel.psnhgs, rule=eHydMaxESSOutput2ndBlock, doc='max output of the second block of an ESS [p.u.]'))
@@ -508,15 +676,15 @@ def create_constraints(model, optmodel):
 
     # Maximum and minimum charge of an ESS [p.u.]
     def eEleMaxESSCharge2ndBlock(optmodel, p,sc,n,egs):
-        if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] and model.Par['pEleGenNoOperatingReserve'][egs] == 0:
-            return optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
+        if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] and model.Par['pEleGenNoFCRD'][egs] == 0:
+            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxESSCharge2ndBlock', Constraint(optmodel.psnegs, rule=eEleMaxESSCharge2ndBlock, doc='max charge of an ESS [p.u.]'))
 
     def eEleMinESSCharge2ndBlock(optmodel, p,sc,n,egs):
-        if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] and model.Par['pEleGenNoOperatingReserve'][egs] == 0:
-            return optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] >= 0.0
+        if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] and model.Par['pEleGenNoFCRD'][egs] == 0:
+            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] >= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinESSCharge2ndBlock', Constraint(optmodel.psnegs, rule=eEleMinESSCharge2ndBlock, doc='min charge of an ESS [p.u.]'))
@@ -537,7 +705,7 @@ def create_constraints(model, optmodel):
 
     def eHydMaxESSCharge2ndBlock(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n]:
-            return optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n] <= model.Par['pVarFixedAvailability'][hgs][p,sc,n]
+            return optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n] <= optmodel.vHydStorDischarge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eMaxHydESSCharge2ndBlock', Constraint(optmodel.psnhgs, rule=eHydMaxESSCharge2ndBlock, doc='max charge of an ESS [p.u.]'))
@@ -551,53 +719,69 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxESSOutput2ndBlock) > 0 or len(optmodel.eEleMinESSOutput2ndBlock) > 0 or len(optmodel.eHydMaxESSOutput2ndBlock) > 0 or len(optmodel.eHydMinESSOutput2ndBlock) > 0 or len(optmodel.eEleMaxESSCharge2ndBlock) > 0 or len(optmodel.eEleMinESSCharge2ndBlock) > 0 or len(optmodel.eE2HMaxCharge2ndBlock) > 0 or len(optmodel.eE2HMinCharge2ndBlock) > 0 or len(optmodel.eMaxHydESSCharge2ndBlock) > 0 or len(optmodel.eHydMinESSCharge2ndBlock) > 0:
-        print('--- Declaring the maximum and minimum charge of an ESS:                {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum and minimum charge of an ESS:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Incompatibility between charge and discharge of an electrical ESS [p.u.]
     def eEleChargingDecision(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n] :
-            return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n]  <= optmodel.vEleStorOperat[p,sc,n,egs]
+            return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n]  <= optmodel.vEleStorCharge[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleChargingDecision', Constraint(optmodel.psnegs, rule=eEleChargingDecision, doc='charging decision [p.u.]'))
 
     def eEleDischargingDecision(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxPower'][egs][p,sc,n] :
-            return optmodel.vEleTotalOutput[p,sc,n,egs] / model.Par['pEleMaxPower'][egs][p,sc,n]  <= 1.0 - optmodel.vEleStorOperat[p,sc,n,egs]
+            return optmodel.vEleTotalOutput[p,sc,n,egs] / model.Par['pEleMaxPower'][egs][p,sc,n]  <= optmodel.vEleStorDischarge[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleDischargingDecision', Constraint(optmodel.psnegs, rule=eEleDischargingDecision, doc='discharging decision [p.u.]'))
 
+    def eEleStorageMode(optmodel, p,sc,n,egs):
+        if model.Par['pEleMaxCharge'][egs][p,sc,n] + model.Par['pEleMaxPower'][egs][p,sc,n]:
+            return optmodel.vEleStorCharge[p,sc,n,egs] + optmodel.vEleStorDischarge[p,sc,n,egs] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorageMode', Constraint(optmodel.psnegs, rule=eEleStorageMode, doc='storage mode [p.u.]'))
+
     # Incompatibility between charge and discharge of an H2 ESS [p.u.]
     def eHydChargingDecision(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxPower'][hgs][p,sc,n] :
-            return optmodel.vHydTotalOutput[p,sc,n,hgs] / model.Par['pHydMaxPower'][hgs][p,sc,n]  <= optmodel.vHydStorOperat[p,sc,n,hgs]
+            return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMaxPower'][hgs][p,sc,n]  <= optmodel.vHydStorCharge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydChargingDecision', Constraint(optmodel.psnhgs, rule=eHydChargingDecision, doc='charging decision [p.u.]'))
 
     def eHydDischargingDecision(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] :
-            return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMaxCharge'][hgs][p,sc,n]  <= 1.0 - optmodel.vHydStorOperat[p,sc,n,hgs]
+            return optmodel.vHydTotalOutput[p,sc,n,hgs] / model.Par['pHydMaxCharge'][hgs][p,sc,n]  <= optmodel.vHydStorDischarge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydDischargingDecision', Constraint(optmodel.psnhgs, rule=eHydDischargingDecision, doc='discharging decision [p.u.]'))
 
+    def eHydStorageMode(optmodel, p,sc,n,hgs):
+        if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n]:
+            return optmodel.vHydStorCharge[p,sc,n,hgs] + optmodel.vHydStorDischarge[p,sc,n,hgs] <= model.Par['pVarFixedAvailability'][hgs][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydStorageMode', Constraint(optmodel.psnhgs, rule=eHydStorageMode, doc='storage mode [p.u.]'))
+
     # print if the constraints object len is greater than 0
-    if len(optmodel.eEleChargingDecision) > 0 or len(optmodel.eEleDischargingDecision) > 0 or len(optmodel.eHydChargingDecision) > 0 or len(optmodel.eHydDischargingDecision) > 0:
-        print('--- Declaring the incompatibility between charge and discharge:        {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+    if len(optmodel.eEleChargingDecision) > 0 or len(optmodel.eEleDischargingDecision) > 0 or len(optmodel.eEleStorageMode) > 0 or len(optmodel.eHydChargingDecision) > 0 or len(optmodel.eHydDischargingDecision) > 0 or len(optmodel.eHydStorageMode) > 0:
+        log_time('--- Declaring the incompatibility between charge and discharge:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Total output of a committed unit (all except the VRES units) [GW]
     def eEleTotalOutput(optmodel, p,sc,n,egnr):
         if model.Par['pEleMaxPower'][egnr][p,sc,n]:
-            if model.Par['pEleMinPower'][egnr][p,sc,n] == 0.0:
-                return optmodel.vEleTotalOutput[p,sc,n,egnr]                                           ==                                                     optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr]
+            if   model.Par['pEleMinPower'][egnr][p,sc,n] == 0.0 and egnr in model.egs:
+                return optmodel.vEleTotalOutput[p,sc,n,egnr]                                           ==                                             optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] + model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egnr] - model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egnr]
+            elif model.Par['pEleMinPower'][egnr][p,sc,n] == 0.0 and egnr not in model.egs:
+                return optmodel.vEleTotalOutput[p,sc,n,egnr]                                           ==                                             optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] + model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egnr] - model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egnr]
             elif model.Par['pEleMinPower'][egnr][p,sc,n] != 0.0 and egnr in model.egs:
-                return optmodel.vEleTotalOutput[p,sc,n,egnr] / model.Par['pEleMinPower'][egnr][p,sc,n] == model.Par['pVarFixedAvailability'][egnr][p,sc,n] + (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] / model.Par['pEleMinPower'][egnr][p,sc,n])
+                return optmodel.vEleTotalOutput[p,sc,n,egnr] / model.Par['pEleMinPower'][egnr][p,sc,n] == optmodel.vEleStorDischarge[p,sc,n,egnr] + ((optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] + model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egnr] - model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egnr]) / model.Par['pEleMinPower'][egnr][p,sc,n])
             elif model.Par['pEleMinPower'][egnr][p,sc,n] != 0.0 and egnr not in model.egs:
-                return optmodel.vEleTotalOutput[p,sc,n,egnr] / model.Par['pEleMinPower'][egnr][p,sc,n] == optmodel.vEleGenCommitment[p,sc,n,egnr]          + (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] / model.Par['pEleMinPower'][egnr][p,sc,n])
+                return optmodel.vEleTotalOutput[p,sc,n,egnr] / model.Par['pEleMinPower'][egnr][p,sc,n] == optmodel.vEleGenCommitment[p,sc,n,egnr] + ((optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] + model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egnr] - model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egnr]) / model.Par['pEleMinPower'][egnr][p,sc,n])
             else:
                 return Constraint.Skip
         else:
@@ -610,7 +794,7 @@ def create_constraints(model, optmodel):
             if model.Par['pHydMinPower'][hgt][p,sc,n] == 0.0:
                 return optmodel.vHydTotalOutput[p,sc,n,hgt]                                          ==                                                    optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]
             elif model.Par['pHydMinPower'][hgt][p,sc,n] != 0.0 and hgt in model.hgs:
-                return optmodel.vHydTotalOutput[p,sc,n,hgt] / model.Par['pHydMinPower'][hgt][p,sc,n] == model.Par['pVarFixedAvailability'][hgs][p,sc,n] + (optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt] / model.Par['pHydMinPower'][hgt][p,sc,n])
+                return optmodel.vHydTotalOutput[p,sc,n,hgt] / model.Par['pHydMinPower'][hgt][p,sc,n] == optmodel.vHydStorDischarge[p,sc,n,hgt] + (optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt] / model.Par['pHydMinPower'][hgt][p,sc,n])
             elif model.Par['pHydMinPower'][hgt][p,sc,n] != 0.0 and hgt not in model.hgs:
                 return optmodel.vHydTotalOutput[p,sc,n,hgt] / model.Par['pHydMinPower'][hgt][p,sc,n] == optmodel.vHydGenCommitment[p,sc,n,hgt]          + (optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt] / model.Par['pHydMinPower'][hgt][p,sc,n])
             else:
@@ -621,17 +805,17 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleTotalOutput) > 0 or len(optmodel.eHydTotalOutput) > 0:
-        print('--- Declaring the total output of a committed unit:                    {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the total output of a committed unit:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Total charge of an ESS [GW]
     def eEleTotalCharge(optmodel, p,sc,n,egs):
         if egs in model.egs:
             if model.Par['pEleMaxCharge'][egs][p,sc,n] and model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
                 if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0:
-                    return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                                    optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
+                    return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                         optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]
                 else:
-                    return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMinCharge'][egs][p,sc,n] == model.Par['pVarFixedAvailability'][egs][p,sc,n] + (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pEleMinCharge'][egs][p,sc,n])
+                    return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMinCharge'][egs][p,sc,n] == optmodel.vEleStorCharge[p,sc,n,egs] + ((optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pEleMinCharge'][egs][p,sc,n])
             else:
                 return Constraint.Skip
         elif egs in model.e2h:
@@ -652,15 +836,15 @@ def create_constraints(model, optmodel):
             if model.Par['pHydMinCharge'][hgs][p,sc,n] == 0.0:
                 return optmodel.vHydTotalCharge[p,sc,n,hgs]                                           ==                                                    optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]
             else:
-                return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMinCharge'][hgs][p,sc,n] == model.Par['pVarFixedAvailability'][hgs][p,sc,n] + (optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMinCharge'][hgs][p,sc,n])
+                return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMinCharge'][hgs][p,sc,n] == optmodel.vHydStorCharge[p,sc,n,hgs] + (optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMinCharge'][hgs][p,sc,n])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydTotalCharge', Constraint(optmodel.psnhgs, rule=eHydTotalCharge, doc='total charge of an H2 ESS unit [tH2]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleTotalCharge) > 0:
-        print('--- Declaring the total charge of an ESS:                              {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the total charge of an H2 ESS unit:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Incompatibility between charge and outflows use of an ESS [p.u.]
     def eIncompatibilityEleChargeOutflows(optmodel, p,sc,n,egs):
@@ -685,8 +869,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eIncompatibilityEleChargeOutflows) > 0: # or len(optmodel.eIncompatibilityHydChargeOutflows) > 0:
-        print('--- Declaring the incompatibility between charge and outflows use:     {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the incompatibility between charge and outflows use:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Logical relation between commitment, startup and shutdown status of a committed unit (all except the VRES units) [p.u.]
     def eEleCommitmentStartupShutdown(optmodel, p,sc,n,egt):
@@ -711,16 +895,16 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleCommitmentStartupShutdown) > 0 or len(optmodel.eHydCommitmentStartupShutdown) > 0:
-        print('--- Declaring the logical relation in the unit commitment:             {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the logical relation in the unit commitment:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Maximum ramp up and ramp down for the second block of a non-renewable (thermal, hydro) unit [p.u.]
     def eEleMaxRampUpOutput(optmodel, p,sc,n,egt):
         if model.Par['pEleGenRampUp'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampUp'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
-                return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0) + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
+                return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                               + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt]                      + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisDownGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampUpOutput', Constraint(optmodel.psnegt, rule=eEleMaxRampUpOutput, doc='maximum ramp up   [p.u.]'))
@@ -728,25 +912,25 @@ def create_constraints(model, optmodel):
     def eEleMaxRampDwOutput(optmodel, p,sc,n,egt):
         if model.Par['pEleGenRampDown'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampDw'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
-                return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0) + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
+                return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                             + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt]                      + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - optmodel.vEleGenCommitment[p,sc,model.n.prev(n),egt] + optmodel.vEleGenShutDown[p,sc,n,egt]
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisUpGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - optmodel.vEleGenCommitment[p,sc,model.n.prev(n),egt] + optmodel.vEleGenShutDown[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampDwOutput', Constraint(optmodel.psnegt, rule=eEleMaxRampDwOutput, doc='maximum ramp down [p.u.]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxRampUpOutput) > 0 or len(optmodel.eEleMaxRampDwOutput) > 0:
-        print('--- Declaring the maximum ramp up and ramp down:                       {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum ramp up and ramp down for the second block:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Maximum ramp down and ramp up for the charge of an ESS [p.u.]
     def eEleMaxRampUpCharge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampUp'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                               optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
+                return (                                                                                                                                  optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
             else:
-                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
+                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampUpCharge', Constraint(optmodel.psnegs, rule=eEleMaxRampUpCharge, doc='maximum ramp up   charge [p.u.]'))
@@ -754,9 +938,9 @@ def create_constraints(model, optmodel):
     def eEleMaxRampDwCharge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampDown'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                             + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] <=   1.0
+                return (                                                                                                                              + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] <=   1.0
             else:
-                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] <=   1.0
+                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] <=   1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampDwCharge', Constraint(optmodel.psnegs, rule=eEleMaxRampDwCharge, doc='maximum ramp down charge [p.u.]'))
@@ -764,9 +948,9 @@ def create_constraints(model, optmodel):
     def eEleMaxRampUpDischarge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampUp'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                               optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] <=   1.0
+                return (                                                                                                                                  optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] <=   1.0
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] <=   1.0
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] <=   1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampUpDischarge', Constraint(optmodel.psnegs, rule=eEleMaxRampUpDischarge, doc='maximum ramp up   discharge [p.u.]'))
@@ -774,17 +958,17 @@ def create_constraints(model, optmodel):
     def eEleMaxRampDwDischarge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampDown'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                               optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
+                return (                                                                                                                                optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisUpDis[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampDwDischarge', Constraint(optmodel.psnegs, rule=eEleMaxRampDwDischarge, doc='maximum ramp down discharge [p.u.]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxRampUpCharge) > 0 or len(optmodel.eEleMaxRampDwCharge) > 0 or len(optmodel.eEleMaxRampUpDischarge) > 0 or len(optmodel.eEleMaxRampDwDischarge) > 0:
-        print('--- Declaring the maximum ramp down and ramp up for the charge:        {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum ramp down and ramp up for the charge:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the charge of an H2 producer [p.u.]
     def eHydMaxRampUpOutput(optmodel, p,sc,n,hgt):
@@ -809,8 +993,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eHydMaxRampUpOutput) > 0 or len(optmodel.eHydMaxRampDwOutput) > 0:
-        print('--- Declaring the maximum ramp up and ramp down for the H2 output:     {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum ramp up and ramp down for the H2 output:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the charge of an H2 ESS [p.u.]
     def eHydMaxRampUpCharge(optmodel, p,sc,n,hgs):
@@ -835,8 +1019,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eHydMaxRampUpCharge) > 0 or len(optmodel.eHydMaxRampDwCharge) > 0:
-        print('--- Declaring the maximum ramp up and ramp down for the H2 charge:     {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum ramp up and ramp down for the H2 charge:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the outflows of an H2 ESS [p.u.]
     def eHydMaxRampUpOutflows(optmodel, p,sc,n,hgs):
@@ -861,8 +1045,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eHydMaxRampUpOutflows) > 0 or len(optmodel.eHydMaxRampDwOutflows) > 0:
-        print('--- Declaring the maximum ramp up and ramp down for the H2 outflows:   {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the maximum ramp up and ramp down for the H2 outflows:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     # Minimum up time and down time of thermal unit [h]
     def eEleMinUpTime(optmodel, p,sc,n,egt):
@@ -896,8 +1080,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMinUpTime) > 0 or len(optmodel.eEleMinDownTime) > 0 or len(optmodel.eHydMinUpTime) > 0 or len(optmodel.eHydMinDownTime) > 0:
-        print('--- Declaring the minimum up and down time:                            {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the minimum up and down time:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
         if model.Par['pVarStartUp'][egs][p,sc,n] and egs in model.egv:
@@ -918,8 +1102,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMinEnergyStartUp) > 0 or len(optmodel.eEleTotalMaxChargeConditioned) > 0:
-        print('--- Declaring the minimum energy start up and total max charge:        {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the minimum energy start up and total max charge:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m:
@@ -954,8 +1138,8 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eElePeakHourValue) > 0 or len(optmodel.eElePeakHourInd_C1) > 0 or len(optmodel.eElePeakHourInd_C2) > 0 or len(optmodel.eElePeakNumberMonths) > 0:
-        print('--- Declaring the peak hour selection:                                 {} seconds'.format(round(time.time() - StartTime)))
-    StartTime = time.time() # to compute elapsed time
+        log_time('--- Declaring the peak hour selection:', StartTime)
+        StartTime = time.time() # to compute elapsed time
 
     def eKirchhoff2ndLaw(optmodel, p,sc,n,ni,nf,cc):
         if model.Par[('pOptIndBinSingleNode')] == 0 and model.Par['pEleNetInitialPeriod'][ni,nf,cc] <= model.Par['pParEconomicBaseYear'] and model.Par['pEleNetFinalPeriod'][ni,nf,cc] >= model.Par['pParEconomicBaseYear'] and (ni,nf,cc) in model.elea:
@@ -966,6 +1150,6 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eKirchhoff2ndLaw) > 0:
-        print('--- Declaring the Kirchhoff 2nd Law:                                   {} seconds'.format(round(time.time() - StartTime)))
+        log_time('--- Declaring the Kirchhoff 2nd Law:', StartTime)
 
     return model

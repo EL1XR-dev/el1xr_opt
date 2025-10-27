@@ -12,9 +12,10 @@ from   pyomo.environ     import ConcreteModel
 from .oM_InputData        import data_processing, create_variables
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .oM_ProblemSolving   import solving_model
-from .oM_OutputData       import saving_results
+from .oM_OutputData       import saving_results, saving_rawdata
 from .oM_OutputData_duckdb import save_to_duckdb
 from .oM_SolverSetup      import ensure_ampl_solvers
+from .utils.oM_Utils      import log_time
 
 def routine(dir, case, solver, date, rawresults, plots):
     initial_time = time.time()
@@ -30,40 +31,40 @@ def routine(dir, case, solver, date, rawresults, plots):
     #
     print('- Initializing the model\n')
     model = data_processing(dir, case, date, oModel)
-    print('- Total time for reading and processing the data:                      {} seconds\n'.format(round(time.time() - initial_time)))
+    log_time('- Total time for reading and processing the data:', initial_time)
     start_time = time.time()
     # defining the variables
     model = create_variables(model, model)
-    print('- Total time for defining the variables:                               {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for defining the variables:', start_time)
     start_time = time.time()
     # defining the objective function
     model = create_objective_function(model, model)
-    print('- Total time for defining the objective function:                      {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for defining the objective function:', start_time)
     start_time = time.time()
     # defining components of the day-ahead objective function
     model = create_objective_function_components(model, model)
-    print('- Total time for defining the objective function:                      {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for defining the ObjFunc components:', start_time)
     start_time = time.time()
     # defining the constraints
     model = create_constraints(model, model)
-    print('- Total time for defining the constraints:                             {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for defining the constraints:', start_time)
     start_time = time.time()
     # solving the model
-    pWrittingLPFile = 0
+    pWrittingLPFile = 1
     model = solving_model(dir, case, solver, model, pWrittingLPFile)
-    print('- Total time for solving the model:                                    {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for solving the model:', start_time)
     start_time = time.time()
     # outputting the results
-    # model = saving_rawdata(dir, case, solver, model, model)
-    # print('- Total time for outputting the raw data:                              {} seconds\n'.format(round(time.time() - start_time  )))
-    # start_time = time.time()
+    model = saving_rawdata(dir, case, solver, model, model)
+    log_time('- Total time for outputting the raw data:', start_time)
+    start_time = time.time()
     # outputting the results
     model = saving_results(dir, case, date, model, model)
-    print('- Total time for outputting the results:                               {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for outputting the results:', start_time)
     start_time = time.time()
     # outputting the results to duckdb
     save_to_duckdb(dir, case, model, model)
-    print('- Total time for outputting the results to duckdb:                     {} seconds\n'.format(round(time.time() - start_time  )))
+    log_time('- Total time for outputting the results to duckdb:', start_time)
     for i in range(0, 117):
         print('-', end="")
     print('\n')

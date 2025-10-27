@@ -15,21 +15,24 @@ Day-ahead Electricity Market Participation
 
 Participation in the day-ahead electricity market is modeled through the next constraints, which ensure that the amount of energy bought from or sold to the market does not exceed predefined limits for each time step and retailer.
 
-Eletricity bought from the market («``eEleRetMaxBuy``»)
+Electricity bought from the market is enabled if :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0`
 
-If :math:`\pelemaxmarketbuy_{\traderindex} >= 0.0`
+The upper bound defined by («``eEleRetMaxBuy``»)
 
 :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketbuy_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
+The amount of electricity bought from the market is equal to the total demand from all loads and storage units owned by the retailer, as defined by («``eEleBuyComposition``»):
+
 :math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\demandindex \in \nDE_{\traderindex}} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} + \sum_{\storageindex \in \nEE_{\traderindex}} (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
-Eletricity sold to the market («``eEleRetMaxSell``»)
-
-If :math:`\pelemaxmarketsell_{\traderindex} >= 0.0`
+Electricity sold to the market is enabled if :math:`\pelemaxmarketsell_{\traderindex} >= 0.0`
+The upper bound defined by («``eEleRetMaxSell``»)
 
 :math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} \le \pelemaxmarketsell_{\traderindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
-:math:`\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\genindex \in \nGE_{\traderindex}} (\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}) + \sum_{\storageindex \in \nEE_{\traderindex}} (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
+The amount of electricity sold to the market is equal to the total production from all generators and storage units owned by the retailer, as defined by («``eEleSellComposition``»):
+
+:math:`\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} = \sum_{\genindex \in \nGE_{\traderindex}} (\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}) + \sum_{\storageindex \in \nEE_{\traderindex}} (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\traderindex|\traderindex \in \nRE`
 
 Day-ahead Hydrogen Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +67,7 @@ Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-The bids are submitted for upward and downward reserves separately and are not greater than the maximum upward and downward reserve required.
+The bids are submitted for upward and downward reserves separately and are not greater than the maximum upward and downward reserve required. These constraints are represented by («``eEleFreqContReserveDisUpward``», ``eEleFreqContReserveDisDownward``»):
 
 :math:`\sum_{\genindex \in \nGE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex \in \nEE} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex} \quad \forall \periodindex,\scenarioindex,\timeindex`
 
@@ -82,15 +85,15 @@ And for an electric ESS:
 
 :math:`\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
+The tight headroom bounds for FCR-D provision from an electric ESS is defined by the constraints
 
-:math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
-:math:`\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
+:math:`\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!+\! \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}) \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE`
 
 Peak Power Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
