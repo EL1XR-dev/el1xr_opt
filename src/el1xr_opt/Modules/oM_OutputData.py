@@ -186,19 +186,31 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     total_cost = market_cost + operational_cost + system_cost
     total_revenue = market_revenue + system_revenue
 
-    # Combine all results into a single DataFrame for static output
-    df_results = pd.DataFrame({
-        'MarketCost': market_cost,
-        'OperationalCost': operational_cost,
-        'SystemCost': system_cost,
-        'MarketRevenue': market_revenue,
-        'SystemRevenue': system_revenue,
-        'TotalCost': total_cost,
-        'TotalRevenue': total_revenue
-    }).join(df_static) # aappend original static granular components
+    # Sankey data preparation
+    sankey_data = []
 
-    Output_TotalCost_Static = df_results.stack().to_frame(name='EUR').rename_axis(['Period', 'Scenario', 'Component']).reset_index()
-    Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
+    # Objective Function -> TotalCost / TotalRevenue
+    sankey_data.append({'Source': 'Objective Function', 'Target': 'TotalCost', 'Value': total_cost.sum()})
+    sankey_data.append({'Source': 'Objective Function', 'Target': 'TotalRevenue', 'Value': -total_revenue.sum()})
+
+    # TotalCost -> SystemCost / OperationalCost / MarketCost
+    sankey_data.append({'Source': 'TotalCost', 'Target': 'SystemCost', 'Value': system_cost.sum()})
+    sankey_data.append({'Source': 'TotalCost', 'Target': 'OperationalCost', 'Value': operational_cost.sum()})
+    sankey_data.append({'Source': 'TotalCost', 'Target': 'MarketCost', 'Value': market_cost.sum()})
+
+    # SystemCost -> EleNCost / EleXCost
+    sankey_data.append({'Source': 'SystemCost', 'Target': 'EleNCost', 'Value': df_static['EleNCost'].sum()})
+    sankey_data.append({'Source': 'SystemCost', 'Target': 'EleXCost', 'Value': df_static['EleXCost'].sum()})
+
+    # TotalRevenue -> SystemRevenue / MarketRevenue
+    sankey_data.append({'Source': 'TotalRevenue', 'Target': 'SystemRevenue', 'Value': system_revenue.sum()})
+    sankey_data.append({'Source': 'TotalRevenue', 'Target': 'MarketRevenue', 'Value': market_revenue.sum()})
+
+    # SystemRevenue -> EleXRev
+    sankey_data.append({'Source': 'SystemRevenue', 'Target': 'EleXRev', 'Value': df_static['EleXRev'].sum()})
+
+    df_sankey = pd.DataFrame(sankey_data)
+    df_sankey.to_csv(f"{_path}/oM_Result_01_rSankey_Data_{CaseName}.csv", index=False, sep=',')
 
     # --- Prepare Hourly (Dynamic) Output ---
     def compute_date(x):
