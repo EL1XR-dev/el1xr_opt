@@ -1274,6 +1274,8 @@ def create_variables(model, optmodel):
     # if pEleGenNoFCRD == 1, fix the frequency containment reserve variables to zero
     for idx in model.psnegnr:
         if model.Par['pEleGenNoFCRD'][idx[-1]] == 1:
+            optmodel.vEleFreqContReserveDisUpwardBid[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisDownwardBid[idx].fix(0.0)
             if idx[-1] in model.egt:
                 optmodel.vEleFreqContReserveDisUpGen[idx].fix(0.0)
                 optmodel.vEleFreqContReserveDisDownGen[idx].fix(0.0)
