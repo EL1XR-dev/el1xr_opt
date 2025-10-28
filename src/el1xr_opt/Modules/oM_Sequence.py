@@ -63,8 +63,8 @@ def routine(dir, case, solver, date, rawresults, plots):
     log_time('- Total time for outputting the results:', start_time)
     start_time = time.time()
     # outputting the results to duckdb
-    save_to_duckdb(dir, case, model, model)
-    log_time('- Total time for outputting the results to duckdb:', start_time)
+    # save_to_duckdb(dir, case, model, model)
+    # log_time('- Total time for outputting the results to duckdb:', start_time)
     for i in range(0, 117):
         print('-', end="")
     print('\n')
