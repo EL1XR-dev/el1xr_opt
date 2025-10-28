@@ -244,7 +244,7 @@ def create_constraints(model, optmodel):
 
     def eEleBuyComposition(optmodel, p,sc,n,er):
         if model.Par['pEleRetMaxBuy'][er] > 0:
-            return optmodel.vEleBuy[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+            return optmodel.vEleBuy[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleBuyComposition', Constraint(optmodel.psner, rule=eEleBuyComposition, doc='Electricity buy composition [kWh]'))
