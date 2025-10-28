@@ -217,7 +217,6 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         # REVENUE hierarchy
         ("TotalRevenue", "MarketRevenue", get(Output_TotalCost_Static, "MarketRevenue")),
         ("TotalRevenue", "SystemRevenue", get(Output_TotalCost_Static, "SystemRevenue")),
-        ("SystemRevenue", "EleNRev", get(Output_TotalCost_Static, "EleNRev")),
         ("SystemRevenue", "EleXRev", get(Output_TotalCost_Static, "EleXRev"))
     ]
 
