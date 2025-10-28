@@ -316,16 +316,28 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     # removing the component 'PowerFlowOut' and 'PowerFlowIn' from the Output_EleBalance
     Output_EleBalance = Output_EleBalance[~Output_EleBalance['Component'].isin(['PowerFlowOut', 'PowerFlowIn', 'Electrolyzer', 'H2ESS'])]
     # chart for the electricity balance using Altair and bars
+    brush = alt.selection_interval(encodings=['x'])
     # Base chart for KWh with the primary y-axis
-    kwh_chart = alt.Chart(Output_EleBalance).mark_bar().encode(
+    main_chart = alt.Chart(Output_EleBalance).mark_bar().encode(
         # x='Date:T',
-        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%A, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
         y=alt.Y('sum(KWh):Q', axis=alt.Axis(title='KWh')),
         color='Component:N'
     ).properties(
         width=800,
         height=400
-    ).interactive()
+    ).transform_filter(brush)
+
+    slider_chart = alt.Chart(Output_EleBalance).mark_bar().encode(
+        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+        y=alt.Y('sum(KWh):Q', axis=alt.Axis(title='KWh')),
+        color='Component:N'
+    ).properties(
+        width=800,
+        height=100
+    ).add_params(brush)
+
+    kwh_chart = main_chart & slider_chart
 
     kwh_chart.save(_path + '/oM_Plot_02_rElectricityBalance_' + CaseName + '.html', embed_options={'renderer':'svg'})
     ##kwh_chart.save(_path + '/oM_Plot_rElectricityBalance_' + CaseName + '.png')
@@ -372,38 +384,46 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     StartTime = time.time()
 
     # Base chart for KWh with the primary y-axis
-    kwh_chart = alt.Chart(Output_Demand).mark_line(color='blue', point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        # x='Date:T',
-        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%A, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-        y=alt.Y('KWh:Q', axis=alt.Axis(title='KWh')),
-        color='Type:N'
+    # --- Common formatting options ---
+    x_axis = alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format='%a, %b %d, %H:%M', tickCount=30, labelLimit=1000))
+
+    # --- KWh Chart (Main Energy Use) ---
+    kwh_chart = (
+        alt.Chart(Output_Demand)
+        .mark_line(color='steelblue', point=alt.OverlayMarkDef(filled=False, fill='white'))
+        .encode(
+            x=x_axis,
+            y=alt.Y('KWh:Q', axis=alt.Axis(title='Energy [kWh]')),
+            color=alt.Color('Type:N', legend=alt.Legend(title='Type'))
+        )
     )
 
-    # Layered chart for EUR/KWh with a secondary y-axis and dashed line style
-    eur_chart = alt.Chart(Output_EleCost).mark_line(color='orange', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        # x='Date:T',
-        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%A, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-        # y=alt.Y('EUR/KWh:Q', axis=alt.Axis(title='SEK/KWh', orient='right'), scale=alt.Scale(domain=[1, 1.5])),
-        y=alt.Y('EUR/KWh:Q', axis=alt.Axis(title='SEK/KWh', orient='right')),
-        color='Type:N'
+    # --- EUR/kWh Chart (Cost) ---
+    eur_chart = (
+        alt.Chart(Output_EleCost)
+        .mark_line(color='orange', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill='white'))
+        .encode(
+            x=x_axis,
+            y=alt.Y('EUR/KWh:Q', axis=alt.Axis(title='Price [SEK/kWh]', orient='right')),
+            color=alt.Color('Type:N', legend=None)
+        )
     )
 
-    # Combine the two charts
-    chart1 = alt.layer(kwh_chart, eur_chart).resolve_scale(
-        y='independent'  # Ensures each chart has its own y-axis
-    ).properties(
-        width=800,
-        height=400
-    ).interactive()
+    # --- Combine charts with independent Y-axes ---
+    main_chart = (
+        alt.layer(kwh_chart, eur_chart)
+        .resolve_scale(y='independent')
+        .properties(width=900, height=400, title='Electricity Demand and Price Over Time')
+    )
 
-    # Save the chart to an HTML file
-    chart1.save(_path + '/oM_Plot_rEleDemand_' + CaseName + '.html', embed_options={'renderer':'svg'})
+    # --- Save chart as HTML (SVG embedded) ---
+    main_chart.save(f"{_path}/oM_Plot_03_rEleDemand_{CaseName}.html", embed_options={'renderer': 'svg'})
     # Save the chart to a PNG file
     #chart.save(_path + '/oM_Plot_rElectricityDemand_' + CaseName + '.png')
     if sum(model.Par['pEleDemFlexible'][ed] for ed in model.ed) != 0.0:
         vDemand_chart = alt.Chart(Output_vDemand).mark_line(color='blue', point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
             # x='Date:T',
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%A, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
             y=alt.Y('KWh:Q', axis=alt.Axis(title='KWh')),
             color='Type:N'
         )
@@ -417,7 +437,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         ).interactive()
 
         # Save the chart to an HTML file
-        chart2.save(_path + '/oM_Plot_rEleFlexDemand_' + CaseName + '.html', embed_options={'renderer':'svg'})
+        chart2.save(_path + '/oM_Plot_04_rEleFlexDemand_' + CaseName + '.html', embed_options={'renderer':'svg'})
 
     # %% outputting the state of charge of the battery energy storage system
     #%%  State of charge of the battery energy storage system per period, scenario, and load level
@@ -435,7 +455,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         # plot
         # Base chart for SOC with the primary y-axis and dashed line style
         ele_soe_chart = alt.Chart(Output_EleSOE).mark_line(color='green', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%A, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
             y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE')),
             color = 'Component:N'
         )
@@ -454,7 +474,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Output_FixedAvailability = Output_FixedAvailability[Output_FixedAvailability['Component'].isin(['EV_01'])]
         # Base chart for FixedAvailability with the primary y-axis and dashed line style
         ele_fAv_chart = alt.Chart(Output_FixedAvailability).mark_point(color='red').encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%A, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
             y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right')),
         )
 
@@ -466,7 +486,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         ).interactive()
 
         # Save the chart to an HTML file
-        chart.save(_path + '/oM_Plot_rEleStateOfEnergy_' + CaseName + '.html', embed_options={'renderer':'svg'})
+        chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_' + CaseName + '.html', embed_options={'renderer':'svg'})
         # Save the chart to a PNG file
         #chart.save(_path + '/oM_Plot_rEleStateOfEnergy_' + CaseName + '.png')
 
