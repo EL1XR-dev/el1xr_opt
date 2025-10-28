@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 # import ausankey as sky
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 # import altair_saver
 from  collections import defaultdict
 from  pyomo.environ import Var, Param, Constraint
@@ -199,6 +200,60 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
 
     Output_TotalCost_Static = df_results.stack().to_frame(name='EUR').rename_axis(['Period', 'Scenario', 'Component']).reset_index()
     Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
+
+    # -- Plotting helper function ---
+    def get(df, comp):
+        out = df.loc[df.Component == comp, 'EUR']
+        return out.iloc[0] if not out.empty else 0.0
+
+    links = [
+        # COST hierarchy
+        ("TotalCost", "MarketCost", get(Output_TotalCost_Static, "MarketCost")),
+        ("TotalCost", "OperationalCost", get(Output_TotalCost_Static, "OperationalCost")),
+        ("TotalCost", "SystemCost", get(Output_TotalCost_Static, "SystemCost")),
+        ("SystemCost", "EleNCost", get(Output_TotalCost_Static, "EleNCost")),
+        ("SystemCost", "EleXCost", get(Output_TotalCost_Static, "EleXCost")),
+
+        # REVENUE hierarchy
+        ("TotalRevenue", "MarketRevenue", get(Output_TotalCost_Static, "MarketRevenue")),
+        ("TotalRevenue", "SystemRevenue", get(Output_TotalCost_Static, "SystemRevenue")),
+        ("SystemRevenue", "EleNRev", get(Output_TotalCost_Static, "EleNRev")),
+        ("SystemRevenue", "EleXRev", get(Output_TotalCost_Static, "EleXRev"))
+    ]
+
+    df_links = pd.DataFrame(links, columns=["source", "target", "value"])
+
+    labels = pd.unique(df_links[['source', 'target']].values.ravel('K')).tolist()
+    id_map = {label: i for i, label in enumerate(labels)}
+
+    df_links['source_id'] = df_links['source'].map(id_map)
+    df_links['target_id'] = df_links['target'].map(id_map)
+
+    colors = ["#8e24aa" if "Cost" in lbl else "#2e7d32" for lbl in labels]
+
+    fig = go.Figure(go.Sankey(
+        arrangement="snap",
+        node=dict(
+            pad=15,
+            thickness=12,
+            line=dict(color="black", width=0.4),
+            label=labels,
+            color=colors
+        ),
+        link=dict(
+            source=df_links['source_id'],
+            target=df_links['target_id'],
+            value=df_links['value']
+        )
+    ))
+
+    fig.update_layout(
+        title_text="Cost and Revenue Hierarchy (auto-generated from raw_data)",
+        font=dict(size=13),
+        height=600
+    )
+
+    fig.write_html("tree.html", include_plotlyjs="cdn", full_html=True)
 
     # --- Prepare Hourly (Dynamic) Output ---
     def compute_date(x):
