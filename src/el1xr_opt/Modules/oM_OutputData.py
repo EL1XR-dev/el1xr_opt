@@ -295,8 +295,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     OutputResults3     = pd.Series(data=[-sum(optmodel.vEleTotalCharge          [p,sc,n,e2h     ]() * model.Par['pDuration'][p,sc,n] for e2h in model.e2h if (nd,e2h) in model.n2hg and (gt,e2h) in model.t2hg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='ConsumptionEle2Hyd').reset_index().pivot_table(index=['level_0','level_1','level_2','level_3'], columns='level_4', values='ConsumptionEle2Hyd', aggfunc='sum')
     OutputResults4     = pd.Series(data=[ sum(optmodel.vENS                     [p,sc,n,ed      ]() * model.Par['pDuration'][p,sc,n] for ed  in model.ed  if (nd,ed ) in model.n2ed                           ) for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ENS'               )
     OutputResults5     = pd.Series(data=[-sum(optmodel.vEleDemand               [p,sc,n,ed      ]() * model.Par['pDuration'][p,sc,n] for ed  in model.ed  if (nd,ed ) in model.n2ed                           ) for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ElectricityDemand' )
-    OutputResults6     = pd.Series(data=[ sum(optmodel.vEleBuy                  [p,sc,n,er      ]() * model.Par['pDuration'][p,sc,n] for er  in model.er  if (nd,er ) in model.n2er                           ) for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ElectricityBuy'    )
-    OutputResults7     = pd.Series(data=[-sum(optmodel.vEleSell                 [p,sc,n,er      ]() * model.Par['pDuration'][p,sc,n] for er  in model.er  if (nd,er ) in model.n2er                           ) for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ElectricitySell'   )
+    OutputResults6     = pd.Series(data=[     optmodel.vEleImport               [p,sc,n,nd      ]() * model.Par['pDuration'][p,sc,n]                                                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ElectricityImport' )
+    OutputResults7     = pd.Series(data=[    -optmodel.vEleExport               [p,sc,n,nd      ]() * model.Par['pDuration'][p,sc,n]                                                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ElectricityExport' )
     OutputResults8     = pd.Series(data=[-sum(optmodel.vEleNetFlow              [p,sc,n,nd,nf,cc]() * model.Par['pDuration'][p,sc,n] for (nf,cc) in lout [nd])                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='PowerFlowOut'      )
     OutputResults9     = pd.Series(data=[ sum(optmodel.vEleNetFlow              [p,sc,n,ni,nd,cc]() * model.Par['pDuration'][p,sc,n] for (ni,cc) in lin  [nd])                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='PowerFlowIn'       )
     OutputResults  = pd.concat([OutputResults1, OutputResults2, OutputResults3, OutputResults4, OutputResults5, OutputResults6, OutputResults7, OutputResults8, OutputResults9], axis=1).stack().to_frame(name='MWh')
@@ -327,7 +327,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         height=400
     ).interactive()
 
-    kwh_chart.save(_path + '/oM_Plot_rElectricityBalance_' + CaseName + '.html', embed_options={'renderer':'svg'})
+    kwh_chart.save(_path + '/oM_Plot_02_rElectricityBalance_' + CaseName + '.html', embed_options={'renderer':'svg'})
     ##kwh_chart.save(_path + '/oM_Plot_rElectricityBalance_' + CaseName + '.png')
 
     log_time('-- Total time for outputting the electricity balance:', StartTime)
