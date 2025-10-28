@@ -252,7 +252,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         height=600
     )
 
-    fig.write_html("tree.html", include_plotlyjs="cdn", full_html=True)
+    fig.write_html(f"{_path}/oM_Plot_01_rTotalCost_Sankey_{CaseName}.html", include_plotlyjs="cdn", full_html=True)
 
     # --- Prepare Hourly (Dynamic) Output ---
     def compute_date(x):
