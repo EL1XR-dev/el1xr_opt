@@ -62,7 +62,7 @@ def create_objective_function_components(model, optmodel):
 
     # Total electricity net usage costs
     def eTotalEleNetUseCost(optmodel, p,sc):
-        return (optmodel.vTotalEleNetUseCost[p,sc] == sum(model.Par['pEleRetnetavgift'][er] * model.factor1 * sum(optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleNetUseCost[p,sc] == sum(sum(model.Par['pEleRetnetavgift'][er] * model.factor1 * optmodel.vEleBuy[p,sc,n,er] + model.Par['pEleRetelcertifikat'][er] * model.factor1 * optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
@@ -121,7 +121,7 @@ def create_objective_function_components(model, optmodel):
 
     # VAT on electricity taxes costs
     def eEleTaxVATCost(optmodel, p,sc):
-        return (optmodel.vTotalEleVATCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleVATCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] + (model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] + model.Par['pEleRetelcertifikat'][er] * model.factor1) * optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
     optmodel.__setattr__('eEleTaxVATCost', Constraint(optmodel.ps, rule=eEleTaxVATCost, doc='Total electricity taxes costs [kEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
@@ -130,7 +130,7 @@ def create_objective_function_components(model, optmodel):
 
     # Incentives on electricity taxes revenues
     def eEleTaxISRevenue(optmodel, p,sc):
-        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetelcertifikat'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
     optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [kEUR]'))
 
     #%% Total electricity operation and maintenance costs
