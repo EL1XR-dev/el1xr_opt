@@ -55,14 +55,16 @@ def routine(dir, case, solver, date, rawresults, plots):
     log_time('- Total time for solving the model:', start_time)
     start_time = time.time()
     # outputting the results
-    # model = saving_rawdata(dir, case, solver, model, model)
-    # log_time('- Total time for outputting the raw data:', start_time)
-    # start_time = time.time()
+    if rawresults.lower() == 'true':
+        model = saving_rawdata(dir, case, solver, model, model)
+        log_time('- Total time for outputting the raw data:', start_time)
+        start_time = time.time()
     # outputting the results
-    model = saving_results(dir, case, date, model, model)
-    log_time('- Total time for outputting the results:', start_time)
-    start_time = time.time()
-    # outputting the results to duckdb
+    if plots.lower() == 'true':
+        model = saving_results(dir, case, date, model, model)
+        log_time('- Total time for outputting the results:', start_time)
+        start_time = time.time()
+    # # outputting the results to duckdb
     # save_to_duckdb(dir, case, model, model)
     # log_time('- Total time for outputting the results to duckdb:', start_time)
     for i in range(0, 117):
