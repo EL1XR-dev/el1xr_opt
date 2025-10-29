@@ -259,7 +259,7 @@ def create_constraints(model, optmodel):
 
     def eEleSellComposition(optmodel, p,sc,n,er):
         if model.Par['pEleRetMaxSell'][er] > 0:
-            return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+            return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleSellComposition', Constraint(optmodel.psner, rule=eEleSellComposition, doc='Electricity sell composition [kWh]'))
