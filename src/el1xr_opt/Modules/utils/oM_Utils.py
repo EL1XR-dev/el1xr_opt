@@ -26,6 +26,7 @@ import time
 def log_time(message: str,
              start_time: float,
              unit: str = "seconds",
+             ind_log: str = 'False',
              decimals: int = 1,
              right_margin: int = 1,
              anchor_col: int | None = None,
@@ -57,8 +58,9 @@ def log_time(message: str,
 
     # compute spaces; +1 for a space before time_str
     spaces = end_col - len(msg) - len(time_str) - 1
-    if spaces < 1:
-        # too long; just print compactly
-        print(f"{msg} {time_str}")
-    else:
-        print(f"{msg}{' ' * spaces} {time_str}")
+    if ind_log == 'True':
+        if spaces < 1:
+            # too long; just print compactly
+            print(f"{msg} {time_str}")
+        else:
+            print(f"{msg}{' ' * spaces} {time_str}")

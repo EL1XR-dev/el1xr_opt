@@ -11,7 +11,7 @@ from   pyomo.environ     import Constraint, Objective, minimize
 from   collections       import defaultdict
 from  .utils.oM_Utils    import log_time
 
-def create_objective_function(model, optmodel):
+def create_objective_function(model, optmodel, indlog):
     # this function declares constraints
     StartTime = time.time() # to compute elapsed time
 
@@ -42,11 +42,11 @@ def create_objective_function(model, optmodel):
                 sum(model.Par['pDuration'][p,sc,n] * (optmodel.vTotalEleMRev[p,sc,n] + optmodel.vTotalHydMRev[p,sc,n]) for n in model.n))
     optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [kEUR]'))
 
-    log_time('--- Declaring the totals components of the ObjFunc:', StartTime)
+    log_time('--- Declaring the totals components of the ObjFunc:', StartTime, ind_log=indlog)
 
     return model
 
-def create_objective_function_components(model, optmodel):
+def create_objective_function_components(model, optmodel, indlog):
     #
     StartTime = time.time() # to compute elapsed time
 
@@ -186,11 +186,11 @@ def create_objective_function_components(model, optmodel):
         return (optmodel.vTotalHydRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd]) for hd in model.hd))
     optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [kEUR]'))
 
-    log_time('--- Declaring the ObjFunc components:', StartTime)
+    log_time('--- Declaring the ObjFunc components:', StartTime, ind_log=indlog)
 
     return model
 
-def create_constraints(model, optmodel):
+def create_constraints(model, optmodel, indlog):
     # this function declares constraints
     StartTime = time.time()  # to compute elapsed time
 
@@ -266,7 +266,7 @@ def create_constraints(model, optmodel):
 
     # print if the max buy or sell is greater than 0
     if len(optmodel.eEleRetMaxBuy) > 0 or len(optmodel.eEleRetMaxSell) > 0:
-        log_time('--- Declaring the maximum electricity buys and sells:', StartTime)
+        log_time('--- Declaring the maximum electricity buys and sells:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Maximum hydrogen buys
@@ -301,7 +301,7 @@ def create_constraints(model, optmodel):
 
     # print if the max buy or sell is greater than 0
     if len(optmodel.eHydRetMaxBuy) > 0 or len(optmodel.eHydRetMaxSell) > 0:
-        log_time('--- Declaring the maximum hydrogen buys and sells:', StartTime)
+        log_time('--- Declaring the maximum hydrogen buys and sells:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     #%% shifting demand constraints
@@ -326,7 +326,7 @@ def create_constraints(model, optmodel):
 
     # print the constraints object len is greater than 0
     if len(optmodel.eEleDemandShiftBalance) > 0 or len(optmodel.eEleDemandShifted) > 0:
-        log_time('--- Declaring the electricity demand shift constraints:', StartTime)
+        log_time('--- Declaring the electricity demand shift constraints:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # electrical energy conservation or balance
@@ -349,7 +349,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleBalance) > 0 or len(optmodel.eHydBalance) > 0:
-        log_time('--- Declaring the energy balance constraints:', StartTime)
+        log_time('--- Declaring the energy balance constraints:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     #%%% Operating Reserves
@@ -463,7 +463,7 @@ def create_constraints(model, optmodel):
         len(optmodel.eEleFreqDisDownDischargeHeadroom) > 0 or len(optmodel.eEleFreqDisDownChargeHeadroom) > 0 or
         len(optmodel.eEleFreqDisUpChargeBound) > 0 or len(optmodel.eEleFreqDisUpDischargeBound) > 0 or
         len(optmodel.eEleFreqDisDownChargeBound) > 0 or len(optmodel.eEleFreqDisDownDischargeBound) > 0):
-        log_time('--- Declaring the frequency containment reserve (FCR-D) constraints:', StartTime)
+        log_time('--- Declaring the frequency containment reserve (FCR-D) constraints:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data [p.u.]
@@ -497,7 +497,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxInflows2Commitment) > 0 or len(optmodel.eEleMinInflows2Commitment) > 0 or len(optmodel.eHydMaxInflows2Commitment) > 0 or len(optmodel.eHydMinInflows2Commitment) > 0:
-        log_time('--- Declaring the energy inflows of ESS:', StartTime)
+        log_time('--- Declaring the energy inflows of ESS:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # ESS energy inventory (only for load levels multiple of 1, 24, 168 h depending on the ESS storage type) [GWh]
@@ -527,7 +527,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleInventory) > 0 or len(optmodel.eHydInventory) > 0:
-        log_time('--- Declaring the ESS energy inventory:', StartTime)
+        log_time('--- Declaring the ESS energy inventory:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Energy conversion from energy from electricity to hydrogen and vice versa [p.u.]
@@ -604,7 +604,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxOutflows2Commitment) > 0 or len(optmodel.eEleMinOutflows2Commitment) > 0 or len(optmodel.eHydMaxOutflows2Commitment) > 0 or len(optmodel.eHydMinOutflows2Commitment) > 0 or len(optmodel.eEleMaxEnergyOutflows) > 0 or len(optmodel.eEleMinEnergyOutflows) > 0 or len(optmodel.eHydMaxEnergyOutflows) > 0 or len(optmodel.eHydMinEnergyOutflows) > 0:
-        log_time('--- Declaring the ESS outflows:', StartTime)
+        log_time('--- Declaring the ESS outflows:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Maximum and minimum output of the second block of a committed unit (all except the VRES and ESS units) [p.u.]
@@ -642,7 +642,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxOutput2ndBlock) > 0 or len(optmodel.eEleMinOutput2ndBlock) > 0 or len(optmodel.eHydMaxOutput2ndBlock) > 0 or len(optmodel.eHydMinOutput2ndBlock) > 0:
-        log_time('--- Declaring the maximum and minimum output of the second block:', StartTime)
+        log_time('--- Declaring the maximum and minimum output of the second block:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Maximum and minimum output of the second block of an electricity ESS [p.u.]
@@ -719,7 +719,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxESSOutput2ndBlock) > 0 or len(optmodel.eEleMinESSOutput2ndBlock) > 0 or len(optmodel.eHydMaxESSOutput2ndBlock) > 0 or len(optmodel.eHydMinESSOutput2ndBlock) > 0 or len(optmodel.eEleMaxESSCharge2ndBlock) > 0 or len(optmodel.eEleMinESSCharge2ndBlock) > 0 or len(optmodel.eE2HMaxCharge2ndBlock) > 0 or len(optmodel.eE2HMinCharge2ndBlock) > 0 or len(optmodel.eMaxHydESSCharge2ndBlock) > 0 or len(optmodel.eHydMinESSCharge2ndBlock) > 0:
-        log_time('--- Declaring the maximum and minimum charge of an ESS:', StartTime)
+        log_time('--- Declaring the maximum and minimum charge of an ESS:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Incompatibility between charge and discharge of an electrical ESS [p.u.]
@@ -768,7 +768,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleChargingDecision) > 0 or len(optmodel.eEleDischargingDecision) > 0 or len(optmodel.eEleStorageMode) > 0 or len(optmodel.eHydChargingDecision) > 0 or len(optmodel.eHydDischargingDecision) > 0 or len(optmodel.eHydStorageMode) > 0:
-        log_time('--- Declaring the incompatibility between charge and discharge:', StartTime)
+        log_time('--- Declaring the incompatibility between charge and discharge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Total output of a committed unit (all except the VRES units) [GW]
@@ -805,7 +805,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleTotalOutput) > 0 or len(optmodel.eHydTotalOutput) > 0:
-        log_time('--- Declaring the total output of a committed unit:', StartTime)
+        log_time('--- Declaring the total output of a committed unit:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Total charge of an ESS [GW]
@@ -843,7 +843,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleTotalCharge) > 0:
-        log_time('--- Declaring the total charge of an H2 ESS unit:', StartTime)
+        log_time('--- Declaring the total charge of an H2 ESS unit:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Incompatibility between charge and outflows use of an ESS [p.u.]
@@ -869,7 +869,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eIncompatibilityEleChargeOutflows) > 0: # or len(optmodel.eIncompatibilityHydChargeOutflows) > 0:
-        log_time('--- Declaring the incompatibility between charge and outflows use:', StartTime)
+        log_time('--- Declaring the incompatibility between charge and outflows use:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Logical relation between commitment, startup and shutdown status of a committed unit (all except the VRES units) [p.u.]
@@ -895,7 +895,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleCommitmentStartupShutdown) > 0 or len(optmodel.eHydCommitmentStartupShutdown) > 0:
-        log_time('--- Declaring the logical relation in the unit commitment:', StartTime)
+        log_time('--- Declaring the logical relation in the unit commitment:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Maximum ramp up and ramp down for the second block of a non-renewable (thermal, hydro) unit [p.u.]
@@ -921,7 +921,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxRampUpOutput) > 0 or len(optmodel.eEleMaxRampDwOutput) > 0:
-        log_time('--- Declaring the maximum ramp up and ramp down for the second block:', StartTime)
+        log_time('--- Declaring the maximum ramp up and ramp down for the second block:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Maximum ramp down and ramp up for the charge of an ESS [p.u.]
@@ -967,7 +967,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxRampUpCharge) > 0 or len(optmodel.eEleMaxRampDwCharge) > 0 or len(optmodel.eEleMaxRampUpDischarge) > 0 or len(optmodel.eEleMaxRampDwDischarge) > 0:
-        log_time('--- Declaring the maximum ramp down and ramp up for the charge:', StartTime)
+        log_time('--- Declaring the maximum ramp down and ramp up for the charge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the charge of an H2 producer [p.u.]
@@ -993,7 +993,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eHydMaxRampUpOutput) > 0 or len(optmodel.eHydMaxRampDwOutput) > 0:
-        log_time('--- Declaring the maximum ramp up and ramp down for the H2 output:', StartTime)
+        log_time('--- Declaring the maximum ramp up and ramp down for the H2 output:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the charge of an H2 ESS [p.u.]
@@ -1019,7 +1019,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eHydMaxRampUpCharge) > 0 or len(optmodel.eHydMaxRampDwCharge) > 0:
-        log_time('--- Declaring the maximum ramp up and ramp down for the H2 charge:', StartTime)
+        log_time('--- Declaring the maximum ramp up and ramp down for the H2 charge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the outflows of an H2 ESS [p.u.]
@@ -1045,7 +1045,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eHydMaxRampUpOutflows) > 0 or len(optmodel.eHydMaxRampDwOutflows) > 0:
-        log_time('--- Declaring the maximum ramp up and ramp down for the H2 outflows:', StartTime)
+        log_time('--- Declaring the maximum ramp up and ramp down for the H2 outflows:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Minimum up time and down time of thermal unit [h]
@@ -1080,7 +1080,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMinUpTime) > 0 or len(optmodel.eEleMinDownTime) > 0 or len(optmodel.eHydMinUpTime) > 0 or len(optmodel.eHydMinDownTime) > 0:
-        log_time('--- Declaring the minimum up and down time:', StartTime)
+        log_time('--- Declaring the minimum up and down time:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
@@ -1102,7 +1102,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMinEnergyStartUp) > 0 or len(optmodel.eEleTotalMaxChargeConditioned) > 0:
-        log_time('--- Declaring the minimum energy start up and total max charge:', StartTime)
+        log_time('--- Declaring the minimum energy start up and total max charge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
@@ -1138,7 +1138,7 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eElePeakHourValue) > 0 or len(optmodel.eElePeakHourInd_C1) > 0 or len(optmodel.eElePeakHourInd_C2) > 0 or len(optmodel.eElePeakNumberMonths) > 0:
-        log_time('--- Declaring the peak hour selection:', StartTime)
+        log_time('--- Declaring the peak hour selection:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     def eKirchhoff2ndLaw(optmodel, p,sc,n,ni,nf,cc):
@@ -1150,6 +1150,6 @@ def create_constraints(model, optmodel):
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eKirchhoff2ndLaw) > 0:
-        log_time('--- Declaring the Kirchhoff 2nd Law:', StartTime)
+        log_time('--- Declaring the Kirchhoff 2nd Law:', StartTime, ind_log=indlog)
 
     return model

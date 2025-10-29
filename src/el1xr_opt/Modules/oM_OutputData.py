@@ -25,7 +25,7 @@ try:
 except Exception:
     sky = None
 
-def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
+def saving_rawdata(DirName, CaseName, SolverName, model, optmodel, indlog):
     """
     Save raw optimization model data to CSV files.
 
@@ -82,11 +82,11 @@ def saving_rawdata(DirName, CaseName, SolverName, model, optmodel):
                 for index in con_object:
                     writer.writerow([str(con), index, model.dual[con_object[index]], str(con_object[index].lb), str(con_object[index].ub)])
 
-    log_time('-- Total time for outputting the raw data:', StartTime)
+    log_time('-- Total time for outputting the raw data:', StartTime, ind_log=indlog)
 
     return model
 
-def saving_results(DirName, CaseName, Date, model, optmodel):
+def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     """
     Save processed optimization results to CSV files and generate plots.
 
@@ -342,7 +342,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     kwh_chart.save(_path + '/oM_Plot_02_rElectricityBalance_' + CaseName + '.html', embed_options={'renderer':'svg'})
     ##kwh_chart.save(_path + '/oM_Plot_rElectricityBalance_' + CaseName + '.png')
 
-    log_time('-- Total time for outputting the electricity balance:', StartTime)
+    log_time('-- Total time for outputting the electricity balance:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # net demand by filtering Solar-PV, BESS, and ElectricityDemand in Output_EleBalance, column Component
@@ -355,7 +355,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     # save the results to a csv file
     Output_NetDemand.to_csv(_path+'/oM_Result_03_rElectricityNetDemand_'+CaseName+'.csv', index=False, sep=',')
 
-    log_time('-- Total time for outputting the net electricity demand:', StartTime)
+    log_time('-- Total time for outputting the net electricity demand:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     model.Output_NetDemand = Output_NetDemand
@@ -380,7 +380,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     Output_Demand.to_csv(_path+'/oM_Result_04_rAllElectricityDemand_'+CaseName+'.csv', index=False, sep=',')
     model.Output_Demand = Output_Demand
 
-    log_time('-- Total time for outputting the all electricity demand:', StartTime)
+    log_time('-- Total time for outputting the all electricity demand:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Base chart for KWh with the primary y-axis
@@ -449,7 +449,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Output_EleSOE['SOE'] *= (1/model.factor1)
         Output_EleSOE.to_csv(_path+'/oM_Result_05_rEleStateOfEnergy_'+CaseName+'.csv', index=False, sep=',')
 
-        log_time('-- Total time for outputting the electrical state of energy:', StartTime)
+        log_time('-- Total time for outputting the electrical state of energy:', StartTime, ind_log=indlog)
         StartTime = time.time()
 
         # plot
@@ -467,7 +467,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
         Output_FixedAvailability = Output_FixedAvailability.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Date'], axis=0).stack().reset_index().rename(columns={'level_4': 'Component', 0: 'FixedAvailability'}, inplace=False)
         Output_FixedAvailability.to_csv(_path+'/oM_Result_06_rFixedAvailability_'+CaseName+'.csv', index=False, sep=',')
 
-        log_time('-- Total time for outputting the electrical fixed availability:', StartTime)
+        log_time('-- Total time for outputting the electrical fixed availability:', StartTime, ind_log=indlog)
         StartTime = time.time()
 
         # filter component 'EV_01' and 'EV_02' from the Output_FixedAvailability
@@ -827,7 +827,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     dfEnergyBalance.to_csv(os.path.join(_path, f"oM_Result_08_rEnergyBalance_{CaseName}.csv"), index=False)
     save_sankey_always(dfEnergyBalance, out_dir=_path, case_name=CaseName, mode="percent")
 
-    log_time('-- Sankey diagrams output time:', StartTime)
+    log_time('-- Sankey diagrams output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the EV total output and the total charge
@@ -858,7 +858,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     )
     chart.save(_path+'/oM_Plot_rDurationCurve_NetCharge_' + CaseName + '.html')
 
-    log_time('-- Duration curves of the net charge output time:', StartTime)
+    log_time('-- Duration curves of the net charge output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the Solar PV total output
@@ -886,7 +886,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     )
     chart.save(_path+'/oM_Plot_rDurationCurve_TotalOutput_' + CaseName + '.html')
 
-    log_time('-- Duration curves of electricity production output time:', StartTime)
+    log_time('-- Duration curves of electricity production output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the electricity demand
@@ -914,7 +914,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     )
     chart.save(_path+'/oM_Plot_rDurationCurve_Demand_' + CaseName + '.html')
 
-    log_time('-- Duration curves of the electricity demand output time:', StartTime)
+    log_time('-- Duration curves of the electricity demand output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the electricity bought from the market
@@ -970,6 +970,6 @@ def saving_results(DirName, CaseName, Date, model, optmodel):
     )
     chart.save(_path+'/oM_Plot_rDurationCurve_EleSell_' + CaseName + '.html')
 
-    log_time('-- Duration curves of the electricity sold output time:', StartTime)
+    log_time('-- Duration curves of the electricity sold output time:', StartTime, ind_log=indlog)
 
     return model

@@ -15,7 +15,7 @@ from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegati
 from   pyomo.dataportal  import DataPortal
 from  .utils.oM_Utils    import log_time
 
-def data_processing(DirName, CaseName, DateModel, model):
+def data_processing(DirName, CaseName, DateModel, model, indlog):
     # %% Read the input data
     print('-- Reading the input data')
     # Defining the path
@@ -89,7 +89,7 @@ def data_processing(DirName, CaseName, DateModel, model):
     for column in model.gen_frames_suffixes:
         data_frames[f'df{column}'] = data_frames[f'df{column}'].where(data_frames[f'df{column}'] > 0.0)
 
-    log_time('--- Reading the CSV files:', start_time)
+    log_time('--- Reading the CSV files:', start_time, ind_log=indlog)
     start_time = time.time()
 
     # Constants
@@ -240,7 +240,7 @@ def data_processing(DirName, CaseName, DateModel, model):
     # minimum up- and downtime converted to an integer number of time steps
     parameters_dict['pEleNetSwOnTime' ] = round(parameters_dict['pEleNetSwOnTime' ] / parameters_dict['pParTimeStep']).astype('int')
 
-    log_time('--- Transforming the dataframes:', start_time)
+    log_time('--- Transforming the dataframes:', start_time, ind_log=indlog)
     start_time = time.time()
 
     # replacing string values by numerical values
@@ -337,7 +337,7 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.esc  = model.egc | model.hgc           # set for the candidate ESS and hydrogen units
 
 
-    log_time('--- Defining the sets:', start_time)
+    log_time('--- Defining the sets:', start_time, ind_log=indlog)
     start_time = time.time()
 
     # instrumental sets
@@ -474,7 +474,7 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.psnht = [(p, sc, n, ht) for p, sc, n, ht in model.psn * model.ht]
     model.psnrt = [(p, sc, n, rt) for p, sc, n, rt in model.psn * model.rt]
 
-    log_time('--- Defining the instrumental sets:', start_time)
+    log_time('--- Defining the instrumental sets:', start_time, ind_log=indlog)
     start_time = time.time()
 
     ## Defining the temporal reference for the model
@@ -514,7 +514,7 @@ def data_processing(DirName, CaseName, DateModel, model):
     model.psm = [(p, sc, m) for p, sc, m in model.ps * model.moy]
     model.psd = [(p, sc, d) for p, sc, d in model.ps * model.doy]
 
-    log_time('--- Defining the temporal reference for the model:', start_time)
+    log_time('--- Defining the temporal reference for the model:', start_time, ind_log=indlog)
     start_time = time.time()
 
     # minimum and maximum variable power, charge, and storage capacity
@@ -856,11 +856,11 @@ def data_processing(DirName, CaseName, DateModel, model):
 
     model.Par = parameters_dict
 
-    log_time('--- Defining the parameters', start_time)
+    log_time('--- Defining the parameters', start_time, ind_log=indlog)
 
     return model
 
-def create_variables(model, optmodel):
+def create_variables(model, optmodel, indlog):
 
     #
     print('-- Defining the variables')
@@ -988,7 +988,7 @@ def create_variables(model, optmodel):
     if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
         setattr(optmodel, 'vEleDemFlex',                   Var(model.psned,  within=           Reals, doc='flexible electricity demand                 [kW]'))
 
-    log_time('--- Defining the continuous variables', StartTime)
+    log_time('--- Defining the continuous variables', StartTime, ind_log=indlog)
 
     # Define binary variables
     if model.Par['pOptIndBinGenOperat'] == 0:
@@ -1029,7 +1029,7 @@ def create_variables(model, optmodel):
         setattr(optmodel, 'vEleNetCommit',                 Var(model.psnela,  within=Binary,       initialize=0, doc='network binary operation              '))
         setattr(optmodel, 'vHydNetCommit',                 Var(model.psnela,  within=Binary,       initialize=0, doc='network binary operation              '))
 
-    log_time('--- Defining the binary variables', StartTime)
+    log_time('--- Defining the binary variables', StartTime, ind_log=indlog)
 
     # Precompute the bounds
     # psn
@@ -1173,7 +1173,7 @@ def create_variables(model, optmodel):
             optmodel.vHydNetFlow[idx].setlb(std_lower_bound)
             optmodel.vHydNetFlow[idx].setub(std_upper_bound)
 
-    log_time('--- Setting the bounds for the variables', StartTime)
+    log_time('--- Setting the bounds for the variables', StartTime, ind_log=indlog)
 
     EnergyPrefix = {}
     AssetCand    = {}
@@ -1371,7 +1371,7 @@ def create_variables(model, optmodel):
             optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Sell')[idx].fix(0.0)
             nFixedVariables += 1
 
-    log_time('--- Fixing the variables', StartTime)
+    log_time('--- Fixing the variables', StartTime, ind_log=indlog)
 
     # detecting infeasibility: total min ESS output greater than total inflows, total max ESS charge lower than total outflows
     for es in model.egs:
@@ -1402,7 +1402,7 @@ def create_variables(model, optmodel):
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
 
-    log_time('--- Checking infeasibility', StartTime)
+    log_time('--- Checking infeasibility', StartTime, ind_log=indlog)
 
     # # Fixing the shut down in the first 8 hours of every day
     # for idx in model.psnegt:

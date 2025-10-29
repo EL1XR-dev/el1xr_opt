@@ -24,6 +24,7 @@ parser.add_argument('--solver', type=str, default=None)
 parser.add_argument('--date',   type=str, default=None)
 parser.add_argument('--rawresults', type=str, default=None)
 parser.add_argument('--plots', type=str, default=None)
+parser.add_argument('--indlog', type=str, default='True')
 
 default_DirName    = os.path.dirname(__file__)
 default_CaseName   = 'Home1'                              # To select the case
@@ -31,6 +32,7 @@ default_SolverName = 'highs'
 default_date       = datetime.datetime.now().replace(second=0, microsecond=0)
 default_rawresults = 'False'
 default_plots      = 'False'
+default_indlog     = 'False'
 
 def main():
     args = parser.parse_args()
@@ -71,6 +73,12 @@ def main():
         args.plots      = input('Input Plots       Name (Default {}): '.format(default_plots))
         if args.plots == '':
             args.plots = default_plots
+    if args.indlog == "":
+        args.indlog = default_indlog
+    elif args.indlog is None:
+        args.indlog     = input('Input Ind Log     Name (Default {}): '.format(default_indlog))
+        if args.indlog == '':
+            args.indlog = default_indlog
     for i in range(0, 117):
         print('-', end="")
     print('\n')
@@ -80,12 +88,13 @@ def main():
     print(args.solver)
     print(args.rawresults)
     print(args.plots)
+    print(args.indlog)
     for i in range(0, 117):
         print('-', end="")
     print('\n')
 
     # %% model call
-    model = routine(args.dir, args.case, args.solver, args.date, args.rawresults, args.plots)
+    model = routine(args.dir, args.case, args.solver, args.date, args.rawresults, args.plots, args.indlog)
 
     return model
 

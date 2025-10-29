@@ -10,6 +10,7 @@ def load_case(
     solver: str = "highs",
     rawresults: bool = False,
     plots: bool = False,
+    indlog: bool = False,
 ) -> Dict[str, Union[str, datetime.datetime, bool]]:
     """
     Create and validate a load case configuration.
@@ -24,6 +25,7 @@ def load_case(
         solver (str, optional): Solver to be used. Defaults to "highs".
         rawresults (bool, optional): Whether to save raw results. Defaults to False.
         plots (bool, optional): Whether to generate plots. Defaults to False.
+        indlog (bool, optional): Whether to enable individual logging. Defaults to False.
 
     Returns:
         dict: A dictionary containing the case configuration.
@@ -61,6 +63,7 @@ def load_case(
         "date": date_info,
         "rawresults": rawresults,
         "plots": plots,
+        "indlog": indlog,
     }
 
     return case_data

@@ -28,6 +28,7 @@ def case_720h_system(request):
         date=datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="False",
         plots="False",
+        indlog="False",
     )
 
     # File paths
