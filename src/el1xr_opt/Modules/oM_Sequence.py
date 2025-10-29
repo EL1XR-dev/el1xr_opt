@@ -55,12 +55,12 @@ def routine(dir, case, solver, date, rawresults, plots):
     log_time('- Total time for solving the model:', start_time)
     start_time = time.time()
     # outputting the results
-    if rawresults.lower() == 'true':
+    if rawresults == 'true':
         model = saving_rawdata(dir, case, solver, model, model)
         log_time('- Total time for outputting the raw data:', start_time)
         start_time = time.time()
     # outputting the results
-    if plots.lower() == 'true':
+    if plots == 'true':
         model = saving_results(dir, case, date, model, model)
         log_time('- Total time for outputting the results:', start_time)
         start_time = time.time()
