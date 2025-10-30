@@ -11,11 +11,11 @@ from src.el1xr_opt.Modules.oM_Sequence import routine
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
-CASE_NAMES = ["Home1"]  # Add more case names as needed
+CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
+# CASE_NAMES = ["Home1"]  # Add more case names as needed
 EXPECTED_COSTS = {
-    "Grid1": 4950.104033219814,
-    "Home1": 234.81936126265944}  # Replace with actual expected costs
+    "Grid1": 5532.028490738335,
+    "Home1": 918.2139322903365}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
