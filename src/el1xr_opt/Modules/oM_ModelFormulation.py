@@ -1086,7 +1086,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
         if model.Par['pVarStartUp'][egs][p,sc,n] and egs in model.egv:
             if n != model.n.first() and model.Par['pVarStartUp'][egs][p,sc,model.n.prev(n)] < model.Par['pVarStartUp'][egs][p,sc,n]:
-                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= 0.8 * model.Par['pEleMaxStorage'][egs][p,sc,n]
+                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= 0.8 * model.Par['pEleMaxStorage'][egs][p,sc,n] * 1e3 * model.factor1
             else:
                 return Constraint.Skip
         else:
