@@ -29,7 +29,7 @@ def setup_test_case(case_name):
         case=case_name,
         solver="gurobi",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
-        rawresults="True",
+        rawresults="False",
         plots="False",
         indlog="False",
     )
