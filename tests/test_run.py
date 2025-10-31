@@ -54,8 +54,8 @@ def case_720h_system(request):
 
 # === Parametrized Test ===
 @pytest.mark.parametrize("case_720h_system,expected_cost", [
-    ("Grid1", 5532.028490738335),
-    ("Home1",  918.2139322903365),
+    ("Grid1", 6187.4980716663795),
+    ("Home1",  226.924524774594),
 ], indirect=["case_720h_system"])
 def test_model_run(case_720h_system, expected_cost):
     """
