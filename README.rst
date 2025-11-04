@@ -1,6 +1,6 @@
 el1xr_opt
 =========
-.. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/el1xr_opt_logo_v6.png
+.. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/Logo_new_2a.png
    :width: 120
    :align: right
    :alt: EL1XR logo
