@@ -268,33 +268,6 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_TotalCost_Hourly = df_dynamic_output
     Output_TotalCost_Hourly.to_csv(f"{_path}/oM_Result_01_rTotalCost_Hourly_{CaseName}.csv", index=False, sep=',')
 
-    # Output_vTotalEleMrkDACost = pd.Series(data=[optmodel.vTotalEleMrkDACost[p, sc, n]() * model.Par['pDuration'][p, sc, n] for p, sc, n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR').reset_index()
-    # Output_vTotalEleMrkDACost = Output_vTotalEleMrkDACost.pivot_table(index=['level_0', 'level_1'], values='EUR', aggfunc='sum').reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalEleMrkDACost['Component'] = 'Day-Ahead Market Cost'
-    # Output_vTotalEleNetUseFixCost = pd.Series(data=[optmodel.vTotalEleNetUseFixCost[p, sc]() for p, sc in model.ps], index=pd.Index(model.ps)).to_frame(name='EUR').reset_index()
-    # Output_vTotalEleNetUseFixCost = Output_vTotalEleNetUseFixCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalEleNetUseFixCost['Component'] = 'Network Fixed Cost'
-    # Output_vTotalEleNetUseVarCost = pd.Series(data=[optmodel.vTotalEleNetUseVarCost[p, sc]() for p, sc in model.ps], index=pd.Index(model.ps)).to_frame(name='EUR').reset_index()
-    # Output_vTotalEleNetUseVarCost = Output_vTotalEleNetUseVarCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalEleNetUseVarCost['Component'] = 'Network Variable Cost'
-    # Output_vTotalElePeakCost = pd.Series(data=[optmodel.vTotalElePeakCost[p, sc]() for p, sc in model.ps], index=pd.Index(model.ps)).to_frame(name='EUR').reset_index()
-    # Output_vTotalElePeakCost = Output_vTotalElePeakCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalElePeakCost['Component'] = 'Power Peak Cost'
-    # Output_vTotalEleEnergyTaxCost = pd.Series(data=[optmodel.vTotalEleEnergyTaxCost[p, sc]() for p, sc in model.ps], index=pd.Index(model.ps)).to_frame(name='EUR').reset_index()
-    # Output_vTotalEleEnergyTaxCost = Output_vTotalEleEnergyTaxCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalEleEnergyTaxCost['Component'] = 'Energy Tax Cost'
-    # Output_vTotalEleMrkDARev = pd.Series(data=[optmodel.vTotalEleMrkDARev[p, sc, n]() * model.Par['pDuration'][p, sc, n] for p, sc, n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR').reset_index()
-    # Output_vTotalEleMrkDARev = Output_vTotalEleMrkDARev.pivot_table(index=['level_0', 'level_1'], values='EUR', aggfunc='sum').reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalEleMrkDARev['EUR'] *= -1  # changing the sign to revenue
-    # Output_vTotalEleMrkDARev['Component'] = 'Day-Ahead Market Revenue'
-    # Output_vTotalEleFCRDRev = pd.Series(data=[optmodel.vTotalEleFCRDRev[p, sc, n]() * model.Par['pDuration'][p, sc, n] for p, sc, n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR').reset_index()
-    # Output_vTotalEleFCRDRev = Output_vTotalEleFCRDRev.pivot_table(index=['level_0', 'level_1'], values='EUR', aggfunc='sum').reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario'}, inplace=False)
-    # Output_vTotalEleFCRDRev['EUR'] *= -1  # changing the sign to revenue
-    # Output_vTotalEleFCRDRev['Component'] = 'FCR-D Revenue'
-    # # concat
-    # Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDRev], axis=0)
-    # Output_AdditionalCosts.to_csv(f"{_path}/oM_Result_01_rObjFunComponents_{CaseName}.csv", index=False, sep=',')
-
     def extract_cost_or_rev(optmodel, model, var_name, set_name, multiplier=False, revenue=False, component_name=None):
         """
         Generic extractor for cost or revenue components.
