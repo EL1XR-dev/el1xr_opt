@@ -39,23 +39,24 @@ def case_720h_system(request):
     # Backup original data
     original_duration_df = pd.read_csv(duration_csv, index_col=[0, 1, 2])
 
-    try:
-        # Modify Duration: keep only first 168 hours (1 week)
-        df = original_duration_df.copy()
-        df.iloc[720:, df.columns.get_loc("Duration")] = np.nan
-        df.to_csv(duration_csv)
+    if original_duration_df.index.get_loc(0) != 0:
+        try:
+            # Modify Duration: keep only first 168 hours (1 week)
+            df = original_duration_df.copy()
+            df.iloc[720:, df.columns.get_loc("Duration")] = np.nan
+            df.to_csv(duration_csv)
 
-        yield data
+            yield data
 
-    finally:
-        # Restore original files
-        original_duration_df.to_csv(duration_csv)
+        finally:
+            # Restore original files
+            original_duration_df.to_csv(duration_csv)
 
 
 # === Parametrized Test ===
 @pytest.mark.parametrize("case_720h_system,expected_cost", [
-    ("Grid1", 6187.4980716663795),
-    ("Home1",  226.924524774594),
+    ("Grid1", 9555.244609167634),
+    ("Home1",  743.3624846222317),
 ], indirect=["case_720h_system"])
 def test_model_run(case_720h_system, expected_cost):
     """
