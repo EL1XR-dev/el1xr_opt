@@ -896,8 +896,8 @@ def create_variables(model, optmodel, indlog):
     # electricity network/grid cost such capacity and peak costs
     setattr(optmodel, 'vTotalElePeakCost',                 Var(model.ps ,     within=             Reals, doc='total electricity peak                cost                           [EUR]'))
     # setattr(optmodel, 'vTotalHydPeakCost',                 Var(model.ps ,     within=             Reals, doc='total hydrogen    peak                cost  [EUR]'))
-    setattr(optmodel, 'vTotalEleNetUseCost',               Var(model.ps ,     within=             Reals, doc='total electricity network usage       cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleCapTariffCost',            Var(model.ps ,     within=             Reals, doc='total electricity capacity tariff     cost                           [EUR]'))
+    setattr(optmodel, 'vTotalEleNetUseVarCost',               Var(model.ps ,     within=             Reals, doc='total electricity network usage       cost                           [EUR]'))
+    setattr(optmodel, 'vTotalEleNetUseFixCost',            Var(model.ps ,     within=             Reals, doc='total electricity capacity tariff     cost                           [EUR]'))
 
     # electricity market costs
     setattr(optmodel, 'vTotalEleMrkDACost',                Var(model.psn,     within=             Reals, doc='total electricity day-ahead market   cost                            [EUR]'))
@@ -916,7 +916,7 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalHydMrkPPARev',                Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market       revenue                           [EUR]'))
 
     # electricity tax costs and revenues
-    setattr(optmodel, 'vTotalEleVATCost',                  Var(model.ps ,     within=             Reals, doc='total electricity VAT                cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleEnergyTaxCost',                  Var(model.ps ,     within=             Reals, doc='total electricity VAT                cost                            [EUR]'))
     setattr(optmodel, 'vTotalEleISRev',                    Var(model.ps ,     within=             Reals, doc='total electricity  incentives     revenue                            [EUR]'))
 
     # electricity and hydrogen generation costs
@@ -1047,10 +1047,10 @@ def create_variables(model, optmodel, indlog):
 
     rev_vars = [optmodel.vTotalEleXRev, optmodel.vTotalEleMRev, optmodel.vTotalHydMRev]
 
-    sub_cost_vars = [optmodel.vTotalElePeakCost, optmodel.vTotalEleNetUseCost, optmodel.vTotalEleCapTariffCost,
+    sub_cost_vars = [optmodel.vTotalElePeakCost, optmodel.vTotalEleNetUseVarCost, optmodel.vTotalEleNetUseFixCost,
                      optmodel.vTotalEleMrkDACost,
                      optmodel.vTotalHydMrkPPACost,
-                     optmodel.vTotalEleVATCost,
+                     optmodel.vTotalEleEnergyTaxCost,
                      optmodel.vTotalEleGCost, optmodel.vTotalHydGCost,
                      optmodel.vTotalEleECost,
                      optmodel.vTotalEleCCost, optmodel.vTotalHydCCost,
