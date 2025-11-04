@@ -367,7 +367,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_OrgDemand['KWh'] = Output_OrgDemand['KWh'].apply(lambda x: x)
     Output_OrgDemand['Type'] ='OrgDemand'
     # series of the electricity cost
-    Output_EleCost = pd.Series(data=[((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetelcertifikat'][er] + model.Par['pEleRetpaslag'][er]) * (1+model.Par['pEleRetmoms'][er]) + model.Par['pEleRetnetavgift'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
+    Output_EleCost = pd.Series(data=[((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er]) * (1+model.Par['pEleRetMoms'][er]) + model.Par['pEleRetFastavgift'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
     Output_EleCost = Output_EleCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Component'}, inplace=False).set_index(['Period', 'Scenario', 'LoadLevel', 'Component'], inplace=False)
     # select the third level of the index and create a new column date using the Date as a initial date
     Output_EleCost['Date'] = Output_EleCost.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
@@ -545,7 +545,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults9 = OutputResults9.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
     OutputResults9 = OutputResults9.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
     # series of the electricity cost
-    OutputResults10 = pd.Series(data=[((model.Par['pVarEnergyCost' ] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetelcertifikat'][er] * model.factor1 + model.Par['pEleRetpaslag'][er] * model.factor1) * (1+model.Par['pEleRetmoms'][er] * model.factor1) + model.Par['pEleRetnetavgift'][er] * model.factor1) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
+    OutputResults10 = pd.Series(data=[((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er]) * (1+model.Par['pEleRetMoms'][er]) + model.Par['pEleRetFastavgift'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
     OutputResults10['Component'] = 'EleCost [EUR/KWh]'
     OutputResults10['EUR/KWh'] *= (1/model.factor1)
     OutputResults10 = OutputResults10.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
