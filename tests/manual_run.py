@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]  # Add more case names as needed
 EXPECTED_COSTS = {
-    "Grid1": 6187.4980716663795,
-    "Home1":  226.924524774594}  # Replace with actual expected costs
+    "Grid1": 9555.244609167634,
+    "Home1":  743.3624846222317}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
@@ -30,7 +30,7 @@ def setup_test_case(case_name):
         solver="gurobi",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="False",
-        plots="False",
+        plots="True",
         indlog="False",
     )
 
@@ -48,7 +48,19 @@ def setup_test_case(case_name):
     try:
         print("Modifying CSV files...")  # Added print for console feedback
         # Modify and save the modified DataFrames
-        modify_and_save_csv(original_duration_df, "Duration", 720, duration_csv, 0)
+        # Identify which the start row is for modification from original_duration_df
+        if "Duration" in original_duration_df.columns:
+            print("Modifying Duration column...")  # Added print for console feedback
+            # Get the index of the first row to modify
+            match = original_duration_df.index[original_duration_df["Duration"] == 1]
+            if not match.empty:
+                start_row = original_duration_df.index.get_loc(match[0])
+                print(f'Found start row for modification at index: {start_row}')  # Added print for console feedback
+                modify_and_save_csv(original_duration_df, "Duration", start_row, 720, duration_csv, 0)
+        else:
+            print("Duration column not found in the DataFrame.")  # Added print for console feedback
+
+        # modify_and_save_csv(original_duration_df, "Duration", 720, duration_csv, 0)
         #modify_and_save_csv(original_resenergy_df, "RESEnergy", 0, RESEnergy_csv, 0)
         #modify_and_save_csv(original_stage_df, "Weight", 0, stage_csv, 1)
 
@@ -67,15 +79,16 @@ def setup_test_case(case_name):
         #original_stage_df.to_csv(stage_csv)
 
 
-def modify_and_save_csv(df, column_name, start_row, file_path, idx):
+def modify_and_save_csv(df, column_name, start_row, length_levels, file_path, idx):
     """
     Modify the specified column starting from the given row, setting values to NaN, and save to the file.
     """
     df_copy = df.copy()
+    df_copy.iloc[:, df_copy.columns.get_loc(column_name)] = np.nan
     if idx == 0:
-        df_copy.iloc[start_row:, df_copy.columns.get_loc(column_name)] = np.nan
+        df_copy.iloc[start_row:(start_row+length_levels):, df_copy.columns.get_loc(column_name)] = 1
     elif idx == 1:
-        df_copy.iloc[start_row:, df_copy.columns.get_loc(column_name)] = 12
+        df_copy.iloc[start_row:(start_row+length_levels):, df_copy.columns.get_loc(column_name)] = 12
     df_copy.to_csv(file_path)
     print(f"Modified {file_path} and saved.")  # Added print for console feedback
 
