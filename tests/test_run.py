@@ -39,18 +39,18 @@ def case_720h_system(request):
     # Backup original data
     original_duration_df = pd.read_csv(duration_csv, index_col=[0, 1, 2])
 
-    if original_duration_df.index.get_loc(0) != 0:
-        try:
-            # Modify Duration: keep only first 168 hours (1 week)
-            df = original_duration_df.copy()
-            df.iloc[720:, df.columns.get_loc("Duration")] = np.nan
-            df.to_csv(duration_csv)
 
-            yield data
+    try:
+        # Modify Duration: keep only first 168 hours (1 week)
+        df = original_duration_df.copy()
+        df.iloc[720:, df.columns.get_loc("Duration")] = np.nan
+        df.to_csv(duration_csv)
 
-        finally:
-            # Restore original files
-            original_duration_df.to_csv(duration_csv)
+        yield data
+
+    finally:
+        # Restore original files
+        original_duration_df.to_csv(duration_csv)
 
 
 # === Parametrized Test ===
