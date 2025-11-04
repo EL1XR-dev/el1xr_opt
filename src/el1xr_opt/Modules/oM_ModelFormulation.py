@@ -52,24 +52,23 @@ def create_objective_function_components(model, optmodel, indlog):
 
     #%% Total electricity grid usage cost [M€]
     def eEleNetGridUsageCost(optmodel, p,sc):
-        return optmodel.vTotalEleNCost[p,sc] == optmodel.vTotalElePeakCost[p,sc] + optmodel.vTotalEleNetUseCost[p,sc] + optmodel.vTotalEleCapTariffCost[p,sc]
+        return optmodel.vTotalEleNCost[p,sc] == optmodel.vTotalElePeakCost[p,sc] + optmodel.vTotalEleNetUseVarCost[p,sc] + optmodel.vTotalEleNetUseFixCost[p,sc]
     optmodel.__setattr__('eNetGridUsageCost', Constraint(optmodel.ps, rule=eEleNetGridUsageCost, doc='Total electricity grid usage cost [kEUR]'))
 
     # Total electricity peak costs
     def eTotalElePeakCost(optmodel, p,sc):
-        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) for er in model.er) / len(model.Peaks))
+        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeak[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / len(model.Peaks))
     optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [kEUR]'))
 
     # Total electricity net usage costs
-    def eTotalEleNetUseCost(optmodel, p,sc):
-        return (optmodel.vTotalEleNetUseCost[p,sc] == sum(sum(model.Par['pEleRetnetavgift'][er] * model.factor1 * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseCost, doc='Total electricity net usage cost [kEUR]'))
+    def eTotalEleNetUseVarCost(optmodel, p,sc):
+        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * optmodel.vEleBuy[p,sc,n,er] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+    optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
-    def eTotalEleCapTariffCost(optmodel, p,sc):
-        # return (optmodel.vTotalEleCapTariffCost[p,sc] == sum(sum(model.Par['pEleRetTariff'][er] * model.factor1 * sum(model.Par['pEleMaxPower'][egs][p,sc,n] for n in model.n for egs in model.egs if (nd,egs) in model.n2eg) for er in model.er if (nd,er) in model.n2er) for nd in model.nd))
-        return (optmodel.vTotalEleCapTariffCost[p,sc] == sum(model.Par['pEleRetelcertifikat'][er] * model.factor1 * sum(optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eTotalEleCapTariffCost', Constraint(optmodel.ps, rule=eTotalEleCapTariffCost, doc='Total electricity capacity tariff cost [kEUR]'))
+    def eTotalEleNetUseFixCost(optmodel, p,sc):
+        return (optmodel.vTotalEleNetUseFixCost[p,sc] == sum(model.Par['pEleRetFastavgift'][er] * model.factor1 * sum(1 for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+    optmodel.__setattr__('eTotalEleNetUseFixCost', Constraint(optmodel.ps, rule=eTotalEleNetUseFixCost, doc='Total electricity capacity tariff cost [kEUR]'))
 
     #%% Total electricity market costs
     def eEleMarketCost(optmodel, p,sc,n):
@@ -77,7 +76,7 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * optmodel.vEleBuy [p,sc,n,er] for er in model.er)
+        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er]) * optmodel.vEleBuy [p,sc,n,er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
 
     #%% Total electricity market revenues
@@ -117,13 +116,13 @@ def create_objective_function_components(model, optmodel, indlog):
 
     #%% Total electricity taxes costs
     def eEleTaxCost(optmodel, p,sc):
-        return (optmodel.vTotalEleXCost[p,sc] == optmodel.vTotalEleVATCost[p,sc])
+        return (optmodel.vTotalEleXCost[p,sc] == optmodel.vTotalEleEnergyTaxCost[p,sc])
     optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [kEUR]'))
 
     # VAT on electricity taxes costs
-    def eEleTaxVATCost(optmodel, p,sc):
-        return (optmodel.vTotalEleVATCost[p,sc] == sum(model.Par['pEleRetmoms'][er] * sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetpaslag'][er] * model.factor1 + model.Par['pEleRetnetavgift'][er] * model.factor1 + model.Par['pEleRetelcertifikat'][er] * model.factor1) * optmodel.vEleBuy[p,sc,n,er] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eEleTaxVATCost', Constraint(optmodel.ps, rule=eEleTaxVATCost, doc='Total electricity taxes costs [kEUR]'))
+    def eEleTaxEnergyCost(optmodel, p,sc):
+        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] * model.factor1 * sum(optmodel.vEleBuy[p,sc,n,er] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+    optmodel.__setattr__('eEleTaxEnergyCost', Constraint(optmodel.ps, rule=eEleTaxEnergyCost, doc='Total electricity taxes costs [kEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
         return (optmodel.vTotalEleXRev[p,sc] == optmodel.vTotalEleISRev[p,sc])
@@ -1108,7 +1107,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         # Check applicability
-        if optmodel.Par['pEleRetTariff'][er] and (n, m) in optmodel.n2m:
+        if optmodel.Par['pEleRetPowerTariff'][er] and (n, m) in optmodel.n2m:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1125,7 +1124,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourValue', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourValue, doc='peak hour selection'))
 
     def eElePeakHourInd_C1(optmodel, p,sc,n,er,m,peak):
-        if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m:
+        if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1139,7 +1138,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourInd_C1', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C1, doc='peak hour indicator'))
 
     def eElePeakHourInd_C2(optmodel, p,sc,n,er,m,peak):
-        if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m:
+        if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1153,8 +1152,8 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourInd_C2', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C2, doc='peak hour indicator'))
 
     def eElePeakNumberMonths(optmodel, m,peak):
-        if sum(model.Par['pEleRetTariff'][er] for er in model.er) > 0:
-            return sum(optmodel.vElePeakHourInd[p,sc,n,er,peak] for p,sc,n,er in model.psner if model.Par['pEleRetTariff'][er] and (n,m) in model.n2m) == 1
+        if sum(model.Par['pEleRetPowerTariff'][er] for er in model.er) > 0:
+            return sum(optmodel.vElePeakHourInd[p,sc,n,er,peak] for p,sc,n,er in model.psner if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m) == 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakNumberMonths', Constraint(optmodel.moy, optmodel.Peaks, rule=eElePeakNumberMonths, doc='peak number of months'))
