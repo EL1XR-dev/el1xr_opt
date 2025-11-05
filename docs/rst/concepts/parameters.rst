@@ -18,22 +18,14 @@ These parameters define the temporal structure and general constants for the mod
      - **Description**
      - **Unit**
      - **Pyomo Component**
+   * - :math:`\pdiscountfactor_{\periodindex}`
+     - Discount factor for each period
+     - -
+     - ``pDiscountFactor``
    * - :math:`\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}`
      - Duration of each time step
      - h
      - ``pDuration``
-   * - :math:`\pfactorone`
-     - A utility conversion factor (e.g., 1,000)
-     - -
-     - ``factor1``
-   * - :math:`\pfactortwo`
-     - A utility conversion factor (e.g., 100)
-     - -
-     - ``factor2``
-   * - :math:`\pdiscountrate_{\periodindex}`
-     - Annual discount rate for NPV calculations
-     - %
-     - ``pParDiscountRate``
 
 Market & Costs
 --------------
@@ -48,83 +40,128 @@ These parameters define the economic environment, including energy prices, tarif
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
-     - Cost of electricity purchased from a trader
+   * - :math:`\pEleRetPowerTariff_{\eletraderindex}`
+     - Tariff for peak power consumption
+     - €/kW
+     - ``pEleRetPowerTariff``
+   * - :math:`\pEleRetMoms_{\eletraderindex}`
+     - Value-added tax (VAT)
+     - %
+     - ``pEleRetMoms``
+   * - :math:`\pEleRetOverforingsavgift_{\eletraderindex}`
+     - Variable network fee
+     - €/kWh
+     - ``pEleRetOverforingsavgift``
+   * - :math:`\pEleRetFastavgift_{\eletraderindex}`
+     - Fixed network fee
+     - €/month
+     - ``pEleRetFastavgift``
+   * - :math:`\pVarEnergyCost_{\periodindex,\scenarioindex,\timeindex}`
+     - Cost of energy from the market
      - €/MWh
      - ``pVarEnergyCost``
-   * - :math:`\pelesellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
-     - Price of electricity sold to a trader
-     - €/MWh
-     - ``pVarEnergyPrice``
-   * - :math:`\phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
-     - Cost of hydrogen purchased from a trader
-     - €/kgH2
-     - ``pHydrogenCost``
-   * - :math:`\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
-     - Price of hydrogen sold to a trader
-     - €/kgH2
-     - ``pHydrogenPrice``
-   * - :math:`\pelemarketbuyingratio_{\eletraderindex}`
+   * - :math:`\pEleRetBuyingRatio_{\eletraderindex}`
      - Ratio for electricity purchases
      - -
      - ``pEleRetBuyingRatio``
-   * - :math:`\pelemarketsellingratio_{\eletraderindex}`
+   * - :math:`\pEleRetPaslag_{\eletraderindex}`
+     - Pass-through fee for electricity
+     - €/kWh
+     - ``pEleRetPaslag``
+   * - :math:`\pVarEnergyPrice_{\periodindex,\scenarioindex,\timeindex}`
+     - Price of energy sold to the market
+     - €/MWh
+     - ``pVarEnergyPrice``
+   * - :math:`\pEleRetSellingRatio_{\eletraderindex}`
      - Ratio for electricity sales
      - -
      - ``pEleRetSellingRatio``
-   * - :math:`\pelemarketcertrevenue_{\eletraderindex}`
-     - Revenue from electricity certificates
-     - €/kWh
-     - ``pEleRetelcertifikat``
-   * - :math:`\pelemarketpassthrough_{\eletraderindex}`
-     - Pass-through fee for electricity
-     - €/kWh
-     - ``pEleRetpaslag``
-   * - :math:`\pelemarketmoms_{\eletraderindex}`
-     - Value-added tax (moms) for electricity
+   * - :math:`\pOperatingReservePriceFCRDUp_{\periodindex,\scenarioindex,\timeindex}`
+     - Price for upward frequency containment reserve (FCR-D)
+     - €/MW
+     - ``pOperatingReservePrice_FCRD_Up``
+   * - :math:`\pOperatingReservePriceFCRDDown_{\periodindex,\scenarioindex,\timeindex}`
+     - Price for downward frequency containment reserve (FCR-D)
+     - €/MW
+     - ``pOperatingReservePrice_FCRD_Down``
+   * - :math:`\pEleGenRetailer_{\eunitindex}`
+     - Retailer associated with a generation unit
      - -
-     - ``pEleRetmoms``
-   * - :math:`\pelemarketnetfee_{\eletraderindex}`
-     - Network usage fee for electricity
+     - ``pEleGenRetailer``
+   * - :math:`\pEleRetEnergyTax_{\eletraderindex}`
+     - Energy tax
      - €/kWh
-     - ``pEleRetnetavgift``
-   * - :math:`\pelemarkettariff_{\eletraderindex}`
-     - Capacity-based tariff
-     - €/kW
-     - ``pEleRetTariff``
-   * - :math:`\pelemaxmarketbuy_{\traderindex}`
-     - Maximum electricity purchase from a trader
-     - kWh
-     - ``pEleMaxMarketBuy``
-   * - :math:`\pelemaxmarketsell_{\traderindex}`
-     - Maximum electricity sale to a trader
-     - kWh
-     - ``pEleMaxMarketSell``
-   * - :math:`\pfactortwo`
-     - A large number for big-M constraints
-     - -
-     - ``factor2``
-   * - :math:`CF_g, CV_g`
-     - Fixed and variable costs of a generator
-     - €/h, €/kWh
-     - ``pGenConstantVarCost``, ``pGenLinearVarCost``
-   * - :math:`CSU_g, CSD_g`
-     - Startup and shutdown cost of a unit
+     - ``pEleRetEnergyTax``
+   * - :math:`\pEleRetIncentive_{\eletraderindex}`
+     - Incentive for selling electricity
+     - €/kWh
+     - ``pEleRetIncentive``
+   * - :math:`\pEleGenLinearVarCost_{\eunitindex}`
+     - Linear variable cost for electricity generation
+     - €/MWh
+     - ``pEleGenLinearVarCost``
+   * - :math:`\pEleGenConstantVarCost_{\eunitindex}`
+     - Constant variable cost for electricity generation
      - €
-     - ``pGenStartUpCost``, ``pGenShutDownCost``
-   * - :math:`CRU_h, CRD_h`
-     - Ramping cost for a hydrogen unit
-     - €/kWh
-     - ``pGenRampUpCost``, ``pGenRampDownCost``
+     - ``pEleGenConstantVarCost``
+   * - :math:`\pEleGenStartUpCost_{\eunitindex}`
+     - Start-up cost for an electricity generation unit
+     - €
+     - ``pEleGenStartUpCost``
+   * - :math:`\pEleGenShutDownCost_{\eunitindex}`
+     - Shutdown cost for an electricity generation unit
+     - €
+     - ``pEleGenShutDownCost``
+   * - :math:`\pEleGenOMVariableCost_{\eunitindex}`
+     - Variable O&M cost for electricity generation
+     - €/MWh
+     - ``pEleGenOMVariableCost``
+   * - :math:`\pGenCO2EmissionCost_{\eunitindex}`
+     - CO2 emission cost
+     - €/tCO2
+     - ``pGenCO2EmissionCost``
+   * - :math:`\pEleGenLinearTerm_{\eunitindex}`
+     - Linear term for electricity consumption cost
+     - €/MWh
+     - ``pEleGenLinearTerm``
+   * - :math:`\pParENSCost`
+     - Cost of energy not served (electricity)
+     - €/MWh
+     - ``pParENSCost``
+   * - :math:`\pHydGenLinearVarCost_{\hunitindex}`
+     - Linear variable cost for hydrogen generation
+     - €/kg
+     - ``pHydGenLinearVarCost``
+   * - :math:`\pHydGenConstantVarCost_{\hunitindex}`
+     - Constant variable cost for hydrogen generation
+     - €
+     - ``pHydGenConstantVarCost``
+   * - :math:`\pHydGenStartUpCost_{\hunitindex}`
+     - Start-up cost for a hydrogen generation unit
+     - €
+     - ``pHydGenStartUpCost``
+   * - :math:`\pHydGenShutDownCost_{\hunitindex}`
+     - Shutdown cost for a hydrogen generation unit
+     - €
+     - ``pHydGenShutDownCost``
+   * - :math:`\pHydGenOMVariableCost_{\hunitindex}`
+     - Variable O&M cost for hydrogen generation
+     - €/kg
+     - ``pHydGenOMVariableCost``
+   * - :math:`\pHydGenLinearTerm_{\hunitindex}`
+     - Linear term for hydrogen consumption cost
+     - €/kg
+     - ``pHydGenLinearTerm``
+   * - :math:`\pParHNSCost`
+     - Cost of hydrogen not served
+     - €/kg
+     - ``pParHNSCost``
 
 Asset Performance & Limits
 --------------------------
 
 These parameters define the operational characteristics, capacities, and limitations of generation and storage assets.
 
-**Generation**
-~~~~~~~~~~~~~~
-
 .. list-table::
    :widths: 30 50 10 30
    :header-rows: 1
@@ -133,245 +170,259 @@ These parameters define the operational characteristics, capacities, and limitat
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Maximum available electricity production
+   * - :math:`\pEleRetMaxBuy_{\eletraderindex}`
+     - Maximum electricity purchase from a retailer
      - kWh
-     - ``pMaxEleProduction``
-   * - :math:`\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Minimum stable electricity production
+     - ``pEleRetMaxBuy``
+   * - :math:`\pEleRetMaxSell_{\eletraderindex}`
+     - Maximum electricity sale to a retailer
      - kWh
-     - ``pMinEleProduction``
-   * - :math:`\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Maximum available hydrogen production
-     - kgH2
-     - ``pMaxHydProduction``
-   * - :math:`\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Minimum stable hydrogen production
-     - kgH2
-     - ``pMinHydProduction``
-   * - :math:`\overline{EP}_{neg}` / :math:`\underline{EP}_{neg}`
-     - Max/min electricity generation capacity
-     - kWh
-     - ``pMaxPower``, ``pMinPower``
-   * - :math:`\widehat{EP}_{neg}`
-     - Last market position update (Elec Gen)
-     - kWh
-     - ``pVarPositionGeneration``
-   * - :math:`\overline{HP}_{nhg}` / :math:`\underline{HP}_{nhg}`
-     - Max/min hydrogen generation capacity
-     - kgH2
-     - ``pMaxPower``, ``pMinPower``
-   * - :math:`\widehat{HP}_{nhg}`
-     - Last market position update (Hyd Gen)
-     - kWh
-     - ``pVarPositionGeneration``
-   * - :math:`\overline{EC}^{comp}_{nhs}`
-     - Max elec consumption of a compressor
-     - kWh
-     - ``pGenMaxCompressorConsumption``
-   * - :math:`\overline{EC}^{standby}_{nhz}`
-     - Max elec consumption of an electrolyzer at standby
-     - kWh
-     - ``pGenStandByPower``
-   * - :math:`PF_{he}`
-     - Production function (Elec from H2)
-     - kWh/kgH2
-     - ``pGenProductionFunction``
-   * - :math:`PF1_{ehk}` / :math:`PF2_{ehk}`
-     - Piecewise production function (H2 from Elec)
-     - kgH2/kWh
-     - ``pGenProductionFunction``, ``pGenProductionFunctionSlope``
-
-**Ramping and Commitment**
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 30 50 10 30
-   :header-rows: 1
-
-   * - **Symbol**
-     - **Description**
-     - **Unit**
-     - **Pyomo Component**
-   * - :math:`RU_t, RD_t`
-     - Max ramp-up/down rate of an electric unit
-     - kW/h
-     - ``pGenRampUp``, ``pGenRampDown``
-   * - :math:`\prampuprate`
-     - Ramp-up rate for assets
-     - p.u./h
-     - ``pGenRampUpRate``
-   * - :math:`\prampdwrate`
-     - Ramp-down rate for assets
-     - p.u./h
-     - ``pGenRampDownRate``
-   * - :math:`RC^{+}_{hz}, RC^{-}_{hz}`
-     - Max ramp-up/down rate of a hydrogen unit
-     - kgH2/h
-     - ``pGenRampUp``, ``pGenRampDown``
-   * - :math:`\puptime`
-     - Minimum up-time for a unit
-     - h
-     - ``pGenMinUpTime``
-   * - :math:`\pdwtime`
-     - Minimum down-time for a unit
-     - h
-     - ``pGenMinDownTime``
-   * - :math:`TU_t, TD_t`
-     - Minimum up-time and down-time
-     - h
-     - ``pGenUpTime``, ``pGenDownTime``
-
-**Storage**
-~~~~~~~~~~~
-
-.. list-table::
-   :widths: 30 50 10 30
-   :header-rows: 1
-
-   * - **Symbol**
-     - **Description**
-     - **Unit**
-     - **Pyomo Component**
-   * - :math:`\overline{EC}_{neg}` / :math:`\underline{EC}_{neg}`
-     - Max/min electricity charging rate
-     - kWh
-     - ``pMaxCharge``, ``pMinCharge``
-   * - :math:`\widehat{EC}_{neg}`
-     - Last market position update (Elec Consumption)
-     - kWh
-     - ``pVarPositionConsumption``
-   * - :math:`\overline{HC}_{nhg}` / :math:`\underline{HC}_{nhg}`
-     - Max/min hydrogen charging rate
-     - kgH2
-     - ``pMaxCharge``, ``pMinCharge``
-   * - :math:`\widehat{HC}_{nhg}`
-     - Last market position update (Hyd Consumption)
-     - kgH2
-     - ``pVarPositionConsumption``
-   * - :math:`\overline{EI}_{neg}` / :math:`\underline{EI}_{neg}`
-     - Max/min electricity state-of-charge
-     - kWh
-     - ``pMaxStorage``, ``pMinStorage``
-   * - :math:`\overline{HI}_{nhg}` / :math:`\underline{HI}_{nhg}`
-     - Max/min hydrogen state-of-charge
-     - kgH2
-     - ``pMaxStorage``, ``pMinStorage``
-   * - :math:`\overline{EEO}_{neg}` / :math:`\underline{EEO}_{neg}`
-     - Max/min electricity outflow
-     - kW
-     - ``pMaxOutflows``, ``pMinOutflows``
-   * - :math:`\overline{HEO}_{nhg}` / :math:`\underline{HEO}_{nhg}`
-     - Max/min hydrogen outflow
-     - kgH2
-     - ``pMaxOutflows``, ``pMinOutflows``
-   * - :math:`\overline{EEI}_{neg}` / :math:`\underline{EEI}_{neg}`
-     - Max/min electricity inflow
-     - kW
-     - ``pMaxInflows``, ``pMinInflows``
-   * - :math:`\overline{HEI}_{nhg}` / :math:`\underline{HEI}_{nhg}`
-     - Max/min hydrogen inflow
-     - kgH2
-     - ``pMaxInflows``, ``pMinInflows``
-   * - :math:`EF_e` / :math:`EF_h`
-     - Round-trip efficiency (Elec/H2)
-     - p.u.
-     - ``pGenEfficiency``
-   * - :math:`\pelestoragecycle`
-     - Storage cycle time for electricity
-     - h
-     - ``pEleStorageCycle``
-   * - :math:`\phydstoragecycle`
-     - Storage cycle time for hydrogen
-     - h
-     - ``pHydStorageCycle``
-   * - :math:`\pelestorageoutflowcycle`
-     - Outflow cycle time for electricity storage
-     - h
-     - ``pEleStorageOutflowCycle``
-   * - :math:`\phydstorageoutflowcycle`
-     - Outflow cycle time for hydrogen storage
-     - h
-     - ``pHydStorageOutflowCycle``
-   * - :math:`\peleconscompress`
-     - Electricity consumption of a compressor
-     - kWh
-     - ``pEleConsCompress``
-
-Ancillary Services
-~~~~~~~~~~~~~~~~~~
-
-Parameters related to grid support services.
-
-.. list-table::
-   :widths: 30 50 10 30
-   :header-rows: 1
-
-   * - **Symbol**
-     - **Description**
-     - **Unit**
-     - **Pyomo Component**
-   * - :math:`URA^{SR}_{n}, DRA^{SR}_{n}`
-     - Up/down activation of Synchronous Reserve
-     - p.u.
-     - ``pOperatingReserveActivation_Up_SR``, ``pOperatingReserveActivation_Down_SR``
-   * - :math:`URA^{TR}_{n}, DRA^{TR}_{n}`
-     - Up/down activation of Tertiary Reserve
-     - p.u.
-     - ``pOperatingReserveActivation_Up_TR``, ``pOperatingReserveActivation_Down_TR``
-
-Network
-~~~~~~~
-
-Parameters related to network infrastructure.
-
-.. list-table::
-   :widths: 30 50 10 30
-   :header-rows: 1
-
-   * - **Symbol**
-     - **Description**
-     - **Unit**
-     - **Pyomo Component**
-   * - :math:`\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\peleminrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
-     - Max/min electricity network flow
-     - kWh
-     - ``pEleNetTTC``, ``pEleNetTTCBck``
-   * - :math:`\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\phydminflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
-     - Max/min hydrogen network flow
-     - kWh
-     - ``pHydNetTTC``, ``pHydNetTTCBck``
-   * - :math:`\pelereactanceline_{\busindexa,\busindexb,\circuitindex}`
-     - Reactance of an electricity line
-     - p.u.
-     - ``pEleNetReactance``
-
-Demand
-~~~~~~
-
-Parameters related to energy demand.
-
-.. list-table::
-   :widths: 30 50 10 30
-   :header-rows: 1
-
-   * - **Symbol**
-     - **Description**
-     - **Unit**
-     - **Pyomo Component**
-   * - :math:`\peledemflexible`
-     - Flag for flexible electricity demand
+     - ``pEleRetMaxSell``
+   * - :math:`\pHydRetMaxBuy_{\hydtraderindex}`
+     - Maximum hydrogen purchase from a retailer
+     - kg
+     - ``pHydRetMaxBuy``
+   * - :math:`\pHydRetMaxSell_{\hydtraderindex}`
+     - Maximum hydrogen sale to a retailer
+     - kg
+     - ``pHydRetMaxSell``
+   * - :math:`\pEleDemFlexible_{\edemandindex}`
+     - Flag indicating if electricity demand is flexible
      - -
      - ``pEleDemFlexible``
-   * - :math:`\peledemshiftedsteps`
-     - Number of steps for demand shifting
+   * - :math:`\pEleDemShiftedSteps_{\edemandindex}`
+     - Number of time steps for demand shifting
      - -
      - ``pEleDemShiftedSteps``
+   * - :math:`\pVarMaxDemand_{\edemandindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum electricity demand
+     - kWh
+     - ``pVarMaxDemand``
+   * - :math:`\pOperatingReserveRequireFCRDUp_{\periodindex,\scenarioindex,\timeindex}`
+     - Requirement for upward frequency containment reserve (FCR-D)
+     - MW
+     - ``pOperatingReserveRequire_FCRD_Up``
+   * - :math:`\pOperatingReserveRequireFCRDDown_{\periodindex,\scenarioindex,\timeindex}`
+     - Requirement for downward frequency containment reserve (FCR-D)
+     - MW
+     - ``pOperatingReserveRequire_FCRD_Down``
+   * - :math:`\pEleGenNoFCRD_{\eunitindex}`
+     - Flag indicating if a unit can provide FCR-D
+     - -
+     - ``pEleGenNoFCRD``
+   * - :math:`\pEleMaxPower_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum power output of an electricity unit
+     - kW
+     - ``pEleMaxPower``
+   * - :math:`\pEleMinPower_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum power output of an electricity unit
+     - kW
+     - ``pEleMinPower``
+   * - :math:`\pEleMinCharge_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum charging rate of an electricity storage unit
+     - kW
+     - ``pEleMinCharge``
+   * - :math:`\pEleMaxCharge_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum charging rate of an electricity storage unit
+     - kW
+     - ``pEleMaxCharge``
+   * - :math:`\pEleMaxStorage_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum storage capacity of an electricity storage unit
+     - kWh
+     - ``pEleMaxStorage``
+   * - :math:`\pEleMaxPower2ndBlock_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum power output of the second block of a unit
+     - kW
+     - ``pEleMaxPower2ndBlock``
+   * - :math:`\pEleMaxInflows_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum inflows for an electricity storage unit
+     - kWh
+     - ``pEleMaxInflows``
+   * - :math:`\pEleMinStorage_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum storage level of an electricity storage unit
+     - kWh
+     - ``pEleMinStorage``
+   * - :math:`\pEleMinInflows_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum inflows for an electricity storage unit
+     - kWh
+     - ``pEleMinInflows``
+   * - :math:`\pHydMaxStorage_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum storage capacity of a hydrogen storage unit
+     - kg
+     - ``pHydMaxStorage``
+   * - :math:`\pHydMaxPower2ndBlock_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum power output of the second block of a hydrogen unit
+     - kg/h
+     - ``pHydMaxPower2ndBlock``
+   * - :math:`\pHydMaxInflows_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum inflows for a hydrogen storage unit
+     - kg
+     - ``pHydMaxInflows``
+   * - :math:`\pHydMinStorage_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum storage level of a hydrogen storage unit
+     - kg
+     - ``pHydMinStorage``
+   * - :math:`\pHydMinInflows_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum inflows for a hydrogen storage unit
+     - kg
+     - ``pHydMinInflows``
+   * - :math:`\pEleCycleTimeStep_{\eunitindex}`
+     - Cycle time step for electricity storage
+     - h
+     - ``pEleCycleTimeStep``
+   * - :math:`\pEleInitialInventory_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Initial inventory of an electricity storage unit
+     - kWh
+     - ``pEleInitialInventory``
+   * - :math:`\pEleGenEfficiency_discharge_{\eunitindex}`
+     - Discharge efficiency of an electricity storage unit
+     - -
+     - ``pEleGenEfficiency_discharge``
+   * - :math:`\pEleGenEfficiency_charge_{\eunitindex}`
+     - Charge efficiency of an electricity storage unit
+     - -
+     - ``pEleGenEfficiency_charge``
+   * - :math:`\pHydCycleTimeStep_{\hunitindex}`
+     - Cycle time step for hydrogen storage
+     - h
+     - ``pHydCycleTimeStep``
+   * - :math:`\pHydInitialInventory_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Initial inventory of a hydrogen storage unit
+     - kg
+     - ``pHydInitialInventory``
+   * - :math:`\pHydGenEfficiency_{\hunitindex}`
+     - Efficiency of a hydrogen unit
+     - -
+     - ``pHydGenEfficiency``
+   * - :math:`\pHydGenProductionFunction_{\hunitindex}`
+     - Production function for hydrogen generation
+     - kg/kWh
+     - ``pHydGenProductionFunction``
+   * - :math:`\pEleGenProductionFunction_{\eunitindex}`
+     - Production function for electricity generation from hydrogen
+     - kWh/kg
+     - ``pEleGenProductionFunction``
+   * - :math:`\pEleMaxOutflows_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum outflows for an electricity storage unit
+     - kWh
+     - ``pEleMaxOutflows``
+   * - :math:`\pEleMinOutflows_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum outflows for an electricity storage unit
+     - kWh
+     - ``pEleMinOutflows``
+   * - :math:`\pHydMaxOutflows_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum outflows for a hydrogen storage unit
+     - kg
+     - ``pHydMaxOutflows``
+   * - :math:`\pHydMinOutflows_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Minimum outflows for a hydrogen storage unit
+     - kg
+     - ``pHydMinOutflows``
+   * - :math:`\pEleOutflowsTimeStep_{\eunitindex}`
+     - Outflows time step for electricity storage
+     - h
+     - ``pEleOutflowsTimeStep``
+   * - :math:`\pHydOutflowsTimeStep_{\hunitindex}`
+     - Outflows time step for hydrogen storage
+     - h
+     - ``pHydOutflowsTimeStep``
+   * - :math:`\pEleMaxCharge2ndBlock_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum charging rate of the second block of a unit
+     - kW
+     - ``pEleMaxCharge2ndBlock``
+   * - :math:`\pHydMaxCharge2ndBlock_{\hunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Maximum charging rate of the second block of a hydrogen unit
+     - kg/h
+     - ``pHydMaxCharge2ndBlock``
+   * - :math:`\pVarFixedAvailability_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Availability of a unit
+     - -
+     - ``pVarFixedAvailability``
+   * - :math:`\pOperatingReserveActivationFCRDUp_{\periodindex,\scenarioindex,\timeindex}`
+     - Activation of upward frequency containment reserve (FCR-D)
+     - -
+     - ``pOperatingReserveActivation_FCRD_Up``
+   * - :math:`\pOperatingReserveActivationFCRDDown_{\periodindex,\scenarioindex,\timeindex}`
+     - Activation of downward frequency containment reserve (FCR-D)
+     - -
+     - ``pOperatingReserveActivation_FCRD_Down``
+   * - :math:`\pEleInitialUC_{\periodindex, \scenarioindex, \eunitindex}`
+     - Initial unit commitment status for an electricity unit
+     - -
+     - ``pEleInitialUC``
+   * - :math:`\pHydInitialUC_{\periodindex, \scenarioindex, \hunitindex}`
+     - Initial unit commitment status for a hydrogen unit
+     - -
+     - ``pHydInitialUC``
+   * - :math:`\pEleGenRampUp_{\eunitindex}`
+     - Ramp-up rate for an electricity unit
+     - kW/h
+     - ``pEleGenRampUp``
+   * - :math:`\pEleGenRampDown_{\eunitindex}`
+     - Ramp-down rate for an electricity unit
+     - kW/h
+     - ``pEleGenRampDown``
+   * - :math:`\pOptIndBinGenRamps`
+     - Flag to indicate if binary variables are used for ramping
+     - -
+     - ``pOptIndBinGenRamps``
+   * - :math:`\pHydGenRampUp_{\hunitindex}`
+     - Ramp-up rate for a hydrogen unit
+     - kg/h
+     - ``pHydGenRampUp``
+   * - :math:`\pHydGenRampDown_{\hunitindex}`
+     - Ramp-down rate for a hydrogen unit
+     - kg/h
+     - ``pHydGenRampDown``
+   * - :math:`\pEleGenUpTime_{\eunitindex}`
+     - Minimum up time for an electricity unit
+     - h
+     - ``pEleGenUpTime``
+   * - :math:`\pEleGenUpTimeZero_{\eunitindex}`
+     - Initial up time for an electricity unit
+     - h
+     - ``pEleGenUpTimeZero``
+   * - :math:`\pEleGenDownTime_{\eunitindex}`
+     - Minimum down time for an electricity unit
+     - h
+     - ``pEleGenDownTime``
+   * - :math:`\pEleGenDownTimeZero_{\eunitindex}`
+     - Initial down time for an electricity unit
+     - h
+     - ``pEleGenDownTimeZero``
+   * - :math:`\pOptIndBinGenMinTime`
+     - Flag to indicate if binary variables are used for minimum up/down time
+     - -
+     - ``pOptIndBinGenMinTime``
+   * - :math:`\pHydGenUpTime_{\hunitindex}`
+     - Minimum up time for a hydrogen unit
+     - h
+     - ``pHydGenUpTime``
+   * - :math:`\pHydGenUpTimeZero_{\hunitindex}`
+     - Initial up time for a hydrogen unit
+     - h
+     - ``pHydGenUpTimeZero``
+   * - :math:`\pHydGenDownTime_{\hunitindex}`
+     - Minimum down time for a hydrogen unit
+     - h
+     - ``pHydGenDownTime``
+   * - :math:`\pHydGenDownTimeZero_{\hunitindex}`
+     - Initial down time for a hydrogen unit
+     - h
+     - ``pHydGenDownTimeZero``
+   * - :math:`\pVarStartUp_{\eunitindex, \periodindex,\scenarioindex,\timeindex}`
+     - Start-up flag for a unit
+     - -
+     - ``pVarStartUp``
+   * - :math:`\pEleGenFixedAvailability_{\eunitindex}`
+     - Fixed availability of a unit
+     - -
+     - ``pEleGenFixedAvailability``
 
-EV Specific
-~~~~~~~~~~~
+Network
+-------
 
-Parameters specific to Electric Vehicle (EV) modeling.
+Parameters related to the energy network infrastructure.
 
 .. list-table::
    :widths: 30 50 10 30
@@ -381,15 +432,23 @@ Parameters specific to Electric Vehicle (EV) modeling.
      - **Description**
      - **Unit**
      - **Pyomo Component**
-   * - :math:`\pvarfixedavailability`
-     - Availability of EV for grid services
+   * - :math:`\pEleNetInitialPeriod_{\busindexa,\busindexb,\circuitindex}`
+     - Initial period of a network line
      - -
-     - ``pVarFixedAvailability``
-   * - :math:`\peleminstoragestart`
-     - Minimum EV battery state-of-charge at trip start
-     - kWh
-     - ``pEleMinStorageStart``
-   * - :math:`\peleminstorageend`
-     - Minimum EV battery state-of-charge at trip end
-     - kWh
-     - ``pEleMinStorageEnd``
+     - ``pEleNetInitialPeriod``
+   * - :math:`\pParEconomicBaseYear`
+     - Base year for economic calculations
+     - -
+     - ``pParEconomicBaseYear``
+   * - :math:`\pEleNetFinalPeriod_{\busindexa,\busindexb,\circuitindex}`
+     - Final period of a network line
+     - -
+     - ``pEleNetFinalPeriod``
+   * - :math:`\pEleNetTTC_{\busindexa,\busindexb,\circuitindex}`
+     - Total transfer capacity of a network line
+     - MW
+     - ``pEleNetTTC``
+   * - :math:`\pEleNetReactance_{\busindexa,\busindexb,\circuitindex}`
+     - Reactance of a network line
+     - p.u.
+     - ``pEleNetReactance``
