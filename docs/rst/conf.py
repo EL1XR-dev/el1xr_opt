@@ -392,193 +392,104 @@ mathjax3_config = {
             "LROcost": r"C^{LRO}",
 
             # === PARAMETERS ===
-            "pfactorone": r"F1",                                # Generic factor 1
-            "pfactortwo": r"F2",                                # Generic factor 2
-            "pfactorthr": r"F3",                                # Generic factor 3
-            "pfactorfou": r"F4",                                # Generic factor 4
-
-            "pdiscountrate": r"\Gamma",                         # Discount rate
-            "ptimestep": r"\nu",                                # Time step
-            "ptimestepduration": r"\delta",                     # Time step duration (hours)
-            "pintervalduration": r"\Delta u",                   # Time step interval duration (hours)
-            "nintervals": r"N^{u}",                             # Number of time step intervals
-            "nperiods": r"N^{p}",                               # Number of periods
-            "nweeks": r"N^{w}",                                 # Number of weeks in a year
-            "nmonths": r"N^{m}",                                # Number of months in a year
-            "ndays": r"N^{d}",                                  # Number of days in a week
-            "nhours": r"N^{h}",                                 # Number of hours in a day
-
-            # --- Prices (use uppercase Pi for market prices) ---
-            "pelespotprice": r"\lambda^{e}",                    # Electrical spot price
-            "phydspotprice": r"\lambda^{h}",                    # Hydrogen spot price
-            "pelebuyprice": r"\lambda^{b,e}",                   # Electrical buy price
-            "phydbuyprice": r"\lambda^{b,h}",                   # Hydrogen buy price
-            "pelesellprice": r"\lambda^{s,e}",                  # Electrical sell price
-            "phydsellprice": r"\lambda^{s,h}",                  # Hydrogen sell price
-            "peleimportprice": r"\lambda^{imp,e}",              # Electrical import price
-            "phydimportprice": r"\lambda^{imp,h}",              # Hydrogen import price
-            "peleexportprice": r"\lambda^{exp,e}",              # Electrical export price
-            "phydexportprice": r"\lambda^{exp,h}",              # Hydrogen export price
-            "peleppaprice": r"\lambda^{PPA,e}",                 # Electrical PPA price
-            "phydppaprice": r"\lambda^{PPA,h}",                 # Hydrogen PPA price
-            "pelefcrnprice": r"\Pi^{N,e}",                      # Electrical grid FCR-N price
-            "pelefcrdupprice": r"\Pi^{DUP,e}",                  # Electrical grid FCR-D upwards price
-            "pelefcrddwprice": r"\Pi^{DDW,e}",                  # Electrical grid FCR-D downwards price
-            "pelegridaFRRUPprice": r"\Pi^{A-REG-UP,e}",         # Electrical grid aFRR upwards price
-            "pelegridaFRDDWprice": r"\Pi^{A-REG-DW,e}",         # Electrical grid aFRR downwards price
-            "pelegridmFRRUPprice": r"\Pi^{M-REG-UP,e}",         # Electrical grid mFRR upwards price
-            "pelegridmFRDDWprice": r"\Pi^{M-REG-DW,e}",         # Electrical grid mFRR downwards price
-            "pelemarketbuyingratio": r"\Upsilon^{b,e}",         # Electrical market buying ratio
-            "pelemarketsellingratio": r"\Upsilon^{s,e}",        # Electrical market selling ratio
-            "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
-            "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
-            "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
-            "pelemarketnetfee": r"M^{net,e}",                   # Electrical network fee
-            "pelemarkettariff": r"M^{tariff,e}",                # Electrical tariff
-            "pmaxmarketbuy": r"\overline{MB}",                  # Max market buying
-            "pelemaxmarketbuy": r"\overline{MB}^{e}",           # Max electrical market buying
-            "phydmaxmarketbuy": r"\overline{MB}^{h}",           # Max hydrogen market buying
-            "pmaxmarketsell": r"\overline{MS}",                 # Max market selling
-            "pelemaxmarketsell": r"\overline{MS}^{e}",          # Max electrical market selling
-            "phydmaxmarketsell": r"\overline{MS}^{h}",          # Max hydrogen market selling
-            "pminmarketbuy": r"\underline{MB}",                 # Min market buying
-            "peleminmarketbuy": r"\underline{MB}^{e}",          # Min electrical market buying
-            "phydminmarketbuy": r"\underline{MB}^{h}",          # Min hydrogen market buying
-            "pminmarketsell": r"\underline{MS}",                # Min market selling
-            "peleminmarketsell": r"\underline{MS}^{e}",         # Min electrical market selling
-            "phydminmarketsell": r"\underline{MS}^{h}",         # Min hydrogen market selling
-
-            # --- System Balancing ---
-            "pbalanceerror": r"E^{bal}",                        # System balance error
-            "pelebalanceerror": r"E^{bal,e}",                   # Electrical system balance error
-            "phydbalanceerror": r"E^{bal,h}",                   # Hydrogen system balance balance error
-            "pbalanceerrorlimit": r"\overline{E}^{bal}",        # System balance error limit
-            "pelebalanceerrorlimit": r"\overline{E}^{bal,e}",   # Electrical system balance error limit
-            "phydbalanceerrorlimit": r"\overline{E}^{bal,h}",   # Hydrogen system balance error limit
-            # --- Point of Common Coupling (PCC) ---
-            "peleppccmaximport": r"\overline{P}^{PCC,imp,e}",   # Max active power import at PCC
-            "peleppccmaxexport": r"\overline{P}^{PCC,exp,e}",   # Max active power export at PCC
-            "peleqpccmaximport": r"\overline{Q}^{PCC,imp,e}",   # Max reactive power import at PCC
-            "peleqpccmaxexport": r"\overline{Q}^{PCC,exp,e}",   # Max reactive power export at PCC
-            
-            # --- Demand ---
-            "peledemand": r"D^{e}",                             # Electrical demand
-            "phyddemand": r"D^{h}",                             # Hydrogen demand
-            "pelemaxdemand": r"\overline{D}^{e}",               # Electrical max demand
-            "pelemindemand": r"\underline{D}^{e}",              # Electrical min demand
-            "phydmaxdemand": r"\overline{D}^{h}",               # Hydrogen max demand
-            "phydmindemand": r"\underline{D}^{h}",              # Hydrogen min demand
-            "pelepeakdemand": r"D^{e,peak}",                    # Electrical peak demand
-            "phydpeakdemand": r"D^{h,peak}",                    # Hydrogen peak demand
-            "pdemflexible": r"D^{flex}",                        # Generic flexible demand
-            "peledemflexible": r"D^{e,flex}",                   # Electrical flexible demand
-            "phyddemflexible": r"D^{h,flex}",                   # Hydrogen flexible demand
-            "pdemshiftedsteps": r"N^{shift}",                   # Generic demand shifted time steps
-            "peledemshiftedsteps": r"N^{e,shift}",              # Electrical demand shifted time steps
-            "phyddemshiftedsteps": r"N^{h,shift}",              # Hydrogen demand shifted time steps
-
-            # --- Generation and Consumption Limits ---
-            "pcontractedcapacity": r"\hat{E}",                  # Contracted capacity (generic)
-            "pelecontractedcapacity": r"\hat{E}^{e}",           # Contracted electrical capacity
-            "phydcontractedcapacity": r"\hat{E}^{h}",           # Contracted hydrogen capacity
-            "pelemaxproduction": r"\overline{EP}",              # Max electrical generation
-            "peleminproduction": r"\underline{EP}",             # Min electrical generation
-            "phydmaxproduction": r"\overline{HP}",              # Max hydrogen generation
-            "phydminproduction": r"\underline{HP}",             # Min hydrogen generation
-            "pelemaxconsumption": r"\overline{EC}",             # Max electrical consumption
-            "peleminconsumption": r"\underline{EC}",            # Min electrical consumption
-            "phydmaxconsumption": r"\overline{HC}",             # Max hydrogen consumption
-            "phydminconsumption": r"\underline{HC}",            # Min hydrogen consumption
-            "peleconscompress": r"\overline{EC}^{compress}",    # Max electrical consumption (compression)
-
-            # --- Technical Parameters ---
-            "prampuprate": r"RU",                               # Ramp-up rate
-            "prampdwrate": r"RD",                               # Ramp-down rate
-            "puptime": r"TU",                                   # Minimum up time
-            "pdwtime": r"TD",                                   # Minimum down time
-            "peletohydfunction": r"F^{e2h}",                    # Power-to-hydrogen conversion
-            "phydtoelefunction": r"F^{h2e}",                    # Hydrogen-to-power conversion
-
-            # --- Cost Parameters ---
-            "pstartupcost": r"CSU",                             # Start-up cost
-            "pshutdowncost": r"CSD",                            # Shut-down cost
-            "ppeakdemandtariff": r"C^{peak}",                   # Peak demand cost
-            "pnoloadcost": r"C^{nl}",                           # No-load cost
-            "ploadsheddingcost": r"C^{ls}",                     # Load-shedding cost
-            "pspillcost": r"C^{spill}",                         # Spill cost
-            "pfuelafactor": r"A",                               # Linear fuel cost coeff.
-            "pfuelbfactor": r"B",                               # Quadratic fuel cost coeff.
-            "pfuelcfactor": r"C",                               # Fixed fuel cost coeff.
-            "pmaintenancecost": r"CM",                          # Maintenance cost
-            "poperationcost": r"CO",                            # Operation cost
-            "pfixedcost": r"CF",                                # Fixed cost
-            "pvariablecost": r"CV",                             # Variable cost
-            "pinvestmentcost": r"C^{inv}",                      # Investment cost
-            "pannualcost": r"C^{ann}",                          # Annualized cost
-            "pcarbonprice": r"CE",                              # Carbon price or tax
-
-            # --- Electrical Network Parameters ---
-            "peleresistantline": r"R",                          # Resistance
-            "pelereactanceline": r"X",                          # Reactance
-            "peleimpedanceline": r"Z",                          # Impedance magnitude
-            "peleconductline": r"G",                            # Conductance
-            "pelesusceptline": r"B",                            # Susceptance
-            "peleshuntsuscepline": r"B^{l}",                    # Line shunt susceptance
-            "pelemaxcurrent": r"\overline{I}",                  # Max current
-            "pelemaxapparentpower": r"\overline{S}",            # Max apparent power
-            "pelemaxrealpower": r"\overline{P}",                # Max real power
-            "peleminrealpower": r"\underline{P}",               # Min real power
-            "pelemaxreactivepower": r"\overline{Q}",            # Max reactive power
-            "peleminreactivepower": r"\underline{Q}",           # Min reactive power
-            "pelemaxvolt": r"\overline{V}",                     # Max voltage magnitude
-            "peleminvolt": r"\underline{V}",                    # Min voltage magnitude
-            "pelemaxvoltageangle": r"\overline{\theta}",        # Max voltage angle
-            "peleminvoltageangle": r"\underline{\theta}",       # Min voltage angle
-            "peleinitvolt": r"V^{0}",                           # Initial voltage
-            "phydmaxflow": r"\overline{H}",                     # Max hydrogen flow
-            "phydminflow": r"\underline{H}",                    # Min hydrogen flow
-
-            # --- Storage Parameters ---
-            "pelestoragecycle": r"\tau^{e}",                    # Electrical Energy storage duration
-            "pelestorageinflowcycle": r"\tau^{i,e}",            # Electrical Inflow cycle duration
-            "pelestorageoutflowcycle": r"\tau^{o,e}",           # Electrical Outflow cycle duration
-            "pelestorageefficiency": r"\eta^{e}",               # Electrical Storage efficiency
-            "pelestorchargeefficiency": r"\eta^{c,e}",          # Electrical Storage charging efficiency
-            "pelestordischargeefficiency": r"\eta^{d,e}",       # Electrical Storage discharging efficiency
-            "pelestoragecapacity": r"\Psi^{e}",                 # Electrical Storage capacity
-            "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
-            "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
-            "pelemaxoutflow": r"\overline{EO}^{e}",             # Max electrical outflow
-            "pelemininflow": r"\underline{EI}^{e}",             # Min electrical inflow
-            "peleminoutflow": r"\underline{EO}^{e}",            # Min electrical outflow
-            "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
-            "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
-            "phydstoragecycle": r"\tau^{h}",                    # Hydrogen Energy storage duration
-            "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
-            "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
-            "phydstorageefficiency": r"\eta^{h}",               # Hydrogen Storage efficiency
-            "phydstoragecapacity": r"\Psi^{h}",                 # Hydrogen Storage capacity
-            "phydmaxinflow": r"\overline{EI}^{h}",              # Max hydrogen inflow
-            "phydmaxoutflow": r"\overline{EO}^{h}",             # Max hydrogen outflow
-            "phydmininflow": r"\underline{EI}^{h}",             # Min hydrogen inflow
-            "phydminoutflow": r"\underline{EO}^{h}",            # Min hydrogen outflow
-            "phydmaxinventory": r"\overline{SI}^{h}",           # Max hydrogen inventory
-            "phydmininventory": r"\underline{SI}^{h}",          # Min hydrogen inventory
-            "peleminstoragestart": r"S^{e,init}",               # Initial electrical storage inventory
-            "phydminstoragestart": r"S^{h,init}",               # Initial hydrogen storage inventory
-            "peleminstorageend": r"S^{e,end}",                  # End electrical storage inventory
-            "phydminstorageend": r"S^{h,end}",                  # End hydrogen storage inventory
-
-            # --- Frequency Containment Parameters ---
-            "pfcrnrequirement": r"FCRN",                        # Frequency containment reserve
-            "pfcrduprequirement": r"FCRD^{UP}",                 # Frequency containment reserve - upwards
-            "pfcrddwrequirement": r"FCRD^{DW}",                 # Frequency containment reserve - downwards
-            "pafrruprequirement": r"REG^{A,UP}",                # Automatic frequency restoration reserve - upwards
-            "pafrddwrequirement": r"REG^{A,DW}",                # Automatic frequency restoration reserve - downwards
-            "pmfrruprequirement": r"REG^{M,UP}",                # Manual frequency restoration reserve - upwards
-            "pmfrddwrequirement": r"REG^{M,DW}",                # Manual frequency restoration reserve - downwards
-            "pfcrdupreqactivation": r"FCRD^{UP,act}",           # FCR-D upwards reserve activation
-            "pfcrddwreqactivation": r"FCRD^{DW,act}",           # FCR-D downwards reserve activation
+            "pDiscountFactor": r"\Gamma_{\periodindex}",
+            "pDuration": r"\Delta t_{\periodindex,\scenarioindex,\timeindex}",
+            "pEleRetPowerTariff": r"\pi^{\text{peak}}_{\eletraderindex}",
+            "pEleRetMoms": r"\tau^{\text{VAT}}_{\eletraderindex}",
+            "pEleRetOverforingsavgift": r"\pi^{\text{grid,var}}_{\eletraderindex}",
+            "pEleRetFastavgift": r"\pi^{\text{grid,fix}}_{\eletraderindex}",
+            "pVarEnergyCost": r"\lambda^{\text{buy}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pEleRetBuyingRatio": r"\beta^{\text{buy}}_{\eletraderindex}",
+            "pEleRetPaslag": r"\pi^{\text{pass}}_{\eletraderindex}",
+            "pVarEnergyPrice": r"\lambda^{\text{sell}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pEleRetSellingRatio": r"\beta^{\text{sell}}_{\eletraderindex}",
+            "pOperatingReservePriceFCRDUp": r"\lambda^{\text{FCR-D,up}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pOperatingReservePriceFCRDDown": r"\lambda^{\text{FCR-D,down}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pEleGenRetailer": r"R_{\eunitindex}",
+            "pEleRetEnergyTax": r"\tau^{\text{energy}}_{\eletraderindex}",
+            "pEleRetIncentive": r"\iota^{\text{sell}}_{\eletraderindex}",
+            "pEleGenLinearVarCost": r"C^{\text{var,lin}}_{\eunitindex}",
+            "pEleGenConstantVarCost": r"C^{\text{var,const}}_{\eunitindex}",
+            "pEleGenStartUpCost": r"C^{\text{su}}_{\eunitindex}",
+            "pEleGenShutDownCost": r"C^{\text{sd}}_{\eunitindex}",
+            "pEleGenOMVariableCost": r"C^{\text{O&M,var}}_{\eunitindex}",
+            "pGenCO2EmissionCost": r"C^{\text{CO2}}_{\eunitindex}",
+            "pEleGenLinearTerm": r"C^{\text{lin}}_{\eunitindex}",
+            "pParENSCost": r"C^{\text{ENS}}",
+            "pHydGenLinearVarCost": r"C^{\text{var,lin}}_{\hunitindex}",
+            "pHydGenConstantVarCost": r"C^{\text{var,const}}_{\hunitindex}",
+            "pHydGenStartUpCost": r"C^{\text{su}}_{\hunitindex}",
+            "pHydGenShutDownCost": r"C^{\text{sd}}_{\hunitindex}",
+            "pHydGenOMVariableCost": r"C^{\text{O&M,var}}_{\hunitindex}",
+            "pHydGenLinearTerm": r"C^{\text{lin}}_{\hunitindex}",
+            "pParHNSCost": r"C^{\text{HNS}}",
+            "pEleRetMaxBuy": r"\overline{MB}_{\eletraderindex}",
+            "pEleRetMaxSell": r"\overline{MS}_{\eletraderindex}",
+            "pHydRetMaxBuy": r"\overline{MB}_{\hydtraderindex}",
+            "pHydRetMaxSell": r"\overline{MS}_{\hydtraderindex}",
+            "pEleDemFlexible": r"D^{\text{flex}}_{\edemandindex}",
+            "pEleDemShiftedSteps": r"N^{\text{shift}}_{\edemandindex}",
+            "pVarMaxDemand": r"\overline{D}_{\edemandindex, \periodindex,\scenarioindex,\timeindex}",
+            "pOperatingReserveRequireFCRDUp": r"R^{\text{req,FCR-D,up}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pOperatingReserveRequireFCRDDown": r"R^{\text{req,FCR-D,down}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pEleGenNoFCRD": r"B^{\text{noFCRD}}_{\eunitindex}",
+            "pEleMaxPower": r"\overline{P}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMinPower": r"\underline{P}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMinCharge": r"\underline{C}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMaxCharge": r"\overline{C}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMaxStorage": r"\overline{S}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMaxPower2ndBlock": r"\overline{P}^{\text{2nd}}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMaxInflows": r"\overline{I}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMinStorage": r"\underline{S}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMinInflows": r"\underline{I}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMaxStorage": r"\overline{S}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMaxPower2ndBlock": r"\overline{P}^{\text{2nd}}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMaxInflows": r"\overline{I}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMinStorage": r"\underline{S}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMinInflows": r"\underline{I}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleCycleTimeStep": r"\Delta T^{\text{cyc}}_{\eunitindex}",
+            "pEleInitialInventory": r"S^{\text{init}}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleGenEfficiency_discharge": r"\eta^{\text{dis}}_{\eunitindex}",
+            "pEleGenEfficiency_charge": r"\eta^{\text{chg}}_{\eunitindex}",
+            "pHydCycleTimeStep": r"\Delta T^{\text{cyc}}_{\hunitindex}",
+            "pHydInitialInventory": r"S^{\text{init}}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydGenEfficiency": r"\eta_{\hunitindex}",
+            "pHydGenProductionFunction": r"\phi^{\text{prod}}_{\hunitindex}",
+            "pEleGenProductionFunction": r"\phi^{\text{prod}}_{\eunitindex}",
+            "pEleMaxOutflows": r"\overline{O}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleMinOutflows": r"\underline{O}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMaxOutflows": r"\overline{O}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMinOutflows": r"\underline{O}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleOutflowsTimeStep": r"\Delta T^{\text{out}}_{\eunitindex}",
+            "pHydOutflowsTimeStep": r"\Delta T^{\text{out}}_{\hunitindex}",
+            "pEleMaxCharge2ndBlock": r"\overline{C}^{\text{2nd}}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pHydMaxCharge2ndBlock": r"\overline{C}^{\text{2nd}}_{\hunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pVarFixedAvailability": r"A_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pOperatingReserveActivationFCRDUp": r"\alpha^{\text{act,FCR-D,up}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pOperatingReserveActivationFCRDDown": r"\alpha^{\text{act,FCR-D,down}}_{\periodindex,\scenarioindex,\timeindex}",
+            "pEleInitialUC": r"U^{\text{init}}_{\periodindex, \scenarioindex, \eunitindex}",
+            "pHydInitialUC": r"U^{\text{init}}_{\periodindex, \scenarioindex, \hunitindex}",
+            "pEleGenRampUp": r"RU_{\eunitindex}",
+            "pEleGenRampDown": r"RD_{\eunitindex}",
+            "pOptIndBinGenRamps": r"B^{\text{ramps}}",
+            "pHydGenRampUp": r"RU_{\hunitindex}",
+            "pHydGenRampDown": r"RD_{\hunitindex}",
+            "pEleGenUpTime": r"T^{\text{up}}_{\eunitindex}",
+            "pEleGenUpTimeZero": r"T^{\text{up,0}}_{\eunitindex}",
+            "pEleGenDownTime": r"T^{\text{down}}_{\eunitindex}",
+            "pEleGenDownTimeZero": r"T^{\text{down,0}}_{\eunitindex}",
+            "pOptIndBinGenMinTime": r"B^{\text{minTime}}",
+            "pHydGenUpTime": r"T^{\text{up}}_{\hunitindex}",
+            "pHydGenUpTimeZero": r"T^{\text{up,0}}_{\hunitindex}",
+            "pHydGenDownTime": r"T^{\text{down}}_{\hunitindex}",
+            "pHydGenDownTimeZero": r"T^{\text{down,0}}_{\hunitindex}",
+            "pVarStartUp": r"B^{\text{startup}}_{\eunitindex, \periodindex,\scenarioindex,\timeindex}",
+            "pEleGenFixedAvailability": r"A^{\text{fix}}_{\eunitindex}",
+            "pEleNetInitialPeriod": r"T^{\text{init}}_{\busindexa,\busindexb,\circuitindex}",
+            "pParEconomicBaseYear": r"Y^{\text{base}}",
+            "pEleNetFinalPeriod": r"T^{\text{final}}_{\busindexa,\busindexb,\circuitindex}",
+            "pEleNetTTC": r"TTC_{\busindexa,\busindexb,\circuitindex}",
+            "pEleNetReactance": r"X_{\busindexa,\busindexb,\circuitindex}",
 
             # =======================================================
             #                       VARIABLES
