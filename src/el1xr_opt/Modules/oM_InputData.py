@@ -489,7 +489,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict['pDate'] = pd.DataFrame(index=pd.Index(model.psn), columns=['DateTime'])
 
     # Generate DateTime for each psn based on hour difference from hour_of_year
-    parameters_dict['pDate']['DateTime'] = parameters_dict['pDate'].index.get_level_values(2).map(lambda x: DateModel + pd.Timedelta(hours=(int(x[1:]) - hour_of_year)))
+    parameters_dict['pDate']['DateTime'] = parameters_dict['pDate'].index.get_level_values(2).map(lambda x: DateModel + pd.Timedelta(hours=(int(x[1:]) - (hour_of_year+1))))
 
     # Convert 'DateTime' to a datetime object if it isn't already
     parameters_dict['pDate']['DateTime'] = pd.to_datetime(parameters_dict['pDate']['DateTime'])
@@ -1242,14 +1242,17 @@ def create_variables(model, optmodel, indlog):
     #         if model.Par['pHydRetTariffType'][idx[-1]] != 'Hourly':
     #             optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakGlobal')[idx, peak].fix(0.0)
     #             nFixedVariables += 1
-    for idx in model.psder:
-        if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
-            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakDay')[idx].fix(0.0)
-            nFixedVariables += 1
-    for idx in model.psdhr:
-        if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
-            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakDay')[idx].fix(0.0)
-            nFixedVariables += 1
+    # for idx in model.psder:
+    #     if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
+    #         optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakDay')[idx].fix(0.0)
+    #         # # delete the variable from the model to speed up the optimization
+    #         # optmodel.del_component(optmodel.vEleDemPeakDay[idx])
+    #         # nFixedVariables += 1
+    # for idx in model.psdhr:
+    #     if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
+    #         optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakDay')[idx].fix(0.0)
+    #         # optmodel.del_component(optmodel.vHydDemPeakDay[idx])
+    #         # nFixedVariables += 1
 
     for idx in model.psner:
         for peak in model.Peaks:
