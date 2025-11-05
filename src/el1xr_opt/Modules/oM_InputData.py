@@ -511,10 +511,28 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # Define the relationship between loadlevel and day of the year
     model.n2d = [(idx[2], int(parameters_dict['pDate']['Day'][idx])) for idx in model.psn]
     # Define the relationship between day of the year and month
-    model.d2m = [(d, int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn for d in model.doy if int(parameters_dict['pDate']['Day'][idx]) == d]
+    model.d2m = list(dict.fromkeys((int(parameters_dict['pDate']['Day'][idx]), int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn))
 
     model.psm = [(p, sc, m) for p, sc, m in model.ps * model.moy]
     model.psd = [(p, sc, d) for p, sc, d in model.ps * model.doy]
+
+    model.psmer  = [(p, sc, m, er) for p, sc, m, er in model.psm * model.er]
+    model.psmed  = [(p, sc, d, ed) for p, sc, d, ed in model.psd * model.ed]
+    model.psmhr  = [(p, sc, m, hr) for p, sc, m, hr in model.psm * model.hr]
+    model.psmhd  = [(p, sc, m, hd) for p, sc, m, hd in model.psm * model.hd]
+    model.psder  = [(p, sc, d, er) for p, sc, d, er in model.psd * model.er]
+    model.psded  = [(p, sc, d, ed) for p, sc, d, ed in model.psd * model.ed]
+    model.psdhr  = [(p, sc, d, hr) for p, sc, d, hr in model.psd * model.hr]
+    model.psdhd  = [(p, sc, d, hd) for p, sc, d, hd in model.psd * model.hd]
+
+    model.psmd   = [(p, sc, m,  d) for p, sc, m in model.psm for d in model.doy if (d,m) in model.d2m]
+    model.psmdn  = [(p, sc, m,  d,n) for p, sc, m, d in model.psmd for n in model.n if (n,d) in model.n2d]
+    model.psdn   = [(p, sc, d,  n) for p, sc, d in model.psd for n in model.n if (n,d) in model.n2d]
+
+    model.psdner = [(p, sc, d, n, er) for p, sc, d, n in model.psdn for er in model.er if (p,sc,n,er) in model.psner]
+    model.psdned = [(p, sc, d, n, ed) for p, sc, d, n in model.psdn for ed in model.ed if (p,sc,n,ed) in model.psned]
+    model.psdnhr = [(p, sc, d, n, hr) for p, sc, d, n in model.psdn for hr in model.hr if (p,sc,n,hr) in model.psnhr]
+    model.psdnhd = [(p, sc, d, n, hd) for p, sc, d, n in model.psdn for hd in model.hd if (p,sc,n,hd) in model.psnhd]
 
     log_time('--- Defining the temporal reference for the model:', start_time, ind_log=indlog)
     start_time = time.time()
@@ -936,10 +954,10 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalEleRCost',                    Var(model.psn,     within=             Reals, doc='total system electricity reliability cost                            [EUR]'))
     setattr(optmodel, 'vTotalHydRCost',                    Var(model.psn,     within=             Reals, doc='total system hydrogen    reliability cost                            [EUR]'))
 
-    setattr(optmodel, 'vEleDemPeakGlobal',                 Var(model.psm, model.er, model.Peaks, within=NonNegativeReals, doc='electricity peak                                     [kW]'))
-    setattr(optmodel, 'vHydDemPeakGlobal',                 Var(model.psm, model.hr, model.Peaks, within=NonNegativeReals, doc='hydrogen    peak                                   [kgH2]'))
-    setattr(optmodel, 'vEleDemPeakDay',                    Var(model.psd, model.er, within=NonNegativeReals, doc='electricity daily peak                                            [kW]'))
-    setattr(optmodel, 'vHydDemPeakDay',                    Var(model.psd, model.hr, within=NonNegativeReals, doc='hydrogen    daily peak                                          [kgH2]'))
+    setattr(optmodel, 'vEleDemPeakGlobal',                 Var(model.psmer, model.Peaks, within=PositiveReals, doc='electricity peak                                             [kW]'))
+    setattr(optmodel, 'vHydDemPeakGlobal',                 Var(model.psmhr, model.Peaks, within=PositiveReals, doc='hydrogen    peak                                           [kgH2]'))
+    setattr(optmodel, 'vEleDemPeakDay',                    Var(model.psder,   within=PositiveReals, doc='electricity daily peak                                                  [kW]'))
+    setattr(optmodel, 'vHydDemPeakDay',                    Var(model.psdhr,   within=PositiveReals, doc='hydrogen    daily peak                                                [kgH2]'))
 
     # Define continuous variables
     setattr(optmodel, 'vEleBuy',                           Var(model.psner,   within=NonNegativeReals, doc='electricity retail  buy                                                 [kW]'))
@@ -1001,7 +1019,8 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vEleStorCharge',                Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vEleStorDischarge',             Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vElePeakGlobalInd',             Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
-        setattr(optmodel, 'vElePeakDayInd',                Var(model.psner, model.doy,   within=UnitInterval, initialize=0, doc='daily peak hour indicator             '))
+        setattr(optmodel, 'vElePeakMonthInd',              Var(model.psder, model.Peaks, within=UnitInterval, initialize=0, doc='monthly peak hour indicator           '))
+        setattr(optmodel, 'vElePeakDayInd',                Var(model.psdner,             within=UnitInterval, initialize=0, doc='daily peak hour indicator             '))
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
@@ -1009,7 +1028,8 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vHydPeakGlobalInd',             Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
-        setattr(optmodel, 'vHydPeakDayInd',                Var(model.psner, model.doy,   within=UnitInterval, initialize=0, doc='daily peak hour indicator             '))
+        setattr(optmodel, 'vHydPeakMonthInd',              Var(model.psder, model.Peaks, within=UnitInterval, initialize=0, doc='monthly peak hour indicator           '))
+        setattr(optmodel, 'vHydPeakDayInd',                Var(model.psdner,             within=UnitInterval, initialize=0, doc='daily peak hour indicator             '))
     else:
         setattr(optmodel, 'vEleGenCommitment',             Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vEleGenStartUp',                Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary start-up             '))
@@ -1018,7 +1038,8 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vEleStorCharge',                Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vEleStorDischarge',             Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vElePeakGlobalInd',             Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
-        setattr(optmodel, 'vElePeakDayInd',                Var(model.psner, model.doy,   within=Binary,       initialize=0, doc='daily peak hour indicator             '))
+        setattr(optmodel, 'vElePeakMonthInd',              Var(model.psder, model.Peaks, within=Binary,       initialize=0, doc='monthly peak hour indicator           '))
+        setattr(optmodel, 'vElePeakDayInd',                Var(model.psdner,             within=Binary,       initialize=0, doc='daily peak hour indicator             '))
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary shut-down            '))
@@ -1026,7 +1047,8 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vHydPeakGlobalInd',             Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
-        setattr(optmodel, 'vHydPeakDayInd',                Var(model.psner, model.doy,   within=Binary,       initialize=0, doc='daily peak hour indicator             '))
+        setattr(optmodel, 'vHydPeakMonthInd',              Var(model.psder, model.Peaks, within=Binary,       initialize=0, doc='monthly peak hour indicator           '))
+        setattr(optmodel, 'vHydPeakDayInd',                Var(model.psdner,             within=Binary,       initialize=0, doc='daily peak hour indicator             '))
 
     if model.Par['pOptIndBinNetOperat'] == 0:
         setattr(optmodel, 'vEleNetCommit',                 Var(model.psnela,  within=UnitInterval, initialize=0, doc='network binary operation              '))
@@ -1210,24 +1232,57 @@ def create_variables(model, optmodel, indlog):
     nFixedVariables = 0.0
 
     # fixing the DemPeakDay and PeakDayInd variables
-    for idx in model.psd:
-        for er in model.er:
-            if model.Par['pEleRetTariffType'][er] != 'Daily':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[er]}DemPeakDay')[idx, er].fix(0.0)
-                nFixedVariables += 1
-        for hr in model.hr:
-            if model.Par['pHydRetTariffType'][hr] != 'Daily':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[hr]}DemPeakDay')[idx, hr].fix(0.0)
-                nFixedVariables += 1
+    # for idx in model.psmer:
+    #     for peak in model.Peaks:
+    #         if model.Par['pEleRetTariffType'][idx[-1]] != 'Hourly':
+    #             optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakGlobal')[idx, peak].fix(0.0)
+    #             nFixedVariables += 1
+    # for idx in model.psmhr:
+    #     for peak in model.Peaks:
+    #         if model.Par['pHydRetTariffType'][idx[-1]] != 'Hourly':
+    #             optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakGlobal')[idx, peak].fix(0.0)
+    #             nFixedVariables += 1
+    for idx in model.psder:
+        if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
+            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakDay')[idx].fix(0.0)
+            nFixedVariables += 1
+    for idx in model.psdhr:
+        if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
+            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}DemPeakDay')[idx].fix(0.0)
+            nFixedVariables += 1
+
     for idx in model.psner:
-        for d in model.doy:
-            if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx, d].fix(0.0)
+        for peak in model.Peaks:
+            if model.Par['pEleRetTariffType'][idx[-1]] != 'Hourly':
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakGlobalInd')[idx,peak].fix(0.0)
                 nFixedVariables += 1
     for idx in model.psnhr:
+        for peak in model.Peaks:
+            if model.Par['pHydRetTariffType'][idx[-1]] != 'Hourly':
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakGlobalInd')[idx,peak].fix(0.0)
+                nFixedVariables += 1
+
+    for idx in model.psder:
+        for peak in model.Peaks:
+            for d in model.doy:
+                if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
+                    optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakMonthInd')[idx[0],idx[1],d,idx[-1],peak].fix(0.0)
+                    nFixedVariables += 1
+    for idx in model.psdhr:
+        for peak in model.Peaks:
+            for d in model.doy:
+                if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
+                    optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakMonthInd')[idx[0],idx[1],d,idx[-1],peak].fix(0.0)
+                    nFixedVariables += 1
+    for idx in model.psdner:
+        for d in model.doy:
+            if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx].fix(0.0)
+                nFixedVariables += 1
+    for idx in model.psdhr:
         for d in model.doy:
             if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx, d].fix(0.0)
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx].fix(0.0)
                 nFixedVariables += 1
 
     # assign the minimum power for the RES units
