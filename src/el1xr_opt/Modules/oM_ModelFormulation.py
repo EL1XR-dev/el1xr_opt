@@ -1111,7 +1111,7 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
+            buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
             # Peak-hour logic
@@ -1128,7 +1128,7 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
+            buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
             # Peak-hour logic
@@ -1142,7 +1142,7 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
+            buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
             # Peak-hour logic
@@ -1157,6 +1157,11 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakNumberMonths', Constraint(optmodel.moy, optmodel.Peaks, rule=eElePeakNumberMonths, doc='peak number of months'))
+
+    # print if the constraints object len is greater than 0
+    if len(optmodel.eElePeakHourValue) > 0 or len(optmodel.eElePeakHourInd_C1) > 0 or len(optmodel.eElePeakHourInd_C2) > 0 or len(optmodel.eElePeakNumberMonths) > 0:
+        log_time('--- Declaring the peak hour selection (all peaks - month):', StartTime, ind_log=indlog)
+        StartTime = time.time() # to compute elapsed time
 
     ####################################################################################################################
     ####################################################################################################################
@@ -1252,7 +1257,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakNumberDays', Constraint(optmodel.moy, optmodel.er, optmodel.Peaks, rule=eElePeakNumberDays, doc='peaks from days'))
 
     # print if the constraints object len is greater than 0
-    if len(optmodel.eElePeakHourValue) > 0 or len(optmodel.eElePeakHourInd_C1) > 0 or len(optmodel.eElePeakHourInd_C2) > 0 or len(optmodel.eElePeakNumberMonths) > 0:
+    if len(optmodel.eEleDailyPeakValue) > 0 or len(optmodel.eEleDailyPeakNumber) > 0 or len(optmodel.eEleDailyPeakInd_C1) > 0 or len(optmodel.eEleDailyPeakInd_C2) > 0 or len(optmodel.eEleGlobalPeakValue) > 0 or len(optmodel.eElePeakGlobalInd_C1) > 0 or len(optmodel.eElePeakGlobalInd_C2) > 0 or len(optmodel.eElePeakNumberDays) > 0:
         log_time('--- Declaring the peak hour selection (daily peaks - month):', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
