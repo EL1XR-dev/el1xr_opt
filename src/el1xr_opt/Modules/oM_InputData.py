@@ -524,15 +524,20 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.psded  = [(p, sc, d, ed) for p, sc, d, ed in model.psd * model.ed]
     model.psdhr  = [(p, sc, d, hr) for p, sc, d, hr in model.psd * model.hr]
     model.psdhd  = [(p, sc, d, hd) for p, sc, d, hd in model.psd * model.hd]
+    model.psdegs = [(p, sc, d, egs) for p, sc, d, egs in model.psd * model.egs]
+    model.psdhgs = [(p, sc, d, hgs) for p, sc, d, hgs in model.psd * model.hgs]
 
-    model.psmd   = [(p, sc, m,  d) for p, sc, m in model.psm for d in model.doy if (d,m) in model.d2m]
-    model.psmdn  = [(p, sc, m,  d,n) for p, sc, m, d in model.psmd for n in model.n if (n,d) in model.n2d]
-    model.psdn   = [(p, sc, d,  n) for p, sc, d in model.psd for n in model.n if (n,d) in model.n2d]
+    model.psmd   = [(p, sc, m, d) for p, sc, m in model.psm for d in model.doy if (d,m) in model.d2m]
+    model.psmdn  = [(p, sc, m, d,n) for p, sc, m, d in model.psmd for n in model.n if (n,d) in model.n2d]
+    model.psdn   = [(p, sc, d, n) for p, sc, d in model.psd for n in model.n if (n,d) in model.n2d]
 
     model.psdner = [(p, sc, d, n, er) for p, sc, d, n in model.psdn for er in model.er if (p,sc,n,er) in model.psner]
     model.psdned = [(p, sc, d, n, ed) for p, sc, d, n in model.psdn for ed in model.ed if (p,sc,n,ed) in model.psned]
     model.psdnhr = [(p, sc, d, n, hr) for p, sc, d, n in model.psdn for hr in model.hr if (p,sc,n,hr) in model.psnhr]
     model.psdnhd = [(p, sc, d, n, hd) for p, sc, d, n in model.psdn for hd in model.hd if (p,sc,n,hd) in model.psnhd]
+
+    model.psdnegs = [(p, sc, d, n, egs) for p, sc, d, n in model.psdn for egs in model.egs if (p,sc,n,egs) in model.psnegs]
+    model.psdnhgs = [(p, sc, d, n, hgs) for p, sc, d, n in model.psdn for hgs in model.hgs if (p,sc,n,hgs) in model.psnhgs]
 
     log_time('--- Defining the temporal reference for the model:', start_time, ind_log=indlog)
     start_time = time.time()
@@ -905,8 +910,8 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalHydMCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    market     cost                           [EUR]'))
     setattr(optmodel, 'vTotalEleOCost',                    Var(model.psn,     within=             Reals, doc='total          electricity   oper     cost                           [EUR]'))
     setattr(optmodel, 'vTotalHydOCost',                    Var(model.psn,     within=             Reals, doc='total          hydrogen      oper     cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleDCost',                    Var(model.psn,     within=             Reals, doc='total electricity    degradation      cost                           [EUR]'))
-    setattr(optmodel, 'vTotalHydDCost',                    Var(model.psn,     within=             Reals, doc='total hydrogen       degradation      cost                           [EUR]'))
+    setattr(optmodel, 'vTotalEleDCost',                    Var(model.psd,     within=             Reals, doc='total electricity    degradation      cost                           [EUR]'))
+    setattr(optmodel, 'vTotalHydDCost',                    Var(model.psd,     within=             Reals, doc='total hydrogen       degradation      cost                           [EUR]'))
 
     # electricity and hydrogen revenue components
     setattr(optmodel, 'vTotalEleXRev',                     Var(model.ps ,     within=             Reals, doc='total tax             electricity  revenue                           [EUR]'))
@@ -971,6 +976,12 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vEleEnergyInflows',                 Var(model.psnegs,  within=NonNegativeReals, doc='unscheduled inflows  of all ESS units                                  [kWh]'))
     setattr(optmodel, 'vEleEnergyOutflows',                Var(model.psnegs,  within=NonNegativeReals, doc='scheduled   outflows of all ESS units                                  [kWh]'))
     setattr(optmodel, 'vEleInventory',                     Var(model.psnegs,  within=NonNegativeReals, doc='ESS inventory                                                          [kWh]'))
+    setattr(optmodel, 'vEleInventoryMinDay',               Var(model.psdegs,  within=NonNegativeReals, doc=f'Minimum battery inventory per day                                     [kWh]'))
+    setattr(optmodel, 'vEleInventoryMaxDay',               Var(model.psdegs,  within=NonNegativeReals, doc=f'Maximum battery inventory per day                                     [kWh]'))
+    setattr(optmodel, 'vEleInventoryDoDDay',               Var(model.psdegs,  within=NonNegativeReals, doc=f'Battery Depth of Discharge per day                                    [kWh]'))
+    setattr(optmodel, 'vEleInventoryDoDS1Day',             Var(model.psdegs,  within=NonNegativeReals, doc=f'Battery Depth of Discharge per day  S1                                [kWh]'))
+    setattr(optmodel, 'vEleInventoryDoDS2Day',             Var(model.psdegs,  within=NonNegativeReals, doc=f'Battery Depth of Discharge per day  S2                                [kWh]'))
+    setattr(optmodel, 'vEleInventoryDoDS3Day',             Var(model.psdegs,  within=NonNegativeReals, doc=f'Battery Depth of Discharge per day  S3                                [kWh]'))
     setattr(optmodel, 'vEleSpillage',                      Var(model.psnegs,  within=NonNegativeReals, doc='ESS spillage                                                           [kWh]'))
     setattr(optmodel, 'vEleExport',                        Var(model.psnnd,   within=NonNegativeReals, doc='electricity export   in node                                            [kW]'))
     setattr(optmodel, 'vEleImport',                        Var(model.psnnd,   within=NonNegativeReals, doc='electricity import   in node                                            [kW]'))
@@ -1069,13 +1080,14 @@ def create_variables(model, optmodel, indlog):
     # List of variables to set bounds
     cost_vars = [optmodel.vTotalEleNCost, optmodel.vTotalEleXCost, optmodel.vTotalEleMCost, optmodel.vTotalHydMCost, optmodel.vTotalEleOCost, optmodel.vTotalHydOCost]
 
-    zero_cost_vars = [optmodel.vTotalEleDCost, optmodel.vTotalHydDCost,
+    zero_cost_vars = [optmodel.vTotalHydDCost,
                       optmodel.vTotalEleMrkPPACost,
                       optmodel.vTotalEleMrkPPARev]
 
     rev_vars = [optmodel.vTotalEleXRev, optmodel.vTotalEleMRev, optmodel.vTotalHydMRev]
 
-    sub_cost_vars = [optmodel.vTotalElePeakCost, optmodel.vTotalEleNetUseVarCost, optmodel.vTotalEleNetUseFixCost,
+    sub_cost_vars = [optmodel.vTotalEleDCost,
+                     optmodel.vTotalElePeakCost, optmodel.vTotalEleNetUseVarCost, optmodel.vTotalEleNetUseFixCost,
                      optmodel.vTotalEleMrkDACost,
                      optmodel.vTotalHydMrkPPACost,
                      optmodel.vTotalEleEnergyTaxCost,
