@@ -32,8 +32,8 @@ def create_objective_function(model, optmodel, indlog):
     # Cost components of the objective function
     def eTotalCComponent(optmodel, p,sc):
         return (optmodel.vTotalCComponent[p,sc] == optmodel.vTotalEleNCost[p,sc] + optmodel.vTotalEleXCost[p,sc] +
-                sum(model.Par['pDuration'][p,sc,n] * sum(optmodel.__getattribute__(f'vTotal{eng}MCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}OCost')[p,sc,n] +
-                                                      optmodel.__getattribute__(f'vTotal{eng}DCost')[p,sc,n] for eng in ['Ele','Hyd']) for n in model.n))
+                sum(model.Par['pDuration'][p,sc,n] * sum(optmodel.__getattribute__(f'vTotal{eng}MCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}OCost')[p,sc,n]  for eng in ['Ele','Hyd']) for n in model.n) +
+                sum(optmodel.__getattribute__(f'vTotal{eng}DCost')[p,sc,d] for eng in ['Ele','Hyd'] for d in model.doy))
     optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [kEUR]'))
 
     # Revenue components of the objective function
@@ -156,6 +156,11 @@ def create_objective_function_components(model, optmodel, indlog):
     def eTotalEleCCost(optmodel, p,sc,n):
         return optmodel.vTotalEleCCost[p,sc,n] == sum(model.Par['pEleGenLinearTerm'][egs] * optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs)
     optmodel.__setattr__('eTotalEleCCost', Constraint(optmodel.psn, rule=eTotalEleCCost, doc='Total consumption cost in electricity units [kEUR]'))
+
+    # Electricity storage degradation cost [M€]
+    def eTotalEleDCost(optmodel, p,sc,d):
+        return optmodel.vTotalEleDCost[p,sc,d] == sum(model.Par['pEleGenDoDC1'][egs] * optmodel.vEleInventoryDoDS1Day[p,sc,d,egs] + model.Par['pEleGenDoDC2'][egs] * optmodel.vEleInventoryDoDS2Day[p,sc,d,egs] + model.Par['pEleGenDoDC3'][egs] * optmodel.vEleInventoryDoDS3Day[p,sc,d,egs] for egs in model.egs)
+    optmodel.__setattr__('eTotalEleDCost', Constraint(optmodel.psd, rule=eTotalEleDCost, doc='Total degradation cost in electricity storage units [kEUR]'))
 
     # Electricity reliability cost [M€]
     def eTotalEleRCost(optmodel, p,sc,n):
@@ -528,6 +533,112 @@ def create_constraints(model, optmodel, indlog):
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleInventory) > 0 or len(optmodel.eHydInventory) > 0:
         log_time('--- Declaring the ESS energy inventory:', StartTime, ind_log=indlog)
+        StartTime = time.time() # to compute elapsed time
+
+    # ESS SoC Min per Day [kWh]
+    def eEleInventoryMinDay(optmodel, p,sc,d,n,egs):
+        if   model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs]:
+             return optmodel.vEleInventoryMinDay[p,sc,d,egs] <= optmodel.vEleInventory[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryMinDay', Constraint(optmodel.psdnegs, rule=eEleInventoryMinDay, doc='ESS inventory Min Day [kWh]'))
+
+    # ESS SoC Max per Day [kWh]
+    def eEleInventoryMaxDay(optmodel, p,sc,d,n,egs):
+        if   model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs]:
+             return optmodel.vEleInventoryMaxDay[p,sc,d,egs] >= optmodel.vEleInventory[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryMaxDay', Constraint(optmodel.psdnegs, rule=eEleInventoryMaxDay, doc='ESS inventory Max Day [kWh]'))
+
+    # ESS DoD per Day [kWh]
+    def eEleInventoryDoD(optmodel, p,sc,d,egs):
+        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+            return optmodel.vEleInventoryDoDDay[p,sc,d,egs] == optmodel.vEleInventoryMaxDay[p,sc,d,egs] - optmodel.vEleInventoryMinDay[p,sc,d,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryDoD', Constraint(optmodel.psdegs, rule=eEleInventoryDoD, doc='ESS Depth of Discharge (DoD) [kWh]'))
+
+    #Total ESS DoD per Day (Segments) and [kWh]
+    def eEleInventoryDoDSegments(optmodel, p,sc,d,egs):
+        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+            return optmodel.vEleInventoryDoDDay[p,sc,d,egs] == optmodel.vEleInventoryDoDS1Day[p,sc,d,egs] + optmodel.vEleInventoryDoDS2Day[p,sc,d,egs] + optmodel.vEleInventoryDoDS3Day[p,sc,d,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryDoDSegments', Constraint(optmodel.psdegs, rule=eEleInventoryDoDSegments, doc='Total ESS Depth of Discharge (DoD) per Segment [kWh]'))
+
+    def eEleInventoryDoDS1Upper(optmodel, p, sc, d, egs):
+        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+            b1 = model.Par['pEleGenDoDS1'][egs]
+            return optmodel.vEleInventoryDoDS1Day[p, sc, d, egs] <= b1 * model.Par['pEleGenMaximumStorage'][egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryDoDS1Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS1Upper, doc='ESS Depth of Discharge (DoD) per Segment 1 Up [kWh]'))
+
+    def eEleInventoryDoDS2Upper(optmodel, p, sc, d, egs):
+        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+            return optmodel.vEleInventoryDoDS2Day[p, sc, d, egs] <= model.Par['pEleGenDoDS2'][egs] * model.Par['pEleGenMaximumStorage'][egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryDoDS2Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS2Upper, doc='ESS Depth of Discharge (DoD) per Segment 2 Upper [kWh]'))
+
+    def eEleInventoryDoDS3Upper(optmodel, p, sc, d, egs):
+        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+            b2 = model.Par['pEleGenDoDS2'][egs]
+            b3 = model.Par['pEleGenDoDS3'][egs]
+            return optmodel.vEleInventoryDoDS3Day[p, sc, d, egs] <= optmodel.vEleInventoryDoDDay[p, sc, d, egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInventoryDoDS3Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS3Upper, doc='ESS Depth of Discharge (DoD) per Segment 3 Upper [kWh]'))
+
+    # #Total ESS DoD per Day (Segment 1) and [kWh]
+    # def eEleInventoryDoDS1Upper(optmodel, p,sc,d,egs):
+    #     if model.Par['pEleGenMaximumStorage'][egs] > 0:
+    #         return optmodel.vEleInventoryDoDS1Day[p,sc,d,egs] <= (model.Par['pEleGenDoDS1'][egs] * model.factor1) * model.Par['pEleGenMaximumStorage'][egs]
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleInventoryDoDS1Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS1Upper, doc='ESS Depth of Discharge (DoD) per Segment 1 Up [kWh]'))
+    #
+    # # def eEleInventoryDoDS1Lower(optmodel, p,sc,d,egs):
+    # #     if model.Par['pGenMaximumStorage'][egs] > 0:
+    # #         return optmodel.vEleInventoryDoDS1Day[p,sc,d,egs] >= 0
+    # #     else:
+    # #         return Constraint.Skip
+    # # optmodel.__setattr__('eEleInventoryDoDS1Lower', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS1Lower, doc='ESS Depth of Discharge (DoD) per Segment 1 Lower [kWh]'))
+    #
+    # #Total ESS DoD per Day (Segment 2) and [kWh]
+    # def eEleInventoryDoDS2Upper(optmodel, p,sc,d,egs):
+    #     if model.Par['pEleGenMaximumStorage'][egs] > 0:
+    #         return optmodel.vEleInventoryDoDS2Day[p,sc,d,egs] <= (model.Par['pEleGenDoDS2'][egs] * model.factor1) * model.Par['pEleGenMaximumStorage'][egs]
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleInventoryDoDS2Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS2Upper, doc='ESS Depth of Discharge (DoD) per Segment 2 Upper [kWh]'))
+    #
+    # # def eEleInventoryDoDS2Lower(optmodel, p,sc,d,egs):
+    # #     if model.Par['pGenMaximumStorage'][egs] > 0:
+    # #         return optmodel.vEleInventoryDoDS2Day[p,sc,d,egs] >= 0
+    # #     else:
+    # #         return Constraint.Skip
+    # # optmodel.__setattr__('eEleInventoryDoDS2Lower', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS2Lower, doc='ESS Depth of Discharge (DoD) per Segment 2 Lower [kWh]'))
+    #
+    # #Total ESS DoD per Day (Segment 3) and [kWh]
+    # def eEleInventoryDoDS3Upper(optmodel, p,sc,d,egs):
+    #     if model.Par['pEleGenMaximumStorage'][egs] > 0:
+    #         return optmodel.vEleInventoryDoDS3Day[p,sc,d,egs] <= (model.Par['pEleGenDoDS3'][egs] * model.factor1) * model.Par['pEleGenMaximumStorage'][egs]
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleInventoryDoDS3Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS3Upper, doc='ESS Depth of Discharge (DoD) per Segment 3 Upper [kWh]'))
+    #
+    # # def eEleInventoryDoDS3Lower(optmodel, p,sc,d,egs):
+    # #     if model.Par['pGenMaximumStorage'][egs] > 0:
+    # #         return optmodel.vEleInventoryDoDS3Day[p,sc,d,egs] >= 0
+    # #     else:
+    # #         return Constraint.Skip
+    # # optmodel.__setattr__('eEleInventoryDoDS3Lower', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS3Lower, doc='ESS Depth of Discharge (DoD) per Segment 3 Lower [kWh]'))
+
+    # print if the constraints object len is greater than 0
+    if (len(optmodel.eEleInventoryMinDay) > 0 or len(optmodel.eEleInventoryMaxDay) > 0 or len(optmodel.eEleInventoryDoD) > 0 or len(optmodel.eEleInventoryDoDSegments) > 0 or len(optmodel.eEleInventoryDoDS1Upper) > 0 or len(optmodel.eEleInventoryDoDS2Upper) > 0 or len(optmodel.eEleInventoryDoDS3Upper) > 0):
+        log_time('--- Declaring the ESS SoC Min/Max and DoD per Day constraints:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
     # Energy conversion from energy from electricity to hydrogen and vice versa [p.u.]
