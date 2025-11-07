@@ -130,7 +130,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
     else:
         SolverResults = Solver.solve(
             optmodel,
-            tee=False,
+            tee=True,
             report_timing=True,
         )
 
@@ -156,7 +156,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         if SolverName == 'gams':
             SolverResults = Solver.solve(optmodel, tee=True, report_timing=True, symbolic_solver_labels=False, add_options=solver_options)
         else:
-            SolverResults = Solver.solve(optmodel, tee=False, report_timing=True)
+            SolverResults = Solver.solve(optmodel, tee=True, report_timing=True)
         SolverResults.write()  # summary of the solver results
 
     log_time('-- Total time for solving the model:', StartTime, ind_log=indlog)
