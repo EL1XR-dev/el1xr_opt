@@ -145,8 +145,10 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     granular_components = {
         'EleNCost': 'vTotalEleNCost', 'EleXCost': 'vTotalEleXCost', 'EleMCost': 'vTotalEleMCost',
-        'EleOCost': 'vTotalEleOCost', 'EleDCost': 'vTotalEleDCost', 'HydMCost': 'vTotalHydMCost',
-        'HydOCost': 'vTotalHydOCost', 'HydDCost': 'vTotalHydDCost', 'EleXRev': 'vTotalEleXRev',
+        'EleOCost': 'vTotalEleOCost', 'HydMCost': 'vTotalHydMCost',
+        'HydOCost': 'vTotalHydOCost', 'EleXRev': 'vTotalEleXRev',
+        # 'EleOCost': 'vTotalEleOCost', 'EleDCost': 'vTotalEleDCost', 'HydMCost': 'vTotalHydMCost',
+        # 'HydOCost': 'vTotalHydOCost', 'HydDCost': 'vTotalHydDCost', 'EleXRev': 'vTotalEleXRev',
         'EleMRev': 'vTotalEleMRev', 'HydMRev': 'vTotalHydMRev',
     }
     static_vars = ['vTotalEleNCost', 'vTotalEleXCost', 'vTotalEleXRev']
@@ -177,8 +179,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # --- Create Hierarchical Aggregations ---
     # Level 3: Cost/Revenue Categories
     market_cost = df_dynamic_agg['EleMCost'] + df_dynamic_agg['HydMCost']
-    operational_cost = (df_dynamic_agg['EleOCost'] + df_dynamic_agg['HydOCost'] +
-                        df_dynamic_agg['EleDCost'] + df_dynamic_agg['HydDCost'])
+    # operational_cost = (df_dynamic_agg['EleOCost'] + df_dynamic_agg['HydOCost'] +
+    #                     df_dynamic_agg['EleDCost'] + df_dynamic_agg['HydDCost'])
+    operational_cost = (df_dynamic_agg['EleOCost'] + df_dynamic_agg['HydOCost'])
     system_cost = df_static['EleNCost'] + df_static['EleXCost']
     market_revenue = df_dynamic_agg['EleMRev'] + df_dynamic_agg['HydMRev']
     system_revenue = df_static['EleXRev']
@@ -268,7 +271,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_TotalCost_Hourly = df_dynamic_output
     Output_TotalCost_Hourly.to_csv(f"{_path}/oM_Result_01_rTotalCost_Hourly_{CaseName}.csv", index=False, sep=',')
 
-    def extract_cost_or_rev(optmodel, model, var_name, set_name, multiplier=False, revenue=False, component_name=None):
+    def extract_cost_or_rev(optmodel, model, var_name, set_name, multiplier=False, timeline=None, revenue=False, component_name=None):
         """
         Generic extractor for cost or revenue components.
 
@@ -289,9 +292,12 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         index_len = len(next(iter(index_set)))
 
         # Compute values
-        if multiplier and index_len == 3:
+        if multiplier and index_len == 3 and timeline == "Hourly":
             data = [var[p, sc, n]() * model.Par['pDuration'][p, sc, n] for p, sc, n in index_set]
-            df = pd.DataFrame(index_set, columns=['Period', 'Scenario', 'Time'])
+            df = pd.DataFrame(index_set, columns=['Period', 'Scenario', 'Hour'])
+        elif multiplier and index_len == 3 and timeline == "Daily":
+            data = [var[p, sc, d]() for p, sc, d in index_set]
+            df = pd.DataFrame(index_set, columns=['Period', 'Scenario', 'Day'])
         else:
             data = [var[p, sc]() for p, sc in index_set]
             df = pd.DataFrame(index_set, columns=['Period', 'Scenario'])
@@ -299,7 +305,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         df['EUR'] = data
 
         # Aggregate if necessary (collapse over Time)
-        if 'Time' in df.columns:
+        if 'Hour' or 'Day' in df.columns:
             df = df.groupby(['Period', 'Scenario'], as_index=False)['EUR'].sum()
 
         # Apply sign convention
@@ -311,16 +317,17 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         return df
 
     # === Extract all components ===
-    Output_vTotalEleMrkDACost     = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDACost',     'psn', multiplier=True, revenue=False, component_name='Day-Ahead Market Cost'   )
-    Output_vTotalEleNetUseFixCost = extract_cost_or_rev(optmodel, model, 'vTotalEleNetUseFixCost', 'ps',                   revenue=False, component_name='Network Fixed Cost'      )
-    Output_vTotalEleNetUseVarCost = extract_cost_or_rev(optmodel, model, 'vTotalEleNetUseVarCost', 'ps',                   revenue=False, component_name='Network Variable Cost'   )
-    Output_vTotalElePeakCost      = extract_cost_or_rev(optmodel, model, 'vTotalElePeakCost',      'ps',                   revenue=False, component_name='Power Peak Cost'         )
-    Output_vTotalEleEnergyTaxCost = extract_cost_or_rev(optmodel, model, 'vTotalEleEnergyTaxCost', 'ps',                   revenue=False, component_name='Energy Tax Cost'         )
-    Output_vTotalEleMrkDARev      = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDARev',      'psn', multiplier=True, revenue=True,  component_name='Day-Ahead Market Revenue')
-    Output_vTotalEleFCRDRev       = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDRev',       'psn', multiplier=True, revenue=True,  component_name='FCR-D Revenue'           )
+    Output_vTotalEleMrkDACost     = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDACost',     'psn', multiplier=True, timeline="Hourly", revenue=False, component_name='Day-Ahead Market Cost'   )
+    Output_vTotalEleNetUseFixCost = extract_cost_or_rev(optmodel, model, 'vTotalEleNetUseFixCost', 'ps',                                      revenue=False, component_name='Network Fixed Cost'      )
+    Output_vTotalEleNetUseVarCost = extract_cost_or_rev(optmodel, model, 'vTotalEleNetUseVarCost', 'ps',                                      revenue=False, component_name='Network Variable Cost'   )
+    Output_vTotalElePeakCost      = extract_cost_or_rev(optmodel, model, 'vTotalElePeakCost',      'ps',                                      revenue=False, component_name='Power Peak Cost'         )
+    Output_vTotalEleEnergyTaxCost = extract_cost_or_rev(optmodel, model, 'vTotalEleEnergyTaxCost', 'ps',                                      revenue=False, component_name='Energy Tax Cost'         )
+    Output_vTotalEleDCost         = extract_cost_or_rev(optmodel, model, 'vTotalEleDCost',         'psd', multiplier=True, timeline="Daily",  revenue=False, component_name='Depht of Discharge Cost' )
+    Output_vTotalEleMrkDARev      = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDARev',      'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='Day-Ahead Market Revenue')
+    Output_vTotalEleFCRDRev       = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDRev',       'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Revenue'           )
 
     # === Combine and export ===
-    Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDRev], ignore_index=True)
+    Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleDCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDRev], ignore_index=True)
     Output_AdditionalCosts.to_csv(f"{_path}/oM_Result_01_rObjFunComponents_{CaseName}.csv", index=False)
 
     # %% outputting the electrical energy balance
