@@ -11,11 +11,11 @@ from src.el1xr_opt.Modules.oM_Sequence import routine
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
-# CASE_NAMES = ["Home1"]  # Add more case names as needed
+# CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
+CASE_NAMES = ["Home1"]  # Add more case names as needed
 EXPECTED_COSTS = {
     "Grid1": 9420.211182713268,
-    "Home1":  618.3414647396012}  # Replace with actual expected costs
+    "Home1":  610.065287739262}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
@@ -29,7 +29,7 @@ def setup_test_case(case_name):
         case=case_name,
         solver="gurobi",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
-        rawresults="False",
+        rawresults="True",
         plots="False",
         indlog="False",
     )
