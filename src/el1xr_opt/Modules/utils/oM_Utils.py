@@ -64,3 +64,56 @@ def log_time(message: str,
             print(f"{msg} {time_str}")
         else:
             print(f"{msg}{' ' * spaces} {time_str}")
+
+def _update_parameters(df, dict, factor, indices, factoring_indices, data_key, prefix):
+    for idx in indices:
+        if idx in factoring_indices:
+            dict[f'{prefix}{idx}'] = df[data_key][idx] * factor
+        else:
+            dict[f'{prefix}{idx}'] = df[data_key][idx]
+
+def _psdn_init(m, dict):
+    # (p, sc, d, n) with d = day(n)
+    for p, sc, n in m.psn:
+        d = dict[n]
+        yield (p, sc, d, n)
+
+def _psmd_init(m, dict):
+    # (p, sc, m, d) with m = month(d)
+    for p, sc, d in m.psd:
+        mth = dict[d]
+        yield (p, sc, mth, d)
+
+def _psmdn_init(m, dict_n2d, dict_d2m):
+    # (p, sc, m, d, n) with m = month(d), d = day(n)
+    for p, sc, n in m.psn:
+        d = dict_n2d[n]
+        mth = dict_d2m[d]
+        yield (p, sc, mth, d, n)
+
+def _cartesian_4_psm(m, extra_set):
+    for (p, sc, mo) in m.psm:
+        for x in extra_set:
+            yield (p, sc, mo, x)
+
+def _cartesian_4_psd(m, extra_set):
+    for (p, sc, d) in m.psd:
+        for x in extra_set:
+            yield (p, sc, d, x)
+
+def _extend_psdn_filtered(m, link_set_name, extra_set, dimen=5):
+    """
+    Build (p, sc, d, n, x) from psdn and extra_set,
+    keeping only those with (p, sc, n, x) in link_set.
+    """
+    psdn = m.psdn
+    link = set(getattr(m, link_set_name))  # e.g., psner: (p, sc, n, er)
+    for (p, sc, d, n) in psdn:
+        for x in extra_set:
+            if (p, sc, n, x) in link:
+                yield (p, sc, d, n, x)
+
+def _apply_mask_and_set_zero(pdict, key, sector_key, threshold):
+    selected_rows = pdict[key].loc[:, sector_key]
+    mask = selected_rows < threshold
+    pdict[key].loc[:,sector_key] = selected_rows.where(~mask, 0.0)
