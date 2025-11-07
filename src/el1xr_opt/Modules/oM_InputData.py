@@ -10,10 +10,12 @@ import datetime
 import os
 import math
 import time                                         # count clock time
+import numpy             as np
 import pandas            as pd
+from   itertools         import product
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
-from  .utils.oM_Utils    import log_time
+from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 def data_processing(DirName, CaseName, DateModel, model, indlog):
     # %% Read the input data
@@ -179,22 +181,15 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     HydRetail_ind = data_frames['dfHydrogenRetail'].columns.to_list()
     idx_retail_factoring = ['MaximumEnergyBuy', 'MinimumEnergyBuy', 'MaximumEnergySell', 'MinimumEnergySell']
 
-    def update_parameters(indices, factoring_indices, data_key, prefix):
-        for idx in indices:
-            if idx in factoring_indices:
-                parameters_dict[f'{prefix}{idx}'] = data_frames[data_key][idx] * factor1
-            else:
-                parameters_dict[f'{prefix}{idx}'] = data_frames[data_key][idx]
-
     # Update electricity-related parameters
-    update_parameters(EleGeneration_ind, idx_gen_factoring, 'dfElectricityGeneration', 'pEleGen')
-    update_parameters(EleDemand_ind, idx_dem_factoring, 'dfElectricityDemand', 'pEleDem')
-    update_parameters(EleRetail_ind, idx_retail_factoring, 'dfElectricityRetail', 'pEleRet')
+    _update_parameters(data_frames, parameters_dict, factor1, EleGeneration_ind, idx_gen_factoring, 'dfElectricityGeneration', 'pEleGen')
+    _update_parameters(data_frames, parameters_dict, factor1, EleDemand_ind, idx_dem_factoring, 'dfElectricityDemand', 'pEleDem')
+    _update_parameters(data_frames, parameters_dict, factor1, EleRetail_ind, idx_retail_factoring, 'dfElectricityRetail', 'pEleRet')
 
     # Update hydrogen-related parameters
-    update_parameters(HydGeneration_ind, idx_gen_factoring, 'dfHydrogenGeneration', 'pHydGen')
-    update_parameters(HydDemand_ind, idx_dem_factoring, 'dfHydrogenDemand', 'pHydDem')
-    update_parameters(HydRetail_ind, idx_retail_factoring, 'dfHydrogenRetail', 'pHydRet')
+    _update_parameters(data_frames, parameters_dict, factor1, HydGeneration_ind, idx_gen_factoring, 'dfHydrogenGeneration', 'pHydGen')
+    _update_parameters(data_frames, parameters_dict, factor1, HydDemand_ind, idx_dem_factoring, 'dfHydrogenDemand', 'pHydDem')
+    _update_parameters(data_frames, parameters_dict, factor1, HydRetail_ind, idx_retail_factoring, 'dfHydrogenRetail', 'pHydRet')
 
     for sector in ['Ele', 'Hyd']:
         parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost'] + parameters_dict[f'p{sector[0:3]}GenOMVariableCost'] * model.factor1  # linear   term variable cost             [MEUR/GWh]
@@ -477,67 +472,128 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     log_time('--- Defining the instrumental sets:', start_time, ind_log=indlog)
     start_time = time.time()
 
-    ## Defining the temporal reference for the model
-    # Hour of the day
-    hour_of_day   = DateModel.hour
-    # Day of the year
-    day_of_year   = DateModel.timetuple().tm_yday
-    # Hour of the year
+    # ## Defining the temporal reference for the model
+    # # Hour of the day
+    # hour_of_day   = DateModel.hour
+    # # Day of the year
+    # day_of_year   = DateModel.timetuple().tm_yday
+    # # Hour of the year
+    # hour_of_year = (day_of_year - 1) * 24 + hour_of_day
+    # # create a dataframe with model.n as index and columns like hour of the year, day of the year and month of the year taking from argument DateModel
+    # # Convert 'DateTime' to a datetime object if it isn't already
+    # parameters_dict['pDate'] = pd.DataFrame(index=pd.Index(model.psn), columns=['DateTime'])
+    #
+    # # Generate DateTime for each psn based on hour difference from hour_of_year
+    # parameters_dict['pDate']['DateTime'] = parameters_dict['pDate'].index.get_level_values(2).map(lambda x: DateModel + pd.Timedelta(hours=(int(x[1:]) - (hour_of_year+1))))
+    #
+    # # Convert 'DateTime' to a datetime object if it isn't already
+    # parameters_dict['pDate']['DateTime'] = pd.to_datetime(parameters_dict['pDate']['DateTime'])
+    #
+    # # Calculate Month, Day of Year, Hour, and Hour of Year
+    # parameters_dict['pDate']['Month'] = parameters_dict['pDate']['DateTime'].dt.month
+    # parameters_dict['pDate']['Day'] = parameters_dict['pDate']['DateTime'].dt.dayofyear
+    # parameters_dict['pDate']['Hour'] = parameters_dict['pDate']['DateTime'].dt.hour
+    # parameters_dict['pDate']['HourOfYear'] = (parameters_dict['pDate']['Day'] - 1) * 24 + parameters_dict['pDate']['Hour']
+
+    # --- TEMPORAL REFERENCE FOR THE MODEL ---
+
+    # Assuming model.n is ordered like ['t0001', 't0002', ..., 'tNNNN']
+    n_list = list(model.n)
+
+    # Reference position of DateModel in the year
+    hour_of_day = DateModel.hour
+    day_of_year = DateModel.timetuple().tm_yday
     hour_of_year = (day_of_year - 1) * 24 + hour_of_day
-    # create a dataframe with model.n as index and columns like hour of the year, day of the year and month of the year taking from argument DateModel
-    # Convert 'DateTime' to a datetime object if it isn't already
-    parameters_dict['pDate'] = pd.DataFrame(index=pd.Index(model.psn), columns=['DateTime'])
 
-    # Generate DateTime for each psn based on hour difference from hour_of_year
-    parameters_dict['pDate']['DateTime'] = parameters_dict['pDate'].index.get_level_values(2).map(lambda x: DateModel + pd.Timedelta(hours=(int(x[1:]) - (hour_of_year+1))))
+    # We want n = 't0001' to correspond to hour 0 of the year (or whatever you intend).
+    # Start datetime for t0001:
+    # start_dt = DateModel - pd.Timedelta(hours=(hour_of_year - 1))
 
-    # Convert 'DateTime' to a datetime object if it isn't already
-    parameters_dict['pDate']['DateTime'] = pd.to_datetime(parameters_dict['pDate']['DateTime'])
 
-    # Calculate Month, Day of Year, Hour, and Hour of Year
-    parameters_dict['pDate']['Month'] = parameters_dict['pDate']['DateTime'].dt.month
-    parameters_dict['pDate']['Day'] = parameters_dict['pDate']['DateTime'].dt.dayofyear
-    parameters_dict['pDate']['Hour'] = parameters_dict['pDate']['DateTime'].dt.hour
-    parameters_dict['pDate']['HourOfYear'] = (parameters_dict['pDate']['Day'] - 1) * 24 + parameters_dict['pDate']['Hour']
+    start_dt = DateModel - pd.Timedelta(hours=(hour_of_year))
 
-    # Define set of hours of the year
-    model.hoy = [int(i) for i in parameters_dict['pDate']['HourOfYear'].unique()]
-    # Define set of days of the year
-    model.doy = [int(i) for i in parameters_dict['pDate']['Day'].unique()]
-    # Define set of months of the year
-    model.moy = [int(i) for i in parameters_dict['pDate']['Month'].unique()]
-    # Define the relationship between loadlevel and month
-    model.n2m = [(idx[2], int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn]
-    # Define the relationship between loadlevel and day of the year
-    model.n2d = [(idx[2], int(parameters_dict['pDate']['Day'][idx])) for idx in model.psn]
-    # Define the relationship between day of the year and month
-    model.d2m = list(dict.fromkeys((int(parameters_dict['pDate']['Day'][idx]), int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn))
+    # Index only by n
+    idx_n = pd.Index(n_list, name='n')
+    pDate = pd.DataFrame(index=idx_n)
 
-    model.psm = [(p, sc, m) for p, sc, m in model.ps * model.moy]
-    model.psd = [(p, sc, d) for p, sc, d in model.ps * model.doy]
+    # Vectorized DateTime for each n (no loops over p, sc)
+    pDate['DateTime'] = start_dt + pd.to_timedelta(np.arange(len(idx_n)), unit='h')
 
-    model.psmer  = [(p, sc, m, er) for p, sc, m, er in model.psm * model.er]
-    model.psmed  = [(p, sc, d, ed) for p, sc, d, ed in model.psd * model.ed]
-    model.psmhr  = [(p, sc, m, hr) for p, sc, m, hr in model.psm * model.hr]
-    model.psmhd  = [(p, sc, m, hd) for p, sc, m, hd in model.psm * model.hd]
-    model.psder  = [(p, sc, d, er) for p, sc, d, er in model.psd * model.er]
-    model.psded  = [(p, sc, d, ed) for p, sc, d, ed in model.psd * model.ed]
-    model.psdhr  = [(p, sc, d, hr) for p, sc, d, hr in model.psd * model.hr]
-    model.psdhd  = [(p, sc, d, hd) for p, sc, d, hd in model.psd * model.hd]
-    model.psdegs = [(p, sc, d, egs) for p, sc, d, egs in model.psd * model.egs]
-    model.psdhgs = [(p, sc, d, hgs) for p, sc, d, hgs in model.psd * model.hgs]
+    # Components
+    pDate['Month'] = pDate['DateTime'].dt.month.astype(int)
+    pDate['Day'] = pDate['DateTime'].dt.dayofyear.astype(int)
+    pDate['Hour'] = pDate['DateTime'].dt.hour.astype(int)
+    pDate['HourOfYear'] = (pDate['Day'] - 1) * 24 + pDate['Hour']
 
-    model.psmd   = [(p, sc, m, d) for p, sc, m in model.psm for d in model.doy if (d,m) in model.d2m]
-    model.psmdn  = [(p, sc, m, d,n) for p, sc, m, d in model.psmd for n in model.n if (n,d) in model.n2d]
-    model.psdn   = [(p, sc, d, n) for p, sc, d in model.psd for n in model.n if (n,d) in model.n2d]
+    parameters_dict['pDate'] = pDate
 
-    model.psdner = [(p, sc, d, n, er) for p, sc, d, n in model.psdn for er in model.er if (p,sc,n,er) in model.psner]
-    model.psdned = [(p, sc, d, n, ed) for p, sc, d, n in model.psdn for ed in model.ed if (p,sc,n,ed) in model.psned]
-    model.psdnhr = [(p, sc, d, n, hr) for p, sc, d, n in model.psdn for hr in model.hr if (p,sc,n,hr) in model.psnhr]
-    model.psdnhd = [(p, sc, d, n, hd) for p, sc, d, n in model.psdn for hd in model.hd if (p,sc,n,hd) in model.psnhd]
+    log_time('--- Creating the temporal reference dataframe:', start_time, ind_log=indlog)
+    start_time = time.time()
 
-    model.psdnegs = [(p, sc, d, n, egs) for p, sc, d, n in model.psdn for egs in model.egs if (p,sc,n,egs) in model.psnegs]
-    model.psdnhgs = [(p, sc, d, n, hgs) for p, sc, d, n in model.psdn for hgs in model.hgs if (p,sc,n,hgs) in model.psnhgs]
+    # # Define set of hours of the year
+    # model.hoy = [int(i) for i in parameters_dict['pDate']['HourOfYear'].unique()]
+    # # Define set of days of the year
+    # model.doy = [int(i) for i in parameters_dict['pDate']['Day'].unique()]
+    # # Define set of months of the year
+    # model.moy = [int(i) for i in parameters_dict['pDate']['Month'].unique()]
+    # # Define the relationship between loadlevel and month
+    # model.n2m = [(idx[2], int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn]
+    # # Define the relationship between loadlevel and day of the year
+    # model.n2d = [(idx[2], int(parameters_dict['pDate']['Day'][idx])) for idx in model.psn]
+    # # Define the relationship between day of the year and month
+    # model.d2m = list(dict.fromkeys((int(parameters_dict['pDate']['Day'][idx]), int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn))
+
+    # --- Fundamental time sets ---
+
+    # Unique values
+    model.hoy = Set(initialize=sorted(pDate['HourOfYear'].unique()))
+    model.doy = Set(initialize=sorted(pDate['Day'].unique()))
+    model.moy = Set(initialize=sorted(pDate['Month'].unique()))
+
+    # n -> month/day
+    model.n2m = Set(dimen=2, initialize=[(n, m) for n, m in zip(pDate.index, pDate['Month'])])
+
+    model.n2d = Set(dimen=2, initialize=[(n, d) for n, d in zip(pDate.index, pDate['Day'])])
+
+    # day -> month (unique pairs)
+    d2m_pairs = list(dict.fromkeys(zip(pDate['Day'], pDate['Month'])))
+    model.d2m = Set(dimen=2, initialize=d2m_pairs)
+
+    log_time('--- Defining the fundamental time sets:', start_time, ind_log=indlog)
+    start_time = time.time()
+
+    # --- Composite time sets ---
+    model.psm = Set(dimen=3, initialize=lambda m: product(m.p, m.sc, m.moy))
+    model.psd = Set(dimen=3, initialize=lambda m: product(m.p, m.sc, m.doy))
+
+    # For quick lookup
+    n2d_dict = dict(model.n2d.data())  # n -> d
+    d2m_dict = {d: m for d, m in d2m_pairs}  # d -> m
+
+    model.psdn = Set(dimen=4, initialize=_psdn_init(model, n2d_dict))
+    model.psmd = Set(dimen=4, initialize=_psmd_init(model, d2m_dict))
+    model.psmdn = Set(dimen=5, initialize=_psmdn_init(model, n2d_dict, d2m_dict))
+
+    # psm × {er, hr, hd}
+    model.psmer  = Set(dimen=4, initialize=lambda m: _cartesian_4_psm(m, m.er))
+    model.psmhr  = Set(dimen=4, initialize=lambda m: _cartesian_4_psm(m, m.hr))
+    model.psmhd  = Set(dimen=4, initialize=lambda m: _cartesian_4_psm(m, m.hd))
+
+    # psd × {er, ed, hr, hd, egs, hgs}
+    model.psder  = Set(dimen=4, initialize=lambda m: _cartesian_4_psd(m, m.er))
+    model.psded  = Set(dimen=4, initialize=lambda m: _cartesian_4_psd(m, m.ed))
+    model.psdhr  = Set(dimen=4, initialize=lambda m: _cartesian_4_psd(m, m.hr))
+    model.psdhd  = Set(dimen=4, initialize=lambda m: _cartesian_4_psd(m, m.hd))
+    model.psdegs = Set(dimen=4, initialize=lambda m: _cartesian_4_psd(m, m.egs))
+    model.psdhgs = Set(dimen=4, initialize=lambda m: _cartesian_4_psd(m, m.hgs))
+
+    # Now define each:
+    model.psdner  = Set(dimen=5, initialize=lambda m: _extend_psdn_filtered(m, 'psner', m.er))
+    model.psdned  = Set(dimen=5, initialize=lambda m: _extend_psdn_filtered(m, 'psned', m.ed))
+    model.psdnhr  = Set(dimen=5, initialize=lambda m: _extend_psdn_filtered(m, 'psnhr', m.hr))
+    model.psdnhd  = Set(dimen=5, initialize=lambda m: _extend_psdn_filtered(m, 'psnhd', m.hd))
+    model.psdnegs = Set(dimen=5, initialize=lambda m: _extend_psdn_filtered(m, 'psnegs', m.egs))
+    model.psdnhgs = Set(dimen=5, initialize=lambda m: _extend_psdn_filtered(m, 'psnhgs', m.hgs))
 
     log_time('--- Defining the temporal reference for the model:', start_time, ind_log=indlog)
     start_time = time.time()
@@ -640,11 +696,6 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     pEleEpsilon = (parameters_dict['pVarMaxDemand'][[ed for ed in model.ed]].sum(axis=1).max()) * 1e-5
     pHydEpsilon = (parameters_dict['pVarMaxDemand'][[hd for hd in model.hd]].sum(axis=1).max()) * 1e-5
 
-    def apply_mask_and_set_zero(parameter_dict, key, sector_key, threshold):
-        selected_rows = parameter_dict[key].loc[:, sector_key]
-        mask = selected_rows < threshold
-        parameter_dict[key].loc[:,sector_key] = selected_rows.where(~mask, 0.0)
-
     # these parameters are in GW or tH2
     for sector in ['Ele', 'Hyd']:
         if sector == 'Ele':
@@ -652,26 +703,26 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         else:
             pEpsilon = pHydEpsilon
 
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinPower'        , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxPower'        , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinCharge'       , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxCharge'       , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinStorage'      , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxStorage'      , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinInflows'      , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxInflows'      , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinOutflows'     , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxOutflows'     , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinFuelCost'     , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxFuelCost'     , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MinCO2Cost'      , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxCO2Cost'      , dict_sector[sector], pEpsilon)
-        apply_mask_and_set_zero(parameters_dict, f'p{sector}InitialInventory', dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinPower'        , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxPower'        , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinCharge'       , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxCharge'       , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinStorage'      , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxStorage'      , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinInflows'      , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxInflows'      , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinOutflows'     , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxOutflows'     , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinFuelCost'     , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxFuelCost'     , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MinCO2Cost'      , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}MaxCO2Cost'      , dict_sector[sector], pEpsilon)
+        _apply_mask_and_set_zero(parameters_dict, f'p{sector}InitialInventory', dict_sector[sector], pEpsilon)
 
-    apply_mask_and_set_zero(parameters_dict, 'pVarMaxDemand'     , model.ed, pEleEpsilon)
-    apply_mask_and_set_zero(parameters_dict, 'pVarMinDemand'     , model.ed, pEleEpsilon)
-    apply_mask_and_set_zero(parameters_dict, 'pVarMaxDemand'     , model.hd, pHydEpsilon)
-    apply_mask_and_set_zero(parameters_dict, 'pVarMinDemand'     , model.hd, pHydEpsilon)
+    _apply_mask_and_set_zero(parameters_dict, 'pVarMaxDemand'     , model.ed, pEleEpsilon)
+    _apply_mask_and_set_zero(parameters_dict, 'pVarMinDemand'     , model.ed, pEleEpsilon)
+    _apply_mask_and_set_zero(parameters_dict, 'pVarMaxDemand'     , model.hd, pHydEpsilon)
+    _apply_mask_and_set_zero(parameters_dict, 'pVarMinDemand'     , model.hd, pHydEpsilon)
 
     for idx in model.reserves_prefixes:
         parameters_dict[f'pOperatingReservePrice_{idx}'     ][parameters_dict[f'pOperatingReservePrice_{idx}'     ] < pEleEpsilon] = 0.0
