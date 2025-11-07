@@ -537,7 +537,7 @@ def create_constraints(model, optmodel, indlog):
 
     # ESS SoC Min per Day [kWh]
     def eEleInventoryMinDay(optmodel, p,sc,d,n,egs):
-        if   model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs]:
+        if   model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs] and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs] == 1):
              return optmodel.vEleInventoryMinDay[p,sc,d,egs] <= optmodel.vEleInventory[p,sc,n,egs]
         else:
             return Constraint.Skip
@@ -545,7 +545,7 @@ def create_constraints(model, optmodel, indlog):
 
     # ESS SoC Max per Day [kWh]
     def eEleInventoryMaxDay(optmodel, p,sc,d,n,egs):
-        if   model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs]:
+        if   model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs] and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs] == 1):
              return optmodel.vEleInventoryMaxDay[p,sc,d,egs] >= optmodel.vEleInventory[p,sc,n,egs]
         else:
             return Constraint.Skip
@@ -553,7 +553,7 @@ def create_constraints(model, optmodel, indlog):
 
     # ESS DoD per Day [kWh]
     def eEleInventoryDoD(optmodel, p,sc,d,egs):
-        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+        if model.Par['pEleGenMaximumStorage'][egs] > 0 and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 1:
             return optmodel.vEleInventoryDoDDay[p,sc,d,egs] == optmodel.vEleInventoryMaxDay[p,sc,d,egs] - optmodel.vEleInventoryMinDay[p,sc,d,egs]
         else:
             return Constraint.Skip
@@ -561,31 +561,30 @@ def create_constraints(model, optmodel, indlog):
 
     #Total ESS DoD per Day (Segments) and [kWh]
     def eEleInventoryDoDSegments(optmodel, p,sc,d,egs):
-        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+        if model.Par['pEleGenMaximumStorage'][egs] > 0 and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 1:
             return optmodel.vEleInventoryDoDDay[p,sc,d,egs] == optmodel.vEleInventoryDoDS1Day[p,sc,d,egs] + optmodel.vEleInventoryDoDS2Day[p,sc,d,egs] + optmodel.vEleInventoryDoDS3Day[p,sc,d,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleInventoryDoDSegments', Constraint(optmodel.psdegs, rule=eEleInventoryDoDSegments, doc='Total ESS Depth of Discharge (DoD) per Segment [kWh]'))
 
     def eEleInventoryDoDS1Upper(optmodel, p, sc, d, egs):
-        if model.Par['pEleGenMaximumStorage'][egs] > 0:
-            b1 = model.Par['pEleGenDoDS1'][egs]
-            return optmodel.vEleInventoryDoDS1Day[p, sc, d, egs] <= b1 * model.Par['pEleGenMaximumStorage'][egs]
+        if model.Par['pEleGenMaximumStorage'][egs] > 0 and model.Par['pEleGenDoDS1'][egs] > 0 and model.Par['pEleGenDoDS1'][egs] < 1 and model.Par['pEleGenDoDC1'][egs] > 0:
+            return optmodel.vEleInventoryDoDS1Day[p, sc, d, egs] <= model.Par['pEleGenDoDS1'][egs] * model.Par['pEleGenMaximumStorage'][egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleInventoryDoDS1Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS1Upper, doc='ESS Depth of Discharge (DoD) per Segment 1 Up [kWh]'))
 
     def eEleInventoryDoDS2Upper(optmodel, p, sc, d, egs):
-        if model.Par['pEleGenMaximumStorage'][egs] > 0:
+        if model.Par['pEleGenMaximumStorage'][egs] > 0 and model.Par['pEleGenDoDS2'][egs] > 0 and model.Par['pEleGenDoDS2'][egs] < 1 and model.Par['pEleGenDoDC2'][egs] > 0:
             return optmodel.vEleInventoryDoDS2Day[p, sc, d, egs] <= model.Par['pEleGenDoDS2'][egs] * model.Par['pEleGenMaximumStorage'][egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleInventoryDoDS2Upper', Constraint(optmodel.psdegs, rule=eEleInventoryDoDS2Upper, doc='ESS Depth of Discharge (DoD) per Segment 2 Upper [kWh]'))
 
     def eEleInventoryDoDS3Upper(optmodel, p, sc, d, egs):
-        if model.Par['pEleGenMaximumStorage'][egs] > 0:
-            b2 = model.Par['pEleGenDoDS2'][egs]
-            b3 = model.Par['pEleGenDoDS3'][egs]
+        if model.Par['pEleGenMaximumStorage'][egs] > 0 and model.Par['pEleGenDoDS3'][egs] > 0 and model.Par['pEleGenDoDS3'][egs] < 1 and model.Par['pEleGenDoDC3'][egs] > 0:
+            # b2 = model.Par['pEleGenDoDS2'][egs]
+            # b3 = model.Par['pEleGenDoDS3'][egs]
             return optmodel.vEleInventoryDoDS3Day[p, sc, d, egs] <= optmodel.vEleInventoryDoDDay[p, sc, d, egs]
         else:
             return Constraint.Skip
