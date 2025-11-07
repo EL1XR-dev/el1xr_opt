@@ -472,29 +472,6 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     log_time('--- Defining the instrumental sets:', start_time, ind_log=indlog)
     start_time = time.time()
 
-    # ## Defining the temporal reference for the model
-    # # Hour of the day
-    # hour_of_day   = DateModel.hour
-    # # Day of the year
-    # day_of_year   = DateModel.timetuple().tm_yday
-    # # Hour of the year
-    # hour_of_year = (day_of_year - 1) * 24 + hour_of_day
-    # # create a dataframe with model.n as index and columns like hour of the year, day of the year and month of the year taking from argument DateModel
-    # # Convert 'DateTime' to a datetime object if it isn't already
-    # parameters_dict['pDate'] = pd.DataFrame(index=pd.Index(model.psn), columns=['DateTime'])
-    #
-    # # Generate DateTime for each psn based on hour difference from hour_of_year
-    # parameters_dict['pDate']['DateTime'] = parameters_dict['pDate'].index.get_level_values(2).map(lambda x: DateModel + pd.Timedelta(hours=(int(x[1:]) - (hour_of_year+1))))
-    #
-    # # Convert 'DateTime' to a datetime object if it isn't already
-    # parameters_dict['pDate']['DateTime'] = pd.to_datetime(parameters_dict['pDate']['DateTime'])
-    #
-    # # Calculate Month, Day of Year, Hour, and Hour of Year
-    # parameters_dict['pDate']['Month'] = parameters_dict['pDate']['DateTime'].dt.month
-    # parameters_dict['pDate']['Day'] = parameters_dict['pDate']['DateTime'].dt.dayofyear
-    # parameters_dict['pDate']['Hour'] = parameters_dict['pDate']['DateTime'].dt.hour
-    # parameters_dict['pDate']['HourOfYear'] = (parameters_dict['pDate']['Day'] - 1) * 24 + parameters_dict['pDate']['Hour']
-
     # --- TEMPORAL REFERENCE FOR THE MODEL ---
 
     # Assuming model.n is ordered like ['t0001', 't0002', ..., 'tNNNN']
@@ -504,11 +481,6 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     hour_of_day = DateModel.hour
     day_of_year = DateModel.timetuple().tm_yday
     hour_of_year = (day_of_year - 1) * 24 + hour_of_day
-
-    # We want n = 't0001' to correspond to hour 0 of the year (or whatever you intend).
-    # Start datetime for t0001:
-    # start_dt = DateModel - pd.Timedelta(hours=(hour_of_year - 1))
-
 
     start_dt = DateModel - pd.Timedelta(hours=(hour_of_year))
 
@@ -530,21 +502,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     log_time('--- Creating the temporal reference dataframe:', start_time, ind_log=indlog)
     start_time = time.time()
 
-    # # Define set of hours of the year
-    # model.hoy = [int(i) for i in parameters_dict['pDate']['HourOfYear'].unique()]
-    # # Define set of days of the year
-    # model.doy = [int(i) for i in parameters_dict['pDate']['Day'].unique()]
-    # # Define set of months of the year
-    # model.moy = [int(i) for i in parameters_dict['pDate']['Month'].unique()]
-    # # Define the relationship between loadlevel and month
-    # model.n2m = [(idx[2], int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn]
-    # # Define the relationship between loadlevel and day of the year
-    # model.n2d = [(idx[2], int(parameters_dict['pDate']['Day'][idx])) for idx in model.psn]
-    # # Define the relationship between day of the year and month
-    # model.d2m = list(dict.fromkeys((int(parameters_dict['pDate']['Day'][idx]), int(parameters_dict['pDate']['Month'][idx])) for idx in model.psn))
-
     # --- Fundamental time sets ---
-
     # Unique values
     model.hoy = Set(initialize=sorted(pDate['HourOfYear'].unique()))
     model.doy = Set(initialize=sorted(pDate['Day'].unique()))
@@ -569,6 +527,9 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # For quick lookup
     n2d_dict = dict(model.n2d.data())  # n -> d
     d2m_dict = {d: m for d, m in d2m_pairs}  # d -> m
+
+    model.n2d_dict = n2d_dict
+    model.d2m_dict = d2m_dict
 
     model.psdn = Set(dimen=4, initialize=_psdn_init(model, n2d_dict))
     model.psmd = Set(dimen=4, initialize=_psmd_init(model, d2m_dict))
@@ -1077,7 +1038,7 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vEleGenCommitment',             Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vEleGenStartUp',                Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vEleGenShutDown',               Var(model.psnegt,             within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
-        setattr(optmodel, 'vEleStorOperat',                Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
+        # setattr(optmodel, 'vEleStorOperat',                Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vEleStorCharge',                Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vEleStorDischarge',             Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vElePeakGlobalInd',             Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
@@ -1096,7 +1057,7 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vEleGenCommitment',             Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vEleGenStartUp',                Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vEleGenShutDown',               Var(model.psnegt,             within=Binary,       initialize=0, doc='generator binary shut-down            '))
-        setattr(optmodel, 'vEleStorOperat',                Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
+        # setattr(optmodel, 'vEleStorOperat',                Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vEleStorCharge',                Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vEleStorDischarge',             Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
         setattr(optmodel, 'vElePeakGlobalInd',             Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
@@ -1294,26 +1255,38 @@ def create_variables(model, optmodel, indlog):
     #%% fixing variables
     nFixedVariables = 0.0
 
+    # fixing storage mode based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
+    for idx in model.psnegs:
+        egs = idx[-1]
+        if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 0:  # charge only
+            optmodel.__getattribute__(f'vEleStorCharge')[idx].fix(0.0)
+            optmodel.__getattribute__(f'vEleStorDischarge')[idx].fix(0.0)
+            optmodel.__getattribute__(f'vElePeakDayInd')[idx[:2]+(model.n2d_dict[idx[2]],idx[2],model.Par['pEleGenRetailer'][egs],)].fix(0.0)
+            optmodel.__getattribute__(f'vEleBuy')[idx[:2]+(idx[2],model.Par['pEleGenRetailer'][egs],)].fix(0.0)
+            optmodel.__getattribute__(f'vEleSell')[idx[:2] + (idx[2], model.Par['pEleGenRetailer'][egs],)].fix(0.0)
+            nFixedVariables += 5.0
+
+    # fixing storage variables related to depth of discharge scenarios
     for idx in model.psd:
         for egs in model.egs:
             if (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0:
                 optmodel.__getattribute__(f'vTotalEleDCost')[idx].fix(0.0)
                 nFixedVariables += 1.0
             if (idx, egs) in model.psdegs and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0:
-                optmodel.__getattribute__(f'vEleInventoryMinDay')[idx,egs].fix(0.0)
+                optmodel.__getattribute__(f'vEleInventoryMinDay')[idx+(egs,)].fix(0.0)
                 nFixedVariables += 1.0
-                optmodel.__getattribute__(f'vEleInventoryMaxDay')[idx,egs].fix(0.0)
+                optmodel.__getattribute__(f'vEleInventoryMaxDay')[idx+(egs,)].fix(0.0)
                 nFixedVariables += 1.0
-                optmodel.__getattribute__(f'vEleInventoryDoDDay')[idx,egs].fix(0.0)
+                optmodel.__getattribute__(f'vEleInventoryDoDDay')[idx+(egs,)].fix(0.0)
                 nFixedVariables += 1.0
                 if model.Par['pEleGenDoDS1'][egs] == 0:
-                    optmodel.__getattribute__(f'vEleInventoryDoDS1Day')[idx,egs].fix(0.0)
+                    optmodel.__getattribute__(f'vEleInventoryDoDS1Day')[idx+(egs,)].fix(0.0)
                     nFixedVariables += 1.0
                 if model.Par['pEleGenDoDS2'][egs] == 0:
-                    optmodel.__getattribute__(f'vEleInventoryDoDS2Day')[idx,egs].fix(0.0)
+                    optmodel.__getattribute__(f'vEleInventoryDoDS2Day')[idx+(egs,)].fix(0.0)
                     nFixedVariables += 1.0
                 if model.Par['pEleGenDoDS3'][egs] == 0:
-                    optmodel.__getattribute__(f'vEleInventoryDoDS3Day')[idx,egs].fix(0.0)
+                    optmodel.__getattribute__(f'vEleInventoryDoDS3Day')[idx+(egs,)].fix(0.0)
                     nFixedVariables += 1.0
 
     # fixing the DemPeakDay and PeakDayInd variables
@@ -1342,36 +1315,32 @@ def create_variables(model, optmodel, indlog):
     for idx in model.psner:
         for peak in model.Peaks:
             if model.Par['pEleRetTariffType'][idx[-1]] != 'Hourly':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakGlobalInd')[idx,peak].fix(0.0)
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakGlobalInd')[idx+(peak,)].fix(0.0)
                 nFixedVariables += 1
     for idx in model.psnhr:
         for peak in model.Peaks:
             if model.Par['pHydRetTariffType'][idx[-1]] != 'Hourly':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakGlobalInd')[idx,peak].fix(0.0)
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakGlobalInd')[idx+(peak,)].fix(0.0)
                 nFixedVariables += 1
 
     for idx in model.psder:
         for peak in model.Peaks:
-            for d in model.doy:
-                if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
-                    optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakMonthInd')[idx[0],idx[1],d,idx[-1],peak].fix(0.0)
-                    nFixedVariables += 1
+            if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakMonthInd')[idx+(peak,)].fix(0.0)
+                nFixedVariables += 1
     for idx in model.psdhr:
         for peak in model.Peaks:
-            for d in model.doy:
-                if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
-                    optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakMonthInd')[idx[0],idx[1],d,idx[-1],peak].fix(0.0)
-                    nFixedVariables += 1
-    for idx in model.psdner:
-        for d in model.doy:
-            if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx].fix(0.0)
-                nFixedVariables += 1
-    for idx in model.psdhr:
-        for d in model.doy:
             if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
-                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx].fix(0.0)
+                optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakMonthInd')[idx+(peak,)].fix(0.0)
                 nFixedVariables += 1
+    for idx in model.psdner:
+        if model.Par['pEleRetTariffType'][idx[-1]] != 'Daily':
+            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx].fix(0.0)
+            nFixedVariables += 1
+    for idx in model.psdnhr:
+        if model.Par['pHydRetTariffType'][idx[-1]] != 'Daily':
+            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}PeakDayInd')[idx].fix(0.0)
+            nFixedVariables += 1
 
     # assign the minimum power for the RES units
     for idx in model.psnegr:
