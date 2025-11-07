@@ -1255,16 +1255,16 @@ def create_variables(model, optmodel, indlog):
     #%% fixing variables
     nFixedVariables = 0.0
 
-    # # fixing storage mode based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
-    # for idx in model.psnegs:
-    #     egs = idx[-1]
-    #     if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 0:  # charge only
-    #         optmodel.__getattribute__(f'vEleStorCharge')[idx].fix(0.0)
-    #         optmodel.__getattribute__(f'vEleStorDischarge')[idx].fix(0.0)
-    #         optmodel.__getattribute__(f'vElePeakDayInd')[idx[:2]+(model.n2d_dict[idx[2]],idx[2],model.Par['pEleGenRetailer'][egs],)].fix(0.0)
-    #         optmodel.__getattribute__(f'vEleBuy')[idx[:2]+(idx[2],model.Par['pEleGenRetailer'][egs],)].fix(0.0)
-    #         optmodel.__getattribute__(f'vEleSell')[idx[:2] + (idx[2], model.Par['pEleGenRetailer'][egs],)].fix(0.0)
-    #         nFixedVariables += 5.0
+    # fixing storage mode based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
+    for idx in model.psnegs:
+        egs = idx[-1]
+        if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 0:  # charge only
+            optmodel.__getattribute__(f'vEleStorCharge')[idx].fix(0.0)
+            optmodel.__getattribute__(f'vEleStorDischarge')[idx].fix(0.0)
+            optmodel.__getattribute__(f'vElePeakDayInd')[idx[:2]+(model.n2d_dict[idx[2]],idx[2],model.Par['pEleGenRetailer'][egs],)].fix(0.0)
+            optmodel.__getattribute__(f'vEleBuy')[idx[:2]+(idx[2],model.Par['pEleGenRetailer'][egs],)].fix(0.0)
+            optmodel.__getattribute__(f'vEleSell')[idx[:2] + (idx[2], model.Par['pEleGenRetailer'][egs],)].fix(0.0)
+            nFixedVariables += 5.0
 
     # fixing storage variables related to depth of discharge scenarios
     for idx in model.psd:
