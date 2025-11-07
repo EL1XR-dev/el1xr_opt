@@ -322,7 +322,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_vTotalEleNetUseVarCost = extract_cost_or_rev(optmodel, model, 'vTotalEleNetUseVarCost', 'ps',                                      revenue=False, component_name='Network Variable Cost'   )
     Output_vTotalElePeakCost      = extract_cost_or_rev(optmodel, model, 'vTotalElePeakCost',      'ps',                                      revenue=False, component_name='Power Peak Cost'         )
     Output_vTotalEleEnergyTaxCost = extract_cost_or_rev(optmodel, model, 'vTotalEleEnergyTaxCost', 'ps',                                      revenue=False, component_name='Energy Tax Cost'         )
-    Output_vTotalEleDCost         = extract_cost_or_rev(optmodel, model, 'vTotalEleDCost',         'psd', multiplier=True, timeline="Daily",  revenue=False, component_name='Depht of Discharge Cost' )
+    Output_vTotalEleDCost         = extract_cost_or_rev(optmodel, model, 'vTotalEleDCost',         'psd', multiplier=True, timeline="Daily",  revenue=False, component_name='Depth of Discharge Cost' )
     Output_vTotalEleMrkDARev      = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDARev',      'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='Day-Ahead Market Revenue')
     Output_vTotalEleFCRDRev       = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDRev',       'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Revenue'           )
 
