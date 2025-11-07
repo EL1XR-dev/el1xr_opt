@@ -1243,6 +1243,28 @@ def create_variables(model, optmodel, indlog):
     #%% fixing variables
     nFixedVariables = 0.0
 
+    for idx in model.psd:
+        for egs in model.egs:
+            if (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0:
+                optmodel.__getattribute__(f'vTotalEleDCost')[idx].fix(0.0)
+                nFixedVariables += 1.0
+            if (idx, egs) in model.psdegs and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0:
+                optmodel.__getattribute__(f'vEleInventoryMinDay')[idx,egs].fix(0.0)
+                nFixedVariables += 1.0
+                optmodel.__getattribute__(f'vEleInventoryMaxDay')[idx,egs].fix(0.0)
+                nFixedVariables += 1.0
+                optmodel.__getattribute__(f'vEleInventoryDoDDay')[idx,egs].fix(0.0)
+                nFixedVariables += 1.0
+                if model.Par['pEleGenDoDS1'][egs] == 0:
+                    optmodel.__getattribute__(f'vEleInventoryDoDS1Day')[idx,egs].fix(0.0)
+                    nFixedVariables += 1.0
+                if model.Par['pEleGenDoDS2'][egs] == 0:
+                    optmodel.__getattribute__(f'vEleInventoryDoDS2Day')[idx,egs].fix(0.0)
+                    nFixedVariables += 1.0
+                if model.Par['pEleGenDoDS3'][egs] == 0:
+                    optmodel.__getattribute__(f'vEleInventoryDoDS3Day')[idx,egs].fix(0.0)
+                    nFixedVariables += 1.0
+
     # fixing the DemPeakDay and PeakDayInd variables
     # for idx in model.psmer:
     #     for peak in model.Peaks:
