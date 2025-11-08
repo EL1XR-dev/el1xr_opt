@@ -1196,7 +1196,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
         if model.Par['pVarStartUp'][egs][p,sc,n] and egs in model.egv:
             if n != model.n.first() and model.Par['pVarStartUp'][egs][p,sc,model.n.prev(n)] < model.Par['pVarStartUp'][egs][p,sc,n]:
-                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= 0.8 * model.Par['pEleMaxStorage'][egs][p,sc,n] * 1e3 * model.factor1
+                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= 0.8 * model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1
             else:
                 return Constraint.Skip
         else:
@@ -1228,7 +1228,7 @@ def create_constraints(model, optmodel, indlog):
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy
             else:
-                return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy - 1e2 * sum(optmodel.vElePeakGlobalInd[p,sc,n,er,peak2] for peak2 in optmodel.Peaks if peak2 < peak)
+                return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * sum(optmodel.vElePeakGlobalInd[p,sc,n,er,peak2] for peak2 in optmodel.Peaks if peak2 < peak)
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakHourValue', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourValue, doc='peak hour selection'))
@@ -1242,7 +1242,7 @@ def create_constraints(model, optmodel, indlog):
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
             # Peak-hour logic
-            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - 1e2 * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
+            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakHourInd_C1', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C1, doc='peak hour indicator'))
@@ -1256,7 +1256,7 @@ def create_constraints(model, optmodel, indlog):
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
             # Peak-hour logic
-            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + 1e2 * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
+            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakHourInd_C2', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C2, doc='peak hour indicator'))
@@ -1310,7 +1310,7 @@ def create_constraints(model, optmodel, indlog):
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er]
             # Peak-hour logic
-            return optmodel.vEleDemPeakDay[p,sc,d,er] >= adjusted_buy - 1e2 * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
+            return optmodel.vEleDemPeakDay[p,sc,d,er] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleDailyPeakInd_C1', Constraint(optmodel.psdner, rule=eEleDailyPeakInd_C1, doc='daily peak hour indicator'))
@@ -1324,7 +1324,7 @@ def create_constraints(model, optmodel, indlog):
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er]
             # Peak-hour logic
-            return optmodel.vEleDemPeakDay[p,sc,d,er] <= adjusted_buy + 1e2 * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
+            return optmodel.vEleDemPeakDay[p,sc,d,er] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleDailyPeakInd_C2', Constraint(optmodel.psdner, rule=eEleDailyPeakInd_C2, doc='daily peak hour indicator'))
@@ -1337,7 +1337,7 @@ def create_constraints(model, optmodel, indlog):
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er]
             else:
-                return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er] - 1e2 * sum(optmodel.vElePeakMonthInd[p,sc,d,er,peak2] for peak2 in optmodel.Peaks if peak2 < peak)
+                return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er] - model.Par['pEleRetMaximumEnergySell'][er] * sum(optmodel.vElePeakMonthInd[p,sc,d,er,peak2] for peak2 in optmodel.Peaks if peak2 < peak)
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleGlobalPeakValue', Constraint(optmodel.psmd, optmodel.er, optmodel.Peaks, rule=eEleGlobalPeakValue, doc='global peak hour selection from daily peaks'))
@@ -1346,7 +1346,7 @@ def create_constraints(model, optmodel, indlog):
     def eElePeakGlobalInd_C1(optmodel, p,sc,m,d,er,peak):
         if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
             # Peak-hour logic
-            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er] - 1e2 * (1 - optmodel.vElePeakMonthInd[p,sc,d,er,peak])
+            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er] - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakMonthInd[p,sc,d,er,peak])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakGlobalInd_C1', Constraint(optmodel.psmd, optmodel.er, optmodel.Peaks, rule=eElePeakGlobalInd_C1, doc='global peak hour indicator from daily peaks'))
@@ -1354,7 +1354,7 @@ def create_constraints(model, optmodel, indlog):
     def eElePeakGlobalInd_C2(optmodel, p,sc,d,er,m,peak):
         if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
             # Peak-hour logic
-            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= optmodel.vEleDemPeakDay[p,sc,d,er] + 1e2 * (1 - optmodel.vElePeakMonthInd[p,sc,d,er,peak])
+            return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= optmodel.vEleDemPeakDay[p,sc,d,er] + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakMonthInd[p,sc,d,er,peak])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakGlobalInd_C2', Constraint(optmodel.psd, optmodel.er, optmodel.moy, optmodel.Peaks, rule=eElePeakGlobalInd_C2, doc='global peak hour indicator from daily peaks'))
@@ -1365,6 +1365,24 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakNumberDays', Constraint(optmodel.moy, optmodel.er, optmodel.Peaks, rule=eElePeakNumberDays, doc='peaks from days'))
+
+    # Each day used by at most one peak (prevents double-counting)
+    # def eEleMonthDayAtMostOnePeak_rule(optmodel, p, sc, d, er, mth):
+    #     if (d, mth) in model.d2m and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily':
+    #         return sum(optmodel.vElePeakMonthInd[p, sc, d, er, peak] for peak in model.Peaks) <= 1
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.eEleMonthDayAtMostOnePeak = Constraint(model.psd, model.er, model.moy, rule=eEleMonthDayAtMostOnePeak_rule)
+
+    # vGlobal[1] ≥ vGlobal[2] ≥ ... ≥ vGlobal[K]
+    def eEleMonthPeakOrder_rule(optmodel, p, sc, mth, er, peak):
+        # skip last peak
+        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and peak != model.Peaks.last():
+            next_peak = model.Peaks.next(peak)
+            return optmodel.vEleDemPeakGlobal[p, sc, mth, er, peak] >= optmodel.vEleDemPeakGlobal[p, sc, mth, er, next_peak]
+        else:
+            return Constraint.Skip
+    optmodel.eEleMonthPeakOrder = Constraint(model.psm, model.er, model.Peaks, rule=eEleMonthPeakOrder_rule)
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleDailyPeakValue) > 0 or len(optmodel.eEleDailyPeakNumber) > 0 or len(optmodel.eEleDailyPeakInd_C1) > 0 or len(optmodel.eEleDailyPeakInd_C2) > 0 or len(optmodel.eEleGlobalPeakValue) > 0 or len(optmodel.eElePeakGlobalInd_C1) > 0 or len(optmodel.eElePeakGlobalInd_C2) > 0 or len(optmodel.eElePeakNumberDays) > 0:
