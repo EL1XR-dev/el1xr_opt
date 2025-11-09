@@ -113,6 +113,26 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         Solver.options["Threads"]         = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
         Solver.options["TimeLimit"]       = 1500
         Solver.options["IterationLimit"]  = 1800000
+        print("Gurobi solver options configured.")
+
+    if "asl" in solver_name_lower:
+        # Example HiGHS options (customize as needed)
+        # Solver.options["log_file"]             = os.path.join(_path, f"oM_{CaseName}.log")
+        # Solver.options["log_to_console"]         = True
+        Solver.options["presolve"]               = "on"
+        Solver.options["solver"]               = "ipm"
+        Solver.options["parallel"]             = "on"
+        Solver.options["run_crossover"]        = "on"  # HiGHS allows on/off only
+        Solver.options["mip_rel_gap"]          = 0.02  # equivalent to MIPGap
+        Solver.options["mip_abs_gap"]          = 1e-4
+        # Solver.options["mip_detect_symmetry"]  = "on"
+        # Solver.options["mip_heuristic_effort"] = 0.1  # equivalent to RINS intensity
+        Solver.options["mip_max_nodes"]        = 1000000
+        Solver.options["mip_max_leaves"]       = 1000000
+        Solver.options["threads"]              = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
+        Solver.options["time_limit"]           = 1500
+        Solver.options["ipm_iteration_limit"]  = 1800000
+        print("HiGHS solver options configured.")
 
     # ---- Solve ----
     if SolverName.lower() == "gams":
