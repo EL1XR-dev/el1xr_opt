@@ -238,10 +238,10 @@ mathjax3_config = {
             "monthindex": r"m",                                 # Index for month
             "dayindex": r"d",                                   # Index for day
             "hourindex": r"h",                                  # Index for hour
-            "twentyminuteindex": r"w",                          # Index for 20 minute interval
+            "twentyminuteindex": r"wi",                          # Index for 20 minute interval
             "quarterindex": r"q",                               # Index for quarter
             "tenminuteindex": r"t",                             # Index for 10 minute interval
-            "minuteindex": r"m",                                # Index for minute
+            "minuteindex": r"mi",                                # Index for minute
             "intervalindex": r"u",                              # Index for time interval
             "timeindex": r"n",                                  # Index for time  step
             "storageperiodindex": r"p'",                        # Index for storage period
