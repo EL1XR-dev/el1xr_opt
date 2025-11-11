@@ -22,8 +22,8 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 where:
 
-* :math:`C_{\periodindex,\scenarioindex}` is the total cost component for a given period and scenario, defined by the constraint «``eTotalCComponent``».
-* :math:`R_{\periodindex,\scenarioindex}` is the total revenue component for a given period and scenario, defined by the constraint «``eTotalRComponent``».
+* :math:`C_{\periodindex,\scenarioindex}` is the total cost component for a given period and scenario, as defined in :eq:`eq:TotalCComponent`.
+* :math:`R_{\periodindex,\scenarioindex}` is the total revenue component for a given period and scenario, as defined in :eq:`eq:TotalRComponent`.
 
 .. math::
    :label: eq:TotalCComponent
