@@ -572,25 +572,25 @@ The total DoD is divided into three segments to model non-linear degradation cos
 
 .. math::
    \veleinvdoday_{\periodindex,\scenarioindex,\text{doy},\storageindex} =
-   \veleinvdods1day_{\periodindex,\scenarioindex,\text{doy},\storageindex} +
-   \veleinvdods2day_{\periodindex,\scenarioindex,\text{doy},\storageindex} +
-   \veleinvdods3day_{\periodindex,\scenarioindex,\text{doy},\storageindex}
+   \veleinvdodsaday_{\periodindex,\scenarioindex,\text{doy},\storageindex} +
+   \veleinvdodsbday_{\periodindex,\scenarioindex,\text{doy},\storageindex} +
+   \veleinvdodscday_{\periodindex,\scenarioindex,\text{doy},\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 Upper bounds for each DoD segment are defined by («``eEleInventoryDoDS1Upper``», «``eEleInventoryDoDS2Upper``», «``eEleInventoryDoDS3Upper``»):
 
 .. math::
-   \veleinvdods1day_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+   \veleinvdodsaday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
    \pdods1_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 .. math::
-   \veleinvdods2day_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+   \veleinvdodsbday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
    \pdods2_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 .. math::
-   \veleinvdods3day_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+   \veleinvdodscday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
    \veleinvdoday_{\periodindex,\scenarioindex,\text{doy},\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
