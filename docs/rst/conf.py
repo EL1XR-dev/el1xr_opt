@@ -584,9 +584,9 @@ mathjax3_config = {
             "pmaxstorage": r"\overline{S}",                     # Max storage (generic)
             "pelemaxcharge": r"\overline{C}^{e}",               # Max electrical charge
             "pelemaxchargesecondblock": r"\overline{C}^{e,2b}", # Max electrical charge 2nd block
-            "pdods1": r"DoD_1",                                 # Depth of discharge segment 1
-            "pdods2": r"DoD_2",                                 # Depth of discharge segment 2
-            "pdods3": r"DoD_3",                                 # Depth of discharge segment 3
+            "pdodsa": r"DoD^{a}",                                 # Depth of discharge segment 1
+            "pdodsb": r"DoD^{b}",                                 # Depth of discharge segment 2
+            "pdodsc": r"DoD^{c}",                                 # Depth of discharge segment 3
             "phydstoragecycle": r"\tau^{h}",                    # Hydrogen Energy storage duration
             "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
             "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
@@ -659,9 +659,9 @@ mathjax3_config = {
             "veleinvminday": r"si^{e,min,day}",                 # Electrical inventory min daily
             "veleinvmaxday": r"si^{e,max,day}",                 # Electrical inventory max daily
             "veleinvdoday": r"si^{e,dod,day}",                  # Electrical inventory DoD daily
-            "veleinvdods1day": r"si^{e,dod1,day}",              # Electrical inventory DoD segment 1 daily
-            "veleinvdods2day": r"si^{e,dod2,day}",              # Electrical inventory DoD segment 2 daily
-            "veleinvdods3day": r"si^{e,dod3,day}",              # Electrical inventory DoD segment 3 daily
+            "veleinvdodsaday": r"si^{e,doda,day}",              # Electrical inventory DoD segment 1 daily
+            "veleinvdodsbday": r"si^{e,dodb,day}",              # Electrical inventory DoD segment 2 daily
+            "veleinvdodscday": r"si^{e,dodc,day}",              # Electrical inventory DoD segment 3 daily
             "vhydinventory": r"si^{h}",                         # Hydrogen storage inventory
             "venergyinflow": r"ei",                             # Storage inflow
             "veleenergyinflow": r"ei^{e}",                      # Electrical storage inflow
