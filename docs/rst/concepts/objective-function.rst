@@ -321,3 +321,7 @@ Here:
    :label: eq:TotalHydDCost
 
    C^{deg,h}_{\periodindex,\scenarioindex,\dayindex} = 0
+
+   .. note::
+
+      Hydrogen storage degradation costs are set to zero in this model. This is an intentional simplification, as hydrogen storage degradation is either negligible, not supported by the current implementation, or may be considered in future model extensions.
