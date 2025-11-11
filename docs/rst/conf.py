@@ -151,19 +151,27 @@ mathjax3_config = {
             "nGER": r"\mathcal{G}^{e,res}",                     # All renewable electrical generators
             "nGVRE": r"\mathcal{G}^{e,vres}",                   # All variable renewable electrical generators
             "nGENR": r"\mathcal{G}^{e,nonres}",                 # All non-renewable electrical generators
+            "nGET": r"\mathcal{G}^{e,th}",                      # All thermal electrical generators
             "nGEH": r"\mathcal{G}^{e,h}",                       # All electrical generators consuming hydrogen
             "nGH": r"\mathcal{G}^{h}",                          # All hydrogen generators
             "nGNG": r"\mathcal{G}^{h,cng}",                     # All hydrogen generators consuming natural gas
             "nGHE": r"\mathcal{G}^{h,e}",                       # All hydrogen generators consuming electricity
+            "nHGE": r"\mathcal{G}^{h,e}",                       # All hydrogen generators consuming electricity (alias)
+            "nHGS": r"\mathcal{E}^{h}",                         # All hydrogen storage systems
+            "nHGT": r"\mathcal{G}^{h,th}",                      # All thermal hydrogen generators
             "nE": r"\mathcal{E}",                               # All storage units
             "nEE": r"\mathcal{E}^{e}",                          # All electrical storage units
+            "nEES": r"\mathcal{E}^{e}",                         # All electrical storage units (alias)
             "nEH": r"\mathcal{E}^{h}",                          # All hydrogen storage units
+            "nEHS": r"\mathcal{E}^{h}",                         # All hydrogen storage units (alias)
             "nEV": r"\mathcal{EV}",                             # All vehicles
             "nEVE": r"\mathcal{EV}^{e}",                        # All electrical vehicles
             "nEVH": r"\mathcal{EV}^{h}",                        # All hydrogen vehicles
             "nR": r"\mathcal{R}",                               # All retailers
             "nRE": r"\mathcal{R}^{e}",                          # All electrical retailers
             "nRH": r"\mathcal{R}^{h}",                          # All hydrogen retailers
+            "nREDE": r"\mathcal{R}^{e,d}",                      # Retailer to electrical demand mapping
+            "nREGE": r"\mathcal{R}^{e,g}",                      # Retailer to electrical generator mapping
             "nDE": r"\mathcal{D}^{e}",                          # All electrical demands
             "nDH": r"\mathcal{D}^{h}",                          # All hydrogen demands
             "nK": r"\mathcal{K}",                               # All peak demands
@@ -171,6 +179,7 @@ mathjax3_config = {
             "nKH": r"\mathcal{K}^{h}",                          # All hydrogen peak demands
             "nL": r"\mathcal{L}",                               # All lines
             "nLE": r"\mathcal{L}^{e}",                          # All electrical lines
+            "nELA": r"\mathcal{L}^{e}",                         # All electrical lines (alias)
             "nLH": r"\mathcal{L}^{h}",                          # All hydrogen lines
             "nX": r"\mathcal{R}",                               # All regions
             "nZ": r"\mathcal{Z}",                               # All zones
@@ -219,6 +228,7 @@ mathjax3_config = {
             "storageindex": r"e",                               # Index for storage
             "traderindex": r"r",                                # Index for retailer
             "eletraderindex": r"r^{e}",                         # Index for electrical retailer
+            "eltraderindex": r"r^{e}",                          # Index for electrical retailer (alias)
             "hydtraderindex": r"r^{h}",                         # Index for hydrogen retailer
             "elevehicleindex": r"v^{e}",                        # Index for electrical vehicle
             "hydvehicleindex": r"v^{h}",                        # Index for hydrogen vehicle
@@ -439,6 +449,7 @@ mathjax3_config = {
             "pelemaxmarketbuy": r"\overline{MB}^{e}",           # Max electrical market buying
             "phydmaxmarketbuy": r"\overline{MB}^{h}",           # Max hydrogen market buying
             "pmaxmarketsell": r"\overline{MS}",                 # Max market selling
+            "pmaxsell": r"\overline{MS}",                       # Max market selling (alias)
             "pelemaxmarketsell": r"\overline{MS}^{e}",          # Max electrical market selling
             "phydmaxmarketsell": r"\overline{MS}^{h}",          # Max hydrogen market selling
             "pminmarketbuy": r"\underline{MB}",                 # Min market buying
@@ -447,6 +458,10 @@ mathjax3_config = {
             "pminmarketsell": r"\underline{MS}",                # Min market selling
             "peleminmarketsell": r"\underline{MS}^{e}",         # Min electrical market selling
             "phydminmarketsell": r"\underline{MS}^{h}",         # Min hydrogen market selling
+            "peleretmaxbuy": r"\overline{RB}^{e}",              # Max electrical retailer buy
+            "peleretmaxsell": r"\overline{RS}^{e}",             # Max electrical retailer sell
+            "phydretmaxbuy": r"\overline{RB}^{h}",              # Max hydrogen retailer buy
+            "phydretmaxsell": r"\overline{RS}^{h}",             # Max hydrogen retailer sell
 
             # --- System Balancing ---
             "pbalanceerror": r"E^{bal}",                        # System balance error
@@ -465,6 +480,7 @@ mathjax3_config = {
             "peledemand": r"D^{e}",                             # Electrical demand
             "phyddemand": r"D^{h}",                             # Hydrogen demand
             "pelemaxdemand": r"\overline{D}^{e}",               # Electrical max demand
+            "pmaxdemand": r"\overline{D}",                      # Max demand (generic)
             "pelemindemand": r"\underline{D}^{e}",              # Electrical min demand
             "phydmaxdemand": r"\overline{D}^{h}",               # Hydrogen max demand
             "phydmindemand": r"\underline{D}^{h}",              # Hydrogen min demand
@@ -482,14 +498,17 @@ mathjax3_config = {
             "pelecontractedcapacity": r"\hat{E}^{e}",           # Contracted electrical capacity
             "phydcontractedcapacity": r"\hat{E}^{h}",           # Contracted hydrogen capacity
             "pelemaxproduction": r"\overline{EP}",              # Max electrical generation
+            "pelemaxprodsecondblock": r"\overline{EP}^{2b}",    # Max electrical generation 2nd block
             "peleminproduction": r"\underline{EP}",             # Min electrical generation
             "phydmaxproduction": r"\overline{HP}",              # Max hydrogen generation
+            "phydmaxprodsecondblock": r"\overline{HP}^{2b}",    # Max hydrogen generation 2nd block
             "phydminproduction": r"\underline{HP}",             # Min hydrogen generation
             "pelemaxconsumption": r"\overline{EC}",             # Max electrical consumption
             "peleminconsumption": r"\underline{EC}",            # Min electrical consumption
             "phydmaxconsumption": r"\overline{HC}",             # Max hydrogen consumption
             "phydminconsumption": r"\underline{HC}",            # Min hydrogen consumption
             "peleconscompress": r"\overline{EC}^{compress}",    # Max electrical consumption (compression)
+            "phydprodfunction": r"\eta^{h,prod}",               # Hydrogen production efficiency function
 
             # --- Technical Parameters ---
             "prampuprate": r"RU",                               # Ramp-up rate
@@ -520,6 +539,7 @@ mathjax3_config = {
             # --- Electrical Network Parameters ---
             "peleresistantline": r"R",                          # Resistance
             "pelereactanceline": r"X",                          # Reactance
+            "pnetreactance": r"X",                              # Network reactance (alias)
             "peleimpedanceline": r"Z",                          # Impedance magnitude
             "peleconductline": r"G",                            # Conductance
             "pelesusceptline": r"B",                            # Susceptance
@@ -527,6 +547,7 @@ mathjax3_config = {
             "pelemaxcurrent": r"\overline{I}",                  # Max current
             "pelemaxapparentpower": r"\overline{S}",            # Max apparent power
             "pelemaxrealpower": r"\overline{P}",                # Max real power
+            "pnettc": r"\overline{TC}",                         # Network transmission capacity
             "peleminrealpower": r"\underline{P}",               # Min real power
             "pelemaxreactivepower": r"\overline{Q}",            # Max reactive power
             "peleminreactivepower": r"\underline{Q}",           # Min reactive power
@@ -540,19 +561,32 @@ mathjax3_config = {
 
             # --- Storage Parameters ---
             "pelestoragecycle": r"\tau^{e}",                    # Electrical Energy storage duration
+            "pcycletimestep": r"\tau^{cycle}",                  # Storage cycle timestep (generic)
             "pelestorageinflowcycle": r"\tau^{i,e}",            # Electrical Inflow cycle duration
             "pelestorageoutflowcycle": r"\tau^{o,e}",           # Electrical Outflow cycle duration
+            "poutflowtimestep": r"\tau^{o}",                    # Outflow timestep (generic)
             "pelestorageefficiency": r"\eta^{e}",               # Electrical Storage efficiency
+            "peff": r"\eta",                                    # Generic efficiency
             "pelestorchargeefficiency": r"\eta^{c,e}",          # Electrical Storage charging efficiency
+            "pcheff": r"\eta^{c}",                              # Charging efficiency (generic)
             "pelestordischargeefficiency": r"\eta^{d,e}",       # Electrical Storage discharging efficiency
+            "pdischeff": r"\eta^{d}",                           # Discharging efficiency (generic)
             "pelestoragecapacity": r"\Psi^{e}",                 # Electrical Storage capacity
             "pvarfixedavailability": r"A",                      # Variable/fixed availability ratio
+            "pfixavail": r"A^{fix}",                            # Fixed availability
             "pelemaxinflow": r"\overline{EI}^{e}",              # Max electrical inflow
             "pelemaxoutflow": r"\overline{EO}^{e}",             # Max electrical outflow
             "pelemininflow": r"\underline{EI}^{e}",             # Min electrical inflow
             "peleminoutflow": r"\underline{EO}^{e}",            # Min electrical outflow
             "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
             "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
+            "pelemaxstorage": r"\overline{S}^{e}",              # Max electrical storage
+            "pmaxstorage": r"\overline{S}",                     # Max storage (generic)
+            "pelemaxcharge": r"\overline{C}^{e}",               # Max electrical charge
+            "pelemaxchargesecondblock": r"\overline{C}^{e,2b}", # Max electrical charge 2nd block
+            "pdods1": r"DoD_1",                                 # Depth of discharge segment 1
+            "pdods2": r"DoD_2",                                 # Depth of discharge segment 2
+            "pdods3": r"DoD_3",                                 # Depth of discharge segment 3
             "phydstoragecycle": r"\tau^{h}",                    # Hydrogen Energy storage duration
             "phydstorageinflowcycle": r"\tau^{i,h}",            # Hydrogen Inflow cycle duration
             "phydstorageoutflowcycle": r"\tau^{o,h}",           # Hydrogen Outflow cycle duration
@@ -573,6 +607,8 @@ mathjax3_config = {
             "pfcrnrequirement": r"FCRN",                        # Frequency containment reserve
             "pfcrduprequirement": r"FCRD^{UP}",                 # Frequency containment reserve - upwards
             "pfcrddwrequirement": r"FCRD^{DW}",                 # Frequency containment reserve - downwards
+            "pfcrdact": r"FCRD^{act}",                          # Frequency containment reserve activation
+            "pgennofcrd": r"NoFCRD",                            # Generator with no FCR-D capability flag
             "pafrruprequirement": r"REG^{A,UP}",                # Automatic frequency restoration reserve - upwards
             "pafrddwrequirement": r"REG^{A,DW}",                # Automatic frequency restoration reserve - downwards
             "pmfrruprequirement": r"REG^{M,UP}",                # Manual frequency restoration reserve - upwards
@@ -585,31 +621,47 @@ mathjax3_config = {
             # =======================================================
             # symbols in lowercase to distinguish from parameters
             "velemarketbuy": r"mb^{e}",                         # Electrical market buying
+            "velebuy": r"mb^{e}",                               # Electrical market buying (alias)
             "vhydmarketbuy": r"mb^{h}",                         # Hydrogen market buying
+            "vhydbuy": r"mb^{h}",                               # Hydrogen market buying (alias)
             "vmarketbuy": r"mb",                                # Market buying
             "velemarketsell": r"ms^{e}",                        # Electrical market selling
+            "velesell": r"ms^{e}",                              # Electrical market selling (alias)
             "vhydmarketsell": r"ms^{h}",                        # Hydrogen market selling
+            "vhydsell": r"ms^{h}",                              # Hydrogen market selling (alias)
             "vmarketsell": r"ms",                               # Market selling
             "veleppccimport": r"imp^{e}",                       # Electrical import at PCC
+            "veleimport": r"imp^{e}",                           # Electrical import (alias)
             "veleppccexport": r"exp^{e}",                       # Electrical export at PCC
+            "veleexport": r"exp^{e}",                           # Electrical export (alias)
             "vhydimport": r"imp^{h}",                           # Hydrogen import
             "vhydexport": r"exp^{h}",                           # Hydrogen export
 
             "vproduction": r"p",                                # Generation
             "veleproduction": r"p^{e}",                         # Electrical generation
             "vhydproduction": r"p^{h}",                         # Hydrogen production
+            "veletotaloutput": r"p^{e,tot}",                    # Electrical total output
+            "vhydtotaloutput": r"p^{h,tot}",                    # Hydrogen total output
             "veleproductionact": r"p^{a,e}",                    # Electrical activated generation
             "vhydproductionact": r"p^{a,h}",                    # Hydrogen activated generation
             "vconsumption": r"c",                               # Consumption
             "veleconsumption": r"c^{e}",                        # Electrical consumption
+            "veletotalcharge": r"c^{e,tot}",                    # Electrical total charge
             "veleconsumptionstandby": r"c^{e,standby}",         # Electrical consumption (standby)
             "veleconsumptioncompress": r"c^{e,compress}",       # Electrical consumption (compression)
             "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
+            "vhydtotalcharge": r"c^{h,tot}",                    # Hydrogen total charge
             "veleconsumptionact": r"c^{a,e}",                   # Electrical activated consumption
             "vhydconsumptionact": r"c^{a,h}",                   # Hydrogen activated consumption
             "vinventorystart": r"s^{init}",                     # Storage initial inventory
             "vinventory": r"si",                                # Storage inventory
             "veleinventory": r"si^{e}",                         # Electrical storage inventory
+            "veleinvminday": r"si^{e,min,day}",                 # Electrical inventory min daily
+            "veleinvmaxday": r"si^{e,max,day}",                 # Electrical inventory max daily
+            "veleinvdoday": r"si^{e,dod,day}",                  # Electrical inventory DoD daily
+            "veleinvdods1day": r"si^{e,dod1,day}",              # Electrical inventory DoD segment 1 daily
+            "veleinvdods2day": r"si^{e,dod2,day}",              # Electrical inventory DoD segment 2 daily
+            "veleinvdods3day": r"si^{e,dod3,day}",              # Electrical inventory DoD segment 3 daily
             "vhydinventory": r"si^{h}",                         # Hydrogen storage inventory
             "venergyinflow": r"ei",                             # Storage inflow
             "veleenergyinflow": r"ei^{e}",                      # Electrical storage inflow
@@ -628,6 +680,7 @@ mathjax3_config = {
             "vhydsecondblockconsumption": r"c2b^{h}",           # Hydrogen 2nd block consumption
             "vmagvolt": r"v^{2}",                               # Squared voltage magnitude
             "vangvolt": r"\theta",                              # Voltage angle
+            "vtheta": r"\theta",                                # Voltage angle (alias)
             "vflow": r"f",                                      # Branch flow
             "vactflow": r"f^{P}",                               # Active power flow
             "vreactflow": r"f^{Q}",                             # Reactive power flow
@@ -644,6 +697,8 @@ mathjax3_config = {
             "vhydloadshed": r"ls^{h}",                          # Hydrogen load-shedding
             "vpeakdemand": r"d^{peak}",                         # Peak demand
             "velepeakdemand": r"d^{e,peak}",                    # Electrical peak demand
+            "vglobalpeak": r"d^{global,peak}",                  # Global peak demand
+            "vdailypeak": r"d^{daily,peak}",                    # Daily peak demand
             "vhydpeakdemand": r"d^{h,peak}",                    # Hydrogen peak demand
 
             # --- Reserves ---
@@ -674,6 +729,8 @@ mathjax3_config = {
 
             # --- Binary Variables ---
             "vpeakdemandindbin": r"kd",                         # Peak demand indicator binary
+            "vpeakind": r"kd",                                  # Peak demand indicator binary (alias)
+            "vmonthpeakind": r"kd^{month}",                     # Monthly peak demand indicator binary
             "velepeakdemandindbin": r"kd^{e}",                  # Electrical peak demand indicator binary
             "vhydpeakdemandindbin": r"kd^{h}",                  # Hydrogen peak demand indicator binary
             "vstoroperatbin": r"sf",                            # Storage operating binary
@@ -716,6 +773,12 @@ mathjax3_config = {
             "dualnumber": r"\upsilon",                          # Dual variable index
             "dualperiod": r"\eta",                              # Dual variable period
             "robustindicator": r"\chi",                         # Robustness indicator
+            
+            # =======================================================
+            #               Additional LaTeX aliases
+            # =======================================================
+            "leq": r"\leq",                                     # Less than or equal
+            "geq": r"\geq",                                     # Greater than or equal
         }
     }
 }
