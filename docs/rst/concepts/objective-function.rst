@@ -194,7 +194,7 @@ The formulation is defined by «``eEleTaxCost``».
 .. math::
    :label: eq:EleTaxCost
 
-   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \text{pEleRetEnergyTax}_{r} F1 (1 + M^{moms,e}_{r}) \sum_{n \in \mathcal{T}} mb^{e}_{p,s,n,r} \right)
+   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \peleretenergytax_{r} F1 (1 + M^{moms,e}_{r}) \sum_{n \in \mathcal{T}} mb^{e}_{p,s,n,r} \right)
 
 Incentives and Certificate Revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
