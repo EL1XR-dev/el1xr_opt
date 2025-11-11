@@ -324,10 +324,13 @@ The total charge of a hydrogen unit is defined by («``eHydTotalCharge``»):
    \frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS
 
-The total charge of an electrolyzer is defined by («``eE2HMaxCharge2ndBlock``»):
+The total charge of an electrolyzer is constrained by («``eE2HMaxCharge2ndBlock``», «``eE2HMinCharge2ndBlock``»):
 
 .. math::
-   \frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \cdot \pHydMaxCharge2ndBlock_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \geq \veletotalcharge2ndblock_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \cdot \pHydMinCharge2ndBlock_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
 
 Ramping Limits
 ~~~~~~~~~~~~~~
