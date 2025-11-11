@@ -404,18 +404,6 @@ Minimum up-time and down-time of a thermal unit («``eEleMinUpTime``», «``eEle
    \le 1 - \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET
 
-Maximum ramp-up and ramp-down for charging an electricity ESS («``eEleMaxRampUpCharge``», «``eEleMaxRampDwCharge``»):
-
-.. math::
-   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
-   \ge -1
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
-
-.. math::
-   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
-   \le 1
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
-
 Minimum up-time and down-time for a hydrogen unit («``eHydMinUpTime``», «``eHydMinDownTime``»):
 
 .. math::
