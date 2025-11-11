@@ -1,0 +1,1274 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Constraints &#8212;   documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"nB": "\\mathcal{B}", "nBEP": "\\mathcal{B}^{pcc,e}", "nBE": "\\mathcal{B}^{e}", "nBHP": "\\mathcal{B}^{pcc,h}", "nBH": "\\mathcal{B}^{h}", "nC": "\\mathcal{C}", "nG": "\\mathcal{G}", "nGE": "\\mathcal{G}^{e}", "nGER": "\\mathcal{G}^{e,res}", "nGVRE": "\\mathcal{G}^{e,vres}", "nGENR": "\\mathcal{G}^{e,nonres}", "nGET": "\\mathcal{G}^{e,th}", "nGEH": "\\mathcal{G}^{e,h}", "nGH": "\\mathcal{G}^{h}", "nGNG": "\\mathcal{G}^{h,cng}", "nGHE": "\\mathcal{G}^{h,e}", "nHGE": "\\mathcal{G}^{h,e}", "nHGS": "\\mathcal{E}^{h}", "nHGT": "\\mathcal{G}^{h,th}", "nE": "\\mathcal{E}", "nEE": "\\mathcal{E}^{e}", "nEES": "\\mathcal{E}^{e}", "nEH": "\\mathcal{E}^{h}", "nEHS": "\\mathcal{E}^{h}", "nEV": "\\mathcal{EV}", "nEVE": "\\mathcal{EV}^{e}", "nEVH": "\\mathcal{EV}^{h}", "nR": "\\mathcal{R}", "nRE": "\\mathcal{R}^{e}", "nRH": "\\mathcal{R}^{h}", "nREDE": "\\mathcal{R}^{e,d}", "nREGE": "\\mathcal{R}^{e,g}", "nDE": "\\mathcal{D}^{e}", "nDH": "\\mathcal{D}^{h}", "nK": "\\mathcal{K}", "nKE": "\\mathcal{K}^{e}", "nKH": "\\mathcal{K}^{h}", "nL": "\\mathcal{L}", "nLE": "\\mathcal{L}^{e}", "nELA": "\\mathcal{L}^{e}", "nLH": "\\mathcal{L}^{h}", "nX": "\\mathcal{R}", "nZ": "\\mathcal{Z}", "nA": "\\mathcal{A}", "nT": "\\mathcal{T}", "nV": "\\mathcal{V}", "nP": "\\mathcal{P}", "nS": "\\mathcal{S}", "nM": "\\mathcal{M}", "nW": "\\mathcal{W}", "nD": "\\mathcal{D}", "nH": "\\mathcal{H}", "nWI": "\\mathcal{H}^{w}", "nQ": "\\mathcal{H}^{q}", "nTI": "\\mathcal{H}^{t}", "nMIN": "\\mathcal{H}^{m}", "busindex": "nd", "busindexa": "i", "busindexb": "j", "branchindex": "ij", "lineindexa": "ijc", "lineindexb": "jic", "circuitindex": "c", "elegenindex": "g^{e}", "elenonresgenindex": "g^{e,nonres}", "elenresgenindex": "g^{e,res}", "elenhydgenindex": "g^{e,h}", "hydgenindex": "g^{h}", "hydcnggenindex": "g^{h,cng}", "hydelecgenindex": "g^{h,e}", "genindex": "g", "eledemandindex": "d^{e}", "hyddemandindex": "d^{h}", "demandindex": "d", "eleconsindex": "c^{e}", "hydconsindex": "c^{h}", "consindex": "c", "elepeakindex": "k^{e}", "hydpeakindex": "k^{h}", "peakindex": "k", "elestorageindex": "e^{e}", "hydstorageindex": "e^{h}", "storageindex": "e", "traderindex": "r", "eletraderindex": "r^{e}", "eltraderindex": "r^{e}", "hydtraderindex": "r^{h}", "elevehicleindex": "v^{e}", "hydvehicleindex": "v^{h}", "periodindex": "p", "scenarioindex": "s", "weekindex": "w", "monthindex": "m", "dayindex": "d", "hourindex": "h", "twentyminuteindex": "wi", "quarterindex": "q", "tenminuteindex": "t", "minuteindex": "mi", "intervalindex": "u", "timeindex": "n", "storageperiodindex": "p'", "storagetimeindex": "n'", "storageweekindex": "w'", "storagemonthindex": "m'", "storagedayindex": "d'", "storagehourindex": "h'", "zoneindex": "z", "areaindex": "a", "regionindex": "r", "marketcost": "C", "elemarketcost": "C^{trade,e}", "elemarketcostDA": "C^{DA,e}", "elemarketcostID": "C^{ID,e}", "elemarketcostIMB": "C^{IMB,e}", "elemarketcostPPA": "C^{PPA,e}", "elemarketcostgrid": "C^{grid,e}", "elemarketcosttax": "C^{tax,e}", "elemarketcostVAT": "C^{VAT,e}", "hydmarketcost": "C^{trade,h}", "hydmarketcostPPA": "C^{PPA,h}", "importcost": "C^{imp}", "marketrevenue": "R", "elemarketrevenue": "R^{trade,e}", "elemarketrevenueDA": "R^{DA,e}", "elemarketrevenueancillary": "R^{f,e}", "elemarketrevenuePPA": "R^{PPA,e}", "elemarketrevenuetax": "R^{tax,e}", "elemarketrevenueincentive": "R^{inc,e}", "hydmarketrevenue": "R^{trade,h}", "hydmarketrevenuePPA": "R^{PPA,h}", "exportrevenue": "R^{exp}", "generationcost": "C^{gen}", "elegenerationcost": "C^{gen,e}", "hydgenerationcost": "C^{gen,h}", "startcost": "C^{start}", "shutdowncost": "C^{shut}", "noloadcost": "C^{nl}", "fuelcost": "C^{fuel}", "watercost": "C^{water}", "maintenancecost": "C^{maint}", "operationcost": "C^{op}", "maintopercost": "C^{0\\& M}", "elemaintopercost": "C^{O\\& M,e}", "hydmaintopercost": "C^{O\\& M,h}", "degradationcost": "C^{deg}", "eledegradationcost": "C^{deg,e}", "hyddegradationcost": "C^{deg,h}", "storagecost": "C^{str}", "consumptioncost": "C^{con}", "eleconsumptioncost": "C^{con,e}", "hydconsumptioncost": "C^{con,h}", "demandcost": "C^{dem}", "eledemandcost": "C^{dem,e}", "hyddemandcost": "C^{dem,h}", "peakdemandcost": "C^{peak}", "elepeakdemandcost": "C^{peak,e}", "hydpeakdemandcost": "C^{peak,h}", "netusecost": "C^{netuse}", "elenetusecost": "C^{netuse,e}", "hydnetusecost": "C^{netuse,h}", "captariffcost": "C^{cap}", "elecaptariffcost": "C^{cap,e}", "hydcaptariffcost": "C^{cap,h}", "transmissioncost": "C^{tr}", "linecost": "C^{line}", "convertercost": "C^{conv}", "hvdcost": "C^{hvdc}", "flexibilitycost": "C^{flex}", "ancillaryservicescost": "C^{as}", "spinningreservecost": "C^{sp}", "nonspinningreservecost": "C^{ns}", "regulationupcost": "C^{reg,u}", "regulationdowncost": "C^{reg,d}", "reserveprocurementcost": "C^{res,proc}", "reserveactivationcost": "C^{res,act}", "flexibilityrevenue": "R^{flex}", "ancillaryservicesrevenue": "R^{as}", "spinningreserverevenue": "R^{sp}", "nonspinningreserverevenue": "R^{ns}", "regulationuprevenue": "R^{reg,u}", "regulationdownrevenue": "R^{reg,d}", "reserveprocurementrevenue": "R^{res,proc}", "reserveactivationrevenue": "R^{res,act}", "freqcontnormalrevenue": "R^{FCR-N}", "freqcontdisturbrevenue": "R^{FCR-D}", "unservedenergycost": "C^{ue}", "eleunservedenergycost": "C^{ens,e}", "hydunservedenergycost": "C^{ens,h}", "demandresponsecost": "C^{dr}", "demandflexibilitycost": "C^{df}", "spillcost": "C^{spill}", "loadsheddingcost": "C^{ls}", "curtailmentcost": "C^{curt}", "emissionpermitcost": "C^{emiss,perm}", "emissiontaxcost": "C^{emiss,tax}", "carboncost": "C^{carb}", "eleemissioncost": "C^{emiss,e}", "investmentcost": "C^{inv}", "fixedcost": "C^{fix}", "variablecost": "C^{var}", "annualcost": "C^{ann}", "totalcost": "C^{tot}", "genemission": "EM^{gen}", "conemission": "EM^{con}", "totemission": "EM^{tot}", "genCO2": "EM^{gen,co2}", "conCO2": "EM^{con,co2}", "totCO2": "EM^{tot,co2}", "genNOx": "EM^{gen,nox}", "conNOx": "EM^{con,nox}", "totNOx": "EM^{tot,nox}", "genSO2": "EM^{gen,so2}", "conSO2": "EM^{con,so2}", "totSO2": "EM^{tot,so2}", "genPM25": "EM^{gen,pm25}", "conPM25": "EM^{con,pm25}", "totPM25": "EM^{tot,pm25}", "startupemission": "EM^{start}", "shutdownemission": "EM^{shut}", "noloademission": "EM^{nl}", "storageemission": "EM^{str}", "importemission": "EM^{imp}", "exportemission": "EM^{exp}", "LROcost": "C^{LRO}", "pfactorone": "F1", "pfactortwo": "F2", "pfactorthr": "F3", "pfactorfou": "F4", "pdiscountrate": "\\Gamma", "ptimestep": "\\nu", "ptimestepduration": "\\delta", "pintervalduration": "\\Delta u", "nintervals": "N^{u}", "nperiods": "N^{p}", "nweeks": "N^{w}", "nmonths": "N^{m}", "ndays": "N^{d}", "nhours": "N^{h}", "pelespotprice": "\\lambda^{e}", "phydspotprice": "\\lambda^{h}", "pelebuyprice": "\\lambda^{b,e}", "phydbuyprice": "\\lambda^{b,h}", "pelesellprice": "\\lambda^{s,e}", "phydsellprice": "\\lambda^{s,h}", "peleimportprice": "\\lambda^{imp,e}", "phydimportprice": "\\lambda^{imp,h}", "peleexportprice": "\\lambda^{exp,e}", "phydexportprice": "\\lambda^{exp,h}", "peleppaprice": "\\lambda^{PPA,e}", "phydppaprice": "\\lambda^{PPA,h}", "pelefcrnprice": "\\Pi^{N,e}", "pelefcrdupprice": "\\Pi^{DUP,e}", "pelefcrddwprice": "\\Pi^{DDW,e}", "pelegridaFRRUPprice": "\\Pi^{A-REG-UP,e}", "pelegridaFRDDWprice": "\\Pi^{A-REG-DW,e}", "pelegridmFRRUPprice": "\\Pi^{M-REG-UP,e}", "pelegridmFRDDWprice": "\\Pi^{M-REG-DW,e}", "pelemarketbuyingratio": "\\Upsilon^{b,e}", "pelemarketsellingratio": "\\Upsilon^{s,e}", "pelemarketcertrevenue": "M^{cert,e}", "pelemarketpassthrough": "M^{pass,e}", "pelemarketmoms": "M^{moms,e}", "pelemarketnetfee": "M^{net,e}", "pelemarkettariff": "M^{tariff,e}", "pmaxmarketbuy": "\\overline{MB}", "pelemaxmarketbuy": "\\overline{MB}^{e}", "phydmaxmarketbuy": "\\overline{MB}^{h}", "pmaxmarketsell": "\\overline{MS}", "pmaxsell": "\\overline{MS}", "pelemaxmarketsell": "\\overline{MS}^{e}", "phydmaxmarketsell": "\\overline{MS}^{h}", "pminmarketbuy": "\\underline{MB}", "peleminmarketbuy": "\\underline{MB}^{e}", "phydminmarketbuy": "\\underline{MB}^{h}", "pminmarketsell": "\\underline{MS}", "peleminmarketsell": "\\underline{MS}^{e}", "phydminmarketsell": "\\underline{MS}^{h}", "peleretmaxbuy": "\\overline{RB}^{e}", "peleretmaxsell": "\\overline{RS}^{e}", "phydretmaxbuy": "\\overline{RB}^{h}", "phydretmaxsell": "\\overline{RS}^{h}", "pbalanceerror": "E^{bal}", "pelebalanceerror": "E^{bal,e}", "phydbalanceerror": "E^{bal,h}", "pbalanceerrorlimit": "\\overline{E}^{bal}", "pelebalanceerrorlimit": "\\overline{E}^{bal,e}", "phydbalanceerrorlimit": "\\overline{E}^{bal,h}", "peleppccmaximport": "\\overline{P}^{PCC,imp,e}", "peleppccmaxexport": "\\overline{P}^{PCC,exp,e}", "peleqpccmaximport": "\\overline{Q}^{PCC,imp,e}", "peleqpccmaxexport": "\\overline{Q}^{PCC,exp,e}", "peledemand": "D^{e}", "phyddemand": "D^{h}", "pelemaxdemand": "\\overline{D}^{e}", "pmaxdemand": "\\overline{D}", "pelemindemand": "\\underline{D}^{e}", "phydmaxdemand": "\\overline{D}^{h}", "phydmindemand": "\\underline{D}^{h}", "pelepeakdemand": "D^{e,peak}", "phydpeakdemand": "D^{h,peak}", "pdemflexible": "D^{flex}", "peledemflexible": "D^{e,flex}", "phyddemflexible": "D^{h,flex}", "pdemshiftedsteps": "N^{shift}", "peledemshiftedsteps": "N^{e,shift}", "phyddemshiftedsteps": "N^{h,shift}", "pcontractedcapacity": "\\hat{E}", "pelecontractedcapacity": "\\hat{E}^{e}", "phydcontractedcapacity": "\\hat{E}^{h}", "pelemaxproduction": "\\overline{EP}", "pelemaxprodsecondblock": "\\overline{EP}^{2b}", "peleminproduction": "\\underline{EP}", "phydmaxproduction": "\\overline{HP}", "phydmaxprodsecondblock": "\\overline{HP}^{2b}", "phydminproduction": "\\underline{HP}", "pelemaxconsumption": "\\overline{EC}", "peleminconsumption": "\\underline{EC}", "phydmaxconsumption": "\\overline{HC}", "phydminconsumption": "\\underline{HC}", "peleconscompress": "\\overline{EC}^{compress}", "phydprodfunction": "\\eta^{h,prod}", "prampuprate": "RU", "prampdwrate": "RD", "puptime": "TU", "pdwtime": "TD", "peletohydfunction": "F^{e2h}", "phydtoelefunction": "F^{h2e}", "pstartupcost": "CSU", "pshutdowncost": "CSD", "ppeakdemandtariff": "C^{peak}", "pnoloadcost": "C^{nl}", "ploadsheddingcost": "C^{ls}", "pspillcost": "C^{spill}", "pfuelafactor": "A", "pfuelbfactor": "B", "pfuelcfactor": "C", "pmaintenancecost": "CM", "poperationcost": "CO", "pfixedcost": "CF", "pvariablecost": "CV", "pinvestmentcost": "C^{inv}", "pannualcost": "C^{ann}", "pcarbonprice": "CE", "peleresistantline": "R", "pelereactanceline": "X", "pnetreactance": "X", "peleimpedanceline": "Z", "peleconductline": "G", "pelesusceptline": "B", "peleshuntsuscepline": "B^{l}", "pelemaxcurrent": "\\overline{I}", "pelemaxapparentpower": "\\overline{S}", "pelemaxrealpower": "\\overline{P}", "pnettc": "\\overline{TC}", "peleminrealpower": "\\underline{P}", "pelemaxreactivepower": "\\overline{Q}", "peleminreactivepower": "\\underline{Q}", "pelemaxvolt": "\\overline{V}", "peleminvolt": "\\underline{V}", "pelemaxvoltageangle": "\\overline{\\theta}", "peleminvoltageangle": "\\underline{\\theta}", "peleinitvolt": "V^{0}", "phydmaxflow": "\\overline{H}", "phydminflow": "\\underline{H}", "pelestoragecycle": "\\tau^{e}", "pcycletimestep": "\\tau^{cycle}", "pelestorageinflowcycle": "\\tau^{i,e}", "pelestorageoutflowcycle": "\\tau^{o,e}", "poutflowtimestep": "\\tau^{o}", "pelestorageefficiency": "\\eta^{e}", "peff": "\\eta", "pelestorchargeefficiency": "\\eta^{c,e}", "pcheff": "\\eta^{c}", "pelestordischargeefficiency": "\\eta^{d,e}", "pdischeff": "\\eta^{d}", "pelestoragecapacity": "\\Psi^{e}", "pvarfixedavailability": "A", "pfixavail": "A^{fix}", "pelemaxinflow": "\\overline{EI}^{e}", "pelemaxoutflow": "\\overline{EO}^{e}", "pelemininflow": "\\underline{EI}^{e}", "peleminoutflow": "\\underline{EO}^{e}", "pelemaxinventory": "\\overline{SI}^{e}", "pelemininventory": "\\underline{SI}^{e}", "pelemaxstorage": "\\overline{S}^{e}", "pmaxstorage": "\\overline{S}", "pelemaxcharge": "\\overline{C}^{e}", "pelemaxchargesecondblock": "\\overline{C}^{e,2b}", "phydmaxcharge": "\\overline{C}^{h}", "phydmaxchargesecondblock": "\\overline{C}^{h,2b}", "phydminchargesecondblock": "\\underline{C}^{h,2b}", "pdodsa": "DoD^{a}", "pdodsb": "DoD^{b}", "pdodsc": "DoD^{c}", "phydstoragecycle": "\\tau^{h}", "phydstorageinflowcycle": "\\tau^{i,h}", "phydstorageoutflowcycle": "\\tau^{o,h}", "phydstorageefficiency": "\\eta^{h}", "phydstoragecapacity": "\\Psi^{h}", "phydmaxinflow": "\\overline{EI}^{h}", "phydmaxoutflow": "\\overline{EO}^{h}", "phydmininflow": "\\underline{EI}^{h}", "phydminoutflow": "\\underline{EO}^{h}", "phydmaxinventory": "\\overline{SI}^{h}", "phydmininventory": "\\underline{SI}^{h}", "peleminstoragestart": "S^{e,init}", "phydminstoragestart": "S^{h,init}", "peleminstorageend": "S^{e,end}", "phydminstorageend": "S^{h,end}", "pfcrnrequirement": "FCRN", "pfcrduprequirement": "FCRD^{UP}", "pfcrddwrequirement": "FCRD^{DW}", "pfcrdact": "FCRD^{act}", "pgennofcrd": "NoFCRD", "pafrruprequirement": "REG^{A,UP}", "pafrddwrequirement": "REG^{A,DW}", "pmfrruprequirement": "REG^{M,UP}", "pmfrddwrequirement": "REG^{M,DW}", "pfcrdupreqactivation": "FCRD^{UP,act}", "pfcrddwreqactivation": "FCRD^{DW,act}", "velemarketbuy": "mb^{e}", "velebuy": "mb^{e}", "vhydmarketbuy": "mb^{h}", "vhydbuy": "mb^{h}", "vmarketbuy": "mb", "velemarketsell": "ms^{e}", "velesell": "ms^{e}", "vhydmarketsell": "ms^{h}", "vhydsell": "ms^{h}", "vmarketsell": "ms", "veleppccimport": "imp^{e}", "veleimport": "imp^{e}", "veleppccexport": "exp^{e}", "veleexport": "exp^{e}", "vhydimport": "imp^{h}", "vhydexport": "exp^{h}", "vproduction": "p", "veleproduction": "p^{e}", "vhydproduction": "p^{h}", "veletotaloutput": "p^{e,tot}", "vhydtotaloutput": "p^{h,tot}", "veleproductionact": "p^{a,e}", "vhydproductionact": "p^{a,h}", "vconsumption": "c", "veleconsumption": "c^{e}", "veletotalcharge": "c^{e,tot}", "veleconsumptionstandby": "c^{e,standby}", "veleconsumptioncompress": "c^{e,compress}", "vhydconsumption": "c^{h}", "vhydtotalcharge": "c^{h,tot}", "veleconsumptionact": "c^{a,e}", "vhydconsumptionact": "c^{a,h}", "vinventorystart": "s^{init}", "vinventory": "si", "veleinventory": "si^{e}", "veleinvminday": "si^{e,min,day}", "veleinvmaxday": "si^{e,max,day}", "veleinvdoday": "si^{e,dod,day}", "veleinvdodsaday": "si^{e,doda,day}", "veleinvdodsbday": "si^{e,dodb,day}", "veleinvdodscday": "si^{e,dodc,day}", "vhydinventory": "si^{h}", "venergyinflow": "ei", "veleenergyinflow": "ei^{e}", "vhydenergyinflow": "ei^{h}", "venergyoutflow": "eo", "veleenergyoutflow": "eo^{e}", "vhydenergyoutflow": "eo^{h}", "vspillage": "es", "velespillage": "es^{e}", "vhydspillage": "es^{h}", "vsecondblockproduction": "p2b", "velesecondblockproduction": "p2b^{e}", "vhydsecondblockproduction": "p2b^{h}", "vsecondblockconsumption": "c2b", "velesecondblockconsumption": "c2b^{e}", "vhydsecondblockconsumption": "c2b^{h}", "vmagvolt": "v^{2}", "vangvolt": "\\theta", "vtheta": "\\theta", "vflow": "f", "vactflow": "f^{P}", "vreactflow": "f^{Q}", "veleflow": "f^{e}", "vhydflow": "f^{h}", "vdemand": "d", "veledemand": "d^{e}", "vhyddemand": "d^{h}", "vdemflex": "d^{flex}", "veledemflex": "d^{e,flex}", "vhyddemflex": "d^{h,flex}", "vloadshed": "ls", "veleloadshed": "ls^{e}", "vhydloadshed": "ls^{h}", "vpeakdemand": "d^{peak}", "velepeakdemand": "d^{e,peak}", "vglobalpeak": "d^{global,peak}", "vdailypeak": "d^{daily,peak}", "vhydpeakdemand": "d^{h,peak}", "vPupward": "r^{p,u}", "vPdownward": "r^{p,d}", "vCupward": "r^{c,u}", "vCdownward": "r^{c,d}", "velefcrnbid": "p^{\\Thetha,N}", "velefcrdupbid": "p^{\\Theta,DU}", "velefcrddwbid": "p^{\\Theta,DW}", "velefcrnupact": "p^{NU}", "velefcrndwact": "p^{ND}", "velefcrdupactch": "p^{DU,ch}", "velefcrdupactdi": "p^{DU,di}", "velefcrddwactch": "p^{DD,ch}", "velefcrddwactdi": "p^{DD,di}", "velefcrdupfraction": "\\Lambda^{DU}", "velefcrddwfraction": "\\Lambda^{DD}", "vpeakdemandindbin": "kd", "vpeakind": "kd", "vmonthpeakind": "kd^{month}", "velepeakdemandindbin": "kd^{e}", "vhydpeakdemandindbin": "kd^{h}", "vstoroperatbin": "sf", "velestoroperatbin": "sf^{e}", "vhydstoroperatbin": "sf^{h}", "velestorchargebin": "sc^{e}", "velestorchargeactbin": "sc^{a,e}", "vhydstorchargebin": "sc^{h}", "vhydstorchargeactbin": "sc^{a,h}", "velestordischargebin": "sd^{e}", "velestordischargeactbin": "sd^{a,e}", "vhydstordischargebin": "sd^{h}", "vhydstordischargeactbin": "sd^{a,h}", "vmaxcommitbin": "muc", "velemaxcommitbin": "muc^{e}", "vhydmaxcommitbin": "muc^{h}", "vcommitbin": "uc", "velecommitbin": "uc^{e}", "vhydcommitbin": "uc^{h}", "vstartupbin": "su", "velestartupbin": "su^{e}", "vhydstartupbin": "su^{h}", "vshutdownbin": "sd", "veleshutdownbin": "sd^{e}", "vhydshutdownbin": "sd^{h}", "vhydcompressbin": "hc", "velefcrncommitbin": "uc^{FCR-N,e}", "velefcrdupreqcommitbin": "uc^{FCR-D,UP,e}", "velefcrddwreqcommitbin": "uc^{FCR-D,DW,e}", "robustbudget": "\\Gamma", "devep": "EP^{dev}", "devdem": "D^{dev}", "BigM": "M", "robustdev": "\\omega", "lightslack": "m", "dualnumber": "\\upsilon", "dualperiod": "\\eta", "robustindicator": "\\chi"}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'concepts/constraints';</script>
+    <script src="../_static/../custom.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Results &amp; Post-Processing" href="results-and-postprocessing.html" />
+    <link rel="prev" title="Objective Function" href="objective-function.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objective-function.html">Objective Function</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="future-developments.html">Future Developments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2Fconcepts/constraints.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/concepts/constraints.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Constraints</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#market-and-commercial-constraints">1. Market and Commercial Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day-ahead-electricity-market-participation">Day-ahead Electricity Market Participation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day-ahead-hydrogen-market-participation">Day-ahead Hydrogen Market Participation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reserve-electricity-market-participation">Reserve Electricity Market Participation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-containment-reserves-in-disturbed-operation-fcr-d">Frequency containment reserves in disturbed operation (FCR-D)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#peak-power-calculation">Peak Power Calculation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hourly-tariff-constraints">Hourly Tariff Constraints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#daily-tariff-constraints">Daily Tariff Constraints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-balance-and-conversion">3. Energy Balance and Conversion</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#electricity-balance">Electricity Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hydrogen-balance">Hydrogen Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-conversion">Energy Conversion</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#asset-operational-constraints">2. Asset Operational Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-charge-limits">Output and Charge Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ramping-limits">Ramping Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-commitment-logic">Unit Commitment Logic</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second-block-constraints">Second Block Constraints</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-storage-dynamics">3. Energy Storage Dynamics</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inventory-balance-state-of-charge">Inventory Balance (State-of-Charge)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#charge-discharge-incompatibility">Charge/Discharge Incompatibility</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#depth-of-discharge-dod-constraints">Depth of Discharge (DoD) Constraints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-inflows-and-outflows">Energy Inflows and Outflows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#operation-ramping-constraints">Operation Ramping Constraints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second-block-and-reserve-constraints">Second Block and Reserve Constraints</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#network-constraints">4. Network Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dc-power-flow">DC Power Flow</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#demand-side-and-reliability-constraints">6. Demand-Side and Reliability Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#demand-shifting-balance">Demand Shifting Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#share-of-flexible-demand">Share of Flexible Demand</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electric-vehicle-ev-modeling">7. Electric Vehicle (EV) Modeling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bounds-on-variables">8. Bounds on Variables</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="constraints">
+<h1>Constraints<a class="headerlink" href="#constraints" title="Link to this heading">#</a></h1>
+<p>The optimization model is governed by a series of constraints that ensure the solution is physically and economically feasible. These constraints, defined in the <code class="docutils literal notranslate"><span class="pre">create_constraints</span></code> function, enforce everything from the laws of physics to the operational limits of individual assets.</p>
+<section id="market-and-commercial-constraints">
+<h2>1. Market and Commercial Constraints<a class="headerlink" href="#market-and-commercial-constraints" title="Link to this heading">#</a></h2>
+<p>These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.</p>
+<a class="reference internal image-reference" href="../_images/Market_interaction.png"><img alt="../_images/Market_interaction.png" class="align-center" src="../_images/Market_interaction.png" style="width: 784.5px; height: 620.4px;" />
+</a>
+<section id="day-ahead-electricity-market-participation">
+<h3>Day-ahead Electricity Market Participation<a class="headerlink" href="#day-ahead-electricity-market-participation" title="Link to this heading">#</a></h3>
+<p>Participation in the day-ahead electricity market is modeled through constraints ensuring that energy bought or sold doesn’t exceed predefined limits for each time step and retailer.</p>
+<p>Electricity bought from the market is enabled if <span class="math notranslate nohighlight">\(\pelemaxmarketbuy_{\eltraderindex} &gt;= 0.0\)</span>. The upper bound is defined by («<code class="docutils literal notranslate"><span class="pre">eEleRetMaxBuy</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} \le \peleretmaxbuy_{\eltraderindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex\]</div>
+<p>The composition of electricity bought from the market is defined by («<code class="docutils literal notranslate"><span class="pre">eEleBuyComposition</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} =
+\sum_{\demandindex \in \nDE, (\eltraderindex,\demandindex) \in \nREDE} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} +
+\sum_{\storageindex \in \nEES, (\eltraderindex,\storageindex) \in \nREGE} \veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex\]</div>
+<p>Electricity sold to the market is enabled if <span class="math notranslate nohighlight">\(\pelemaxmarketsell_{\eltraderindex} &gt;= 0.0\)</span>. The upper bound is defined by («<code class="docutils literal notranslate"><span class="pre">eEleRetMaxSell</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} \le \peleretmaxsell_{\eltraderindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex\]</div>
+<p>The composition of electricity sold to the market is defined by («<code class="docutils literal notranslate"><span class="pre">eEleSellComposition</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} =
+\sum_{\genindex \in \nGENR, (\eltraderindex,\genindex) \in \nREGE} \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex\]</div>
+</section>
+<section id="day-ahead-hydrogen-market-participation">
+<h3>Day-ahead Hydrogen Market Participation<a class="headerlink" href="#day-ahead-hydrogen-market-participation" title="Link to this heading">#</a></h3>
+<p>Participation in the day-ahead hydrogen market ensures that the amount of energy bought or sold does not exceed predefined limits for each time step and retailer.</p>
+<p>Hydrogen bought from the market («<code class="docutils literal notranslate"><span class="pre">eHydRetMaxBuy</span></code>») is enabled if <span class="math notranslate nohighlight">\(\phydmaxmarketbuy_{\hydtraderindex} &gt;= 0.0\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\vhydbuy_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \le \phydretmaxbuy_{\hydtraderindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\hydtraderindex\]</div>
+<p>The composition of hydrogen bought from the market is defined by («<code class="docutils literal notranslate"><span class="pre">eHydBuyComposition</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vhydbuy_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} =
+\sum_{\busindex \in \nB, (\busindex,\hydtraderindex) \in \nBH} \vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\hydtraderindex\]</div>
+<p>Hydrogen sold to the market («<code class="docutils literal notranslate"><span class="pre">eHydRetMaxSell</span></code>») is enabled if <span class="math notranslate nohighlight">\(\phydmaxmarketsell_{\hydtraderindex} &gt;= 0.0\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\vhydsell_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} \le \phydretmaxsell_{\hydtraderindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\hydtraderindex\]</div>
+<p>The composition of hydrogen sold to the market is defined by («<code class="docutils literal notranslate"><span class="pre">eHydSellComposition</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vhydsell_{\periodindex,\scenarioindex,\timeindex,\hydtraderindex} =
+\sum_{\busindex \in \nB, (\busindex,\hydtraderindex) \in \nBH} \vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\hydtraderindex\]</div>
+</section>
+<section id="reserve-electricity-market-participation">
+<h3>Reserve Electricity Market Participation<a class="headerlink" href="#reserve-electricity-market-participation" title="Link to this heading">#</a></h3>
+<section id="frequency-containment-reserves-in-disturbed-operation-fcr-d">
+<h4>Frequency containment reserves in disturbed operation (FCR-D)<a class="headerlink" href="#frequency-containment-reserves-in-disturbed-operation-fcr-d" title="Link to this heading">#</a></h4>
+<p>FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.</p>
+<p>The bids for upward and downward reserves are constrained by («<code class="docutils literal notranslate"><span class="pre">eEleFreqContReserveDisUpward</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleFreqContReserveDisDownward</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\sum_{\genindex \in \nGET, \pgennofcrd_{\genindex}=0} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+\sum_{\genindex \in \nEES, \pgennofcrd_{\genindex}=0} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\le \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex\]</div>
+<div class="math notranslate nohighlight">
+\[\sum_{\genindex \in \nGET, \pgennofcrd_{\genindex}=0} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+\sum_{\genindex \in \nEES, \pgennofcrd_{\genindex}=0} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\le \pfcrddwrequirement_{\periodindex,\scenarioindex,\timeindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex\]</div>
+<p>The relation between bids and FCR-D reserves from an electric generator is defined by («<code class="docutils literal notranslate"><span class="pre">eEleRelationFreqDisUpBid2Gen</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleRelationFreqDisDownBid2Gen</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} =
+\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET, \pgennofcrd_{\genindex}=0\]</div>
+<div class="math notranslate nohighlight">
+\[\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} =
+\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET, \pgennofcrd_{\genindex}=0\]</div>
+<p>And for an electric ESS («<code class="docutils literal notranslate"><span class="pre">eEleRelationFreqDisUpBid2Stor</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleRelationFreqDisDownBid2Stor</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} =
+\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0\]</div>
+<div class="math notranslate nohighlight">
+\[\velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} =
+\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0\]</div>
+<p>The tight headroom bounds for FCR-D provision from an electric ESS are defined by («<code class="docutils literal notranslate"><span class="pre">eEleFreqDisUpDischargeHeadroom</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleFreqDisUpChargeHeadroom</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleFreqDisDownDischargeHeadroom</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleFreqDisDownChargeHeadroom</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
+\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
+(\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex})
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0\]</div>
+<div class="math notranslate nohighlight">
+\[\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
+\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0\]</div>
+<div class="math notranslate nohighlight">
+\[\velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
+\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0\]</div>
+<div class="math notranslate nohighlight">
+\[\velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
+\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
+(\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex})
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0\]</div>
+</section>
+</section>
+<section id="peak-power-calculation">
+<h3>Peak Power Calculation<a class="headerlink" href="#peak-power-calculation" title="Link to this heading">#</a></h3>
+<p>A set of constraints identify the highest power peaks within a billing period for tariff calculations, supporting both ‘Hourly’ and ‘Daily’ tariff types.</p>
+<section id="hourly-tariff-constraints">
+<h4>Hourly Tariff Constraints<a class="headerlink" href="#hourly-tariff-constraints" title="Link to this heading">#</a></h4>
+<p>For retailers with ‘Hourly’ tariffs, the following constraints identify the peak consumption hours within each month.</p>
+<p>The peak demand value is determined by («<code class="docutils literal notranslate"><span class="pre">eElePeakHourValue</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \ge
+\velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
+\pmaxsell_{\eltraderindex} \sum_{\peakindex' \le \peakindex} \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex'}
+\quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex\]</div>
+<p>(Note: Although a night discount between 22:00 and 06:00 is described in the documentation, it is not currently applied in the peak calculation equations below.)</p>
+<p>Indicator constraints («<code class="docutils literal notranslate"><span class="pre">eElePeakHourInd_C1</span></code>», «<code class="docutils literal notranslate"><span class="pre">eElePeakHourInd_C2</span></code>») link the peak demand variables to binary indicators:</p>
+<div class="math notranslate nohighlight">
+\[\vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \ge
+\velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
+\pmaxsell_{\eltraderindex} (1 - \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex})
+\quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex\]</div>
+<div class="math notranslate nohighlight">
+\[\vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \le
+\velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} +
+\pmaxsell_{\eltraderindex} (1 - \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex})
+\quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex\]</div>
+<p>The number of peak hours selected per month is constrained by («<code class="docutils literal notranslate"><span class="pre">eElePeakNumberMonths</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\sum_{\periodindex,\scenarioindex,\timeindex} \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex} = 1
+\quad \forall \monthindex,\eltraderindex,\peakindex\]</div>
+</section>
+<section id="daily-tariff-constraints">
+<h4>Daily Tariff Constraints<a class="headerlink" href="#daily-tariff-constraints" title="Link to this heading">#</a></h4>
+<p>For retailers with ‘Daily’ tariffs, the constraints first identify the daily peak and then select the highest peaks from those daily values.</p>
+<p>The daily peak demand is determined by («<code class="docutils literal notranslate"><span class="pre">eEleDailyPeakValue</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vdailypeak_{\periodindex,\scenarioindex,\text{doy},\eltraderindex} \ge
+\velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\timeindex,\eltraderindex\]</div>
+<p>Indicator constraints («<code class="docutils literal notranslate"><span class="pre">eEleDailyPeakInd_C1</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleDailyPeakInd_C2</span></code>») and the daily peak selection constraint («<code class="docutils literal notranslate"><span class="pre">eEleDailyPeakNumber</span></code>») work together to identify the single peak hour for each day.</p>
+<p>The global peak is then selected from the daily peaks («<code class="docutils literal notranslate"><span class="pre">eEleGlobalPeakValue</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \ge
+\vdailypeak_{\periodindex,\scenarioindex,\text{doy},\eltraderindex} -
+\pmaxsell_{\eltraderindex} \sum_{\peakindex' \le \peakindex} \vmonthpeakind_{\periodindex,\scenarioindex,\text{doy},\eltraderindex,\peakindex'}
+\quad \forall \periodindex,\scenarioindex,\monthindex,\text{doy},\eltraderindex,\peakindex\]</div>
+<p>Finally, the number of daily peaks selected per month is constrained by («<code class="docutils literal notranslate"><span class="pre">eElePeakNumberDays</span></code>»), and the peaks are ordered from highest to lowest by («<code class="docutils literal notranslate"><span class="pre">eEleMonthPeakOrder</span></code>»).</p>
+</section>
+</section>
+</section>
+<section id="energy-balance-and-conversion">
+<h2>3. Energy Balance and Conversion<a class="headerlink" href="#energy-balance-and-conversion" title="Link to this heading">#</a></h2>
+<p>These are the most fundamental constraints, ensuring that at every node (<span class="math notranslate nohighlight">\(\busindexa\)</span>) and at every timestep (<span class="math notranslate nohighlight">\(\timeindex\)</span>), energy supply equals energy demand.</p>
+<section id="electricity-balance">
+<h3>Electricity Balance<a class="headerlink" href="#electricity-balance" title="Link to this heading">#</a></h3>
+<p>The electricity balance at each node is enforced by («<code class="docutils literal notranslate"><span class="pre">eEleBalance</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+&amp;\sum_{\genindex \in \nGE_{\busindex}} \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+- \sum_{\storageindex \in \nEES_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+- \sum_{\genindex \in \nGHE_{\busindex}} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
+&amp;- \sum_{(\busindexb,\circuitindex) \in lout(\busindex)} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
++ \sum_{(\busindexa,\circuitindex) \in lin(\busindex)} \vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
+&amp;+ \veleimport_{\periodindex,\scenarioindex,\timeindex,\busindex} - \veleexport_{\periodindex,\scenarioindex,\timeindex,\busindex}
+= \sum_{\demandindex \in \nDE_{\busindex}}(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+- \vloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
+\quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
+\end{aligned}\end{split}\]</div>
+</section>
+<section id="hydrogen-balance">
+<h3>Hydrogen Balance<a class="headerlink" href="#hydrogen-balance" title="Link to this heading">#</a></h3>
+<p>The hydrogen balance at each node is enforced by («<code class="docutils literal notranslate"><span class="pre">eHydBalance</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+&amp;\sum_{\genindex \in \nGH_{\busindex}} \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+- \sum_{\storageindex \in \nEHS_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+- \sum_{\genindex \in \nHGE_{\busindex}} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \\
+&amp;- \sum_{(\busindexb,\circuitindex) \in hout(\busindex)} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindex,\busindexb,\circuitindex}
++ \sum_{(\busindexa,\circuitindex) \in hin(\busindex)} \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindex,\circuitindex} \\
+&amp;+ \vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex} - \vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex}
+= \sum_{\demandindex \in \nDH_{\busindex}}(\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+- \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
+\quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
+\end{aligned}\end{split}\]</div>
+</section>
+<section id="energy-conversion">
+<h3>Energy Conversion<a class="headerlink" href="#energy-conversion" title="Link to this heading">#</a></h3>
+<p>Energy conversion between electricity and hydrogen is modeled by the following constraints.</p>
+<p>From hydrogen to electricity («<code class="docutils literal notranslate"><span class="pre">eAllEnergy2Ele</span></code>»):
+<span class="math notranslate nohighlight">\(\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \phydtoelefunction_{\genindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGEH\)</span></p>
+<p>From electricity to hydrogen («<code class="docutils literal notranslate"><span class="pre">eAllEnergy2Hyd</span></code>»):
+<span class="math notranslate nohighlight">\(\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydprodfunction_{\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE\)</span></p>
+</section>
+</section>
+<section id="asset-operational-constraints">
+<h2>2. Asset Operational Constraints<a class="headerlink" href="#asset-operational-constraints" title="Link to this heading">#</a></h2>
+<p>These constraints model the physical limitations of generation and storage assets.</p>
+<section id="output-and-charge-limits">
+<h3>Output and Charge Limits<a class="headerlink" href="#output-and-charge-limits" title="Link to this heading">#</a></h3>
+<p>The total output of a committed electricity unit is defined by («<code class="docutils literal notranslate"><span class="pre">eEleTotalOutput</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+\frac{\veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} =
+\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+\pfcrdact_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} -
+\pfcrdact_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGENR
+\end{aligned}\]</div>
+<p>For electricity storage systems, the formulation is:</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+\frac{\veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} =
+\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\pfcrdupreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
+\pfcrddwreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+\end{aligned}\]</div>
+<p>The total output of a hydrogen unit is defined by («<code class="docutils literal notranslate"><span class="pre">eHydTotalOutput</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\vhydtotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}} =
+\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+<p>The total charge of an electricity storage system is defined by («<code class="docutils literal notranslate"><span class="pre">eEleTotalCharge</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+\frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} =
+\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
+\pfcrdupreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\pfcrddwreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+\end{aligned}\]</div>
+<p>The total charge of a hydrogen unit is defined by («<code class="docutils literal notranslate"><span class="pre">eHydTotalCharge</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\vhydtotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} =
+\vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS\]</div>
+<p>The maximum and minimum charge of the second block for an electrolyzer is constrained by («<code class="docutils literal notranslate"><span class="pre">eE2HMaxCharge2ndBlock</span></code>», «<code class="docutils literal notranslate"><span class="pre">eE2HMinCharge2ndBlock</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \cdot \phydmaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\geq \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \cdot \phydminchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE\]</div>
+</section>
+<section id="ramping-limits">
+<h3>Ramping Limits<a class="headerlink" href="#ramping-limits" title="Link to this heading">#</a></h3>
+<p>A series of constraints limit how quickly the output or charging rate of an asset can change. For example, <code class="docutils literal notranslate"><span class="pre">eEleMaxRampUpOutput</span></code> restricts the increase in a generator’s output between consecutive timesteps.</p>
+<p>Maximum ramp-up and ramp-down for a non-renewable electricity unit («<code class="docutils literal notranslate"><span class="pre">eEleMaxRampUpOutput</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMaxRampDwOutput</span></code>»):
+* P. Damcı-Kurt, S. Küçükyavuz, D. Rajan, and A. Atamtürk, “A polyhedral study of production ramping,” Math. Program., vol. 158, no. 1–2, pp. 175–205, Jul. 2016. <a class="reference external" href="https://doi.org/10.1007/s10107-015-0919-9">10.1007/s10107-015-0919-9</a></p>
+<div class="math notranslate nohighlight">
+\[\frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\genindex}}
+\le \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\genindex}}
+\ge -\velecommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<p>Maximum ramp-up and ramp-down for discharging an electricity ESS («<code class="docutils literal notranslate"><span class="pre">eEleMaxRampUpDischarge</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMaxRampDwDischarge</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+\le 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+\ge -1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Maximum ramp-up and ramp-down for a hydrogen unit («<code class="docutils literal notranslate"><span class="pre">eHydMaxRampUpOutput</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydMaxRampDwOutput</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{-\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\genindex}}
+\le \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{-\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\genindex}}
+\ge -\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+</section>
+<section id="unit-commitment-logic">
+<h3>Unit Commitment Logic<a class="headerlink" href="#unit-commitment-logic" title="Link to this heading">#</a></h3>
+<p>For dispatchable assets, these constraints model the on/off decisions.</p>
+<p>Logical relation between commitment, startup, and shutdown status of an electricity unit («<code class="docutils literal notranslate"><span class="pre">eEleCommitmentStartupShutdown</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velecommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex}
+= \velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<p>Logical relation for a hydrogen unit («<code class="docutils literal notranslate"><span class="pre">eHydCommitmentStartupShutdown</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex}
+= \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+<p>Minimum up-time and down-time of a thermal unit («<code class="docutils literal notranslate"><span class="pre">eEleMinUpTime</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinDownTime</span></code>»):
+- D. Rajan and S. Takriti, “Minimum up/down polytopes of the unit commitment problem with start-up costs,” IBM, New York, Technical Report RC23628, 2005. <a class="reference external" href="https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf">https://pdfs.semanticscholar.org/b886/42e36b414d5929fed48593d0ac46ae3e2070.pdf</a></p>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex'=\timeindex-\puptime_{\genindex}+1}^{\timeindex} \velestartupbin_{\periodindex,\scenarioindex,\timeindex',\genindex}
+\le \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex'=\timeindex-\pdwtime_{\genindex}+1}^{\timeindex} \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex',\genindex}
+\le 1 - \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<p>Minimum up-time and down-time for a hydrogen unit («<code class="docutils literal notranslate"><span class="pre">eHydMinUpTime</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydMinDownTime</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex'=\timeindex-\puptime_{\genindex}+1}^{\timeindex} \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex',\genindex}
+\le \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex'=\timeindex-\pdwtime_{\genindex}+1}^{\timeindex} \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex',\genindex}
+\le 1 - \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+</section>
+<section id="second-block-constraints">
+<h3>Second Block Constraints<a class="headerlink" href="#second-block-constraints" title="Link to this heading">#</a></h3>
+<p>These constraints define the operational limits for the second block of generation and storage units, including reserve provision.</p>
+<p>Maximum and minimum electricity generation of the second block for a committed unit («<code class="docutils literal notranslate"><span class="pre">eEleMaxOutput2ndBlock</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinOutput2ndBlock</span></code>»):
+* D.A. Tejada-Arango, S. Lumbreras, P. Sánchez-Martín, and A. Ramos “Which Unit-Commitment Formulation is Best? A Systematic Comparison” IEEE Transactions on Power Systems 35 (4):2926-2936 Jul 2020 <a class="reference external" href="https://doi.org/10.1109/TPWRS.2019.2962024">10.1109/TPWRS.2019.2962024</a>
+* C. Gentile, G. Morales-España, and A. Ramos “A tight MIP formulation of the unit commitment problem with start-up and shut-down constraints” EURO Journal on Computational Optimization 5 (1), 177-201 Mar 2017. <a class="reference external" href="https://doi.org/10.1007/s13675-016-0066-y">10.1007/s13675-016-0066-y</a>
+* G. Morales-España, A. Ramos, and J. Garcia-Gonzalez “An MIP Formulation for Joint Market-Clearing of Energy and Reserves Based on Ramp Scheduling” IEEE Transactions on Power Systems 29 (1): 476-488, Jan 2014. <a class="reference external" href="https://doi.org/10.1109/TPWRS.2013.2259601">10.1109/TPWRS.2013.2259601</a>
+* G. Morales-España, J.M. Latorre, and A. Ramos “Tight and Compact MILP Formulation for the Thermal Unit Commitment Problem” IEEE Transactions on Power Systems 28 (4): 4897-4908, Nov 2013. <a class="reference external" href="https://doi.org/10.1109/TPWRS.2013.2251373">10.1109/TPWRS.2013.2251373</a></p>
+<div class="math notranslate nohighlight">
+\[\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\pelemaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+\le \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex+1,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<div class="math notranslate nohighlight">
+\[\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} \ge 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET\]</div>
+<p>Maximum and minimum electricity generation of the second block for an electricity ESS («<code class="docutils literal notranslate"><span class="pre">eEleMaxESSOutput2ndBlock</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinESSOutput2ndBlock</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Maximum and minimum hydrogen generation of the second block («<code class="docutils literal notranslate"><span class="pre">eHydMaxOutput2ndBlock</span></code>», «<code class="docutils literal notranslate"><span class="pre">eMinHydOutput2ndBlock</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+\le \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} - \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex+1,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+<div class="math notranslate nohighlight">
+\[\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \ge 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT\]</div>
+</section>
+</section>
+<section id="energy-storage-dynamics">
+<h2>3. Energy Storage Dynamics<a class="headerlink" href="#energy-storage-dynamics" title="Link to this heading">#</a></h2>
+<p>These constraints specifically model the behavior of energy storage systems.</p>
+<section id="inventory-balance-state-of-charge">
+<h3>Inventory Balance (State-of-Charge)<a class="headerlink" href="#inventory-balance-state-of-charge" title="Link to this heading">#</a></h3>
+<p>The core state-of-charge (SoC) balancing equation, <code class="docutils literal notranslate"><span class="pre">eEleInventory</span></code> for electricity and <code class="docutils literal notranslate"><span class="pre">eHydInventory</span></code> for hydrogen, tracks the stored energy level over time.</p>
+<p>State-of-Charge balance for electricity storage systems:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+&amp;\veleinventory_{\periodindex,\scenarioindex,\timeindex-\pcycletimestep_{\storageindex},\storageindex} +
+\sum_{\timeindex'=\timeindex-\pcycletimestep_{\storageindex}+1}^{\timeindex}
+\ptimestepduration_{\periodindex,\scenarioindex,\timeindex'}
+(\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} -
+\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \\
+&amp;\frac{\veletotaloutput_{\periodindex,\scenarioindex,\timeindex',\storageindex}}{\pdischeff_{\storageindex}} +
+\pcheff_{\storageindex} \veletotalcharge_{\periodindex,\scenarioindex,\timeindex',\storageindex})
+= \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+\end{aligned}\end{split}\]</div>
+<p>State-of-Charge balance for hydrogen storage systems:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+&amp;\vhydinventory_{\periodindex,\scenarioindex,\timeindex-\pcycletimestep_{\storageindex},\storageindex} +
+\sum_{\timeindex'=\timeindex-\pcycletimestep_{\storageindex}+1}^{\timeindex}
+\ptimestepduration_{\periodindex,\scenarioindex,\timeindex'}
+(\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} -
+\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \\
+&amp;\vhydtotaloutput_{\periodindex,\scenarioindex,\timeindex',\storageindex} +
+\peff_{\storageindex} \vhydtotalcharge_{\periodindex,\scenarioindex,\timeindex',\storageindex})
+= \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS
+\end{aligned}\end{split}\]</div>
+</section>
+<section id="charge-discharge-incompatibility">
+<h3>Charge/Discharge Incompatibility<a class="headerlink" href="#charge-discharge-incompatibility" title="Link to this heading">#</a></h3>
+<p>The constraints prevent a storage unit from charging and discharging in the same timestep, using binary variables.</p>
+<p>Electricity Storage Incompatibility («<code class="docutils literal notranslate"><span class="pre">eEleChargingDecision</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleDischargingDecision</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleStorageMode</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{\veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\le \pfixavail_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Hydrogen Storage Incompatibility («<code class="docutils literal notranslate"><span class="pre">eHydChargingDecision</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydDischargingDecision</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydStorageMode</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\vhydtotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{\vhydtotaloutput_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS\]</div>
+<div class="math notranslate nohighlight">
+\[\vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+\vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\le \pfixavail_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS\]</div>
+</section>
+<section id="depth-of-discharge-dod-constraints">
+<h3>Depth of Discharge (DoD) Constraints<a class="headerlink" href="#depth-of-discharge-dod-constraints" title="Link to this heading">#</a></h3>
+<p>These constraints model the degradation of electricity storage systems based on their Depth of Discharge (DoD).</p>
+<p>The minimum and maximum inventory levels for each day are tracked by («<code class="docutils literal notranslate"><span class="pre">eEleInventoryMinDay</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleInventoryMaxDay</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\veleinvminday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+\veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\veleinvmaxday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \ge
+\veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\timeindex,\storageindex \in \nEES\]</div>
+<p>The daily DoD is calculated as the difference between the maximum and minimum inventory levels («<code class="docutils literal notranslate"><span class="pre">eEleInventoryDoD</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\veleinvdoday_{\periodindex,\scenarioindex,\text{doy},\storageindex} =
+\veleinvmaxday_{\periodindex,\scenarioindex,\text{doy},\storageindex} -
+\veleinvminday_{\periodindex,\scenarioindex,\text{doy},\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES\]</div>
+<p>The total DoD is divided into three segments to model non-linear degradation costs («<code class="docutils literal notranslate"><span class="pre">eEleInventoryDoDSegments</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\veleinvdoday_{\periodindex,\scenarioindex,\text{doy},\storageindex} =
+\veleinvdodsaday_{\periodindex,\scenarioindex,\text{doy},\storageindex} +
+\veleinvdodsbday_{\periodindex,\scenarioindex,\text{doy},\storageindex} +
+\veleinvdodscday_{\periodindex,\scenarioindex,\text{doy},\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES\]</div>
+<p>Upper bounds for each DoD segment are defined by («<code class="docutils literal notranslate"><span class="pre">eEleInventoryDoDS1Upper</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleInventoryDoDS2Upper</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleInventoryDoDS3Upper</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\veleinvdodsaday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+\pdodsa_{\storageindex} \pmaxstorage_{\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\veleinvdodsbday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+\pdodsb_{\storageindex} \pmaxstorage_{\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\veleinvdodscday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
+\pdodsc_{\storageindex} \pmaxstorage_{\storageindex}
+\quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES\]</div>
+</section>
+<section id="energy-inflows-and-outflows">
+<h3>Energy Inflows and Outflows<a class="headerlink" href="#energy-inflows-and-outflows" title="Link to this heading">#</a></h3>
+<p>Energy inflows and outflows are constrained by the ESS commitment decision and physical limits.</p>
+<p>Maximum and minimum electricity inflows («<code class="docutils literal notranslate"><span class="pre">eEleMaxInflows2Commitment</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinInflows2Commitment</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \ge 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Maximum and minimum electricity outflows («<code class="docutils literal notranslate"><span class="pre">eEleMaxOutflows2Commitment</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinOutflows2Commitment</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \ge 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Similar constraints apply to hydrogen storage systems («<code class="docutils literal notranslate"><span class="pre">eHydMaxInflows2Commitment</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydMinInflows2Commitment</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydMaxOutflows2Commitment</span></code>», «<code class="docutils literal notranslate"><span class="pre">eHydMinOutflows2Commitment</span></code>»).</p>
+<p>ESS electricity outflows over a cycle are constrained by («<code class="docutils literal notranslate"><span class="pre">eEleMaxEnergyOutflows</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinEnergyOutflows</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex'=\timeindex-\poutflowtimestep_{\storageindex}+1}^{\timeindex}
+(\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex}) \le 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex'=\timeindex-\poutflowtimestep_{\storageindex}+1}^{\timeindex}
+(\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \peleminoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex}) \ge 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Incompatibility between charge and outflows for an electricity ESS is defined by («<code class="docutils literal notranslate"><span class="pre">eIncompatibilityEleChargeOutflows</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+</section>
+<section id="operation-ramping-constraints">
+<h3>Operation Ramping Constraints<a class="headerlink" href="#operation-ramping-constraints" title="Link to this heading">#</a></h3>
+<p>These constraints limit the rate of change in charging and discharging power for ESS.</p>
+<p>Maximum ramp-up and ramp-down for charging an electricity ESS («<code class="docutils literal notranslate"><span class="pre">eEleMaxRampUpCharge</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMaxRampDwCharge</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+\ge -1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+\le 1
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Similar ramping constraints apply to hydrogen storage systems for both charging and outflows.</p>
+</section>
+<section id="second-block-and-reserve-constraints">
+<h3>Second Block and Reserve Constraints<a class="headerlink" href="#second-block-and-reserve-constraints" title="Link to this heading">#</a></h3>
+<p>These constraints define the operational limits for the second block of ESS, including reserve provision.</p>
+<p>Maximum and minimum charge of the second block for an electricity ESS («<code class="docutils literal notranslate"><span class="pre">eEleMaxESSCharge2ndBlock</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleMinESSCharge2ndBlock</span></code>»):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\ge 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<p>Reserve provision from an ESS is constrained by charging and discharging status («<code class="docutils literal notranslate"><span class="pre">eEleFreqDisUpChargeBound</span></code>», «<code class="docutils literal notranslate"><span class="pre">eEleFreqDisUpDischargeBound</span></code>», etc.):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+<div class="math notranslate nohighlight">
+\[\frac{\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+\le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES\]</div>
+</section>
+</section>
+<section id="network-constraints">
+<h2>4. Network Constraints<a class="headerlink" href="#network-constraints" title="Link to this heading">#</a></h2>
+<p>These constraints model the physics and limits of the energy transmission and distribution networks.</p>
+<section id="dc-power-flow">
+<h3>DC Power Flow<a class="headerlink" href="#dc-power-flow" title="Link to this heading">#</a></h3>
+<p>For the electricity grid, <code class="docutils literal notranslate"><span class="pre">eKirchhoff2ndLaw</span></code> implements a DC power flow model, relating the power flow on a line to the voltage angles at its connecting nodes.</p>
+<div class="math notranslate nohighlight">
+\[\frac{\vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}}{\pnettc_{\busindexa,\busindexb,\circuitindex}} -
+\frac{(\vtheta_{\periodindex,\scenarioindex,\timeindex,\busindexa} - \vtheta_{\periodindex,\scenarioindex,\timeindex,\busindexb})}{\pnetreactance_{\busindexa,\busindexb,\circuitindex} \cdot \pnettc_{\busindexa,\busindexb,\circuitindex}} \cdot 0.1 = 0
+\quad \forall \periodindex,\scenarioindex,\timeindex,(\busindexa,\busindexb,\circuitindex) \in \nELA\]</div>
+</section>
+</section>
+<section id="demand-side-and-reliability-constraints">
+<h2>6. Demand-Side and Reliability Constraints<a class="headerlink" href="#demand-side-and-reliability-constraints" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Ramping Limits</strong>: Constraints such as <code class="docutils literal notranslate"><span class="pre">eHydMaxRampUpDemand</span></code> and <code class="docutils literal notranslate"><span class="pre">eHydMaxRampDwDemand</span></code> limit the rate of change in hydrogen demand, preventing abrupt fluctuations that could destabilize the system.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eEleDemandShiftBalance</span></code>: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.</p></li>
+<li><p><strong>Unserved Energy</strong>: The model allows for unserved energy through slack variables (<code class="docutils literal notranslate"><span class="pre">vENS</span></code>, <code class="docutils literal notranslate"><span class="pre">vHNS</span></code>). The high penalty cost in the objective function acts as a soft constraint to meet demand.</p></li>
+</ul>
+<section id="demand-shifting-balance">
+<h3>Demand Shifting Balance<a class="headerlink" href="#demand-shifting-balance" title="Link to this heading">#</a></h3>
+<p>Flexible electricity demand shifting balance («<code class="docutils literal notranslate"><span class="pre">eEleDemandShiftBalance</span></code>»)</p>
+<p>If <span class="math notranslate nohighlight">\(\peledemflexible_{\demandindex} == 1.0\)</span> and <span class="math notranslate nohighlight">\(\peledemshiftedsteps_{\demandindex} &gt; 0.0\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\sum_{\timeindex '=\timeindex-\peledemshiftedsteps_{\demandindex}+1}^{\timeindex}
+\veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} =
+\sum_{\timeindex '=\timeindex-\peledemshiftedsteps_{\demandindex}+1}^{\timeindex}
+\pmaxdemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex\]</div>
+</section>
+<section id="share-of-flexible-demand">
+<h3>Share of Flexible Demand<a class="headerlink" href="#share-of-flexible-demand" title="Link to this heading">#</a></h3>
+<p>Flexible electricity demand share of total demand («<code class="docutils literal notranslate"><span class="pre">eEleDemandShifted</span></code>»)</p>
+<p>If <span class="math notranslate nohighlight">\(\peledemflexible_{\demandindex} == 1.0\)</span> and <span class="math notranslate nohighlight">\(\peledemshiftedsteps_{\demandindex} &gt; 0.0\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} =
+\pmaxdemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} +
+\veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex\]</div>
+</section>
+</section>
+<section id="electric-vehicle-ev-modeling">
+<h2>7. Electric Vehicle (EV) Modeling<a class="headerlink" href="#electric-vehicle-ev-modeling" title="Link to this heading">#</a></h2>
+<p>Electric vehicles are modeled as a special class of mobile energy storage, identified by the <code class="docutils literal notranslate"><span class="pre">model.egv</span></code> set (a subset of <code class="docutils literal notranslate"><span class="pre">model.egs</span></code>). They are subject to standard storage dynamics but with unique constraints that reflect their dual role as both a transportation tool and a potential grid asset.</p>
+<p><strong>Key Modeling Concepts:</strong></p>
+<ul>
+<li><p><strong>Fixed Nodal Connection</strong>: Each EV is assumed to have a fixed charging point at a specific node (<code class="docutils literal notranslate"><span class="pre">nd</span></code>). All its interactions with the grid (charging and vehicle-to-grid discharging) occur at this single location. This means the EV’s charging load (<code class="docutils literal notranslate"><span class="pre">vEleTotalCharge</span></code>) is directly added to the demand side of that node’s <code class="docutils literal notranslate"><span class="pre">eEleBalance</span></code> constraint, while any discharging (<code class="docutils literal notranslate"><span class="pre">vEleTotalOutput</span></code>) is added to the supply side.</p></li>
+<li><p><strong>Availability Windows</strong>: The availability of the EV for charging or discharging is governed by user behavior patterns, represented through time-dependent constraints:</p>
+<ul class="simple">
+<li><p><strong>Availability for Grid Services</strong>: The <span class="math notranslate nohighlight">\(\pvarfixedavailability\)</span> parameter indicates when the EV is parked and thus available for grid services. When this parameter is zero, the EV cannot charge or discharge, effectively making it unavailable to the grid. This is enforced by the <code class="docutils literal notranslate"><span class="pre">eEleStorageMode</span></code> constraint.</p></li>
+<li><p><strong>Charging Flexibility</strong>: The model allows for flexible charging schedules within the availability windows. The EV can choose when to charge based on economic signals, as long as it adheres to the overall energy balance and state-of-charge constraints.</p></li>
+</ul>
+</li>
+<li><p><strong>Minimum Starting Charge</strong>: The <code class="docutils literal notranslate"><span class="pre">eEleMinEnergyStartUp</span></code> constraint enforces a realistic user behavior: an EV must have a minimum state of charge <em>before</em> it can be considered “available” to leave its charging station (i.e., before its availability for grid services can change). This ensures the model doesn’t fully drain the battery for grid purposes if the user needs it for a trip.</p>
+<div class="math notranslate nohighlight">
+\[\veleinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \ge 0.8 \cdot \pelemaxstorage_{\storageindex}\]</div>
+</li>
+</ul>
+<blockquote>
+<div><p>quad forall periodindex,scenarioindex,timeindex,storageindex in nEES</p>
+</div></blockquote>
+<ul>
+<li><p><strong>Driving Consumption</strong>: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:</p>
+<ul class="simple">
+<li><p><strong>Fixed Consumption</strong>: By setting the upper and lower bounds of the outflow to the same value in the input data (e.g., <code class="docutils literal notranslate"><span class="pre">pEleMinOutflows</span></code> and <code class="docutils literal notranslate"><span class="pre">pEleMaxOutflows</span></code>), driving patterns can be treated as a fixed, pre-defined schedule. This is useful for modeling commuters with predictable travel needs.</p></li>
+<li><p><strong>Variable Consumption</strong>: Setting different upper and lower bounds allows the model to optimize the driving schedule. This can represent flexible travel plans, uncertain trip lengths, or scenarios where the timing of a trip is part of the optimization problem but having a fixed total daily consumption.</p></li>
+</ul>
+<p>Both approaches are ensure by the constraints <code class="docutils literal notranslate"><span class="pre">eEleMaxEnergyOutflows</span></code> and <code class="docutils literal notranslate"><span class="pre">eEleMinEnergyOutflows</span></code>.</p>
+</li>
+<li><p><strong>Economic-Driven Charging (Tariff Response)</strong>: The model does not use direct constraints to force EV charging at specific times. Instead, charging behavior is an <em>emergent property</em> driven by the objective to minimize total costs. This optimization is influenced by two main types of tariffs:</p>
+<ul class="simple">
+<li><p><strong>Volumetric Tariffs</strong>: The total cost of purchasing energy from the grid (<code class="docutils literal notranslate"><span class="pre">vTotalEleTradeCost</span></code>) includes not just the wholesale energy price but also volumetric network fees (e.g., <code class="docutils literal notranslate"><span class="pre">pEleRetnetavgift</span></code>). This means the model is incentivized to charge when the <em>all-in price per MWh</em> is lowest.</p></li>
+<li><p><strong>Capacity Tariffs</strong>: The <code class="docutils literal notranslate"><span class="pre">vTotalElePeakCost</span></code> component of the objective function penalizes high monthly power peaks from the grid.</p></li>
+</ul>
+<p>Since EV charging (<code class="docutils literal notranslate"><span class="pre">vEleTotalCharge</span></code>) increases the total load at a node, the model will naturally schedule it during hours when the combination of volumetric and potential capacity costs is lowest. This interaction between the nodal balance, the cost components, and the objective function creates an economically rational “smart charging” behavior.</p>
+</li>
+</ul>
+</section>
+<section id="bounds-on-variables">
+<h2>8. Bounds on Variables<a class="headerlink" href="#bounds-on-variables" title="Link to this heading">#</a></h2>
+<p>To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.</p>
+<div class="math notranslate nohighlight">
+\[0 \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}, \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}, \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH\]</div>
+<div class="math notranslate nohighlight">
+\[\pelemininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE\]</div>
+<div class="math notranslate nohighlight">
+\[\phydmininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \phydmaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq  \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE\]</div>
+<div class="math notranslate nohighlight">
+\[0 \leq  \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH\]</div>
+<div class="math notranslate nohighlight">
+\[-\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLE\]</div>
+<div class="math notranslate nohighlight">
+\[-\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}
+\quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLH\]</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="objective-function.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Objective Function</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="results-and-postprocessing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Results &amp; Post-Processing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#market-and-commercial-constraints">1. Market and Commercial Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day-ahead-electricity-market-participation">Day-ahead Electricity Market Participation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day-ahead-hydrogen-market-participation">Day-ahead Hydrogen Market Participation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reserve-electricity-market-participation">Reserve Electricity Market Participation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-containment-reserves-in-disturbed-operation-fcr-d">Frequency containment reserves in disturbed operation (FCR-D)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#peak-power-calculation">Peak Power Calculation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hourly-tariff-constraints">Hourly Tariff Constraints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#daily-tariff-constraints">Daily Tariff Constraints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-balance-and-conversion">3. Energy Balance and Conversion</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#electricity-balance">Electricity Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hydrogen-balance">Hydrogen Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-conversion">Energy Conversion</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#asset-operational-constraints">2. Asset Operational Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-charge-limits">Output and Charge Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ramping-limits">Ramping Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-commitment-logic">Unit Commitment Logic</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second-block-constraints">Second Block Constraints</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-storage-dynamics">3. Energy Storage Dynamics</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inventory-balance-state-of-charge">Inventory Balance (State-of-Charge)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#charge-discharge-incompatibility">Charge/Discharge Incompatibility</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#depth-of-discharge-dod-constraints">Depth of Discharge (DoD) Constraints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-inflows-and-outflows">Energy Inflows and Outflows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#operation-ramping-constraints">Operation Ramping Constraints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second-block-and-reserve-constraints">Second Block and Reserve Constraints</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#network-constraints">4. Network Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dc-power-flow">DC Power Flow</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#demand-side-and-reliability-constraints">6. Demand-Side and Reliability Constraints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#demand-shifting-balance">Demand Shifting Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#share-of-flexible-demand">Share of Flexible Demand</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electric-vehicle-ev-modeling">7. Electric Vehicle (EV) Modeling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bounds-on-variables">8. Bounds on Variables</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By EL1XR-dev Team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

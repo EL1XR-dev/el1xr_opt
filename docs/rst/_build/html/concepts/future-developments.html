@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Future Developments &#8212;   documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"nB": "\\mathcal{B}", "nBEP": "\\mathcal{B}^{pcc,e}", "nBE": "\\mathcal{B}^{e}", "nBHP": "\\mathcal{B}^{pcc,h}", "nBH": "\\mathcal{B}^{h}", "nC": "\\mathcal{C}", "nG": "\\mathcal{G}", "nGE": "\\mathcal{G}^{e}", "nGER": "\\mathcal{G}^{e,res}", "nGVRE": "\\mathcal{G}^{e,vres}", "nGENR": "\\mathcal{G}^{e,nonres}", "nGET": "\\mathcal{G}^{e,th}", "nGEH": "\\mathcal{G}^{e,h}", "nGH": "\\mathcal{G}^{h}", "nGNG": "\\mathcal{G}^{h,cng}", "nGHE": "\\mathcal{G}^{h,e}", "nHGE": "\\mathcal{G}^{h,e}", "nHGS": "\\mathcal{E}^{h}", "nHGT": "\\mathcal{G}^{h,th}", "nE": "\\mathcal{E}", "nEE": "\\mathcal{E}^{e}", "nEES": "\\mathcal{E}^{e}", "nEH": "\\mathcal{E}^{h}", "nEHS": "\\mathcal{E}^{h}", "nEV": "\\mathcal{EV}", "nEVE": "\\mathcal{EV}^{e}", "nEVH": "\\mathcal{EV}^{h}", "nR": "\\mathcal{R}", "nRE": "\\mathcal{R}^{e}", "nRH": "\\mathcal{R}^{h}", "nREDE": "\\mathcal{R}^{e,d}", "nREGE": "\\mathcal{R}^{e,g}", "nDE": "\\mathcal{D}^{e}", "nDH": "\\mathcal{D}^{h}", "nK": "\\mathcal{K}", "nKE": "\\mathcal{K}^{e}", "nKH": "\\mathcal{K}^{h}", "nL": "\\mathcal{L}", "nLE": "\\mathcal{L}^{e}", "nELA": "\\mathcal{L}^{e}", "nLH": "\\mathcal{L}^{h}", "nX": "\\mathcal{R}", "nZ": "\\mathcal{Z}", "nA": "\\mathcal{A}", "nT": "\\mathcal{T}", "nV": "\\mathcal{V}", "nP": "\\mathcal{P}", "nS": "\\mathcal{S}", "nM": "\\mathcal{M}", "nW": "\\mathcal{W}", "nD": "\\mathcal{D}", "nH": "\\mathcal{H}", "nWI": "\\mathcal{H}^{w}", "nQ": "\\mathcal{H}^{q}", "nTI": "\\mathcal{H}^{t}", "nMIN": "\\mathcal{H}^{m}", "busindex": "nd", "busindexa": "i", "busindexb": "j", "branchindex": "ij", "lineindexa": "ijc", "lineindexb": "jic", "circuitindex": "c", "elegenindex": "g^{e}", "elenonresgenindex": "g^{e,nonres}", "elenresgenindex": "g^{e,res}", "elenhydgenindex": "g^{e,h}", "hydgenindex": "g^{h}", "hydcnggenindex": "g^{h,cng}", "hydelecgenindex": "g^{h,e}", "genindex": "g", "eledemandindex": "d^{e}", "hyddemandindex": "d^{h}", "demandindex": "d", "eleconsindex": "c^{e}", "hydconsindex": "c^{h}", "consindex": "c", "elepeakindex": "k^{e}", "hydpeakindex": "k^{h}", "peakindex": "k", "elestorageindex": "e^{e}", "hydstorageindex": "e^{h}", "storageindex": "e", "traderindex": "r", "eletraderindex": "r^{e}", "eltraderindex": "r^{e}", "hydtraderindex": "r^{h}", "elevehicleindex": "v^{e}", "hydvehicleindex": "v^{h}", "periodindex": "p", "scenarioindex": "s", "weekindex": "w", "monthindex": "m", "dayindex": "d", "hourindex": "h", "twentyminuteindex": "wi", "quarterindex": "q", "tenminuteindex": "t", "minuteindex": "mi", "intervalindex": "u", "timeindex": "n", "storageperiodindex": "p'", "storagetimeindex": "n'", "storageweekindex": "w'", "storagemonthindex": "m'", "storagedayindex": "d'", "storagehourindex": "h'", "zoneindex": "z", "areaindex": "a", "regionindex": "r", "marketcost": "C", "elemarketcost": "C^{trade,e}", "elemarketcostDA": "C^{DA,e}", "elemarketcostID": "C^{ID,e}", "elemarketcostIMB": "C^{IMB,e}", "elemarketcostPPA": "C^{PPA,e}", "elemarketcostgrid": "C^{grid,e}", "elemarketcosttax": "C^{tax,e}", "elemarketcostVAT": "C^{VAT,e}", "hydmarketcost": "C^{trade,h}", "hydmarketcostPPA": "C^{PPA,h}", "importcost": "C^{imp}", "marketrevenue": "R", "elemarketrevenue": "R^{trade,e}", "elemarketrevenueDA": "R^{DA,e}", "elemarketrevenueancillary": "R^{f,e}", "elemarketrevenuePPA": "R^{PPA,e}", "elemarketrevenuetax": "R^{tax,e}", "elemarketrevenueincentive": "R^{inc,e}", "hydmarketrevenue": "R^{trade,h}", "hydmarketrevenuePPA": "R^{PPA,h}", "exportrevenue": "R^{exp}", "generationcost": "C^{gen}", "elegenerationcost": "C^{gen,e}", "hydgenerationcost": "C^{gen,h}", "startcost": "C^{start}", "shutdowncost": "C^{shut}", "noloadcost": "C^{nl}", "fuelcost": "C^{fuel}", "watercost": "C^{water}", "maintenancecost": "C^{maint}", "operationcost": "C^{op}", "maintopercost": "C^{0\\& M}", "elemaintopercost": "C^{O\\& M,e}", "hydmaintopercost": "C^{O\\& M,h}", "degradationcost": "C^{deg}", "eledegradationcost": "C^{deg,e}", "hyddegradationcost": "C^{deg,h}", "storagecost": "C^{str}", "consumptioncost": "C^{con}", "eleconsumptioncost": "C^{con,e}", "hydconsumptioncost": "C^{con,h}", "demandcost": "C^{dem}", "eledemandcost": "C^{dem,e}", "hyddemandcost": "C^{dem,h}", "peakdemandcost": "C^{peak}", "elepeakdemandcost": "C^{peak,e}", "hydpeakdemandcost": "C^{peak,h}", "netusecost": "C^{netuse}", "elenetusecost": "C^{netuse,e}", "hydnetusecost": "C^{netuse,h}", "captariffcost": "C^{cap}", "elecaptariffcost": "C^{cap,e}", "hydcaptariffcost": "C^{cap,h}", "transmissioncost": "C^{tr}", "linecost": "C^{line}", "convertercost": "C^{conv}", "hvdcost": "C^{hvdc}", "flexibilitycost": "C^{flex}", "ancillaryservicescost": "C^{as}", "spinningreservecost": "C^{sp}", "nonspinningreservecost": "C^{ns}", "regulationupcost": "C^{reg,u}", "regulationdowncost": "C^{reg,d}", "reserveprocurementcost": "C^{res,proc}", "reserveactivationcost": "C^{res,act}", "flexibilityrevenue": "R^{flex}", "ancillaryservicesrevenue": "R^{as}", "spinningreserverevenue": "R^{sp}", "nonspinningreserverevenue": "R^{ns}", "regulationuprevenue": "R^{reg,u}", "regulationdownrevenue": "R^{reg,d}", "reserveprocurementrevenue": "R^{res,proc}", "reserveactivationrevenue": "R^{res,act}", "freqcontnormalrevenue": "R^{FCR-N}", "freqcontdisturbrevenue": "R^{FCR-D}", "unservedenergycost": "C^{ue}", "eleunservedenergycost": "C^{ens,e}", "hydunservedenergycost": "C^{ens,h}", "demandresponsecost": "C^{dr}", "demandflexibilitycost": "C^{df}", "spillcost": "C^{spill}", "loadsheddingcost": "C^{ls}", "curtailmentcost": "C^{curt}", "emissionpermitcost": "C^{emiss,perm}", "emissiontaxcost": "C^{emiss,tax}", "carboncost": "C^{carb}", "eleemissioncost": "C^{emiss,e}", "investmentcost": "C^{inv}", "fixedcost": "C^{fix}", "variablecost": "C^{var}", "annualcost": "C^{ann}", "totalcost": "C^{tot}", "genemission": "EM^{gen}", "conemission": "EM^{con}", "totemission": "EM^{tot}", "genCO2": "EM^{gen,co2}", "conCO2": "EM^{con,co2}", "totCO2": "EM^{tot,co2}", "genNOx": "EM^{gen,nox}", "conNOx": "EM^{con,nox}", "totNOx": "EM^{tot,nox}", "genSO2": "EM^{gen,so2}", "conSO2": "EM^{con,so2}", "totSO2": "EM^{tot,so2}", "genPM25": "EM^{gen,pm25}", "conPM25": "EM^{con,pm25}", "totPM25": "EM^{tot,pm25}", "startupemission": "EM^{start}", "shutdownemission": "EM^{shut}", "noloademission": "EM^{nl}", "storageemission": "EM^{str}", "importemission": "EM^{imp}", "exportemission": "EM^{exp}", "LROcost": "C^{LRO}", "pfactorone": "F1", "pfactortwo": "F2", "pfactorthr": "F3", "pfactorfou": "F4", "pdiscountrate": "\\Gamma", "ptimestep": "\\nu", "ptimestepduration": "\\delta", "pintervalduration": "\\Delta u", "nintervals": "N^{u}", "nperiods": "N^{p}", "nweeks": "N^{w}", "nmonths": "N^{m}", "ndays": "N^{d}", "nhours": "N^{h}", "pelespotprice": "\\lambda^{e}", "phydspotprice": "\\lambda^{h}", "pelebuyprice": "\\lambda^{b,e}", "phydbuyprice": "\\lambda^{b,h}", "pelesellprice": "\\lambda^{s,e}", "phydsellprice": "\\lambda^{s,h}", "peleimportprice": "\\lambda^{imp,e}", "phydimportprice": "\\lambda^{imp,h}", "peleexportprice": "\\lambda^{exp,e}", "phydexportprice": "\\lambda^{exp,h}", "peleppaprice": "\\lambda^{PPA,e}", "phydppaprice": "\\lambda^{PPA,h}", "pelefcrnprice": "\\Pi^{N,e}", "pelefcrdupprice": "\\Pi^{DUP,e}", "pelefcrddwprice": "\\Pi^{DDW,e}", "pelegridaFRRUPprice": "\\Pi^{A-REG-UP,e}", "pelegridaFRDDWprice": "\\Pi^{A-REG-DW,e}", "pelegridmFRRUPprice": "\\Pi^{M-REG-UP,e}", "pelegridmFRDDWprice": "\\Pi^{M-REG-DW,e}", "pelemarketbuyingratio": "\\Upsilon^{b,e}", "pelemarketsellingratio": "\\Upsilon^{s,e}", "pelemarketcertrevenue": "M^{cert,e}", "pelemarketpassthrough": "M^{pass,e}", "pelemarketmoms": "M^{moms,e}", "pelemarketnetfee": "M^{net,e}", "pelemarkettariff": "M^{tariff,e}", "pmaxmarketbuy": "\\overline{MB}", "pelemaxmarketbuy": "\\overline{MB}^{e}", "phydmaxmarketbuy": "\\overline{MB}^{h}", "pmaxmarketsell": "\\overline{MS}", "pmaxsell": "\\overline{MS}", "pelemaxmarketsell": "\\overline{MS}^{e}", "phydmaxmarketsell": "\\overline{MS}^{h}", "pminmarketbuy": "\\underline{MB}", "peleminmarketbuy": "\\underline{MB}^{e}", "phydminmarketbuy": "\\underline{MB}^{h}", "pminmarketsell": "\\underline{MS}", "peleminmarketsell": "\\underline{MS}^{e}", "phydminmarketsell": "\\underline{MS}^{h}", "peleretmaxbuy": "\\overline{RB}^{e}", "peleretmaxsell": "\\overline{RS}^{e}", "phydretmaxbuy": "\\overline{RB}^{h}", "phydretmaxsell": "\\overline{RS}^{h}", "pbalanceerror": "E^{bal}", "pelebalanceerror": "E^{bal,e}", "phydbalanceerror": "E^{bal,h}", "pbalanceerrorlimit": "\\overline{E}^{bal}", "pelebalanceerrorlimit": "\\overline{E}^{bal,e}", "phydbalanceerrorlimit": "\\overline{E}^{bal,h}", "peleppccmaximport": "\\overline{P}^{PCC,imp,e}", "peleppccmaxexport": "\\overline{P}^{PCC,exp,e}", "peleqpccmaximport": "\\overline{Q}^{PCC,imp,e}", "peleqpccmaxexport": "\\overline{Q}^{PCC,exp,e}", "peledemand": "D^{e}", "phyddemand": "D^{h}", "pelemaxdemand": "\\overline{D}^{e}", "pmaxdemand": "\\overline{D}", "pelemindemand": "\\underline{D}^{e}", "phydmaxdemand": "\\overline{D}^{h}", "phydmindemand": "\\underline{D}^{h}", "pelepeakdemand": "D^{e,peak}", "phydpeakdemand": "D^{h,peak}", "pdemflexible": "D^{flex}", "peledemflexible": "D^{e,flex}", "phyddemflexible": "D^{h,flex}", "pdemshiftedsteps": "N^{shift}", "peledemshiftedsteps": "N^{e,shift}", "phyddemshiftedsteps": "N^{h,shift}", "pcontractedcapacity": "\\hat{E}", "pelecontractedcapacity": "\\hat{E}^{e}", "phydcontractedcapacity": "\\hat{E}^{h}", "pelemaxproduction": "\\overline{EP}", "pelemaxprodsecondblock": "\\overline{EP}^{2b}", "peleminproduction": "\\underline{EP}", "phydmaxproduction": "\\overline{HP}", "phydmaxprodsecondblock": "\\overline{HP}^{2b}", "phydminproduction": "\\underline{HP}", "pelemaxconsumption": "\\overline{EC}", "peleminconsumption": "\\underline{EC}", "phydmaxconsumption": "\\overline{HC}", "phydminconsumption": "\\underline{HC}", "peleconscompress": "\\overline{EC}^{compress}", "phydprodfunction": "\\eta^{h,prod}", "prampuprate": "RU", "prampdwrate": "RD", "puptime": "TU", "pdwtime": "TD", "peletohydfunction": "F^{e2h}", "phydtoelefunction": "F^{h2e}", "pstartupcost": "CSU", "pshutdowncost": "CSD", "ppeakdemandtariff": "C^{peak}", "pnoloadcost": "C^{nl}", "ploadsheddingcost": "C^{ls}", "pspillcost": "C^{spill}", "pfuelafactor": "A", "pfuelbfactor": "B", "pfuelcfactor": "C", "pmaintenancecost": "CM", "poperationcost": "CO", "pfixedcost": "CF", "pvariablecost": "CV", "pinvestmentcost": "C^{inv}", "pannualcost": "C^{ann}", "pcarbonprice": "CE", "peleresistantline": "R", "pelereactanceline": "X", "pnetreactance": "X", "peleimpedanceline": "Z", "peleconductline": "G", "pelesusceptline": "B", "peleshuntsuscepline": "B^{l}", "pelemaxcurrent": "\\overline{I}", "pelemaxapparentpower": "\\overline{S}", "pelemaxrealpower": "\\overline{P}", "pnettc": "\\overline{TC}", "peleminrealpower": "\\underline{P}", "pelemaxreactivepower": "\\overline{Q}", "peleminreactivepower": "\\underline{Q}", "pelemaxvolt": "\\overline{V}", "peleminvolt": "\\underline{V}", "pelemaxvoltageangle": "\\overline{\\theta}", "peleminvoltageangle": "\\underline{\\theta}", "peleinitvolt": "V^{0}", "phydmaxflow": "\\overline{H}", "phydminflow": "\\underline{H}", "pelestoragecycle": "\\tau^{e}", "pcycletimestep": "\\tau^{cycle}", "pelestorageinflowcycle": "\\tau^{i,e}", "pelestorageoutflowcycle": "\\tau^{o,e}", "poutflowtimestep": "\\tau^{o}", "pelestorageefficiency": "\\eta^{e}", "peff": "\\eta", "pelestorchargeefficiency": "\\eta^{c,e}", "pcheff": "\\eta^{c}", "pelestordischargeefficiency": "\\eta^{d,e}", "pdischeff": "\\eta^{d}", "pelestoragecapacity": "\\Psi^{e}", "pvarfixedavailability": "A", "pfixavail": "A^{fix}", "pelemaxinflow": "\\overline{EI}^{e}", "pelemaxoutflow": "\\overline{EO}^{e}", "pelemininflow": "\\underline{EI}^{e}", "peleminoutflow": "\\underline{EO}^{e}", "pelemaxinventory": "\\overline{SI}^{e}", "pelemininventory": "\\underline{SI}^{e}", "pelemaxstorage": "\\overline{S}^{e}", "pmaxstorage": "\\overline{S}", "pelemaxcharge": "\\overline{C}^{e}", "pelemaxchargesecondblock": "\\overline{C}^{e,2b}", "phydmaxcharge": "\\overline{C}^{h}", "phydmaxchargesecondblock": "\\overline{C}^{h,2b}", "phydminchargesecondblock": "\\underline{C}^{h,2b}", "pdodsa": "DoD^{a}", "pdodsb": "DoD^{b}", "pdodsc": "DoD^{c}", "phydstoragecycle": "\\tau^{h}", "phydstorageinflowcycle": "\\tau^{i,h}", "phydstorageoutflowcycle": "\\tau^{o,h}", "phydstorageefficiency": "\\eta^{h}", "phydstoragecapacity": "\\Psi^{h}", "phydmaxinflow": "\\overline{EI}^{h}", "phydmaxoutflow": "\\overline{EO}^{h}", "phydmininflow": "\\underline{EI}^{h}", "phydminoutflow": "\\underline{EO}^{h}", "phydmaxinventory": "\\overline{SI}^{h}", "phydmininventory": "\\underline{SI}^{h}", "peleminstoragestart": "S^{e,init}", "phydminstoragestart": "S^{h,init}", "peleminstorageend": "S^{e,end}", "phydminstorageend": "S^{h,end}", "pfcrnrequirement": "FCRN", "pfcrduprequirement": "FCRD^{UP}", "pfcrddwrequirement": "FCRD^{DW}", "pfcrdact": "FCRD^{act}", "pgennofcrd": "NoFCRD", "pafrruprequirement": "REG^{A,UP}", "pafrddwrequirement": "REG^{A,DW}", "pmfrruprequirement": "REG^{M,UP}", "pmfrddwrequirement": "REG^{M,DW}", "pfcrdupreqactivation": "FCRD^{UP,act}", "pfcrddwreqactivation": "FCRD^{DW,act}", "velemarketbuy": "mb^{e}", "velebuy": "mb^{e}", "vhydmarketbuy": "mb^{h}", "vhydbuy": "mb^{h}", "vmarketbuy": "mb", "velemarketsell": "ms^{e}", "velesell": "ms^{e}", "vhydmarketsell": "ms^{h}", "vhydsell": "ms^{h}", "vmarketsell": "ms", "veleppccimport": "imp^{e}", "veleimport": "imp^{e}", "veleppccexport": "exp^{e}", "veleexport": "exp^{e}", "vhydimport": "imp^{h}", "vhydexport": "exp^{h}", "vproduction": "p", "veleproduction": "p^{e}", "vhydproduction": "p^{h}", "veletotaloutput": "p^{e,tot}", "vhydtotaloutput": "p^{h,tot}", "veleproductionact": "p^{a,e}", "vhydproductionact": "p^{a,h}", "vconsumption": "c", "veleconsumption": "c^{e}", "veletotalcharge": "c^{e,tot}", "veleconsumptionstandby": "c^{e,standby}", "veleconsumptioncompress": "c^{e,compress}", "vhydconsumption": "c^{h}", "vhydtotalcharge": "c^{h,tot}", "veleconsumptionact": "c^{a,e}", "vhydconsumptionact": "c^{a,h}", "vinventorystart": "s^{init}", "vinventory": "si", "veleinventory": "si^{e}", "veleinvminday": "si^{e,min,day}", "veleinvmaxday": "si^{e,max,day}", "veleinvdoday": "si^{e,dod,day}", "veleinvdodsaday": "si^{e,doda,day}", "veleinvdodsbday": "si^{e,dodb,day}", "veleinvdodscday": "si^{e,dodc,day}", "vhydinventory": "si^{h}", "venergyinflow": "ei", "veleenergyinflow": "ei^{e}", "vhydenergyinflow": "ei^{h}", "venergyoutflow": "eo", "veleenergyoutflow": "eo^{e}", "vhydenergyoutflow": "eo^{h}", "vspillage": "es", "velespillage": "es^{e}", "vhydspillage": "es^{h}", "vsecondblockproduction": "p2b", "velesecondblockproduction": "p2b^{e}", "vhydsecondblockproduction": "p2b^{h}", "vsecondblockconsumption": "c2b", "velesecondblockconsumption": "c2b^{e}", "vhydsecondblockconsumption": "c2b^{h}", "vmagvolt": "v^{2}", "vangvolt": "\\theta", "vtheta": "\\theta", "vflow": "f", "vactflow": "f^{P}", "vreactflow": "f^{Q}", "veleflow": "f^{e}", "vhydflow": "f^{h}", "vdemand": "d", "veledemand": "d^{e}", "vhyddemand": "d^{h}", "vdemflex": "d^{flex}", "veledemflex": "d^{e,flex}", "vhyddemflex": "d^{h,flex}", "vloadshed": "ls", "veleloadshed": "ls^{e}", "vhydloadshed": "ls^{h}", "vpeakdemand": "d^{peak}", "velepeakdemand": "d^{e,peak}", "vglobalpeak": "d^{global,peak}", "vdailypeak": "d^{daily,peak}", "vhydpeakdemand": "d^{h,peak}", "vPupward": "r^{p,u}", "vPdownward": "r^{p,d}", "vCupward": "r^{c,u}", "vCdownward": "r^{c,d}", "velefcrnbid": "p^{\\Thetha,N}", "velefcrdupbid": "p^{\\Theta,DU}", "velefcrddwbid": "p^{\\Theta,DW}", "velefcrnupact": "p^{NU}", "velefcrndwact": "p^{ND}", "velefcrdupactch": "p^{DU,ch}", "velefcrdupactdi": "p^{DU,di}", "velefcrddwactch": "p^{DD,ch}", "velefcrddwactdi": "p^{DD,di}", "velefcrdupfraction": "\\Lambda^{DU}", "velefcrddwfraction": "\\Lambda^{DD}", "vpeakdemandindbin": "kd", "vpeakind": "kd", "vmonthpeakind": "kd^{month}", "velepeakdemandindbin": "kd^{e}", "vhydpeakdemandindbin": "kd^{h}", "vstoroperatbin": "sf", "velestoroperatbin": "sf^{e}", "vhydstoroperatbin": "sf^{h}", "velestorchargebin": "sc^{e}", "velestorchargeactbin": "sc^{a,e}", "vhydstorchargebin": "sc^{h}", "vhydstorchargeactbin": "sc^{a,h}", "velestordischargebin": "sd^{e}", "velestordischargeactbin": "sd^{a,e}", "vhydstordischargebin": "sd^{h}", "vhydstordischargeactbin": "sd^{a,h}", "vmaxcommitbin": "muc", "velemaxcommitbin": "muc^{e}", "vhydmaxcommitbin": "muc^{h}", "vcommitbin": "uc", "velecommitbin": "uc^{e}", "vhydcommitbin": "uc^{h}", "vstartupbin": "su", "velestartupbin": "su^{e}", "vhydstartupbin": "su^{h}", "vshutdownbin": "sd", "veleshutdownbin": "sd^{e}", "vhydshutdownbin": "sd^{h}", "vhydcompressbin": "hc", "velefcrncommitbin": "uc^{FCR-N,e}", "velefcrdupreqcommitbin": "uc^{FCR-D,UP,e}", "velefcrddwreqcommitbin": "uc^{FCR-D,DW,e}", "robustbudget": "\\Gamma", "devep": "EP^{dev}", "devdem": "D^{dev}", "BigM": "M", "robustdev": "\\omega", "lightslack": "m", "dualnumber": "\\upsilon", "dualperiod": "\\eta", "robustindicator": "\\chi"}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'concepts/future-developments';</script>
+    <script src="../_static/../custom.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing" href="../developer/contributing.html" />
+    <link rel="prev" title="Results &amp; Post-Processing" href="results-and-postprocessing.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Future Developments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2Fconcepts/future-developments.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/concepts/future-developments.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Future Developments</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#to-do-list">To-Do List</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modelling-enhancements">Modelling Enhancements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#computational-and-structural-enhancements">Computational and Structural Enhancements</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="future-developments">
+<span id="id1"></span><h1>Future Developments<a class="headerlink" href="#future-developments" title="Link to this heading">#</a></h1>
+<p>This section outlines potential future enhancements to the optimisation model, based on a number of identified challenges and opportunities for more detailed modelling. These items represent a roadmap for increasing the model’s accuracy and applicability to real-world scenarios.</p>
+<section id="to-do-list">
+<h2>To-Do List<a class="headerlink" href="#to-do-list" title="Link to this heading">#</a></h2>
+<p>The following is a list of key areas for future development, divided into modelling enhancements and computational/structural improvements.</p>
+</section>
+<section id="modelling-enhancements">
+<h2>Modelling Enhancements<a class="headerlink" href="#modelling-enhancements" title="Link to this heading">#</a></h2>
+<p>This category includes improvements that add new features, constraints, or more detailed representations of physical or financial systems to the model.</p>
+<ol class="arabic">
+<li><p><strong>Sequential Market Participation</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: The current model does not fully capture the sequential nature of day-ahead (DA), intraday (ID), and imbalance (IMB) markets. It assumes perfect foresight for intraday markets.</p></li>
+<li><p><strong>To-Do</strong>: Implement a deterministic MILP model that can handle the sequential decision-making process across these markets. This could involve a rolling horizon approach or the use of penalty factors to represent the uncertainty of intraday prices.</p></li>
+<li><p><strong>Prototype Equations</strong>: The objective function would be expanded to include revenues and costs from each market stage:</p>
+<div class="math notranslate nohighlight">
+\[\max \pi = \sum_{t \in T} (R_{DA,t} + R_{ID,t} - C_{DA,t} - C_{ID,t})\]</div>
+<p>where bids in later markets adjust the position from earlier ones:</p>
+<div class="math notranslate nohighlight">
+\[P_{dispatch,t} = B_{DA,t} + B_{ID,t}\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Introduce new decision variables in <cite>oM_ModelFormulation.py</cite> for bids in each market (e.g., <span class="math notranslate nohighlight">\(vBidDA_t\)</span>, <span class="math notranslate nohighlight">\(vBidID_t\)</span>).</p></li>
+<li><p>Add new parameters for the prices in each market.</p></li>
+<li><p>Implement new constraints to link the market positions sequentially.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>LER (Limited Energy Reservoir) Constraints Implementation</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: The model needs to incorporate the hysteresis logic for Normal/Alert Energy Management (NEM/AEM) for BESS participating in Frequency Containment Reserve (FCR) markets, as per Swedish TSO requirements.</p></li>
+<li><p><strong>To-Do</strong>: Implement the state-dependent enable/disable logic for NEM/AEM activation states using binary variables and state transition constraints.</p></li>
+<li><p><strong>Prototype Equations</strong>: The hysteresis logic can be modelled using Big-M constraints. For example, for the NEM-low mode activation:</p>
+<div class="math notranslate nohighlight">
+\[SOC_t - SOC_{lower,enable} \leq M \cdot (1 - b_{NEM-low,t})\]</div>
+<div class="math notranslate nohighlight">
+\[SOC_{lower,disable} - SOC_t \leq M \cdot b_{NEM-low,t}\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Add new binary variables in <cite>oM_ModelFormulation.py</cite> for each NEM/AEM state (e.g., <span class="math notranslate nohighlight">\(vNEM_{low,t}\)</span>).</p></li>
+<li><p>Define new parameters for the SOC thresholds (e.g., <span class="math notranslate nohighlight">\(pSOC_{lower,enable}\)</span>).</p></li>
+<li><p>Add the Big-M constraints to <cite>create_constraints</cite> in <cite>oM_ModelFormulation.py</cite>.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>PPA Inclusion in the Model</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: The model currently lacks the functionality to incorporate a virtual Power Purchase Agreement (PPA) or a Contract for Difference (CfD) into the financial model and technical constraints.</p></li>
+<li><p><strong>To-Do</strong>: Develop the necessary mathematical formulations to represent the financial settlements of a virtual PPA and integrate them into the objective function.</p></li>
+<li><p><strong>Prototype Equation</strong>: The trading revenue from a two-way CfD can be formulated as:</p>
+<div class="math notranslate nohighlight">
+\[R_{trad,t} = (p_{market,t} - p_{strike}) \cdot B_{PPA,t}\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Modify the objective function in <cite>oM_ModelFormulation.py</cite> to include this revenue component.</p></li>
+<li><p>Add a new parameter for the PPA strike price (<span class="math notranslate nohighlight">\(pPPA_{strike}\)</span>) and a variable for the PPA volume (<span class="math notranslate nohighlight">\(vPPA_{volume,t}\)</span>).</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Multiple Timescales Modeling</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: The model needs to handle both high-resolution frequency regulation signals (second/minute-level) and energy market data (hour-level) simultaneously.</p></li>
+<li><p><strong>To-Do</strong>: Investigate and implement the best time resolution to handle both frequency and energy markets, potentially using time-aggregation techniques.</p></li>
+<li><p><strong>Prototype Equation</strong>: This is primarily a structural change. Equations would need to be defined over different time sets, for example energy balance over hourly steps <span class="math notranslate nohighlight">\(t\)</span> and FCR provision over minute-steps <span class="math notranslate nohighlight">\(\tau\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[E_{balance,t} = ...\]</div>
+<div class="math notranslate nohighlight">
+\[P_{FCR, \tau} = ...\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Requires a significant change to the temporal structure in <cite>oM_InputData.py</cite> to handle multiple time resolutions.</p></li>
+<li><p>All time-indexed variables and constraints in <cite>oM_ModelFormulation.py</cite> would need to be updated to use the appropriate time sets.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Market Participation Exclusion Rules</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: The model uses a Big-M formulation to allow flexible participation in multiple frequency services, but it does not yet incorporate specific exclusion rules that may be imposed by TSOs (e.g., for Swedish frequency markets).</p></li>
+<li><p><strong>To-Do</strong>: Implement the necessary logical constraints to enforce any exclusion rules between different frequency services, such as FCR-N and aFRR.</p></li>
+<li><p><strong>Prototype Equation</strong>: Mutual exclusivity can be enforced with a simple linear constraint on the binary participation variables:</p>
+<div class="math notranslate nohighlight">
+\[b_{FCR-N,t} + b_{aFRR,t} \leq 1\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Add this new constraint to <cite>create_constraints</cite> in <cite>oM_ModelFormulation.py</cite>, linking the existing binary variables for market participation.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Grid Fees and COMA Costs</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: The model’s cost structure for grid usage and operations is not yet fully defined.</p></li>
+<li><p><strong>To-Do</strong>: Define and implement a realistic cost structure for grid usage fees (MWh imported/exported) and COMA (Operating, Maintenance, Administration) costs, whether as fixed annual costs or usage-based.</p></li>
+<li><p><strong>Prototype Equations</strong>: These costs would be added to the objective function:</p>
+<div class="math notranslate nohighlight">
+\[C_{grid,t} = c_{grid,import} \cdot P_{import,t} + c_{grid,export} \cdot P_{export,t}\]</div>
+<div class="math notranslate nohighlight">
+\[C_{COMA} = C_{fixed\_O\&amp;M}\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Update the objective function in <cite>oM_ModelFormulation.py</cite>.</p></li>
+<li><p>Add new parameters for the grid fee rates (<span class="math notranslate nohighlight">\(pGridFee_{import}\)</span>) and fixed O&amp;M costs (<span class="math notranslate nohighlight">\(pCOMA_{cost}\)</span>).</p></li>
+<li><p>The grid cost would use the existing variables for grid import/export (<span class="math notranslate nohighlight">\(vElecImport_t\)</span>, <span class="math notranslate nohighlight">\(vElecExport_t\)</span>).</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Vehicle-to-Grid (V2G) Integration</strong>:</p>
+<ul>
+<li><p><strong>Current Status</strong>: The model currently includes a basic representation of an aggregated EV fleet, considering it as a flexible load and storage resource with AC charging capabilities.</p></li>
+<li><p><strong>Challenge</strong>: The existing model can be enhanced to provide a more detailed and realistic representation of V2G by incorporating different charging technologies (DC), considering battery degradation from cycling, and modelling more complex driver behaviours.</p></li>
+<li><p><strong>To-Do</strong>: Extend the V2G model to include DC fast-charging capabilities, add a cost component for battery degradation, and refine the constraints related to driving energy requirements.</p></li>
+<li><p><strong>AC vs. DC Charging</strong>:</p>
+<ul class="simple">
+<li><p><strong>AC Charging (Implemented)</strong>: The current model represents lower power charging via the vehicle’s onboard charger, using a single efficiency parameter (<span class="math notranslate nohighlight">\(\eta_{AC}\)</span>).</p></li>
+<li><p><strong>DC Charging (Future)</strong>: A future extension would add high-power DC charging, which bypasses the vehicle’s onboard charger. This would require a separate, higher efficiency parameter (<span class="math notranslate nohighlight">\(\eta_{DC}\)</span>) and could be linked to different grid connection points or constraints.</p></li>
+</ul>
+</li>
+<li><p><strong>Prototype Equations</strong>: The state of charge for the aggregated EV fleet will continue to use the existing formulation, but a degradation cost should be added to the objective function:</p>
+<div class="math notranslate nohighlight">
+\[C_{V2G\_deg,t} = c_{deg} \cdot (P_{chg,t} + P_{dis,t})\]</div>
+<p>And the energy requirement constraint remains crucial:</p>
+<div class="math notranslate nohighlight">
+\[SOC_{EV,t} \geq SOC_{min,driving,t}\]</div>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Modify the existing EV-related sets and parameters in <cite>oM_InputData.py</cite> to include data for DC chargers (e.g., efficiency, capacity).</p></li>
+<li><p>Introduce a new cost term for degradation to the objective function in <cite>oM_ModelFormulation.py</cite>.</p></li>
+<li><p>Add new variables or constraints if necessary to distinguish between AC and DC charging power, potentially allowing simultaneous connection to both if the model scope requires it.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Degradation Modeling for Energy Storage</strong>:</p>
+<ul>
+<li><p><strong>Challenge</strong>: To capture the long-term economic impact of operational decisions, the model must account for the physical degradation of storage assets. This is complex because different technologies degrade in different ways.</p></li>
+<li><p><strong>To-Do</strong>: Implement distinct degradation cost models for electrochemical batteries (BESS) and hydrogen systems (electrolyzers, fuel cells).</p></li>
+<li><p><strong>BESS Degradation (Electrical Storage)</strong>: Battery degradation is primarily driven by two factors:</p>
+<ul class="simple">
+<li><p><strong>Cycle Aging</strong>: Caused by the throughput of energy (charging and discharging).</p></li>
+<li><p><strong>Calendar Aging</strong>: Occurs over time regardless of usage.</p></li>
+</ul>
+</li>
+<li><p><strong>Simple Model</strong>: A linear cost per MWh of throughput is a common simplification for cycle aging.</p>
+<div class="math notranslate nohighlight">
+\[C_{BESS\_deg,t} = c_{cycle} \cdot (P_{chg,t} + P_{dis,t}) + c_{calendar}\]</div>
+</li>
+<li><p><strong>Advanced Model</strong>: <em>Depth of Discharge (DoD) Penalization</em> - A more accurate approach recognizes that deeper discharge cycles cause more stress than shallow ones. This non-linear cost can be approximated in a linear model using a piecewise function.</p>
+<ul>
+<li><p><strong>Prototype Equation</strong>: The total degradation cost is the sum of costs incurred in different SOC segments, each with a different penalty.</p>
+<div class="math notranslate nohighlight">
+\[C_{BESS\_cycle\_deg,t} = \sum_{s \in S} c_{segment,s} \cdot E_{discharged,s,t}\]</div>
+<p>where <span class="math notranslate nohighlight">\(S\)</span> is the set of DoD segments (e.g., 100-80%, 80-60%), <span class="math notranslate nohighlight">\(c_{segment,s}\)</span> is the increasing cost for each segment, and <span class="math notranslate nohighlight">\(E_{discharged,s,t}\)</span> is the energy discharged within that segment.</p>
+</li>
+<li><p><strong>Potential Integration</strong>: This requires a more complex formulation, typically using Special Ordered Sets of Type 2 (SOS2) constraints or binary variables to model the piecewise cost function. New parameters would be needed in <cite>oM_InputData.py</cite> to define the segment breakpoints and costs.</p></li>
+</ul>
+</li>
+<li><p><strong>Hydrogen System Degradation</strong>: Degradation in hydrogen systems primarily affects the conversion components, not the hydrogen storage tank itself. Key drivers include:</p>
+<ul class="simple">
+<li><p><strong>Operational Stress</strong>: Total operating hours for electrolyzers and fuel cells.</p></li>
+<li><p><strong>Start/Stop Cycles</strong>: Thermal and mechanical stress from starting up and shutting down.</p></li>
+</ul>
+</li>
+<li><p><strong>Prototype Equations for Hydrogen Systems</strong>:</p>
+<div class="math notranslate nohighlight">
+\[C_{Hyd\_deg,t} = c_{op} \cdot b_{commit,t} + c_{su} \cdot b_{startup,t}\]</div>
+<p>where <span class="math notranslate nohighlight">\(b_{commit,t}\)</span> is a binary variable for being online and <span class="math notranslate nohighlight">\(b_{startup,t}\)</span> is a binary for starting up at time <span class="math notranslate nohighlight">\(t\)</span>.</p>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul class="simple">
+<li><p>Add new parameters to <cite>oM_InputData.py</cite> for degradation cost factors (e.g., <span class="math notranslate nohighlight">\(pBESS_{cycle\_cost}\)</span>, <span class="math notranslate nohighlight">\(pHyd_{op\_cost}\)</span>).</p></li>
+<li><p>Add these new cost components to the objective function in <cite>oM_ModelFormulation.py</cite>, linking them to existing variables for power dispatch and commitment status.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="computational-and-structural-enhancements">
+<h2>Computational and Structural Enhancements<a class="headerlink" href="#computational-and-structural-enhancements" title="Link to this heading">#</a></h2>
+<p>This category focuses on improvements to the underlying code structure and mathematical formulation to enhance computational efficiency, scalability, and maintainability.</p>
+<ol class="arabic simple">
+<li><p><strong>Code Restructuring with Python Classes</strong>:</p>
+<ul class="simple">
+<li><p><strong>Challenge</strong>: The current implementation relies on a procedural approach with functions spread across multiple modules. This can make the code harder to navigate, debug, and extend as the model complexity grows.</p></li>
+<li><p><strong>To-Do</strong>: Refactor the codebase into a more object-oriented structure. A central <cite>OptimizationModel</cite> class could encapsulate the data, Pyomo model, and methods for building, solving, and post-processing.</p></li>
+<li><p><strong>Benefits</strong>:</p>
+<ul>
+<li><p><strong>Encapsulation</strong>: Grouping related data and functions into a single class improves organization.</p></li>
+<li><p><strong>Maintainability</strong>: Changes to the model are localized within the class, reducing the risk of unintended side effects.</p></li>
+<li><p><strong>Scalability</strong>: A class-based structure is easier to extend with new components (e.g., new assets, new market products).</p></li>
+</ul>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul>
+<li><p>Create a new class in a module like <cite>oM_ModelClass.py</cite>.</p></li>
+<li><p>Methods of this class would wrap the existing functions from <cite>oM_ModelFormulation.py</cite>, <cite>oM_InputData.py</cite>, etc.</p></li>
+<li><p>The main script <cite>el1xr_Main.py</cite> would then instantiate this class to run the optimisation.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Modular Component Implementation with Pyomo Blocks</strong>:</p>
+<ul class="simple">
+<li><p><strong>Challenge</strong>: As more assets (like V2G, electrolyzers, different PPA types) are added, the main model formulation in <cite>create_constraints</cite> can become monolithic and difficult to manage. Adding or removing a component requires manually editing a large function.</p></li>
+<li><p><strong>To-Do</strong>: Use Pyomo’s <cite>Block</cite> feature to encapsulate the variables and constraints for each physical or financial component. Each block would represent a self-contained model of an asset.</p></li>
+<li><p><strong>Example</strong>: A <cite>BESS</cite> block could contain all variables (state of charge, charge/discharge power) and constraints (energy balance, power limits) related to the battery.</p></li>
+<li><p><strong>Benefits</strong>:</p>
+<ul>
+<li><p><strong>Modularity</strong>: Makes it easy to add, remove, or swap different implementations of a component (e.g., a simple BESS model vs. an advanced one with degradation).</p></li>
+<li><p><strong>Readability</strong>: The main model becomes a cleaner composition of these blocks, rather than a long list of constraints.</p></li>
+<li><p><strong>Scalability</strong>: Simplifies the management of models with many individual assets of the same type (e.g., multiple battery units).</p></li>
+</ul>
+</li>
+<li><p><strong>Potential Integration</strong>:</p>
+<ul>
+<li><p>In <cite>oM_ModelFormulation.py</cite>, define a separate function for each component that returns a <cite>Block</cite> (e.g., <cite>def create_bess_block(…)</cite>).</p></li>
+<li><p>The main <cite>create_constraints</cite> function would then call these functions to attach the blocks to the main model.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="results-and-postprocessing.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Results &amp; Post-Processing</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../developer/contributing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#to-do-list">To-Do List</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modelling-enhancements">Modelling Enhancements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#computational-and-structural-enhancements">Computational and Structural Enhancements</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By EL1XR-dev Team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

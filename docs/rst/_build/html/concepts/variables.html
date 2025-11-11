@@ -1,0 +1,1115 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Variables &#8212;   documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"nB": "\\mathcal{B}", "nBEP": "\\mathcal{B}^{pcc,e}", "nBE": "\\mathcal{B}^{e}", "nBHP": "\\mathcal{B}^{pcc,h}", "nBH": "\\mathcal{B}^{h}", "nC": "\\mathcal{C}", "nG": "\\mathcal{G}", "nGE": "\\mathcal{G}^{e}", "nGER": "\\mathcal{G}^{e,res}", "nGVRE": "\\mathcal{G}^{e,vres}", "nGENR": "\\mathcal{G}^{e,nonres}", "nGET": "\\mathcal{G}^{e,th}", "nGEH": "\\mathcal{G}^{e,h}", "nGH": "\\mathcal{G}^{h}", "nGNG": "\\mathcal{G}^{h,cng}", "nGHE": "\\mathcal{G}^{h,e}", "nHGE": "\\mathcal{G}^{h,e}", "nHGS": "\\mathcal{E}^{h}", "nHGT": "\\mathcal{G}^{h,th}", "nE": "\\mathcal{E}", "nEE": "\\mathcal{E}^{e}", "nEES": "\\mathcal{E}^{e}", "nEH": "\\mathcal{E}^{h}", "nEHS": "\\mathcal{E}^{h}", "nEV": "\\mathcal{EV}", "nEVE": "\\mathcal{EV}^{e}", "nEVH": "\\mathcal{EV}^{h}", "nR": "\\mathcal{R}", "nRE": "\\mathcal{R}^{e}", "nRH": "\\mathcal{R}^{h}", "nREDE": "\\mathcal{R}^{e,d}", "nREGE": "\\mathcal{R}^{e,g}", "nDE": "\\mathcal{D}^{e}", "nDH": "\\mathcal{D}^{h}", "nK": "\\mathcal{K}", "nKE": "\\mathcal{K}^{e}", "nKH": "\\mathcal{K}^{h}", "nL": "\\mathcal{L}", "nLE": "\\mathcal{L}^{e}", "nELA": "\\mathcal{L}^{e}", "nLH": "\\mathcal{L}^{h}", "nX": "\\mathcal{R}", "nZ": "\\mathcal{Z}", "nA": "\\mathcal{A}", "nT": "\\mathcal{T}", "nV": "\\mathcal{V}", "nP": "\\mathcal{P}", "nS": "\\mathcal{S}", "nM": "\\mathcal{M}", "nW": "\\mathcal{W}", "nD": "\\mathcal{D}", "nH": "\\mathcal{H}", "nWI": "\\mathcal{H}^{w}", "nQ": "\\mathcal{H}^{q}", "nTI": "\\mathcal{H}^{t}", "nMIN": "\\mathcal{H}^{m}", "busindex": "nd", "busindexa": "i", "busindexb": "j", "branchindex": "ij", "lineindexa": "ijc", "lineindexb": "jic", "circuitindex": "c", "elegenindex": "g^{e}", "elenonresgenindex": "g^{e,nonres}", "elenresgenindex": "g^{e,res}", "elenhydgenindex": "g^{e,h}", "hydgenindex": "g^{h}", "hydcnggenindex": "g^{h,cng}", "hydelecgenindex": "g^{h,e}", "genindex": "g", "eledemandindex": "d^{e}", "hyddemandindex": "d^{h}", "demandindex": "d", "eleconsindex": "c^{e}", "hydconsindex": "c^{h}", "consindex": "c", "elepeakindex": "k^{e}", "hydpeakindex": "k^{h}", "peakindex": "k", "elestorageindex": "e^{e}", "hydstorageindex": "e^{h}", "storageindex": "e", "traderindex": "r", "eletraderindex": "r^{e}", "eltraderindex": "r^{e}", "hydtraderindex": "r^{h}", "elevehicleindex": "v^{e}", "hydvehicleindex": "v^{h}", "periodindex": "p", "scenarioindex": "s", "weekindex": "w", "monthindex": "m", "dayindex": "d", "hourindex": "h", "twentyminuteindex": "wi", "quarterindex": "q", "tenminuteindex": "t", "minuteindex": "mi", "intervalindex": "u", "timeindex": "n", "storageperiodindex": "p'", "storagetimeindex": "n'", "storageweekindex": "w'", "storagemonthindex": "m'", "storagedayindex": "d'", "storagehourindex": "h'", "zoneindex": "z", "areaindex": "a", "regionindex": "r", "marketcost": "C", "elemarketcost": "C^{trade,e}", "elemarketcostDA": "C^{DA,e}", "elemarketcostID": "C^{ID,e}", "elemarketcostIMB": "C^{IMB,e}", "elemarketcostPPA": "C^{PPA,e}", "elemarketcostgrid": "C^{grid,e}", "elemarketcosttax": "C^{tax,e}", "elemarketcostVAT": "C^{VAT,e}", "hydmarketcost": "C^{trade,h}", "hydmarketcostPPA": "C^{PPA,h}", "importcost": "C^{imp}", "marketrevenue": "R", "elemarketrevenue": "R^{trade,e}", "elemarketrevenueDA": "R^{DA,e}", "elemarketrevenueancillary": "R^{f,e}", "elemarketrevenuePPA": "R^{PPA,e}", "elemarketrevenuetax": "R^{tax,e}", "elemarketrevenueincentive": "R^{inc,e}", "hydmarketrevenue": "R^{trade,h}", "hydmarketrevenuePPA": "R^{PPA,h}", "exportrevenue": "R^{exp}", "generationcost": "C^{gen}", "elegenerationcost": "C^{gen,e}", "hydgenerationcost": "C^{gen,h}", "startcost": "C^{start}", "shutdowncost": "C^{shut}", "noloadcost": "C^{nl}", "fuelcost": "C^{fuel}", "watercost": "C^{water}", "maintenancecost": "C^{maint}", "operationcost": "C^{op}", "maintopercost": "C^{0\\& M}", "elemaintopercost": "C^{O\\& M,e}", "hydmaintopercost": "C^{O\\& M,h}", "degradationcost": "C^{deg}", "eledegradationcost": "C^{deg,e}", "hyddegradationcost": "C^{deg,h}", "storagecost": "C^{str}", "consumptioncost": "C^{con}", "eleconsumptioncost": "C^{con,e}", "hydconsumptioncost": "C^{con,h}", "demandcost": "C^{dem}", "eledemandcost": "C^{dem,e}", "hyddemandcost": "C^{dem,h}", "peakdemandcost": "C^{peak}", "elepeakdemandcost": "C^{peak,e}", "hydpeakdemandcost": "C^{peak,h}", "netusecost": "C^{netuse}", "elenetusecost": "C^{netuse,e}", "hydnetusecost": "C^{netuse,h}", "captariffcost": "C^{cap}", "elecaptariffcost": "C^{cap,e}", "hydcaptariffcost": "C^{cap,h}", "transmissioncost": "C^{tr}", "linecost": "C^{line}", "convertercost": "C^{conv}", "hvdcost": "C^{hvdc}", "flexibilitycost": "C^{flex}", "ancillaryservicescost": "C^{as}", "spinningreservecost": "C^{sp}", "nonspinningreservecost": "C^{ns}", "regulationupcost": "C^{reg,u}", "regulationdowncost": "C^{reg,d}", "reserveprocurementcost": "C^{res,proc}", "reserveactivationcost": "C^{res,act}", "flexibilityrevenue": "R^{flex}", "ancillaryservicesrevenue": "R^{as}", "spinningreserverevenue": "R^{sp}", "nonspinningreserverevenue": "R^{ns}", "regulationuprevenue": "R^{reg,u}", "regulationdownrevenue": "R^{reg,d}", "reserveprocurementrevenue": "R^{res,proc}", "reserveactivationrevenue": "R^{res,act}", "freqcontnormalrevenue": "R^{FCR-N}", "freqcontdisturbrevenue": "R^{FCR-D}", "unservedenergycost": "C^{ue}", "eleunservedenergycost": "C^{ens,e}", "hydunservedenergycost": "C^{ens,h}", "demandresponsecost": "C^{dr}", "demandflexibilitycost": "C^{df}", "spillcost": "C^{spill}", "loadsheddingcost": "C^{ls}", "curtailmentcost": "C^{curt}", "emissionpermitcost": "C^{emiss,perm}", "emissiontaxcost": "C^{emiss,tax}", "carboncost": "C^{carb}", "eleemissioncost": "C^{emiss,e}", "investmentcost": "C^{inv}", "fixedcost": "C^{fix}", "variablecost": "C^{var}", "annualcost": "C^{ann}", "totalcost": "C^{tot}", "genemission": "EM^{gen}", "conemission": "EM^{con}", "totemission": "EM^{tot}", "genCO2": "EM^{gen,co2}", "conCO2": "EM^{con,co2}", "totCO2": "EM^{tot,co2}", "genNOx": "EM^{gen,nox}", "conNOx": "EM^{con,nox}", "totNOx": "EM^{tot,nox}", "genSO2": "EM^{gen,so2}", "conSO2": "EM^{con,so2}", "totSO2": "EM^{tot,so2}", "genPM25": "EM^{gen,pm25}", "conPM25": "EM^{con,pm25}", "totPM25": "EM^{tot,pm25}", "startupemission": "EM^{start}", "shutdownemission": "EM^{shut}", "noloademission": "EM^{nl}", "storageemission": "EM^{str}", "importemission": "EM^{imp}", "exportemission": "EM^{exp}", "LROcost": "C^{LRO}", "pfactorone": "F1", "pfactortwo": "F2", "pfactorthr": "F3", "pfactorfou": "F4", "pdiscountrate": "\\Gamma", "ptimestep": "\\nu", "ptimestepduration": "\\delta", "pintervalduration": "\\Delta u", "nintervals": "N^{u}", "nperiods": "N^{p}", "nweeks": "N^{w}", "nmonths": "N^{m}", "ndays": "N^{d}", "nhours": "N^{h}", "pelespotprice": "\\lambda^{e}", "phydspotprice": "\\lambda^{h}", "pelebuyprice": "\\lambda^{b,e}", "phydbuyprice": "\\lambda^{b,h}", "pelesellprice": "\\lambda^{s,e}", "phydsellprice": "\\lambda^{s,h}", "peleimportprice": "\\lambda^{imp,e}", "phydimportprice": "\\lambda^{imp,h}", "peleexportprice": "\\lambda^{exp,e}", "phydexportprice": "\\lambda^{exp,h}", "peleppaprice": "\\lambda^{PPA,e}", "phydppaprice": "\\lambda^{PPA,h}", "pelefcrnprice": "\\Pi^{N,e}", "pelefcrdupprice": "\\Pi^{DUP,e}", "pelefcrddwprice": "\\Pi^{DDW,e}", "pelegridaFRRUPprice": "\\Pi^{A-REG-UP,e}", "pelegridaFRDDWprice": "\\Pi^{A-REG-DW,e}", "pelegridmFRRUPprice": "\\Pi^{M-REG-UP,e}", "pelegridmFRDDWprice": "\\Pi^{M-REG-DW,e}", "pelemarketbuyingratio": "\\Upsilon^{b,e}", "pelemarketsellingratio": "\\Upsilon^{s,e}", "pelemarketcertrevenue": "M^{cert,e}", "pelemarketpassthrough": "M^{pass,e}", "pelemarketmoms": "M^{moms,e}", "pelemarketnetfee": "M^{net,e}", "pelemarkettariff": "M^{tariff,e}", "pmaxmarketbuy": "\\overline{MB}", "pelemaxmarketbuy": "\\overline{MB}^{e}", "phydmaxmarketbuy": "\\overline{MB}^{h}", "pmaxmarketsell": "\\overline{MS}", "pmaxsell": "\\overline{MS}", "pelemaxmarketsell": "\\overline{MS}^{e}", "phydmaxmarketsell": "\\overline{MS}^{h}", "pminmarketbuy": "\\underline{MB}", "peleminmarketbuy": "\\underline{MB}^{e}", "phydminmarketbuy": "\\underline{MB}^{h}", "pminmarketsell": "\\underline{MS}", "peleminmarketsell": "\\underline{MS}^{e}", "phydminmarketsell": "\\underline{MS}^{h}", "peleretmaxbuy": "\\overline{RB}^{e}", "peleretmaxsell": "\\overline{RS}^{e}", "phydretmaxbuy": "\\overline{RB}^{h}", "phydretmaxsell": "\\overline{RS}^{h}", "pbalanceerror": "E^{bal}", "pelebalanceerror": "E^{bal,e}", "phydbalanceerror": "E^{bal,h}", "pbalanceerrorlimit": "\\overline{E}^{bal}", "pelebalanceerrorlimit": "\\overline{E}^{bal,e}", "phydbalanceerrorlimit": "\\overline{E}^{bal,h}", "peleppccmaximport": "\\overline{P}^{PCC,imp,e}", "peleppccmaxexport": "\\overline{P}^{PCC,exp,e}", "peleqpccmaximport": "\\overline{Q}^{PCC,imp,e}", "peleqpccmaxexport": "\\overline{Q}^{PCC,exp,e}", "peledemand": "D^{e}", "phyddemand": "D^{h}", "pelemaxdemand": "\\overline{D}^{e}", "pmaxdemand": "\\overline{D}", "pelemindemand": "\\underline{D}^{e}", "phydmaxdemand": "\\overline{D}^{h}", "phydmindemand": "\\underline{D}^{h}", "pelepeakdemand": "D^{e,peak}", "phydpeakdemand": "D^{h,peak}", "pdemflexible": "D^{flex}", "peledemflexible": "D^{e,flex}", "phyddemflexible": "D^{h,flex}", "pdemshiftedsteps": "N^{shift}", "peledemshiftedsteps": "N^{e,shift}", "phyddemshiftedsteps": "N^{h,shift}", "pcontractedcapacity": "\\hat{E}", "pelecontractedcapacity": "\\hat{E}^{e}", "phydcontractedcapacity": "\\hat{E}^{h}", "pelemaxproduction": "\\overline{EP}", "pelemaxprodsecondblock": "\\overline{EP}^{2b}", "peleminproduction": "\\underline{EP}", "phydmaxproduction": "\\overline{HP}", "phydmaxprodsecondblock": "\\overline{HP}^{2b}", "phydminproduction": "\\underline{HP}", "pelemaxconsumption": "\\overline{EC}", "peleminconsumption": "\\underline{EC}", "phydmaxconsumption": "\\overline{HC}", "phydminconsumption": "\\underline{HC}", "peleconscompress": "\\overline{EC}^{compress}", "phydprodfunction": "\\eta^{h,prod}", "prampuprate": "RU", "prampdwrate": "RD", "puptime": "TU", "pdwtime": "TD", "peletohydfunction": "F^{e2h}", "phydtoelefunction": "F^{h2e}", "pstartupcost": "CSU", "pshutdowncost": "CSD", "ppeakdemandtariff": "C^{peak}", "pnoloadcost": "C^{nl}", "ploadsheddingcost": "C^{ls}", "pspillcost": "C^{spill}", "pfuelafactor": "A", "pfuelbfactor": "B", "pfuelcfactor": "C", "pmaintenancecost": "CM", "poperationcost": "CO", "pfixedcost": "CF", "pvariablecost": "CV", "pinvestmentcost": "C^{inv}", "pannualcost": "C^{ann}", "pcarbonprice": "CE", "peleresistantline": "R", "pelereactanceline": "X", "pnetreactance": "X", "peleimpedanceline": "Z", "peleconductline": "G", "pelesusceptline": "B", "peleshuntsuscepline": "B^{l}", "pelemaxcurrent": "\\overline{I}", "pelemaxapparentpower": "\\overline{S}", "pelemaxrealpower": "\\overline{P}", "pnettc": "\\overline{TC}", "peleminrealpower": "\\underline{P}", "pelemaxreactivepower": "\\overline{Q}", "peleminreactivepower": "\\underline{Q}", "pelemaxvolt": "\\overline{V}", "peleminvolt": "\\underline{V}", "pelemaxvoltageangle": "\\overline{\\theta}", "peleminvoltageangle": "\\underline{\\theta}", "peleinitvolt": "V^{0}", "phydmaxflow": "\\overline{H}", "phydminflow": "\\underline{H}", "pelestoragecycle": "\\tau^{e}", "pcycletimestep": "\\tau^{cycle}", "pelestorageinflowcycle": "\\tau^{i,e}", "pelestorageoutflowcycle": "\\tau^{o,e}", "poutflowtimestep": "\\tau^{o}", "pelestorageefficiency": "\\eta^{e}", "peff": "\\eta", "pelestorchargeefficiency": "\\eta^{c,e}", "pcheff": "\\eta^{c}", "pelestordischargeefficiency": "\\eta^{d,e}", "pdischeff": "\\eta^{d}", "pelestoragecapacity": "\\Psi^{e}", "pvarfixedavailability": "A", "pfixavail": "A^{fix}", "pelemaxinflow": "\\overline{EI}^{e}", "pelemaxoutflow": "\\overline{EO}^{e}", "pelemininflow": "\\underline{EI}^{e}", "peleminoutflow": "\\underline{EO}^{e}", "pelemaxinventory": "\\overline{SI}^{e}", "pelemininventory": "\\underline{SI}^{e}", "pelemaxstorage": "\\overline{S}^{e}", "pmaxstorage": "\\overline{S}", "pelemaxcharge": "\\overline{C}^{e}", "pelemaxchargesecondblock": "\\overline{C}^{e,2b}", "phydmaxcharge": "\\overline{C}^{h}", "phydmaxchargesecondblock": "\\overline{C}^{h,2b}", "phydminchargesecondblock": "\\underline{C}^{h,2b}", "pdodsa": "DoD^{a}", "pdodsb": "DoD^{b}", "pdodsc": "DoD^{c}", "phydstoragecycle": "\\tau^{h}", "phydstorageinflowcycle": "\\tau^{i,h}", "phydstorageoutflowcycle": "\\tau^{o,h}", "phydstorageefficiency": "\\eta^{h}", "phydstoragecapacity": "\\Psi^{h}", "phydmaxinflow": "\\overline{EI}^{h}", "phydmaxoutflow": "\\overline{EO}^{h}", "phydmininflow": "\\underline{EI}^{h}", "phydminoutflow": "\\underline{EO}^{h}", "phydmaxinventory": "\\overline{SI}^{h}", "phydmininventory": "\\underline{SI}^{h}", "peleminstoragestart": "S^{e,init}", "phydminstoragestart": "S^{h,init}", "peleminstorageend": "S^{e,end}", "phydminstorageend": "S^{h,end}", "pfcrnrequirement": "FCRN", "pfcrduprequirement": "FCRD^{UP}", "pfcrddwrequirement": "FCRD^{DW}", "pfcrdact": "FCRD^{act}", "pgennofcrd": "NoFCRD", "pafrruprequirement": "REG^{A,UP}", "pafrddwrequirement": "REG^{A,DW}", "pmfrruprequirement": "REG^{M,UP}", "pmfrddwrequirement": "REG^{M,DW}", "pfcrdupreqactivation": "FCRD^{UP,act}", "pfcrddwreqactivation": "FCRD^{DW,act}", "velemarketbuy": "mb^{e}", "velebuy": "mb^{e}", "vhydmarketbuy": "mb^{h}", "vhydbuy": "mb^{h}", "vmarketbuy": "mb", "velemarketsell": "ms^{e}", "velesell": "ms^{e}", "vhydmarketsell": "ms^{h}", "vhydsell": "ms^{h}", "vmarketsell": "ms", "veleppccimport": "imp^{e}", "veleimport": "imp^{e}", "veleppccexport": "exp^{e}", "veleexport": "exp^{e}", "vhydimport": "imp^{h}", "vhydexport": "exp^{h}", "vproduction": "p", "veleproduction": "p^{e}", "vhydproduction": "p^{h}", "veletotaloutput": "p^{e,tot}", "vhydtotaloutput": "p^{h,tot}", "veleproductionact": "p^{a,e}", "vhydproductionact": "p^{a,h}", "vconsumption": "c", "veleconsumption": "c^{e}", "veletotalcharge": "c^{e,tot}", "veleconsumptionstandby": "c^{e,standby}", "veleconsumptioncompress": "c^{e,compress}", "vhydconsumption": "c^{h}", "vhydtotalcharge": "c^{h,tot}", "veleconsumptionact": "c^{a,e}", "vhydconsumptionact": "c^{a,h}", "vinventorystart": "s^{init}", "vinventory": "si", "veleinventory": "si^{e}", "veleinvminday": "si^{e,min,day}", "veleinvmaxday": "si^{e,max,day}", "veleinvdoday": "si^{e,dod,day}", "veleinvdodsaday": "si^{e,doda,day}", "veleinvdodsbday": "si^{e,dodb,day}", "veleinvdodscday": "si^{e,dodc,day}", "vhydinventory": "si^{h}", "venergyinflow": "ei", "veleenergyinflow": "ei^{e}", "vhydenergyinflow": "ei^{h}", "venergyoutflow": "eo", "veleenergyoutflow": "eo^{e}", "vhydenergyoutflow": "eo^{h}", "vspillage": "es", "velespillage": "es^{e}", "vhydspillage": "es^{h}", "vsecondblockproduction": "p2b", "velesecondblockproduction": "p2b^{e}", "vhydsecondblockproduction": "p2b^{h}", "vsecondblockconsumption": "c2b", "velesecondblockconsumption": "c2b^{e}", "vhydsecondblockconsumption": "c2b^{h}", "vmagvolt": "v^{2}", "vangvolt": "\\theta", "vtheta": "\\theta", "vflow": "f", "vactflow": "f^{P}", "vreactflow": "f^{Q}", "veleflow": "f^{e}", "vhydflow": "f^{h}", "vdemand": "d", "veledemand": "d^{e}", "vhyddemand": "d^{h}", "vdemflex": "d^{flex}", "veledemflex": "d^{e,flex}", "vhyddemflex": "d^{h,flex}", "vloadshed": "ls", "veleloadshed": "ls^{e}", "vhydloadshed": "ls^{h}", "vpeakdemand": "d^{peak}", "velepeakdemand": "d^{e,peak}", "vglobalpeak": "d^{global,peak}", "vdailypeak": "d^{daily,peak}", "vhydpeakdemand": "d^{h,peak}", "vPupward": "r^{p,u}", "vPdownward": "r^{p,d}", "vCupward": "r^{c,u}", "vCdownward": "r^{c,d}", "velefcrnbid": "p^{\\Thetha,N}", "velefcrdupbid": "p^{\\Theta,DU}", "velefcrddwbid": "p^{\\Theta,DW}", "velefcrnupact": "p^{NU}", "velefcrndwact": "p^{ND}", "velefcrdupactch": "p^{DU,ch}", "velefcrdupactdi": "p^{DU,di}", "velefcrddwactch": "p^{DD,ch}", "velefcrddwactdi": "p^{DD,di}", "velefcrdupfraction": "\\Lambda^{DU}", "velefcrddwfraction": "\\Lambda^{DD}", "vpeakdemandindbin": "kd", "vpeakind": "kd", "vmonthpeakind": "kd^{month}", "velepeakdemandindbin": "kd^{e}", "vhydpeakdemandindbin": "kd^{h}", "vstoroperatbin": "sf", "velestoroperatbin": "sf^{e}", "vhydstoroperatbin": "sf^{h}", "velestorchargebin": "sc^{e}", "velestorchargeactbin": "sc^{a,e}", "vhydstorchargebin": "sc^{h}", "vhydstorchargeactbin": "sc^{a,h}", "velestordischargebin": "sd^{e}", "velestordischargeactbin": "sd^{a,e}", "vhydstordischargebin": "sd^{h}", "vhydstordischargeactbin": "sd^{a,h}", "vmaxcommitbin": "muc", "velemaxcommitbin": "muc^{e}", "vhydmaxcommitbin": "muc^{h}", "vcommitbin": "uc", "velecommitbin": "uc^{e}", "vhydcommitbin": "uc^{h}", "vstartupbin": "su", "velestartupbin": "su^{e}", "vhydstartupbin": "su^{h}", "vshutdownbin": "sd", "veleshutdownbin": "sd^{e}", "vhydshutdownbin": "sd^{h}", "vhydcompressbin": "hc", "velefcrncommitbin": "uc^{FCR-N,e}", "velefcrdupreqcommitbin": "uc^{FCR-D,UP,e}", "velefcrddwreqcommitbin": "uc^{FCR-D,DW,e}", "robustbudget": "\\Gamma", "devep": "EP^{dev}", "devdem": "D^{dev}", "BigM": "M", "robustdev": "\\omega", "lightslack": "m", "dualnumber": "\\upsilon", "dualperiod": "\\eta", "robustindicator": "\\chi"}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'concepts/variables';</script>
+    <script src="../_static/../custom.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Objective Function" href="objective-function.html" />
+    <link rel="prev" title="Parameters" href="parameters.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-light" alt="  documentation - Home"/>
+    <script>document.write(`<img src="../_static/el1xr_opt_logo_v6.png" class="logo__image only-dark" alt="  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Projects.html">Research Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/Papers.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/ContactUs.html">Contact Us</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/project-structure.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/data-and-io.html">Data &amp; I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/scenarios-and-stages.html">Scenarios &amp; stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/solvers-and-settings.html">Solvers &amp; settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="sets.html">Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objective-function.html">Objective Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results-and-postprocessing.html">Results &amp; Post-Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="future-developments.html">Future Developments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../developer/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/coding-style.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/changelog.html">Changelog</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/EL1XR-dev/el1xr_opt/issues/new?title=Issue%20on%20page%20%2Fconcepts/variables.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/concepts/variables.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Variables</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#costs-objective">Costs &amp; Objective</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#market-trading">Market &amp; Trading</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#asset-operations-generation-storage-and-demand">Asset Operations (Generation, Storage, and Demand)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation"><strong>Generation</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#consumption-demand"><strong>Consumption &amp; Demand</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#storage"><strong>Storage</strong></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ancillary-services">Ancillary Services</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#network">Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-logical">Binary &amp; Logical</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-bounding-and-fixing">Variable Bounding and Fixing</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="variables">
+<span id="id1"></span><h1>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h1>
+<p>The optimization model determines the values of numerous decision variables to minimize the total system cost while satisfying all constraints. These variables represent the physical and economic operations of the energy system. They are defined as <cite>Var</cite> objects in Pyomo within the <code class="docutils literal notranslate"><span class="pre">create_variables</span></code> function.</p>
+<p>The main variables are indexed by the <a class="reference internal" href="sets.html"><span class="doc">sets</span></a>, primarily by period (<span class="math notranslate nohighlight">\(\periodindex\)</span>), scenario (<span class="math notranslate nohighlight">\(\scenarioindex\)</span>), and timestep (<span class="math notranslate nohighlight">\(\timeindex\)</span>), and are written in <strong>lowercase</strong> letters.</p>
+<section id="costs-objective">
+<h2>Costs &amp; Objective<a class="headerlink" href="#costs-objective" title="Link to this heading">#</a></h2>
+<p>These high-level variables are used to structure the objective function, representing the total costs and revenues over the entire optimization horizon.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\alpha\)</span></p></td>
+<td><p>Total system cost (the main objective function)</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalSCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\marketcost_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total system component cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalCComponent</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\marketrevenue_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total system component revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalRComponent</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketcostgrid_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total fixed electricity network cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleNCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elemarketcosttax_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total tax and surcharges electricity cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleXCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketcost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable electricity market cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydmarketcost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable hydrogen market cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydMCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity operational cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleOCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elemaintopercost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total hydrogen operational cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydOCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\eledegradationcost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity degradation cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleDCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hyddegradationcost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total hydrogen degradation cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydDCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketrevenuetax_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total tax electricity revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleXRev</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elemarketrevenue_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable electricity market revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMRev</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable hydrogen market revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydMRev</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elepeakdemandcost_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total electricity peak cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalElePeakCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elenetusecost_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total electricity network usage cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleNetUseCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elecaptariffcost_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total electricity capacity tariff cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleCapTariffCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketcostDA_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity day-ahead market cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMrkDACost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity PPA market cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMrkPPACost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity day-ahead market revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMrkDARev</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity PPA market revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMrkPPARev</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity frequency market revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleMrkFrqRev</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total hydrogen PPA market cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydMrkPPACost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total hydrogen PPA market revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydMrkPPARev</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elemarketcostVAT_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total electricity VAT cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleVATCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\elemarketrevenueincentive_{\periodindex,\scenarioindex}\)</span></p></td>
+<td><p>Total electricity incentives revenue</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleISRev</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\elegenerationcost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable electricity production cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleGCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hydgenerationcost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable hydrogen production cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydGCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\eleemissioncost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total electricity emission cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleECost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable electricity consumption cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleCCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydconsumptioncost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total variable hydrogen consumption cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydCCost</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total system electricity reliability cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalEleRCost</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex}\)</span></p></td>
+<td><p>Total system hydrogen reliability cost</p></td>
+<td><p>€</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vTotalHydRCost</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="market-trading">
+<h2>Market &amp; Trading<a class="headerlink" href="#market-trading" title="Link to this heading">#</a></h2>
+<p>These variables represent the interactions with external energy markets.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}\)</span></p></td>
+<td><p>Electricity bought from the market</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleBuy</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}\)</span></p></td>
+<td><p>Electricity sold to the market</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleSell</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}\)</span></p></td>
+<td><p>Hydrogen bought from the market</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydBuy</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}\)</span></p></td>
+<td><p>Hydrogen sold to the market</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydSell</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}\)</span></p></td>
+<td><p>Electricity peak demand for tariff calculation</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleDemPeak</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydpeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}\)</span></p></td>
+<td><p>Hydrogen peak demand for tariff calculation</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydDemPeak</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}\)</span></p></td>
+<td><p>Binary indicator for electricity peak demand</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vElePeakHourInd</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydpeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}\)</span></p></td>
+<td><p>Binary indicator for hydrogen peak demand</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydPeakHourInd</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="asset-operations-generation-storage-and-demand">
+<h2>Asset Operations (Generation, Storage, and Demand)<a class="headerlink" href="#asset-operations-generation-storage-and-demand" title="Link to this heading">#</a></h2>
+<p>These variables control the physical operation of all assets in the system.</p>
+<section id="generation">
+<h3><strong>Generation</strong><a class="headerlink" href="#generation" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Electricity output from a generator</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleTotalOutput</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Hydrogen output from a generator</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydTotalOutput</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Elec. production above min. stable level</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleTotalOutput2ndBlock</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Hyd. production above min. stable level</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydTotalOutput2ndBlock</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="consumption-demand">
+<h3><strong>Consumption &amp; Demand</strong><a class="headerlink" href="#consumption-demand" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\eleconsindex}\)</span></p></td>
+<td><p>Electricity consumption (ESS &amp; electrolyzer)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleTotalCharge</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\hydconsindex}\)</span></p></td>
+<td><p>Hydrogen consumption (ESS &amp; thermal units)</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydTotalCharge</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\eleconsindex}\)</span></p></td>
+<td><p>Elec. charge above min. stable level</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleTotalCharge2ndBlock</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\hydconsindex}\)</span></p></td>
+<td><p>Hyd. charge above min. stable level</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydTotalCharge2ndBlock</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}\)</span></p></td>
+<td><p>Electricity demand served</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleDemand</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}\)</span></p></td>
+<td><p>Hydrogen demand served</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydDemand</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}\)</span></p></td>
+<td><p>Unserved electricity (energy not supplied)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vENS</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}\)</span></p></td>
+<td><p>Unserved hydrogen (hydrogen not supplied)</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHNS</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}\)</span></p></td>
+<td><p>Flexible electricity demand</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleDemFlex</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="storage">
+<h3><strong>Storage</strong><a class="headerlink" href="#storage" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Stored energy in an elec. ESS (State of Charge)</p></td>
+<td><p>kWh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleInventory</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Stored energy in a hyd. ESS (State of Charge)</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydInventory</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Inflows of an electricity ESS</p></td>
+<td><p>kWh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleEnergyInflows</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Outflows of an electricity ESS</p></td>
+<td><p>kWh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleEnergyOutflows</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\vhydenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Inflows of a hydrogen ESS</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydEnergyInflows</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Outflows of a hydrogen ESS</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydEnergyOutflows</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Spilled energy from an electricity ESS</p></td>
+<td><p>kWh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleSpillage</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Spilled energy from a hydrogen ESS</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydSpillage</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="ancillary-services">
+<h2>Ancillary Services<a class="headerlink" href="#ancillary-services" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(rp^{FN}_{neg}, rc^{FN}_{nes}\)</span></p></td>
+<td><p>FCR from a producer (gen/ESS) or consumer (ESS)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleReserveProd_FN</span></code>, <code class="docutils literal notranslate"><span class="pre">vEleReserveCons_FN</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Upwards FCR-D from a producer (gen/ESS)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleReserveProd_Up_FD</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Downwards FCR-D from a producer (gen/ESS)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleReserveProd_Down_FD</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Upwards FCR-D from a consumer (ESS)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleReserveCons_Up_FD</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Downwards FCR-D from a consumer (ESS)</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleReserveCons_Down_FD</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="network">
+<h2>Network<a class="headerlink" href="#network" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}\)</span></p></td>
+<td><p>Electricity flow on a transmission line</p></td>
+<td><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleNetFlow</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}\)</span></p></td>
+<td><p>Hydrogen flow in a pipeline</p></td>
+<td><p>kgH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydNetFlow</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\theta_{\periodindex,\scenarioindex,\timeindex,\busindex}\)</span></p></td>
+<td><p>Voltage angle at a node (for DC power flow)</p></td>
+<td><p>rad</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleNetTheta</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="binary-logical">
+<h2>Binary &amp; Logical<a class="headerlink" href="#binary-logical" title="Link to this heading">#</a></h2>
+<p>These binary (0 or 1) variables model on/off decisions, operational states, and logical constraints.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 41.7%" />
+<col style="width: 8.3%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Symbol</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Unit</strong></p></th>
+<th class="head"><p><strong>Pyomo Component</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Commitment of an elec. unit</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleGenCommitment</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Startup of an elec. unit</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleGenStartUp</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\veleshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Shutdown of an elec. unit</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleGenShutDown</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Commitment of a hydrogen unit</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydGenCommitment</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Startup of a hydrogen unit</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydGenStartUp</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}\)</span></p></td>
+<td><p>Shutdown of a hydrogen unit</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydGenShutDown</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Operating state of an elec. ESS (charge/discharge)</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vEleStorOperat</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\)</span></p></td>
+<td><p>Operating state of a hyd. ESS (charge/discharge)</p></td>
+<td><p>‘{0,1}’</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vHydStorOperat</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="variable-bounding-and-fixing">
+<h2>Variable Bounding and Fixing<a class="headerlink" href="#variable-bounding-and-fixing" title="Link to this heading">#</a></h2>
+<p>To improve performance and ensure physical realism, the model applies tight bounds to variables and, in some cases, fixes them entirely during a pre-processing step within the <code class="docutils literal notranslate"><span class="pre">create_variables</span></code> function.</p>
+<p><strong>Bounding:</strong></p>
+<p>Each decision variable is bounded using physical and economic parameters provided in the input data. For example, the <code class="docutils literal notranslate"><span class="pre">vEleTotalOutput</span></code> of a generator is bounded between 0 and its maximum power capacity (<code class="docutils literal notranslate"><span class="pre">pEleMaxPower</span></code>) for each specific time step. This ensures that the solver only explores a feasible solution space.</p>
+<p><strong>Fixing:</strong></p>
+<p>Variable fixing is a powerful technique used to reduce the complexity of the optimization problem. If a variable’s value can be determined with certainty before the solve, it is fixed to that value. This effectively removes it from the set of variables the solver needs to determine. Examples include:</p>
+<ul class="simple">
+<li><p><strong>Unavailable Assets</strong>: If a generator has a maximum capacity of zero at a certain time (e.g., due to a planned outage or no renewable resource), its output variable (<code class="docutils literal notranslate"><span class="pre">vEleTotalOutput</span></code>) is fixed to 0 for that time.</p></li>
+<li><p><strong>Logical Constraints</strong>: If a storage unit has no charging capacity, its charging variable (<code class="docutils literal notranslate"><span class="pre">vEleTotalCharge</span></code>) is fixed to 0.</p></li>
+<li><p><strong>Reference Values</strong>: The voltage angle (<code class="docutils literal notranslate"><span class="pre">vEleNetTheta</span></code>) of the designated reference node is fixed to 0 to provide a reference for the DC power flow calculation.</p></li>
+</ul>
+<p><strong>Benefits:</strong></p>
+<p>This strategy of tightly bounding and fixing variables is crucial for the model’s performance and scalability. By reducing the number of free variables and constraining the solution space, it:</p>
+<ul class="simple">
+<li><p>Creates a <strong>tighter model formulation</strong>, which can be solved more efficiently.</p></li>
+<li><p><strong>Reduces the overall problem size</strong>, leading to faster computation times.</p></li>
+<li><p>Improves the model’s <strong>scalability</strong>, allowing it to handle larger and more complex energy systems without a prohibitive increase in solve time.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="parameters.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Parameters</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="objective-function.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Objective Function</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#costs-objective">Costs &amp; Objective</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#market-trading">Market &amp; Trading</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#asset-operations-generation-storage-and-demand">Asset Operations (Generation, Storage, and Demand)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation"><strong>Generation</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#consumption-demand"><strong>Consumption &amp; Demand</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#storage"><strong>Storage</strong></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ancillary-services">Ancillary Services</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#network">Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-logical">Binary &amp; Logical</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-bounding-and-fixing">Variable Bounding and Fixing</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By EL1XR-dev Team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, EL1XR-dev.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
