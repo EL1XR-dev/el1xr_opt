@@ -581,17 +581,17 @@ Upper bounds for each DoD segment are defined by («``eEleInventoryDoDS1Upper``�
 
 .. math::
    \veleinvdodsaday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
-   \pdods1_{\storageindex} \pmaxstorage_{\storageindex}
+   \pdodsa_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 .. math::
    \veleinvdodsbday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
-   \pdods2_{\storageindex} \pmaxstorage_{\storageindex}
+   \pdodsb_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 .. math::
    \veleinvdodscday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
-   \veleinvdoday_{\periodindex,\scenarioindex,\text{doy},\storageindex}
+   \pdodsc_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 Energy Inflows and Outflows
@@ -718,10 +718,10 @@ Flexible electricity demand shifting balance («``eEleDemandShiftBalance``»)
 If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
 
 .. math::
-   \sum_{\timeindex'=\timeindex-\peledemshiftedsteps_{\demandindex}+1}^{\timeindex}
-   \veledemand_{\periodindex,\scenarioindex,\timeindex',\demandindex} =
-   \sum_{\timeindex'=\timeindex-\peledemshiftedsteps_{\demandindex}+1}^{\timeindex}
-   \pmaxdemand_{\periodindex,\scenarioindex,\timeindex',\demandindex}
+   \sum_{\timeindex '=\timeindex-\peledemshiftedsteps_{\demandindex}+1}^{\timeindex}
+   \veledemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex} =
+   \sum_{\timeindex '=\timeindex-\peledemshiftedsteps_{\demandindex}+1}^{\timeindex}
+   \pmaxdemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex
 
 Share of Flexible Demand
