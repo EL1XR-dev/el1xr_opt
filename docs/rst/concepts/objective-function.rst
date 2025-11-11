@@ -32,7 +32,7 @@ where:
    \begin{align*}
    C_{p,s} = & \underbrace{C^{grid,e}_{p,s}}_{\text{Network usage}} + \underbrace{C^{tax,e}_{p,s}}_{\text{Surcharges/taxes}} \\
    & + \sum_{n \in \mathcal{T}} \delta_{p,s,n} \left( \underbrace{C^{trade,e}_{p,s,n} + C^{trade,h}_{p,s,n}}_{\text{Market purchases}} + \underbrace{C^{O\&M,e}_{p,s,n} + C^{O\&M,h}_{p,s,n}}_{\text{Generation/consumption}} \right) \\
-   & + \underbrace{\sum_{d \in \mathcal{D}} \left( C^{deg,e}_{p,s,d} + C^{deg,h}_{p,s,d} \right)}_{\text{Degradation}}
+   & + \underbrace{\sum_{d \in \nDE} C^{deg,e}_{p,s,d} + \sum_{d \in \nDH} C^{deg,h}_{p,s,d}}_{\text{Degradation}}
    \end{align*}
 
 .. math::
