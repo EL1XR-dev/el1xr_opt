@@ -153,7 +153,7 @@ The formulation is defined by «``eHydMarketRevenue``».
 .. math::
    :label: eq:HydMarketDayAheadRevenue
 
-   \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} \phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}
+   \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} \phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \cdot \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Electricity Grid Services
 -------------------------
