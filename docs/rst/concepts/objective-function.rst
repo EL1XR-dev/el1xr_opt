@@ -34,13 +34,21 @@ where:
 
 .. math::
    :label: eq:TotalCComponent
+   :nowrap:
 
-   C_{\periodindex,\scenarioindex} = C^{grid,e}_{\periodindex,\scenarioindex} + C^{tax,e}_{\periodindex,\scenarioindex} + \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \left( C^{trade,e}_{\periodindex,\scenarioindex,\timeindex} + C^{trade,h}_{\periodindex,\scenarioindex,\timeindex} + C^{O\&M,e}_{\periodindex,\scenarioindex,\timeindex} + C^{O\&M,h}_{\periodindex,\scenarioindex,\timeindex} \right) + \sum_{\dayindex \in \nD} \left( C^{deg,e}_{\periodindex,\scenarioindex,\dayindex} + C^{deg,h}_{\periodindex,\scenarioindex,\dayindex} \right)
+   \begin{align*}
+   C_{p,s} = & \underbrace{C^{grid,e}_{p,s}}_{\text{Network usage}} + \underbrace{C^{tax,e}_{p,s}}_{\text{Surcharges/taxes}} \\
+   & + \sum_{n \in \mathcal{T}} \delta_{p,s,n} \left( \underbrace{C^{trade,e}_{p,s,n} + C^{trade,h}_{p,s,n}}_{\text{Market purchases}} + \underbrace{C^{O\&M,e}_{p,s,n} + C^{O\&M,h}_{p,s,n}}_{\text{Generation/consumption}} \right) \\
+   & + \underbrace{\sum_{d \in \mathcal{D}} \left( C^{deg,e}_{p,s,d} + C^{deg,h}_{p,s,d} \right)}_{\text{Degradation}}
+   \end{align*}
 
 .. math::
    :label: eq:TotalRComponent
+   :nowrap:
 
-   R_{\periodindex,\scenarioindex} = R^{tax,e}_{\periodindex,\scenarioindex} + \sum_{\timeindex \in \nT} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \left( R^{trade,e}_{\periodindex,\scenarioindex,\timeindex} + R^{trade,h}_{\periodindex,\scenarioindex,\timeindex} \right)
+   \begin{align*}
+   R_{p,s} = \underbrace{R^{tax,e}_{p,s}}_{\text{Incentives}} + \sum_{n \in \mathcal{T}} \delta_{p,s,n} \left( \underbrace{R^{trade,e}_{p,s,n} + R^{trade,h}_{p,s,n}}_{\text{Market Sales}} \right)
+   \end{align*}
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
@@ -171,7 +179,9 @@ This revenue subcomponent is earned by providing frequency containment reserves 
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} (\pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}) (1 + \pelemarketmoms_{\traderindex})
+    \freqcontdisturbrevenue_{p,s,n} = \sum_{g \in \mathcal{G}^{e}} \left( (\Pi^{DUP,e}_{p,s,n} F1 \cdot p^{\Theta,DU}_{p,s,n,g} + \Pi^{DDW,e}_{p,s,n} F1 \cdot p^{\Theta,DW}_{p,s,n,g}) \cdot (1 + M^{moms,e}_{Retailer(g)}) \right)
+
+where :math:`Retailer(g)` is the retailer associated with generator :math:`g`.
 
 Taxes and Pass-Throughs
 -----------------------
@@ -184,7 +194,7 @@ The formulation is defined by «``eEleTaxCost``».
 .. math::
    :label: eq:EleTaxCost
 
-   \elemarketcosttax_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketmoms_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
+   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \text{pEleRetEnergyTax}_{r} F1 (1 + M^{moms,e}_{r}) \sum_{n \in \mathcal{T}} mb^{e}_{p,s,n,r} \right)
 
 Incentives and Certificate Revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
