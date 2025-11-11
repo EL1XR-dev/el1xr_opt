@@ -148,7 +148,7 @@ The formulation is defined by «``eHydMarketRevenue``».
 
    \hydmarketrevenue_{\periodindex,\scenarioindex,\timeindex} = \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex}
 
-*   **Hydrogen Sales**: The revenue generated from selling hydrogen to the market, as defined by ``eHydMarketDayAheadRevenue``.
+*   **Hydrogen Sales**: The revenue generated from selling hydrogen to the market, as defined by «``eHydMarketDayAheadRevenue``».
 
 .. math::
    :label: eq:HydMarketDayAheadRevenue
