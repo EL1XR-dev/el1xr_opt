@@ -777,8 +777,8 @@ mathjax3_config = {
             # =======================================================
             #               Additional LaTeX aliases
             # =======================================================
-            "leq": r"\leq",                                     # Less than or equal
-            "geq": r"\geq",                                     # Greater than or equal
+            # "leq": r"\leq",                                     # Less than or equal
+            # "geq": r"\geq",                                     # Greater than or equal
         }
     }
 }
