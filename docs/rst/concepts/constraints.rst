@@ -775,7 +775,9 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 -----------------------
 To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
 
-:math:`0 \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}\quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE`
+.. math::
+   0 \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE
 
 .. math::
    0 \leq \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
