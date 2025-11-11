@@ -170,7 +170,7 @@ The peak demand value is determined by («``eElePeakHourValue``»):
    \pmaxsell_{\eltraderindex} \sum_{\peakindex' \le \peakindex} \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex'}
    \quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex
 
-A night discount is applied between 22:00 and 06:00, reducing the value of `vEleBuy` in the peak calculation.
+(Note: Although a night discount between 22:00 and 06:00 is described in the documentation, it is not currently applied in the peak calculation equations below.)
 
 Indicator constraints («``eElePeakHourInd_C1``», «``eElePeakHourInd_C2``») link the peak demand variables to binary indicators:
 
