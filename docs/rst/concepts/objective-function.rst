@@ -167,7 +167,7 @@ The total revenue from ancillary services (:math:`\elemarketrevenueancillary_{\p
 
 Frequency Containment Reserve for Disturbance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This revenue subcomponent is earned by providing frequency containment reserves to manage disturbances in the grid, as defined by ``eEleMarketFCRDRevenue``.
+This revenue subcomponent is earned by providing frequency containment reserves to manage disturbances in the grid, as defined by «``eEleMarketFCRDRevenue``».
 
 .. math::
     :label: eq:EleMarketFCRDRevenue
