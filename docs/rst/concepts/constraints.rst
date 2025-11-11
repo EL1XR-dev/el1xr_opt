@@ -323,8 +323,8 @@ The total charge of an electricity storage system is defined by («``eEleTotalCh
    \frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}} =
    \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
    \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
-   \pfcrdact_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
-   \pfcrdact_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+   \pfcrdupreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+   \pfcrddwreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    {\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
    \end{aligned}
