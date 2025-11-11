@@ -319,6 +319,10 @@ This component models the degradation cost of electricity storage units, which i
 
    C^{deg,e}_{\periodindex,\scenarioindex,\dayindex} = \sum_{\storageindex \in \nEE} (C_1 \cdot DoD_{1,\storageindex} + C_2 \cdot DoD_{2,\storageindex} + C_3 \cdot DoD_{3,\storageindex})
 
+Here:
+
+- :math:`C_1`, :math:`C_2`, :math:`C_3` are degradation cost coefficients corresponding to different depth-of-discharge (DoD) ranges for each storage unit. These coefficients represent the cost impact per unit of energy discharged within each DoD range.
+- :math:`DoD_{i,\storageindex}` is the amount of energy discharged from storage unit :math:`\storageindex` in the :math:`i`-th DoD range during the period, scenario, and day considered. The index :math:`i` typically refers to predefined DoD intervals (e.g., shallow, medium, deep discharge).
 .. math::
    :label: eq:TotalHydDCost
 
