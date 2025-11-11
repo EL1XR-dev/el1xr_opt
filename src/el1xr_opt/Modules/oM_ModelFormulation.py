@@ -1132,6 +1132,32 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the maximum ramp up and ramp down for the H2 charge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
+    # # maximum ramp up and ramp down for the outflows of an H2 ESS [p.u.]
+    # def eEleMaxRampUpOutflows(optmodel, p,sc,n,egs):
+    #     if model.Par['pEleGenOutflowsRampUp'][egs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
+    #         if n == model.n.first():
+    #             return (                                                          optmodel.vEleEnergyOutflows[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenOutflowsRampUp'][egs] <=   1.0
+    #         else:
+    #             return (- optmodel.vEleEnergyOutflows[p,sc,model.n.prev(n),egs] + optmodel.vEleEnergyOutflows[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenOutflowsRampUp'][egs] <=   1.0
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleMaxRampUpOutflows', Constraint(optmodel.psnegs, rule=eEleMaxRampUpOutflows, doc='maximum ramp up   outflows [p.u.]'))
+    #
+    # def eEleMaxRampDwOutflows(optmodel, p,sc,n,egs):
+    #     if model.Par['pEleGenOutflowsRampDown'][egs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
+    #         if n == model.n.first():
+    #             return (                                                          optmodel.vEleEnergyOutflows[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenOutflowsRampDown'][egs] >= - 1.0
+    #         else:
+    #             return (- optmodel.vEleEnergyOutflows[p,sc,model.n.prev(n),egs] + optmodel.vEleEnergyOutflows[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenOutflowsRampDown'][egs] >= - 1.0
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleMaxRampDwOutflows', Constraint(optmodel.psnegs, rule=eEleMaxRampDwOutflows, doc='maximum ramp down outflows [p.u.]'))
+    #
+    # # print if the constraints object len is greater than 0
+    # if len(optmodel.eEleMaxRampUpOutflows) > 0 or len(optmodel.eEleMaxRampDwOutflows) > 0:
+    #     log_time('--- Declaring the maximum ramp up and ramp down for the Electricity outflows:', StartTime, ind_log=indlog)
+    #     StartTime = time.time() # to compute elapsed time
+
     # maximum ramp up and ramp down for the outflows of an H2 ESS [p.u.]
     def eHydMaxRampUpOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydGenRampUp'][hgs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
@@ -1211,7 +1237,8 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleTotalMaxChargeConditioned', Constraint(optmodel.psneh, rule=eEleTotalMaxChargeConditioned, doc='total charge of an ESS unit [GW]'))
 
     # print if the constraints object len is greater than 0
-    if len(optmodel.eEleMinEnergyStartUp) > 0 or len(optmodel.eEleTotalMaxChargeConditioned) > 0:
+    # if len(optmodel.eEleMinEnergyStartUp) > 0 or len(optmodel.eEleTotalMaxChargeConditioned) > 0:
+    if len(optmodel.eEleTotalMaxChargeConditioned) > 0:
         log_time('--- Declaring the minimum energy start up and total max charge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
