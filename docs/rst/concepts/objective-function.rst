@@ -172,9 +172,9 @@ This revenue subcomponent is earned by providing frequency containment reserves 
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{g \in \elecgen} \left( (\pelemarketpriceDUP_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDU_{\periodindex,\scenarioindex,\timeindex,g} + \pelemarketpriceDDW_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDW_{\periodindex,\scenarioindex,\timeindex,g}) \cdot (1 + \pelemarketmoms_{\retailerofgen(g)}) \right)
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( (\pelemarketpriceDUP_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDU_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelemarketpriceDDW_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDW_{\periodindex,\scenarioindex,\timeindex,\genindex}) \cdot (1 + \pelemarketmoms_{\retailerofgen(\genindex)}) \right)
 
-where :math:`Retailer(g)` is the retailer associated with generator :math:`g`.
+where :math:`Retailer(\genindex)` is the retailer associated with generator :math:`\genindex`.
 
 Taxes and Pass-Throughs
 -----------------------
