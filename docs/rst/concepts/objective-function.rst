@@ -132,7 +132,7 @@ The formulation is defined by «``eHydMarketCost``».
 
    \hydmarketcost_{\periodindex,\scenarioindex,\timeindex} = \hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}
 
-*   **Hydrogen Purchase**: The cost incurred from purchasing hydrogen from the market, as defined by ``eTotalHydTradeCost``.
+*   **Hydrogen Purchase**: The cost incurred from purchasing hydrogen from the market, as defined by «``eTotalHydTradeCost``».
 
 .. math::
    :label: eq:TotalHydTradeCost
