@@ -554,67 +554,103 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
-    OutputResults1 = pd.Series(data=[ sum(optmodel.vEleTotalOutput[p,sc,n,eg ]() * model.Par['pDuration'][p,sc,n] for eg  in model.eg  if (nd,eg ) in model.n2eg and (gt,eg ) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
-    OutputResults1['Component'] = 'Production/Discharge [KWh]'
-    OutputResults1['EleGeneration'] *= (1/model.factor1)
-    OutputResults1 = OutputResults1.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
-    OutputResults1 = OutputResults1.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleGeneration', aggfunc='sum')
+    OutputResults1a = pd.Series(data=[ (sum((optmodel.vEleGenCommitment[p,sc,n,egt]() * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]()) * model.Par['pDuration'][p,sc,n] for egt  in model.egt  if (nd,egt) in model.n2eg and (gt,egt) in model.t2eg) + sum((optmodel.vEleStorDischarge[p,sc,n,egs]() * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs  in model.egs  if (nd,egs ) in model.n2eg and (gt,egs ) in model.t2eg)) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
+    OutputResults1a['Component'] = 'Production/Discharge [kWh]'
+    OutputResults1a['EleGeneration'] *= (1/model.factor1)
+    OutputResults1a = OutputResults1a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults1a = OutputResults1a.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleGeneration', aggfunc='sum')
     # series of electricity consumption
-    OutputResults2 = pd.Series(data=[-sum(optmodel.vEleTotalCharge[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleConsumption').reset_index()
-    OutputResults2['Component'] = 'Consumption/Charge [KWh]'
-    OutputResults2['EleConsumption'] *= (1/model.factor1)
-    OutputResults2 = OutputResults2.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
-    OutputResults2 = OutputResults2.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleConsumption', aggfunc='sum')
+    OutputResults2a = pd.Series(data=[-sum((optmodel.vEleStorCharge[p,sc,n,egs]() * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleConsumption').reset_index()
+    OutputResults2a['Component'] = 'Consumption/Charge [kWh]'
+    OutputResults2a['EleConsumption'] *= (1/model.factor1)
+    OutputResults2a = OutputResults2a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults2a = OutputResults2a.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleConsumption', aggfunc='sum')
+    # series of FCR-D upwards
+    OutputResults1b = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUp').reset_index()
+    OutputResults1b['Component'] = 'FCR-D Upward [kWh]'
+    OutputResults1b['EleFCRDUp'] *= (1/model.factor1)
+    OutputResults1b = OutputResults1b.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults1b = OutputResults1b.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDUp', aggfunc='sum')
+    # series of FCR-D downwards
+    OutputResults2b = pd.Series(data=[-sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDDown').reset_index()
+    OutputResults2b['Component'] = 'FCR-D Downward [kWh]'
+    OutputResults2b['EleFCRDDown'] *= (1/model.factor1)
+    OutputResults2b = OutputResults2b.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults2b = OutputResults2b.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDown', aggfunc='sum')
+    # series of FCR-D upwards when the battery is discharging
+    OutputResults1c = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUpDis').reset_index()
+    OutputResults1c['Component'] = 'FCR-D Upward Discharge [kWh]'
+    OutputResults1c['EleFCRDUpDis'] *= (1/model.factor1)
+    OutputResults1c = OutputResults1c.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults1c = OutputResults1c.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDUpDis', aggfunc='sum')
+    # series of FCR-D downwards when the battery is discharging
+    OutputResults1d = pd.Series(data=[-sum(optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDDwDis').reset_index()
+    OutputResults1d['Component'] = 'FCR-D Downward Discharge [kWh]'
+    OutputResults1d['EleFCRDDwDis'] *= (1/model.factor1)
+    OutputResults1d = OutputResults1d.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults1d = OutputResults1d.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDwDis', aggfunc='sum')
+    # series of FCR-D upwards when the battery is charging
+    OutputResults2c = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUpChg').reset_index()
+    OutputResults2c['Component'] = 'FCR-D Upward Charge [kWh]'
+    OutputResults2c['EleFCRDUpChg'] *= (1/model.factor1)
+    OutputResults2c = OutputResults2c.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults2c = OutputResults2c.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDUpChg', aggfunc='sum')
+    # series of FCR-D downwards when the battery is charging
+    OutputResults2d = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDDwChg').reset_index()
+    OutputResults2d['Component'] = 'FCR-D Downward Charge [kWh]'
+    OutputResults2d['EleFCRDDwChg'] *= (1/model.factor1)
+    OutputResults2d = OutputResults2d.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults2d = OutputResults2d.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDwChg', aggfunc='sum')
     # series of electricity inventory
-    OutputResults3 = pd.Series(data=[ sum(optmodel.vEleInventory[p,sc,n,egs]() for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleInventory').reset_index()
-    OutputResults3['Component'] = 'Inventory [KWh]'
+    OutputResults3 = pd.Series(data=[-sum(optmodel.vEleInventory[p,sc,n,egs]() for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleInventory').reset_index()
+    OutputResults3['Component'] = 'Inventory [kWh]'
     OutputResults3['EleInventory'] *= (1/model.factor1)
     OutputResults3 = OutputResults3.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults3 = OutputResults3.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleInventory', aggfunc='sum')
     # series of ENS
     OutputResults4 = pd.Series(data=[ sum(optmodel.vENS[p,sc,n,ed]() * model.Par['pDuration'][p,sc,n] for ed in model.ed if (nd,ed) in model.n2ed) for p,sc,n,nd in sPNND], index=pd.Index(sPNND)).to_frame(name='ENS').reset_index()
-    OutputResults4['Component'] = 'ENS [KWh]'
+    OutputResults4['Component'] = 'ENS [kWh]'
     OutputResults4['ENS'] *= (1/model.factor1)
     OutputResults4 = OutputResults4.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
     OutputResults4 = OutputResults4.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='ENS', aggfunc='sum')
     # series of energy outflows
     OutputResults5 = pd.Series(data=[-sum(optmodel.vEleEnergyOutflows[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleEnergyOutflows').reset_index()
-    OutputResults5['Component'] = 'Outflows/Driving [KWh]'
+    OutputResults5['Component'] = 'Outflows/Driving [kWh]'
     OutputResults5['EleEnergyOutflows'] *= (1/model.factor1)
     OutputResults5 = OutputResults5.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults5 = OutputResults5.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleEnergyOutflows', aggfunc='sum')
     # series of load home
     OutputResults6 = pd.Series(data=[-sum(optmodel.vEleDemand[p,sc,n,ed]() * model.Par['pDuration'][p,sc,n] for ed in model.ed if (nd,ed) in model.n2ed) for p,sc,n,nd in sPNND], index=pd.Index(sPNND)).to_frame(name='EleDemand').reset_index()
-    OutputResults6['Component'] = 'Load/Home [KWh]'
+    OutputResults6['Component'] = 'Load/Home [kWh]'
     OutputResults6['EleDemand'] *= (1/model.factor1)
     OutputResults6 = OutputResults6.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
     OutputResults6 = OutputResults6.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleDemand', aggfunc='sum')
     # series of the electricity buy
     OutputResults7 = pd.Series(data=[ sum(optmodel.vEleBuy[p,sc,n,er]() * model.Par['pDuration'][p,sc,n] for er in model.er if (nd,er) in model.n2er) for p,sc,n,nd in sPNND], index=pd.Index(sPNND)).to_frame(name='EleBuy').reset_index()
-    OutputResults7['Component'] = 'Electricity Buy [KWh]'
+    OutputResults7['Component'] = 'Electricity Buy [kWh]'
     OutputResults7['EleBuy'] *= (1/model.factor1)
     OutputResults7 = OutputResults7.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
     OutputResults7 = OutputResults7.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleBuy', aggfunc='sum')
     # series of the electricity sell
     OutputResults8 = pd.Series(data=[-sum(optmodel.vEleSell[p,sc,n,er]() * model.Par['pDuration'][p,sc,n] for er in model.er if (nd,er) in model.n2er) for p,sc,n,nd in sPNND], index=pd.Index(sPNND)).to_frame(name='EleSell').reset_index()
-    OutputResults8['Component'] = 'Electricity Sell [KWh]'
+    OutputResults8['Component'] = 'Electricity Sell [kWh]'
     OutputResults8['EleSell'] *= (1/model.factor1)
     OutputResults8 = OutputResults8.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
     OutputResults8 = OutputResults8.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleSell', aggfunc='sum')
     # series of the spot price
     OutputResults9 = pd.Series(data=[  model.Par['pVarEnergyCost' ] [er][p,sc,n] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
-    OutputResults9['Component'] = 'Spot Price [EUR/KWh]'
+    OutputResults9['Component'] = 'Spot Price [EUR/kWh]'
     OutputResults9 = OutputResults9.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
     OutputResults9 = OutputResults9.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
     # series of the electricity cost
     OutputResults10 = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
-    OutputResults10['Component'] = 'EleCost [EUR/KWh]'
+    OutputResults10['Component'] = 'EleCost [EUR/kWh]'
     OutputResults10['EUR/KWh'] *= (1/model.factor1)
     OutputResults10 = OutputResults10.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
     OutputResults10 = OutputResults10.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
     # series of the electricity price
     OutputResults11 = pd.Series(data=[  model.Par['pVarEnergyPrice'] [er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
-    OutputResults11['Component'] = 'ElePrice [EUR/KWh]'
+    OutputResults11['Component'] = 'ElePrice [EUR/kWh]'
     OutputResults11['EUR/KWh'] *= (1/model.factor1)
     OutputResults11 = OutputResults11.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
     OutputResults11 = OutputResults11.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
@@ -635,18 +671,32 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults14 = OutputResults14.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='FixedAvailability', aggfunc='sum')
     # series of spillage
     OutputResults15 = pd.Series(data=[ sum(optmodel.vEleSpillage[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleSpillage').reset_index()
-    OutputResults15['Component'] = 'Spillage [KWh]'
+    OutputResults15['Component'] = 'Spillage [kWh]'
     OutputResults15['EleSpillage'] *= (1/model.factor1)
     OutputResults15 = OutputResults15.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults15 = OutputResults15.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleSpillage', aggfunc='sum')
+    # series of FCR-D upwards prices
+    OutputResults16 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR/kWh').reset_index()
+    OutputResults16['Component'] = 'FCR-D Upward Price [EUR/kWh]'
+    OutputResults16['Technology'] = ''
+    OutputResults16['EUR/kWh'] *= (1/model.factor1)
+    OutputResults16 = OutputResults16.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults16 = OutputResults16.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
+    # series of FCR-D downwards prices
+    OutputResults17 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR/kWh').reset_index()
+    OutputResults17['Component'] = 'FCR-D Downward Price [EUR/kWh]'
+    OutputResults17['Technology'] = ''
+    OutputResults17['EUR/kWh'] *= (1/model.factor1)
+    OutputResults17 = OutputResults17.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults17 = OutputResults17.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1, OutputResults2, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults13, OutputResults14, OutputResults3, OutputResults5, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
+            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults13, OutputResults14, OutputResults3, OutputResults5, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17], axis=1)
         else:
-            OutputResults = pd.concat([OutputResults1, OutputResults2, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
+            OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
-        OutputResults = pd.concat([OutputResults1, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults9, OutputResults10, OutputResults11], axis=1)
+        OutputResults = pd.concat([OutputResults1a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults9, OutputResults10, OutputResults11], axis=1)
     OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
     OutputResults = OutputResults.set_index('Date', append=True)
     OutputResults.index.names = [None, None, None, None]
