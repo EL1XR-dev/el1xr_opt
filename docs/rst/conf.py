@@ -584,6 +584,9 @@ mathjax3_config = {
             "pmaxstorage": r"\overline{S}",                     # Max storage (generic)
             "pelemaxcharge": r"\overline{C}^{e}",               # Max electrical charge
             "pelemaxchargesecondblock": r"\overline{C}^{e,2b}", # Max electrical charge 2nd block
+            "phydmaxcharge": r"\overline{C}^{h}",               # Max hydrogen charge
+            "phydmaxchargesecondblock": r"\overline{C}^{h,2b}", # Max hydrogen charge 2nd block
+            "phydminchargesecondblock": r"\underline{C}^{h,2b}", # Min hydrogen charge 2nd block
             "pdodsa": r"DoD^{a}",                                 # Depth of discharge segment 1
             "pdodsb": r"DoD^{b}",                                 # Depth of discharge segment 2
             "pdodsc": r"DoD^{c}",                                 # Depth of discharge segment 3
