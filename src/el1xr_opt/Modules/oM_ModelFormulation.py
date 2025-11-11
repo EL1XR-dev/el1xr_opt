@@ -76,7 +76,7 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er]) * optmodel.vEleBuy [p,sc,n,er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
+        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er]) * (sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleStorCharge[p,sc,n,egs] * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eTotalEleTradeCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
 
     #%% Total electricity market revenues
@@ -85,7 +85,7 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [kEUR]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * optmodel.vEleSell[p,sc,n,er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
+        return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleStorDischarge[p,sc,n,egs] * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
 
     def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
@@ -264,7 +264,8 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleSellComposition(optmodel, p,sc,n,er):
         if model.Par['pEleRetMaxSell'][er] > 0:
-            return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum((optmodel.vEleStorDischarge[p,sc,n,egs]) * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+            # return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+            return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleSellComposition', Constraint(optmodel.psner, rule=eEleSellComposition, doc='Electricity sell composition [kWh]'))
@@ -363,14 +364,14 @@ def create_constraints(model, optmodel, indlog):
         if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0):
             return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
         else:
-            return Constraint.Skip
+            return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) == 0
     optmodel.__setattr__('eEleFreqContReserveDisUpward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisUpward, doc='Frequency containment reserve - upward'))
 
     def eEleFreqContReserveDisDownward(optmodel, p,sc,n):
         if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0):
             return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n]
         else:
-            return Constraint.Skip
+            return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) == 0
     optmodel.__setattr__('eEleFreqContReserveDisDownward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisDownward, doc='Frequency containment reserve - downward'))
 
     # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
