@@ -26,7 +26,7 @@ The composition of electricity bought from the market is defined by («``eEleBuy
 .. math::
    \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} =
    \sum_{\demandindex \in \nDE, (\eltraderindex,\demandindex) \in \nREDE} \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} +
-   \sum_{\genindex \in \nGE, (\eltraderindex,\genindex) \in \nREGE} \veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \sum_{\storageindex \in \nEES, (\eltraderindex,\storageindex) \in \nREGE} \veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex
 
 Electricity sold to the market is enabled if :math:`\pelemaxmarketsell_{\eltraderindex} >= 0.0`. The upper bound is defined by («``eEleRetMaxSell``»):
@@ -38,24 +38,9 @@ Electricity sold to the market is enabled if :math:`\pelemaxmarketsell_{\eltrade
 The composition of electricity sold to the market is defined by («``eEleSellComposition``»):
 
 .. math::
-   \begin{aligned}
    \velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} =
-   &\sum_{\genindex \in \nGET, (\eltraderindex,\genindex) \in \nREGE} (
-     \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-     \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \\
-   &\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-     \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   ) + \\
-   &\sum_{\genindex \in \nEES, (\eltraderindex,\genindex) \in \nREGE} (
-     \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\genindex} \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-     \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \\
-   &\velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-     \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-     \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-     \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   )
+   \sum_{\genindex \in \nGENR, (\eltraderindex,\genindex) \in \nREGE} \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex
-   \end{aligned}
 
 Day-ahead Hydrogen Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,6 +169,8 @@ The peak demand value is determined by («``eElePeakHourValue``»):
    \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
    \pmaxsell_{\eltraderindex} \sum_{\peakindex' \le \peakindex} \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex'}
    \quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex
+
+A night discount is applied between 22:00 and 06:00, reducing the value of `vEleBuy` in the peak calculation.
 
 Indicator constraints («``eElePeakHourInd_C1``», «``eElePeakHourInd_C2``») link the peak demand variables to binary indicators:
 
@@ -337,6 +324,11 @@ The total charge of a hydrogen unit is defined by («``eHydTotalCharge``»):
    \frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS
 
+The total charge of an electrolyzer is defined by («``eE2HMaxCharge2ndBlock``»):
+
+.. math::
+   \frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} = \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
 Ramping Limits
 ~~~~~~~~~~~~~~
 A series of constraints limit how quickly the output or charging rate of an asset can change. For example, ``eEleMaxRampUpOutput`` restricts the increase in a generator's output between consecutive timesteps.
@@ -353,6 +345,18 @@ Maximum ramp-up and ramp-down for a non-renewable electricity unit («``eEleMaxR
    \frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\genindex}}
    \ge -\velecommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET
+
+Maximum ramp-up and ramp-down for discharging an electricity ESS («``eEleMaxRampUpDischarge``», «``eEleMaxRampDwDischarge``»):
+
+.. math::
+   \frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+   \le 1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \frac{-\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+   \ge -1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Maximum ramp-up and ramp-down for a hydrogen unit («``eHydMaxRampUpOutput``», «``eHydMaxRampDwOutput``»):
 
@@ -396,6 +400,18 @@ Minimum up-time and down-time of a thermal unit («``eEleMinUpTime``», «``eEle
    \sum_{\timeindex'=\timeindex-\pdwtime_{\genindex}+1}^{\timeindex} \veleshutdownbin_{\periodindex,\scenarioindex,\timeindex',\genindex}
    \le 1 - \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET
+
+Maximum ramp-up and ramp-down for charging an electricity ESS («``eEleMaxRampUpCharge``», «``eEleMaxRampDwCharge``»):
+
+.. math::
+   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+   \ge -1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+   \le 1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Minimum up-time and down-time for a hydrogen unit («``eHydMinUpTime``», «``eHydMinDownTime``»):
 
@@ -452,6 +468,17 @@ Maximum and minimum electricity generation of the second block for a committed u
 .. math::
    \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\genindex} \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET
+
+Maximum and minimum electricity generation of the second block for an electricity ESS («``eEleMaxESSOutput2ndBlock``», «``eEleMinESSOutput2ndBlock``»):
+
+.. math::
+   \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+   \le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge 0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Maximum and minimum hydrogen generation of the second block («``eHydMaxOutput2ndBlock``», «``eMinHydOutput2ndBlock``»):
 
@@ -755,7 +782,7 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 
     .. math::
        \veleinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \ge 0.8 \cdot \pelemaxstorage_{\storageindex}
-       \quad (\text{if starting trip})
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 *   **Driving Consumption**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
 
