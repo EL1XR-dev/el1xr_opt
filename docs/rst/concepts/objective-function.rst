@@ -147,7 +147,7 @@ The formulation is defined by «``eHydMarketCost``».
    \hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} \phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
 Hydrogen Market Revenues
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eHydMarketRevenue``».
 
 .. math::
