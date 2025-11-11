@@ -252,11 +252,11 @@ These variables control the physical operation of all assets in the system.
      - kgH2
      - ``vHydTotalCharge``
    * - :math:`\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\eleconsindex}`
-     - Elec. charge above min. stable level
+     - Elec. charge above min. stable level (ESS & electrolyzer)
      - kW
      - ``vEleTotalCharge2ndBlock``
    * - :math:`\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\hydconsindex}`
-     - Hyd. charge above min. stable level
+     - Hyd. charge above min. stable level (ESS & thermal units)
      - kgH2
      - ``vHydTotalCharge2ndBlock``
    * - :math:`\veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
