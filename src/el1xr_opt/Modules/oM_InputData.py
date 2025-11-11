@@ -882,6 +882,9 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
             # print(f'Fixed availability, start-up, and shut-down for {sector} unit {idx[-1]} in period {idx[0]}, scenario {idx[1]}, and load level {idx[2]}: {parameters_dict["pVarFixedAvailability"][idx[-1]][idx[:3]]}, {parameters_dict["pVarStartUp"][idx[-1]][idx[:3]]}, and {parameters_dict["pVarShutDown"][idx[-1]][idx[:3]]}')
 
     # save parameters_dict['pVarFixedAvailability'], parameters_dict['pVarStartUp'], and parameters_dict['pVarShutDown'] by creating a df of merging the three dfs and save in only one csv file
+    # df = parameters_dict['pVarFixedAvailability']
+    # parameters_dict['pVarFixedAvailability'] = (df == 0.0).astype(float)
+
     df_fixed_availability = parameters_dict['pVarFixedAvailability'].stack().to_frame(name='Value')
     df_fixed_availability['Type'] = 'FixedAvailability'
     df_start_up = parameters_dict['pVarStartUp'].stack().to_frame(name='Value')
@@ -1254,6 +1257,13 @@ def create_variables(model, optmodel, indlog):
 
     #%% fixing variables
     nFixedVariables = 0.0
+
+    # for idx in model.psnegs:
+    #     egs = idx[-1]
+    #     # fixing spillage based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
+    #     if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 1:  # no storage operation
+    #         optmodel.__getattribute__('vEleSpillage')[idx].fix(0.0)
+    #         nFixedVariables += 1.0
 
     # # fixing storage mode based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
     # for idx in model.psnegs:
