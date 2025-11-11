@@ -703,13 +703,14 @@ For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model,
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
 *   **Unserved Energy**: The model allows for unserved energy through slack variables (``vENS``, ``vHNS``). The high penalty cost in the objective function acts as a soft constraint to meet demand.
 
-Ramping Limits
-~~~~~~~~~~~~~~
-Ramp up and ramp down for the provision of demand to the hydrogen customers («``eHydMaxRampUpDemand``, ``eHydMaxRampDwDemand``»)
+..
+    Ramping Limits
+    ~~~~~~~~~~~~~~
+    Ramp up and ramp down for the provision of demand to the hydrogen customers («``eHydMaxRampUpDemand``, ``eHydMaxRampDwDemand``»)
 
-:math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\demandindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
+    :math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\demandindex}} \leq   1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
 
-:math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\demandindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
+    :math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\demandindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
 
 Demand Shifting Balance
 ~~~~~~~~~~~~~~~~~~~~~~~
