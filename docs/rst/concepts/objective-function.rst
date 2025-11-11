@@ -54,7 +54,7 @@ The total cost is broken down into several components, each represented by a spe
 
 Electricity Grid Usage
 ----------------------
-This component models capacity-based and tariffs, and consider the power peak penalization cost.
+This component models capacity-based and tariffs, and considers the power peak penalization cost.
 
 .. math::
    :label: eq:EleNetGridUsageCost
