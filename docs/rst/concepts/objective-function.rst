@@ -116,7 +116,7 @@ The formulation is defined by «``eEleMarketRevenue``».
 
    \elemarketrevenue_{\periodindex,\scenarioindex,\timeindex} = \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} + \elemarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} + \elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}
 
-*   **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint ``eEleMarketDayAheadRevenue``.
+*   **Electricity Sales**: The revenue generated from selling electricity to the market. This is defined by the constraint «``eEleMarketDayAheadRevenue``».
 
 .. math::
    :label: eq:EleMarketDayAheadRevenue
