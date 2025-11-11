@@ -634,7 +634,7 @@ ESS electricity outflows over a cycle are constrained by («``eEleMaxEnergyOutfl
 Incompatibility between charge and outflows for an electricity ESS is defined by («``eIncompatibilityEleChargeOutflows``»):
 
 .. math::
-   \frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}} \le 1
+   \frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le 1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Operation Ramping Constraints
@@ -644,12 +644,12 @@ These constraints limit the rate of change in charging and discharging power for
 Maximum ramp-up and ramp-down for charging an electricity ESS («``eEleMaxRampUpCharge``», «``eEleMaxRampDwCharge``»):
 
 .. math::
-   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
    \ge -1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 .. math::
-   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+   \frac{-\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
    \le 1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
