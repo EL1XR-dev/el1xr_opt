@@ -770,3 +770,97 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
     Since EV charging (``vEleTotalCharge``) increases the total load at a node, the model will naturally schedule it during hours when the combination of volumetric and potential capacity costs is lowest. This interaction between the nodal balance, the cost components, and the objective function creates an economically rational "smart charging" behavior.
 
 
+8. Bounds on Variables
+-----------------------
+To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
+
+.. math::
+   0 \leq \veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGE
+
+.. math::
+   0 \leq \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGH
+
+.. math::
+   0 \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE
+
+.. math::
+   0 \leq \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE
+
+.. math::
+   0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH
+
+.. math::
+   0 \leq \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE
+
+.. math::
+   0 \leq \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR
+
+.. math::
+   0 \leq \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE
+
+.. math::
+   0 \leq \veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE
+
+.. math::
+   0 \leq \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH
+
+.. math::
+   0 \leq \vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}, \vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \!-\! \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGENR
+
+.. math::
+   0 \leq \vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}, \vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \!-\! \peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE
+
+.. math::
+   0 \leq \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE
+
+.. math::
+   0 \leq \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \phydmaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH
+
+.. math::
+   \pelemininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE
+
+.. math::
+   \phydmininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq  \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex}  \leq \phydmaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH
+
+.. math::
+   0 \leq  \velespillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEE
+
+.. math::
+   0 \leq  \vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex|\storageindex \in \nEH
+
+..
+    :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\storageindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                        \quad \forall nes`
+
+    :math:`0 \leq ec^{R\!+\!}_{\periodindex,\scenarioindex,\timeindex,\genindex}, ec^{R-}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                        \quad \forall nhz`
+
+    :math:`0 \leq ec^{Comp}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\storageindex}                                                     \quad \forall nhs`
+
+    :math:`0 \leq ec^{StandBy}_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq \overline{EC}_{\periodindex,\scenarioindex,\timeindex,\genindex}                                                  \quad \forall nhz`
+
+.. math::
+   -\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \veleflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLE
+
+.. math::
+   -\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLH
+
+
