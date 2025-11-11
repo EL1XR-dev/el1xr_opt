@@ -179,7 +179,7 @@ This revenue subcomponent is earned by providing frequency containment reserves 
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{p,s,n} = \sum_{g \in \mathcal{G}^{e}} \left( (\Pi^{DUP,e}_{p,s,n} F1 \cdot p^{\Theta,DU}_{p,s,n,g} + \Pi^{DDW,e}_{p,s,n} F1 \cdot p^{\Theta,DW}_{p,s,n,g}) \cdot (1 + M^{moms,e}_{Retailer(g)}) \right)
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{g \in \elecgen} \left( (\pelemarketpriceDUP_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDU_{\periodindex,\scenarioindex,\timeindex,g} + \pelemarketpriceDDW_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDW_{\periodindex,\scenarioindex,\timeindex,g}) \cdot (1 + \pelemarketmoms_{\retailerofgen(g)}) \right)
 
 where :math:`Retailer(g)` is the retailer associated with generator :math:`g`.
 
