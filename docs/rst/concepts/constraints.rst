@@ -302,8 +302,8 @@ For electricity storage systems, the formulation is:
    \frac{\veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} =
    \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
    \frac{\velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
-   \pfcrdact_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
-   \pfcrdact_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+   \pfcrdupreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
+   \pfcrddwreqactivation_{\periodindex,\scenarioindex,\timeindex} \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    {\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
    \end{aligned}
