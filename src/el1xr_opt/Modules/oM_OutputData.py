@@ -682,7 +682,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults13, OutputResults14, OutputResults3, OutputResults5, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
+            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
         else:
             OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
