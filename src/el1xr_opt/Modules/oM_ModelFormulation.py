@@ -89,12 +89,16 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
 
     def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkFrqRev[p,sc,n] == optmodel.vTotalEleFCRDRev[p,sc,n]
+        return optmodel.vTotalEleMrkFrqRev[p,sc,n] == optmodel.vTotalEleFCRDUpRev[p,sc,n] + optmodel.vTotalEleFCRDDwRev[p,sc,n]
     optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [kEUR]'))
 
-    def eEleMarketFCRDRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRDRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr] + model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) * (1 + model.Par['pEleRetMoms'][model.Par['pEleGenRetailer'][egnr]]) for egnr in model.egnr)
-    optmodel.__setattr__('eEleMarketFCRDRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDRevenue, doc='Total electricity market FCR-D revenues [kEUR]'))
+    def eEleMarketFCRDUpRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr]) * (1 + model.Par['pEleRetMoms'][model.Par['pEleGenRetailer'][egnr]]) for egnr in model.egnr)
+    optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [kEUR]'))
+
+    def eEleMarketFCRDDwRevenue(optmodel, p,sc,n):
+        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) * (1 + model.Par['pEleRetMoms'][model.Par['pEleGenRetailer'][egnr]]) for egnr in model.egnr)
+    optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [kEUR]'))
 
     #%% Total hydrogen market costs
     def eHydMarketCost(optmodel, p,sc,n):
