@@ -1237,12 +1237,12 @@ def create_variables(model, optmodel, indlog):
     #%% fixing variables
     nFixedVariables = 0.0
 
-    # for idx in model.psnegs:
-    #     egs = idx[-1]
-    #     # fixing spillage based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
-    #     if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 1:  # no storage operation
-    #         optmodel.__getattribute__('vEleSpillage')[idx].fix(0.0)
-    #         nFixedVariables += 1.0
+    for idx in model.psnegs:
+        egs = idx[-1]
+        # fixing spillage based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
+        # if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 1:  # no storage operation
+        optmodel.__getattribute__('vEleSpillage')[idx].fix(0.0)
+        nFixedVariables += 1.0
 
     # # fixing storage mode based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
     # for idx in model.psnegs:
