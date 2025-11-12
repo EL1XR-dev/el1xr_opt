@@ -65,30 +65,25 @@ The formulation is defined by «``eTotalElePeakCost``».
 
     \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\nKE|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\peakindex \in \nKE} \velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex} (1 + \pelemarketmoms_{\traderindex})
 
-Network Usage Cost
-~~~~~~~~~~~~~~~~~~
+Variable Network Usage Cost
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This cost subcomponent captures the expenses associated with using the electricity distribution or transmission network. It is typically based on the amount of energy consumed or injected into the grid over a billing period.
-The formulation is defined by the variable cost component «``eTotalEleNetUseVarCost``».
+The formulation is defined by «``eTotalEleNetUseVarCost``».
 
 .. math::
    :label: eq:TotalEleNetUseVarCost
 
    \elenetvarusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketvarnetfee_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
 
-And, a fix cost component defined by «``eTotalEleNetUseFixCost``».
+Fixed Network Usage Cost
+~~~~~~~~~~~~~~~~~~~~~~~~
+This cost subcomponent represents fixed charges based on the capacity of the connection to the electricity network. It is usually a monthly fee that depends on the contracted capacity.
+The formulation is defined by «``eTotalEleNetUseFixCost``».
+
 .. math::
    :label: eq:TotalEleNetUseFixCost
-    \elenetfixusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketfixnetfee_{\traderindex} \pfactorone |\nM| (1 + \pelemarketmoms_{\traderindex})
 
-Capacity Tariff Cost
-~~~~~~~~~~~~~~~~~~~~
-This cost subcomponent represents fixed charges based on the capacity of the connection to the electricity network. It is usually a monthly fee that depends on the contracted capacity.
-The formulation is defined by «``eTotalEleCapTariffCost``».
-
-.. math::
-   :label: eq:TotalEleCapTariffCost
-
-   \elecaptariffcost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarkettariff_{\traderindex} \pfactorone |\nM| (1 + \pelemarketmoms_{\traderindex})
+   \elenetfixusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketfixnetfee_{\traderindex} \pfactorone |\nM| (1 + \pelemarketmoms_{\traderindex})
 
 By minimizing the sum of these components, the model finds the most economically efficient way to operate the system's assets to meet energy demand reliably.
 
@@ -322,11 +317,11 @@ Here:
 - :math:`\mathcal{I}^{DoD}` is the set of predefined depth-of-discharge (DoD) intervals (e.g., shallow, medium, deep discharge), over which the index :math:`i` ranges. The definition of these intervals is provided in the model data or parameter section.
 - :math:`C_{i,\storageindex}` is the degradation cost coefficient for storage unit :math:`\storageindex` and DoD interval :math:`i`. This coefficient represents the cost impact per unit of energy discharged within the :math:`i`-th DoD range.
 - :math:`DoD_{i,\storageindex}` is the amount of energy discharged from storage unit :math:`\storageindex` in the :math:`i`-th DoD range during the period, scenario, and day considered.
+
 .. math::
    :label: eq:TotalHydDCost
 
    C^{deg,h}_{\periodindex,\scenarioindex,\dayindex} = 0
 
-   .. note::
-
-      Hydrogen storage degradation costs are set to zero in this model. This is an intentional simplification, as hydrogen storage degradation is either negligible, not supported by the current implementation, or may be considered in future model extensions.
+.. note::
+   Hydrogen storage degradation costs are set to zero in this model. This is an intentional simplification, as hydrogen storage degradation is either negligible, not supported by the current implementation, or may be considered in future model extensions.
