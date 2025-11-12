@@ -63,7 +63,7 @@ def create_objective_function_components(model, optmodel, indlog):
     # Total electricity net usage costs
     def eTotalEleNetUseVarCost(optmodel, p,sc):
         return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * optmodel.vEleBuy[p,sc,n,er] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
-    optmodel.__setattr__('eTotalEleNetUseCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
+    optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
     def eTotalEleNetUseFixCost(optmodel, p,sc):
