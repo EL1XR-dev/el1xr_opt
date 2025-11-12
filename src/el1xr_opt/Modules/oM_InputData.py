@@ -927,7 +927,8 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalEleMrkFrqRev',                Var(model.psn,     within=             Reals, doc='total electricity frequency market revenue                           [EUR]'))
 
     # ancillary services revenues
-    setattr(optmodel, 'vTotalEleFCRDRev',                  Var(model.psn,     within=             Reals, doc='total electricity FCR-D     market revenue                           [EUR]'))
+    setattr(optmodel, 'vTotalEleFCRDUpRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D up    market revenue                         [EUR]'))
+    setattr(optmodel, 'vTotalEleFCRDDwRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D down  market revenue                         [EUR]'))
 
     # hydrogen market costs and revenues
     setattr(optmodel, 'vTotalHydMrkPPACost',               Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market         cost                            [EUR]'))
@@ -1091,7 +1092,7 @@ def create_variables(model, optmodel, indlog):
 
     sub_rev_vars = [optmodel.vTotalEleMrkDARev,
                     optmodel.vTotalHydMrkPPARev,
-                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev, optmodel.vTotalEleFCRDRev]
+                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev, optmodel.vTotalEleFCRDUpRev, optmodel.vTotalEleFCRDDwRev]
 
     # ed_vars = [optmodel.vENS]
 
