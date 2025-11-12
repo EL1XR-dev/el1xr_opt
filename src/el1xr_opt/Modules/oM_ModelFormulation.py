@@ -1220,15 +1220,15 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the minimum up and down time:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
-    def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
-        if model.Par['pVarStartUp'][egs][p,sc,n] and egs in model.egv:
-            if n != model.n.first() and model.Par['pVarStartUp'][egs][p,sc,model.n.prev(n)] < model.Par['pVarStartUp'][egs][p,sc,n]:
-                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= 0.8 * model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1
-            else:
-                return Constraint.Skip
-        else:
-            return Constraint.Skip
-    optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
+    # def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
+    #     if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv:
+    #         if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] < model.Par['pVarFixedAvailability'][egs][p,sc,n]:
+    #             return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= model.Par['pEleMinStorage'][egs][p,sc,n] * model.factor1
+    #         else:
+    #             return Constraint.Skip
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
 
     def eEleTotalMaxChargeConditioned(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:

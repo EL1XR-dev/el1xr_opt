@@ -78,7 +78,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
                                    'VarMinFuelCost', 'VarMaxFuelCost',
                                    'VarMinEmissionCost', 'VarMaxEmissionCost',
                                    'VarPositionConsumption', 'VarPositionGeneration',
-                                   'VarStartUp', 'VarShutDown',]
+                                   'VarFixedAvailability',]
     model.demand_frames_suffixes = ['VarMaxDemand', 'VarMinDemand']
     model.retail_frames_suffixes = ['VarEnergyCost', 'VarEnergyPrice']
 
@@ -857,10 +857,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         #     if len(retail):
         #         parameters_dict[f'p{idx}'] = parameters_dict[f'p{idx}'][retail].where(parameters_dict[f'p{idx}'][retail]  > pEpsilon_price, other=0.0)
 
-    # calculating the availability of the unit
-    parameters_dict['pVarStartUp' ] *= model.factor1
-    parameters_dict['pVarShutDown'] *= model.factor1
-    parameters_dict['pVarFixedAvailability'] = parameters_dict['pVarStartUp'].copy()
+    # # calculating the availability of the unit
 
     # Loop through each sector and set the appropriate sector set
     for sector in ['Ele', 'Hyd']:
@@ -868,31 +865,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
         # Iterate over each index in the set
         for idx in set_sector:
-            parameters_dict['pVarFixedAvailability'].loc[idx[:3], idx[-1]] = 1
             # Check if the fixed availability for the generator is enabled
-            if parameters_dict[f'p{sector}GenFixedAvailability'][idx[-1]] == 1:
-                # Define variables for readability
-                start_up = int(parameters_dict['pVarStartUp'][idx[-1]][idx[:3]])
-                shut_down = int(parameters_dict['pVarShutDown'][idx[-1]][idx[:3]])
-                if idx[2] == model.n.first():
-                    parameters_dict['pVarFixedAvailability'].loc[idx[:3], idx[-1]] = 1  # first load level
-                else:
-                    parameters_dict['pVarFixedAvailability'].loc[idx[:3], idx[-1]] = parameters_dict['pVarFixedAvailability'].loc[(idx[0], idx[1], model.n.prev(idx[2])), idx[-1]] + shut_down - start_up
-
-            # print(f'Fixed availability, start-up, and shut-down for {sector} unit {idx[-1]} in period {idx[0]}, scenario {idx[1]}, and load level {idx[2]}: {parameters_dict["pVarFixedAvailability"][idx[-1]][idx[:3]]}, {parameters_dict["pVarStartUp"][idx[-1]][idx[:3]]}, and {parameters_dict["pVarShutDown"][idx[-1]][idx[:3]]}')
-
-    # save parameters_dict['pVarFixedAvailability'], parameters_dict['pVarStartUp'], and parameters_dict['pVarShutDown'] by creating a df of merging the three dfs and save in only one csv file
-    # df = parameters_dict['pVarFixedAvailability']
-    # parameters_dict['pVarFixedAvailability'] = (df == 0.0).astype(float)
+            if parameters_dict[f'p{sector}GenFixedAvailability'][idx[-1]] != 1:
+                parameters_dict['pVarFixedAvailability'].loc[idx[:3], idx[-1]] = 1
 
     df_fixed_availability = parameters_dict['pVarFixedAvailability'].stack().to_frame(name='Value')
     df_fixed_availability['Type'] = 'FixedAvailability'
-    df_start_up = parameters_dict['pVarStartUp'].stack().to_frame(name='Value')
-    df_start_up['Type'] = 'StartUp'
-    df_shut_down = parameters_dict['pVarShutDown'].stack().to_frame(name='Value')
-    df_shut_down['Type'] = 'ShutDown'
-    df = pd.concat([df_fixed_availability, df_start_up, df_shut_down], axis=0)
-    # df.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Unit'}).to_csv(os.path.join(path_to_read, 'oM_Validation_FixedAvailability.csv'), index=False)
 
     model.Par = parameters_dict
 
