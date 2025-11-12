@@ -597,7 +597,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults2c = OutputResults2c.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2c = OutputResults2c.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDUpChg', aggfunc='sum')
     # series of FCR-D downwards when the battery is charging
-    OutputResults2d = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDDwChg').reset_index()
+    OutputResults2d = pd.Series(data=[-sum(optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDDwChg').reset_index()
     OutputResults2d['Component'] = 'FCR-D Downward Charge [kWh]'
     OutputResults2d['EleFCRDDwChg'] *= (1/model.factor1)
     OutputResults2d = OutputResults2d.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
@@ -693,6 +693,52 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults.index.names = [None, None, None, None]
     OutputResults.columns.names = [None, None]
     OutputResults.to_csv(_path+'/oM_Result_07_rEleOutputSummary_'+CaseName+'.csv', index=True, sep=',')
+
+    data = OutputResults[['Spot Price [EUR/kWh]', 'FCR-D Upward Price [EUR/kWh]', 'FCR-D Downward Price [EUR/kWh]', 'Production/Discharge [kWh]', 'FCR-D Upward Discharge [kWh]', 'FCR-D Downward Discharge [kWh]', 'Consumption/Charge [kWh]', 'FCR-D Upward Charge [kWh]', 'FCR-D Downward Charge [kWh]']]
+    data.columns = data.columns.get_level_values(0)
+    data = data.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Date', 'Spot Price [EUR/kWh]': 'Price Spot', 'FCR-D Upward Price [EUR/kWh]': 'Price FCR-D Upward', 'FCR-D Downward Price [EUR/kWh]': 'Price FCR-D Downward', 'Production/Discharge [kWh]': 'Discharge Day-Ahead', 'FCR-D Upward Discharge [kWh]': 'Discharge FCR-D Upward', 'FCR-D Downward Discharge [kWh]': 'Discharge FCR-D Downward', 'Consumption/Charge [kWh]': 'Charge Day-Ahead', 'FCR-D Upward Charge [kWh]': 'Charge FCR-D Upward', 'FCR-D Downward Charge [kWh]': 'Charge FCR-D Downward'}, inplace=False)
+    bar_data = data[['Date', 'Discharge Day-Ahead', 'Charge Day-Ahead', 'Discharge FCR-D Upward', 'Discharge FCR-D Downward', 'Charge FCR-D Upward', 'Charge FCR-D Downward']]
+    line_data = data[['Date', 'Price Spot', 'Price FCR-D Upward', 'Price FCR-D Downward']]
+    bar_data = bar_data.melt(id_vars=['Date'], var_name='Component', value_name='Value')
+    line_data = line_data.melt(id_vars=['Date'], var_name='Component', value_name='Value')
+
+    # --- Ensure 'Date' is datetime ---
+    bar_data['Date'] = pd.to_datetime(bar_data['Date'])
+    line_data['Date'] = pd.to_datetime(line_data['Date'])
+
+    # --- Filter for first 7 days ---
+    start_date = bar_data['Date'].min()
+    end_date = start_date + pd.Timedelta(days=7)
+
+    bar_data_7days = bar_data[(bar_data['Date'] >= start_date) & (bar_data['Date'] < end_date)]
+    line_data_7days = line_data[(line_data['Date'] >= start_date) & (line_data['Date'] < end_date)]
+
+    # combined plot where it has 2 y-axes
+    ele_summary_chart = alt.Chart(bar_data_7days).mark_bar().encode(
+        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=14, titleFontSize=16)),
+        y=alt.Y('sum(Value):Q', axis=alt.Axis(title='[kWh]', labelFontSize=14, titleFontSize=16)),
+        color=alt.Color('Component:N', scale=alt.Scale(scheme='category10'), legend=alt.Legend(title='', labelFontSize=14, titleFontSize=16)),
+    ).properties(
+        width=1200,
+        height=400
+    )
+
+    ele_summary_chart_price = alt.Chart(line_data_7days).mark_line(color='orange', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill='white')).encode(
+        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=14, titleFontSize=16)),
+        y=alt.Y('Value:Q', axis=alt.Axis(title='[SEK/kWh]', labelFontSize=14, titleFontSize=16)),
+        color=alt.Color('Component:N', scale=alt.Scale(scheme='category10'), legend=alt.Legend(title='', labelFontSize=14, titleFontSize=16)),
+    ).properties(
+        width=1200,
+        height=400
+    )
+
+    combined_chart = alt.layer(ele_summary_chart, ele_summary_chart_price).resolve_scale(
+        y='independent'  # Ensures each chart has its own y-axis
+    ).interactive()
+    # Save the chart to an HTML file
+    combined_chart.save(_path + '/oM_Plot_06_rEleOutputSummary_' + CaseName + '.html', embed_options={'renderer':'svg'})
+    # Save the chart to a PNG file
+    #combined_chart.save(_path + '/oM_Plot_rEleOutputSummary_' + CaseName + '.png')
 
     # ---- Index & small helpers --------------------------------------------------
     I_psn = pd.MultiIndex.from_tuples(model.psn)
