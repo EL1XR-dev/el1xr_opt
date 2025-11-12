@@ -324,10 +324,11 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_vTotalEleEnergyTaxCost = extract_cost_or_rev(optmodel, model, 'vTotalEleEnergyTaxCost', 'ps',                                      revenue=False, component_name='Energy Tax Cost'         )
     Output_vTotalEleDCost         = extract_cost_or_rev(optmodel, model, 'vTotalEleDCost',         'psd', multiplier=True, timeline="Daily",  revenue=False, component_name='Depth of Discharge Cost' )
     Output_vTotalEleMrkDARev      = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDARev',      'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='Day-Ahead Market Revenue')
-    Output_vTotalEleFCRDRev       = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDRev',       'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Revenue'           )
+    Output_vTotalEleFCRDUpRev     = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDUpRev',     'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Upwards Revenue'   )
+    Output_vTotalEleFCRDDwRev     = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDDwRev',     'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Downwards Revenue' )
 
     # === Combine and export ===
-    Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleDCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDRev], ignore_index=True)
+    Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleDCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDUpRev, Output_vTotalEleFCRDDwRev], ignore_index=True)
     Output_AdditionalCosts.to_csv(f"{_path}/oM_Result_01_rObjFunComponents_{CaseName}.csv", index=False)
 
     # %% outputting the electrical energy balance
