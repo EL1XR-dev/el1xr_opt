@@ -52,7 +52,7 @@ This component models capacity-based and tariffs, and considers the power peak p
 .. math::
    :label: eq:EleNetGridUsageCost
 
-   C^{grid,e}_{\periodindex,\scenarioindex} = C^{peak,e}_{\periodindex,\scenarioindex} + C^{netuse,e}_{\periodindex,\scenarioindex} + C^{cap,e}_{\periodindex,\scenarioindex}
+   C^{grid,e}_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex} + \elenetvarusecost_{\periodindex,\scenarioindex} + \elenetfixusecost_{\periodindex,\scenarioindex}
 
 Peak Power Cost
 ~~~~~~~~~~~~~~~~
@@ -68,12 +68,17 @@ The formulation is defined by «``eTotalElePeakCost``».
 Network Usage Cost
 ~~~~~~~~~~~~~~~~~~
 This cost subcomponent captures the expenses associated with using the electricity distribution or transmission network. It is typically based on the amount of energy consumed or injected into the grid over a billing period.
-The formulation is defined by «``eTotalEleNetUseCost``».
+The formulation is defined by the variable cost component «``eTotalEleNetUseVarCost``».
 
 .. math::
-   :label: eq:TotalEleNetUseCost
+   :label: eq:TotalEleNetUseVarCost
 
-   \elenetusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketnetfee_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
+   \elenetvarusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketvarnetfee_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
+
+And, a fix cost component defined by «``eTotalEleNetUseFixCost``».
+.. math::
+   :label: eq:TotalEleNetUseFixCost
+    \elenetfixusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketfixnetfee_{\traderindex} \pfactorone |\nM| (1 + \pelemarketmoms_{\traderindex})
 
 Capacity Tariff Cost
 ~~~~~~~~~~~~~~~~~~~~
@@ -172,7 +177,7 @@ This revenue subcomponent is earned by providing frequency containment reserves 
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( (\pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}) \cdot (1 + \pelemarketmoms_{\retailerindex(\genindex)}) \right)
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( (\pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}) \cdot (1 + \pelemarketmoms_{\traderindex(\genindex)}) \right)
 
 where :math:`Retailer(\genindex)` is the retailer associated with generator :math:`\genindex`.
 
@@ -187,7 +192,7 @@ The formulation is defined by «``eEleTaxCost``».
 .. math::
    :label: eq:EleTaxCost
 
-   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \peleretenergytax_{r} F1 (1 + M^{moms,e}_{r}) \sum_{n \in \mathcal{T}} mb^{e}_{p,s,n,r} \right)
+   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \pelemarketenergytax_{\traderindex} F1 (1 + \pelemarketmoms_{\traderindex}) \sum_{\timeindex \in \mathcal{T}} mb^{e}_{p,s,n,r} \right)
 
 Incentives and Certificate Revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
