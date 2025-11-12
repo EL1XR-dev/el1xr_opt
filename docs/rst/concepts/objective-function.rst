@@ -172,7 +172,7 @@ This revenue subcomponent is earned by providing frequency containment reserves 
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( (\pelemarketpriceDUP_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDU_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelemarketpriceDDW_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \pelemarketdispatchDW_{\periodindex,\scenarioindex,\timeindex,\genindex}) \cdot (1 + \pelemarketmoms_{\retailerofgen(\genindex)}) \right)
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( (\pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}) \cdot (1 + \pelemarketmoms_{\retailerindex(\genindex)}) \right)
 
 where :math:`Retailer(\genindex)` is the retailer associated with generator :math:`\genindex`.
 
