@@ -313,7 +313,8 @@ mathjax3_config = {
             "elepeakdemandcost": r"C^{peak,e}",                 # Electrical peak demand cost
             "hydpeakdemandcost": r"C^{peak,h}",                 # Hydrogen peak demand cost
             "netusecost": r"C^{netuse}",                        # Network use cost
-            "elenetusecost": r"C^{netuse,e}",                   # Electrical network use cost
+            "elenetfixusecost": r"C^{fix,net,e}",               # Electrical network use cost
+            "elenetvarusecost": r"C^{var,net,e}",               # Electrical network use cost
             "hydnetusecost": r"C^{netuse,h}",                   # Hydrogen network use cost
             "captariffcost": r"C^{cap}",                        # Capacity tariff cost
             "elecaptariffcost": r"C^{cap,e}",                   # Electrical capacity tariff cost
@@ -443,7 +444,9 @@ mathjax3_config = {
             "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
             "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
             "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
-            "pelemarketnetfee": r"M^{net,e}",                   # Electrical network fee
+            "pelemarketfixnetfee": r"M^{net,e}",                # Electrical fix network fee
+            "pelemarketvarnetfee": r"M^{net,e}",                # Electrical var network fee
+            "pelemarketenergytax": r"M^{tax,e}",                # Electrical energy tax
             "pelemarkettariff": r"M^{tariff,e}",                # Electrical tariff
             "pmaxmarketbuy": r"\overline{MB}",                  # Max market buying
             "pelemaxmarketbuy": r"\overline{MB}^{e}",           # Max electrical market buying
