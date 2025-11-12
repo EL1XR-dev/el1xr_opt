@@ -602,7 +602,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults2d = OutputResults2d.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2d = OutputResults2d.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDwChg', aggfunc='sum')
     # series of electricity inventory
-    OutputResults3 = pd.Series(data=[-sum(optmodel.vEleInventory[p,sc,n,egs]() for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleInventory').reset_index()
+    OutputResults3 = pd.Series(data=[ sum(optmodel.vEleInventory[p,sc,n,egs]() for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleInventory').reset_index()
     OutputResults3['Component'] = 'Inventory [kWh]'
     OutputResults3['EleInventory'] *= (1/model.factor1)
     OutputResults3 = OutputResults3.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
