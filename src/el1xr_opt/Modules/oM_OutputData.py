@@ -146,7 +146,7 @@ def create_duration_curve(df, value_col, date_col, title, y_label, path, filenam
     chart.save(os.path.join(path, filename))
     return df_sorted
 
-def save_chart(chart, path, filename, embed_options={'renderer': 'svg'}):
+def save_chart(chart, path, filename, embed_options=None):
     """
     Save an Altair chart to HTML file.
     
@@ -154,8 +154,10 @@ def save_chart(chart, path, filename, embed_options={'renderer': 'svg'}):
         chart: Altair chart object
         path (str): Directory path
         filename (str): Filename including extension
-        embed_options (dict): Options for embedding the chart
+        embed_options (dict, optional): Options for embedding the chart. Defaults to {'renderer': 'svg'}.
     """
+    if embed_options is None:
+        embed_options = {'renderer': 'svg'}
     filepath = os.path.join(path, filename)
     chart.save(filepath, embed_options=embed_options)
 
