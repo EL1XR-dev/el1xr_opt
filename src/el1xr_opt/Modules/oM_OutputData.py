@@ -246,6 +246,8 @@ def _write_constraint_to_csv(path, con, con_name, case_name, model):
             for index in con:
                 writer.writerow([con_name, index, model.dual[con[index]], 
                                str(con[index].lb), str(con[index].ub)])
+        else:
+            writer.writerow([con_name, 'NA', model.dual[con], str(con.lb), str(con.ub)])
 
 def saving_rawdata(DirName, CaseName, SolverName, model, optmodel, indlog):
     """
