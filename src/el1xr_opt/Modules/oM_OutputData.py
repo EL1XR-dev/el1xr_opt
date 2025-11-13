@@ -25,6 +25,230 @@ try:
 except Exception:
     sky = None
 
+# ============================================================================
+# REUSABLE HELPER FUNCTIONS FOR CSV EXPORT
+# ============================================================================
+
+def save_to_csv(df, path, filename, index=False):
+    """
+    Save a DataFrame to CSV file.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to save
+        path (str): Directory path
+        filename (str): Filename including extension
+        index (bool): Whether to include index in CSV
+    """
+    filepath = os.path.join(path, filename)
+    df.to_csv(filepath, index=index, sep=',')
+
+# ============================================================================
+# REUSABLE HELPER FUNCTIONS FOR PLOTTING
+# ============================================================================
+
+def create_line_chart(df, x_col, y_col, color_col=None, title='', x_title='', y_title='', 
+                      width=800, height=400, date_format="%a, %b %d, %H:%M", strokeDash=None):
+    """
+    Create a reusable Altair line chart.
+    
+    Args:
+        df (pd.DataFrame): Data to plot
+        x_col (str): Column name for x-axis
+        y_col (str): Column name for y-axis
+        color_col (str, optional): Column name for color encoding
+        title (str): Chart title
+        x_title (str): X-axis title
+        y_title (str): Y-axis title
+        width (int): Chart width
+        height (int): Chart height
+        date_format (str): Format string for date axis
+        strokeDash (list, optional): Dash pattern for line [5, 5]
+    
+    Returns:
+        alt.Chart: Altair chart object
+    """
+    mark_opts = {'point': alt.OverlayMarkDef(filled=False, fill='white')}
+    if strokeDash:
+        mark_opts['strokeDash'] = strokeDash
+    
+    chart = alt.Chart(df).mark_line(**mark_opts)
+    
+    encoding = {
+        'x': alt.X(f'{x_col}:T' if ':T' not in x_col else x_col,
+                   axis=alt.Axis(title=x_title, labelAngle=-90, format=date_format, 
+                               tickCount=30, labelLimit=1000)),
+        'y': alt.Y(f'{y_col}:Q' if ':Q' not in y_col else y_col,
+                   axis=alt.Axis(title=y_title))
+    }
+    
+    if color_col:
+        encoding['color'] = alt.Color(f'{color_col}:N', legend=alt.Legend(title=''))
+    
+    return chart.encode(**encoding).properties(width=width, height=height, title=title)
+
+def create_bar_chart(df, x_col, y_col, color_col, title='', x_title='', y_title='',
+                     width=800, height=400, date_format="%a, %b %d, %H:%M"):
+    """
+    Create a reusable Altair bar chart.
+    
+    Args:
+        df (pd.DataFrame): Data to plot
+        x_col (str): Column name for x-axis
+        y_col (str): Column name for y-axis (use 'sum(...)' for aggregation)
+        color_col (str): Column name for color encoding
+        title (str): Chart title
+        x_title (str): X-axis title
+        y_title (str): Y-axis title
+        width (int): Chart width
+        height (int): Chart height
+        date_format (str): Format string for date axis
+    
+    Returns:
+        alt.Chart: Altair chart object
+    """
+    return (alt.Chart(df)
+            .mark_bar()
+            .encode(
+                x=alt.X(f'{x_col}:T', axis=alt.Axis(title=x_title, labelAngle=-90, 
+                       format=date_format, tickCount=30, labelLimit=1000)),
+                y=alt.Y(y_col, axis=alt.Axis(title=y_title)),
+                color=alt.Color(f'{color_col}:N', legend=alt.Legend(title=''))
+            )
+            .properties(width=width, height=height, title=title))
+
+def create_duration_curve(df, value_col, date_col, title, y_label, path, filename):
+    """
+    Create and save a duration curve plot.
+    
+    Args:
+        df (pd.DataFrame): Input dataframe
+        value_col (str): Column name containing values to plot
+        date_col (str): Column name containing dates
+        title (str): Chart title
+        y_label (str): Y-axis label
+        path (str): Directory path to save chart
+        filename (str): Output filename
+    
+    Returns:
+        pd.DataFrame: DataFrame sorted by value (descending) with counter column
+    """
+    df_sorted = df.sort_values(by=value_col, ascending=False).reset_index(drop=True)
+    df_sorted['Counter'] = range(len(df_sorted))
+    
+    chart = (alt.Chart(df_sorted)
+             .mark_line(point=alt.OverlayMarkDef(filled=False, fill='white'))
+             .encode(
+                 x=alt.X('Counter', title='Time', sort=None),
+                 y=alt.Y(value_col, title=y_label)
+             )
+             .properties(title=title, width=800, height=400))
+    
+    chart.save(os.path.join(path, filename))
+    return df_sorted
+
+def save_chart(chart, path, filename, embed_options=None):
+    """
+    Save an Altair chart to HTML file.
+    
+    Args:
+        chart: Altair chart object
+        path (str): Directory path
+        filename (str): Filename including extension
+        embed_options (dict, optional): Options for embedding the chart. Defaults to {'renderer': 'svg'}.
+    """
+    if embed_options is None:
+        embed_options = {'renderer': 'svg'}
+    filepath = os.path.join(path, filename)
+    chart.save(filepath, embed_options=embed_options)
+
+def create_and_save_duration_curve(series_data, index_tuples, value_col_name, Date, hour_of_year,
+                                   path, csv_filename, html_filename, title, y_label):
+    """
+    Create and save a duration curve with both CSV and HTML outputs.
+    
+    Args:
+        series_data (list): List of values
+        index_tuples: Index tuples (e.g., from model.psn)
+        value_col_name (str): Name for the value column  
+        Date: Starting date
+        hour_of_year (str): Hour of year reference
+        path (str): Output directory
+        csv_filename (str): CSV filename
+        html_filename (str): HTML filename
+        title (str): Chart title
+        y_label (str): Y-axis label
+    
+    Returns:
+        pd.DataFrame: Processed dataframe with counter
+    """
+    # Create series and sort
+    df = pd.Series(series_data, index=pd.MultiIndex.from_tuples(index_tuples))
+    df = df.sort_values(ascending=False).to_frame(name=value_col_name)
+    
+    # Add date column
+    df['Date'] = df.index.get_level_values(2).map(
+        lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))
+    ).strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Reset index and rename
+    df = df.reset_index().rename(
+        columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel'}, 
+        inplace=False
+    )
+    
+    # Save CSV
+    save_to_csv(df, path, csv_filename, index=False)
+    
+    # Create and save plot with counter
+    df['Counter'] = range(len(df))
+    chart = (alt.Chart(df)
+             .mark_line(point=alt.OverlayMarkDef(filled=False, fill='white'))
+             .encode(
+                 x=alt.X('Counter', title='Time', sort=None),
+                 y=alt.Y(value_col_name, title=y_label)
+             )
+             .properties(title=title, width=800, height=400))
+    
+    save_chart(chart, path, html_filename)
+    
+    return df
+
+def _write_variable_to_csv(path, var, var_name, case_name):
+    """Helper function to write a variable component to CSV."""
+    filename = f'oM_Result_{var_name}_{case_name}.csv'
+    with open(os.path.join(path, filename), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Name', 'Index', 'Value', 'Lower Bound', 'Upper Bound'])
+        for index in var:
+            writer.writerow([var_name, index, var[index].value, 
+                           str(var[index].lb), str(var[index].ub)])
+
+def _write_parameter_to_csv(path, par, par_name, case_name):
+    """Helper function to write a parameter component to CSV."""
+    filename = f'oM_Result_{par_name}_{case_name}.csv'
+    with open(os.path.join(path, filename), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Name', 'Index', 'Value'])
+        if par.is_indexed():
+            for index in par:
+                value = par[index] if not par.mutable else par[index].value
+                writer.writerow([par_name, index, value])
+        else:
+            writer.writerow([par_name, 'NA', par.value])
+
+def _write_constraint_to_csv(path, con, con_name, case_name, model):
+    """Helper function to write a constraint component to CSV."""
+    filename = f'oM_Result_{con_name}_{case_name}.csv'
+    with open(os.path.join(path, filename), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Name', 'Index', 'Value', 'Lower Bound', 'Upper Bound'])
+        if con.is_indexed():
+            for index in con:
+                writer.writerow([con_name, index, model.dual[con[index]], 
+                               str(con[index].lb), str(con[index].ub)])
+        else:
+            writer.writerow([con_name, 'NA', model.dual[con], str(con.lb), str(con.ub)])
+
 def saving_rawdata(DirName, CaseName, SolverName, model, optmodel, indlog):
     """
     Save raw optimization model data to CSV files.
@@ -42,6 +266,7 @@ def saving_rawdata(DirName, CaseName, SolverName, model, optmodel, indlog):
         SolverName (str): The name of the solver used.
         model: The optimization model object.
         optmodel: The concrete optimization model instance.
+        indlog: Logging indicator.
 
     Returns:
         model: The original optimization model object.
@@ -49,38 +274,20 @@ def saving_rawdata(DirName, CaseName, SolverName, model, optmodel, indlog):
     _path = os.path.join(DirName, CaseName)
     StartTime = time.time()
 
+    # Write variables
     for var in optmodel.component_objects(Var, active=True):
-        with open(_path+'/oM_Result_'+var.name+'_'+CaseName+'.csv', 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['Name', 'Index', 'Value', 'Lower Bound', 'Upper Bound'])
-            var_object = getattr(optmodel, str(var))
-            for index in var_object:
-                writer.writerow([str(var), index, var_object[index].value, str(var_object[index].lb), str(var_object[index].ub)])
+        var_object = getattr(optmodel, str(var))
+        _write_variable_to_csv(_path, var_object, var.name, CaseName)
 
-    # Extract and write parameters from the case
+    # Write parameters
     for par in optmodel.component_objects(Param):
-        with open(_path+'/oM_Result_'+par.name+'_'+CaseName+'.csv', 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['Name', 'Index', 'Value'])
-            par_object = getattr(optmodel, str(par))
-            if par_object.is_indexed():
-                for index in par_object:
-                    if (isinstance(index, tuple) and par_object.mutable == False) or par_object.mutable == False:
-                        writer.writerow([str(par), index, par_object[index]])
-                    else:
-                        writer.writerow([str(par), index, par_object[index].value])
-            else:
-                writer.writerow        ([str(par), 'NA',  par_object.value])
+        par_object = getattr(optmodel, str(par))
+        _write_parameter_to_csv(_path, par_object, par.name, CaseName)
 
-    # Extract and write dual variables
+    # Write constraints (dual variables)
     for con in optmodel.component_objects(Constraint, active=True):
-        with open(_path+'/oM_Result_'+con.name+'_'+CaseName+'.csv', 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['Name', 'Index', 'Value', 'Lower Bound', 'Upper Bound'])
-            con_object = getattr(optmodel, str(con))
-            if con.is_indexed():
-                for index in con_object:
-                    writer.writerow([str(con), index, model.dual[con_object[index]], str(con_object[index].lb), str(con_object[index].ub)])
+        con_object = getattr(optmodel, str(con))
+        _write_constraint_to_csv(_path, con_object, con.name, CaseName, model)
 
     log_time('-- Total time for outputting the raw data:', StartTime, ind_log=indlog)
 
@@ -141,7 +348,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         Output_vDemand = pd.concat([Output_VarMaxDemand, Output_vEleDemand], axis=0).set_index(['level_0', 'level_1', 'level_2', 'level_3', 'Type'], inplace=False)
         Output_vDemand['Date'] = Output_vDemand.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
         Output_vDemand = Output_vDemand.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Demand'}, inplace=False)
-        Output_vDemand.to_csv(_path+'/oM_Result_00_rElectricityDemand_'+CaseName+'.csv', index=False, sep=',')
+        save_to_csv(Output_vDemand, _path, f'oM_Result_00_rElectricityDemand_{CaseName}.csv')
 
     granular_components = {
         'EleNCost': 'vTotalEleNCost', 'EleXCost': 'vTotalEleXCost', 'EleMCost': 'vTotalEleMCost',
@@ -362,7 +569,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     main_chart = (chart_cost | chart_rev).resolve_scale(color="independent")
 
     # Save the chart
-    main_chart.save(f"{_path}/oM_Plot_01_rObjFunComponents_{CaseName}.html", embed_options={'renderer':'svg'})
+    save_chart(main_chart, _path, f'oM_Plot_01_rObjFunComponents_{CaseName}.html')
 
     # %% outputting the electrical energy balance
     #%%  Power balance per period, scenario, and load level
@@ -406,7 +613,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_EleBalance = OutputResults.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Node', 'Component', 'Date'], axis=0).reset_index().rename(columns={0: 'MWh'}, inplace=False)
     # scaling the results to KWh
     Output_EleBalance['KWh'] = (1/model.factor1) * Output_EleBalance['MWh']
-    Output_EleBalance.to_csv(_path+'/oM_Result_02_rElectricityBalance_'+CaseName+'.csv', index=False, sep=',')
+    save_to_csv(Output_EleBalance, _path, f'oM_Result_02_rElectricityBalance_{CaseName}.csv')
     model.Output_EleBalance = Output_EleBalance
 
     # removing the component 'PowerFlowOut' and 'PowerFlowIn' from the Output_EleBalance
@@ -435,8 +642,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     kwh_chart = main_chart & slider_chart
 
-    kwh_chart.save(_path + '/oM_Plot_02_rElectricityBalance_' + CaseName + '.html', embed_options={'renderer':'svg'})
-    ##kwh_chart.save(_path + '/oM_Plot_rElectricityBalance_' + CaseName + '.png')
+    save_chart(kwh_chart, _path, f'oM_Plot_02_rElectricityBalance_{CaseName}.html')
 
     log_time('-- Total time for outputting the electricity balance:', StartTime, ind_log=indlog)
     StartTime = time.time()
@@ -449,7 +655,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_NetDemand['MWh'] = Output_NetDemand['MWh'].apply(lambda x: x)
     Output_NetDemand['KWh'] = Output_NetDemand['KWh'].apply(lambda x: x)
     # save the results to a csv file
-    Output_NetDemand.to_csv(_path+'/oM_Result_03_rElectricityNetDemand_'+CaseName+'.csv', index=False, sep=',')
+    save_to_csv(Output_NetDemand, _path, f'oM_Result_03_rElectricityNetDemand_{CaseName}.csv')
 
     log_time('-- Total time for outputting the net electricity demand:', StartTime, ind_log=indlog)
     StartTime = time.time()
@@ -473,7 +679,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # merge the results of the original demand with the net demand and electricity cost
     Output_Demand = pd.concat([Output_NetDemand, Output_OrgDemand], axis=0)
     # save the results to a csv file
-    Output_Demand.to_csv(_path+'/oM_Result_04_rAllElectricityDemand_'+CaseName+'.csv', index=False, sep=',')
+    save_to_csv(Output_Demand, _path, f'oM_Result_04_rAllElectricityDemand_{CaseName}.csv')
     model.Output_Demand = Output_Demand
 
     log_time('-- Total time for outputting the all electricity demand:', StartTime, ind_log=indlog)
@@ -513,9 +719,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     )
 
     # --- Save chart as HTML (SVG embedded) ---
-    main_chart.save(f"{_path}/oM_Plot_03_rEleDemand_{CaseName}.html", embed_options={'renderer': 'svg'})
-    # Save the chart to a PNG file
-    #chart.save(_path + '/oM_Plot_rElectricityDemand_' + CaseName + '.png')
+    save_chart(main_chart, _path, f'oM_Plot_03_rEleDemand_{CaseName}.html')
     if sum(model.Par['pEleDemFlexible'][ed] for ed in model.ed) != 0.0:
         vDemand_chart = alt.Chart(Output_vDemand).mark_line(color='blue', point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
             # x='Date:T',
@@ -543,7 +747,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         OutputResults1['Date'] = OutputResults1.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
         Output_EleSOE = OutputResults1.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Date'], axis=0).stack().reset_index().rename(columns={'level_3': 'Component', 0: 'SOE'}, inplace=False)
         Output_EleSOE['SOE'] *= (1/model.factor1)
-        Output_EleSOE.to_csv(_path+'/oM_Result_05_rEleStateOfEnergy_'+CaseName+'.csv', index=False, sep=',')
+        save_to_csv(Output_EleSOE, _path, f'oM_Result_05_rEleStateOfEnergy_{CaseName}.csv')
 
         log_time('-- Total time for outputting the electrical state of energy:', StartTime, ind_log=indlog)
         StartTime = time.time()
@@ -551,9 +755,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         # plot
         # Base chart for SOC with the primary y-axis and dashed line style
         ele_soe_chart = alt.Chart(Output_EleSOE).mark_line(color='green', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE')),
-            color = 'Component:N'
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE', labelFontSize=16, titleFontSize=18)),
+            color=alt.Color('Component:N', legend=alt.Legend(title='Component', labelFontSize=16, titleFontSize=18))
         )
 
     if len(model.egv):
@@ -561,7 +765,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         Output_FixedAvailability = model.Par['pVarFixedAvailability'].loc[model.psn]
         Output_FixedAvailability['Date'] = Output_FixedAvailability.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
         Output_FixedAvailability = Output_FixedAvailability.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Date'], axis=0).stack().reset_index().rename(columns={'level_4': 'Component', 0: 'FixedAvailability'}, inplace=False)
-        Output_FixedAvailability.to_csv(_path+'/oM_Result_06_rFixedAvailability_'+CaseName+'.csv', index=False, sep=',')
+        save_to_csv(Output_FixedAvailability, _path, f'oM_Result_06_rFixedAvailability_{CaseName}.csv')
 
         log_time('-- Total time for outputting the electrical fixed availability:', StartTime, ind_log=indlog)
         StartTime = time.time()
@@ -570,8 +774,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         Output_FixedAvailability = Output_FixedAvailability[Output_FixedAvailability['Component'].isin([list(model.egs)[0]])]
         # Base chart for FixedAvailability with the primary y-axis and dashed line style
         ele_fAv_chart = alt.Chart(Output_FixedAvailability).mark_point(color='red').encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right')),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right', labelFontSize=16, titleFontSize=18)),
         )
 
         chart = alt.layer(ele_soe_chart, ele_fAv_chart).resolve_scale(
@@ -582,9 +786,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         ).interactive()
 
         # Save the chart to an HTML file
-        chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_' + CaseName + '.html', embed_options={'renderer':'svg'})
-        # Save the chart to a PNG file
-        #chart.save(_path + '/oM_Plot_rEleStateOfEnergy_' + CaseName + '.png')
+        save_chart(chart, _path, f'oM_Plot_05_rEleStateOfEnergy_{CaseName}.html')
 
         # --- Ensure 'Date' is datetime ---
         Output_EleSOE['Date'] = pd.to_datetime(Output_EleSOE['Date'])
@@ -598,14 +800,14 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         ava_data_7days = Output_FixedAvailability[(Output_FixedAvailability['Date'] >= start_date) & (Output_FixedAvailability['Date'] < end_date)]
 
         ele_soe_chart = alt.Chart(soe_data_7days).mark_line(color='green', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE')),
-            color = 'Component:N'
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE', labelFontSize=16, titleFontSize=18)),
+            color = alt.Color('Component:N', legend=alt.Legend(title='Component', labelFontSize=16, titleFontSize=18))
         )
 
         ele_fAv_chart = alt.Chart(ava_data_7days).mark_point(color='red').encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right')),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right', labelFontSize=16, titleFontSize=18)),
         )
 
         chart = alt.layer(ele_soe_chart, ele_fAv_chart).resolve_scale(
@@ -616,8 +818,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         ).interactive()
 
         # Save the chart to an HTML file
-        chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_7days_' + CaseName + '.html', embed_options={'renderer':'svg'})
-
+        save_chart(chart, _path, f'oM_Plot_05_rEleStateOfEnergy_7days_{CaseName}.html')
 
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
@@ -758,7 +959,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults = OutputResults.set_index('Date', append=True)
     OutputResults.index.names = [None, None, None, None]
     OutputResults.columns.names = [None, None]
-    OutputResults.to_csv(_path+'/oM_Result_07_rEleOutputSummary_'+CaseName+'.csv', index=True, sep=',')
+    save_to_csv(OutputResults, _path, f'oM_Result_07_rEleOutputSummary_{CaseName}.csv', index=True)
 
     # -----------------------------------------------------------
     # 1) COLUMN SELECTION AND RENAMING
@@ -781,11 +982,31 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     # Extract + flatten columns
     data = OutputResults[keep_cols]
-    data.columns = data.columns.get_level_values(0)
+    # data.columns = data.columns.get_level_values(0)
+    # data.columns = [f"{a}_{b}" if b else a for a, b in data.columns]
+
+    # Step 0 — Rebuild the MultiIndex columns (important!)
+    lvl0 = data.columns.get_level_values(0)  # Component
+    lvl1 = data.columns.get_level_values(1)  # Technology
+    data.columns = pd.MultiIndex.from_arrays([lvl0, lvl1])
+
+    # Step 1 — Stack the first column level = Component
+    stacked = data.stack(level=1, future_stack=True)
+
+    # After stacking:
+    # Index = (period, scenario, time, timestamp, Technology)
+    # Columns = Component
+
+    # Step 2 — Name the stacked value column
+    stacked.name = "Value"
+
+    # Step 3 — Convert to tidy DataFrame
+    tidy = stacked.reset_index()
+    tidy = tidy.rename(columns={"level_4": "Technology"})  # in case pandas names it level_4
 
     # Flatten index
-    data = data.reset_index().rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
-
+    data = tidy.reset_index().rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
+    data = data.fillna(0)
     # Ensure datetime
     data['Date'] = pd.to_datetime(data['Date'])
 
@@ -797,8 +1018,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     line_components = ['Price Spot', 'Price Import','Price FCR-D Upward', 'Price FCR-D Downward']
 
-    bar_data = data[['Date'] + bar_components].melt(id_vars='Date', var_name='Component', value_name='Value')
-    line_data = data[['Date'] + line_components].melt(id_vars='Date', var_name='Component', value_name='Value')
+    bar_data = data[['Date', 'Technology'] + bar_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
+    line_data = data[['Date', 'Technology'] + line_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
 
     line_data_FCR = line_data[line_data['Component'].str.contains('FCR-D')]
 
@@ -867,11 +1088,14 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # 1) COMPUTE NET POWER & FILTER OUT ZERO ROWS
     # -----------------------------------------------------------
 
-    # Compute Net Power directly on the processed dataset
-    data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
+    # # Compute Net Power directly on the processed dataset
+    # data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
+    data_filtered = pd.pivot_table(data, index=['Date', 'Period', 'Scenario', 'LoadLevel'], values=['Price Spot', 'Price Import', 'Discharge Day-Ahead', 'Charge Day-Ahead']).reset_index()
+    data_filtered['NetPower'] = data_filtered['Discharge Day-Ahead'] - data_filtered['Charge Day-Ahead']
+    # data_filtered = data_filtered[data_filtered['NetPower'] != 0].copy()
 
-    # Filter out rows where NetPower = 0
-    data_filtered = data[data['NetPower'] != 0].copy()
+    # # # Filter out rows where Discharge Day-Ahead = 0 and Charge Day-Ahead = 0
+    # data_filtered = data[(data['Discharge Day-Ahead'] != 0) | (data['Charge Day-Ahead'] != 0)].copy()
     # -----------------------------------------------------------
     # 2) HELPER FUNCTION FOR SCATTER PLOTS
     # -----------------------------------------------------------
@@ -1138,142 +1362,92 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # Duration curve of the EV total output and the total charge
     EV_TotalOutput = pd.Series(data=[sum(optmodel.vEleTotalOutput[p,sc,n,egv]() for egv in model.egv) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
     EV_TotalCharge = pd.Series(data=[sum(optmodel.vEleTotalCharge[p,sc,n,egs]() for egs in model.egs) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    # make different dataframes for the EV total output and the total charge, total charge is positive and total output is negative
     EV_NetCharge = EV_TotalCharge - EV_TotalOutput
-    # sort values in the dataframe from the largest to the smallest
-    EV_NetCharge = EV_NetCharge.sort_values(ascending=False)
-    # from series to dataframe
-    EV_NetCharge = EV_NetCharge.to_frame(name='NetCharge')
-    # add a column with the date
-    EV_NetCharge['Date'] = EV_NetCharge.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
-    EV_NetCharge = EV_NetCharge.reset_index()
-    # rename the columns
-    EV_NetCharge = EV_NetCharge.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel'}, inplace=False)
-    # save the dataframe to a csv file
-    EV_NetCharge.to_csv(_path+'/oM_Result_10_rDurationCurve_NetCharge_' + CaseName + '.csv', sep=',', header=True, index=False)
-    # plot the duration curve using altair
-    EV_NetCharge['Counter'] = range(len(EV_NetCharge['NetCharge']))
-    chart = alt.Chart(EV_NetCharge).mark_line(point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        x=alt.X('Counter', title='Time', sort=None),
-        y=alt.Y('NetCharge', title='Charge and discharge [KWh]')
-    ).properties(
+    
+    create_and_save_duration_curve(
+        series_data=EV_NetCharge.values,
+        index_tuples=model.psn,
+        value_col_name='NetCharge',
+        Date=Date,
+        hour_of_year=hour_of_year,
+        path=_path,
+        csv_filename=f'oM_Result_10_rDurationCurve_NetCharge_{CaseName}.csv',
+        html_filename=f'oM_Plot_rDurationCurve_NetCharge_{CaseName}.html',
         title='Duration Curve of the Charge and Discharge of the EV',
-        width=800,
-        height=400
+        y_label='Charge and discharge [KWh]'
     )
-    chart.save(_path+'/oM_Plot_rDurationCurve_NetCharge_' + CaseName + '.html')
 
     log_time('-- Duration curves of the net charge output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the Solar PV total output
-    SolarPV_TotalOutput = pd.Series(data=[sum(optmodel.vEleTotalOutput[p,sc,n,egr]() for egr in model.egr) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    # sort values in the dataframe from the largest to the smallest
-    SolarPV_TotalOutput = SolarPV_TotalOutput.sort_values(ascending=False)
-    # from series to dataframe
-    SolarPV_TotalOutput = SolarPV_TotalOutput.to_frame(name='TotalOutput')
-    # add a column with the date
-    SolarPV_TotalOutput['Date'] = SolarPV_TotalOutput.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
-    SolarPV_TotalOutput = SolarPV_TotalOutput.reset_index()
-    # rename the columns
-    SolarPV_TotalOutput = SolarPV_TotalOutput.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel'}, inplace=False)
-    # save the dataframe to a csv file
-    SolarPV_TotalOutput.to_csv(_path+'/oM_Result_11_rDurationCurve_TotalOutput_' + CaseName + '.csv', sep=',', header=True, index=False)
-    # plot the duration curve using altair
-    SolarPV_TotalOutput['Counter'] = range(len(SolarPV_TotalOutput['TotalOutput']))
-    chart = alt.Chart(SolarPV_TotalOutput).mark_line(point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        x=alt.X('Counter', title='Time', sort=None),
-        y=alt.Y('TotalOutput', title='Total Output [KWh]')
-    ).properties(
+    SolarPV_data = [sum(optmodel.vEleTotalOutput[p,sc,n,egr]() for egr in model.egr) for p,sc,n in model.psn]
+    create_and_save_duration_curve(
+        series_data=SolarPV_data,
+        index_tuples=model.psn,
+        value_col_name='TotalOutput',
+        Date=Date,
+        hour_of_year=hour_of_year,
+        path=_path,
+        csv_filename=f'oM_Result_11_rDurationCurve_TotalOutput_{CaseName}.csv',
+        html_filename=f'oM_Plot_rDurationCurve_TotalOutput_{CaseName}.html',
         title='Duration Curve of the Total Output of the Solar PV',
-        width=800,
-        height=400
+        y_label='Total Output [KWh]'
     )
-    chart.save(_path+'/oM_Plot_rDurationCurve_TotalOutput_' + CaseName + '.html')
 
     log_time('-- Duration curves of electricity production output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the electricity demand
-    EleDemand = pd.Series(data=[sum(optmodel.vEleDemand[p,sc,n,ed]() for ed in model.ed) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    # sort values in the dataframe from the largest to the smallest
-    EleDemand = EleDemand.sort_values(ascending=False)
-    # from series to dataframe
-    EleDemand = EleDemand.to_frame(name='Demand')
-    # add a column with the date
-    EleDemand['Date'] = EleDemand.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
-    EleDemand = EleDemand.reset_index()
-    # rename the columns
-    EleDemand = EleDemand.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel'}, inplace=False)
-    # save the dataframe to a csv file
-    EleDemand.to_csv(_path+'/oM_Result_12_rDurationCurve_Demand_' + CaseName + '.csv', sep=',', header=True, index=False)
-    # plot the duration curve using altair
-    EleDemand['Counter'] = range(len(EleDemand['Demand']))
-    chart = alt.Chart(EleDemand).mark_line(point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        x=alt.X('Counter', title='Time', sort=None),
-        y=alt.Y('Demand', title='Demand [KWh]')
-    ).properties(
+    EleDemand_data = [sum(optmodel.vEleDemand[p,sc,n,ed]() for ed in model.ed) for p,sc,n in model.psn]
+    create_and_save_duration_curve(
+        series_data=EleDemand_data,
+        index_tuples=model.psn,
+        value_col_name='Demand',
+        Date=Date,
+        hour_of_year=hour_of_year,
+        path=_path,
+        csv_filename=f'oM_Result_12_rDurationCurve_Demand_{CaseName}.csv',
+        html_filename=f'oM_Plot_rDurationCurve_Demand_{CaseName}.html',
         title='Duration Curve of the Demand',
-        width=800,
-        height=400
+        y_label='Demand [KWh]'
     )
-    chart.save(_path+'/oM_Plot_rDurationCurve_Demand_' + CaseName + '.html')
 
     log_time('-- Duration curves of the electricity demand output time:', StartTime, ind_log=indlog)
     StartTime = time.time()
 
     # Duration curve of the electricity bought from the market
-    EleBuy = pd.Series(data=[sum(optmodel.vEleBuy[p,sc,n,er]() for er in model.er) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    # sort values in the dataframe from the largest to the smallest
-    EleBuy = EleBuy.sort_values(ascending=False)
-    # from series to dataframe
-    EleBuy = EleBuy.to_frame(name='Buy')
-    # add a column with the date
-    EleBuy['Date'] = EleBuy.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
-    EleBuy = EleBuy.reset_index()
-    # rename the columns
-    EleBuy = EleBuy.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel'}, inplace=False)
-    # save the dataframe to a csv file
-    EleBuy.to_csv(_path+'/oM_Result_13_rDurationCurve_EleBuy_' + CaseName + '.csv', sep=',', header=True, index=False)
-    # plot the duration curve using altair
-    EleBuy['Counter'] = range(len(EleBuy['Buy']))
-    chart = alt.Chart(EleBuy).mark_line(point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        x=alt.X('Counter', title='Time', sort=None),
-        y=alt.Y('Buy', title='Buy [KWh]')
-    ).properties(
+    EleBuy_data = [sum(optmodel.vEleBuy[p,sc,n,er]() for er in model.er) for p,sc,n in model.psn]
+    create_and_save_duration_curve(
+        series_data=EleBuy_data,
+        index_tuples=model.psn,
+        value_col_name='Buy',
+        Date=Date,
+        hour_of_year=hour_of_year,
+        path=_path,
+        csv_filename=f'oM_Result_13_rDurationCurve_EleBuy_{CaseName}.csv',
+        html_filename=f'oM_Plot_rDurationCurve_EleBuy_{CaseName}.html',
         title='Duration Curve of the Buy',
-        width=800,
-        height=400
+        y_label='Buy [KWh]'
     )
-    chart.save(_path+'/oM_Plot_rDurationCurve_EleBuy_' + CaseName + '.html')
 
     log_time('-- Duration curves of the electricity bought output time:',StartTime)
     StartTime = time.time()
 
     # Duration curve of the electricity sold to the market
-    EleSell = pd.Series(data=[sum(optmodel.vEleSell[p,sc,n,er]() for er in model.er) for p,sc,n in model.psn], index=pd.MultiIndex.from_tuples(model.psn))
-    # sort values in the dataframe from the largest to the smallest
-    EleSell = EleSell.sort_values(ascending=False)
-    # from series to dataframe
-    EleSell = EleSell.to_frame(name='Sell')
-    # add a column with the date
-    EleSell['Date'] = EleSell.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
-    EleSell = EleSell.reset_index()
-    # rename the columns
-    EleSell = EleSell.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel'}, inplace=False)
-    # save the dataframe to a csv file
-    EleSell.to_csv(_path+'/oM_Result_14_rDurationCurve_EleSell_' + CaseName + '.csv', sep=',', header=True, index=False)
-    # plot the duration curve using altair
-    EleSell['Counter'] = range(len(EleSell['Sell']))
-    chart = alt.Chart(EleSell).mark_line(point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-        x=alt.X('Counter', title='Time', sort=None),
-        y=alt.Y('Sell', title='Sell [KWh]')
-    ).properties(
+    EleSell_data = [sum(optmodel.vEleSell[p,sc,n,er]() for er in model.er) for p,sc,n in model.psn]
+    create_and_save_duration_curve(
+        series_data=EleSell_data,
+        index_tuples=model.psn,
+        value_col_name='Sell',
+        Date=Date,
+        hour_of_year=hour_of_year,
+        path=_path,
+        csv_filename=f'oM_Result_14_rDurationCurve_EleSell_{CaseName}.csv',
+        html_filename=f'oM_Plot_rDurationCurve_EleSell_{CaseName}.html',
         title='Duration Curve of the Sell',
-        width=800,
-        height=400
+        y_label='Sell [KWh]'
     )
-    chart.save(_path+'/oM_Plot_rDurationCurve_EleSell_' + CaseName + '.html')
 
     log_time('-- Duration curves of the electricity sold output time:', StartTime, ind_log=indlog)
 
