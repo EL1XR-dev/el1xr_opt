@@ -618,7 +618,6 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         # Save the chart to an HTML file
         chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_7days_' + CaseName + '.html', embed_options={'renderer':'svg'})
 
-
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
     OutputResults1a = pd.Series(data=[ (sum((optmodel.vEleGenCommitment[p,sc,n,egt]() * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]()) * model.Par['pDuration'][p,sc,n] for egt  in model.egt  if (nd,egt) in model.n2eg and (gt,egt) in model.t2eg) + sum((optmodel.vEleStorDischarge[p,sc,n,egs]() * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs  in model.egs  if (nd,egs ) in model.n2eg and (gt,egs ) in model.t2eg)) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
