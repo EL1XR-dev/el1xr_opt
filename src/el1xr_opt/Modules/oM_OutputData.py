@@ -331,6 +331,39 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleDCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDUpRev, Output_vTotalEleFCRDDwRev], ignore_index=True)
     Output_AdditionalCosts.to_csv(f"{_path}/oM_Result_01_rObjFunComponents_{CaseName}.csv", index=False)
 
+    df = Output_AdditionalCosts.copy()
+
+    # --- 1. Separate cost and revenue ---
+    df["Type"] = df["EUR"].apply(lambda x: "Cost" if x >= 0 else "Revenue")
+    df["AbsEUR"] = df["EUR"].abs()
+
+    # --- 2. Compute percentages within each Type ---
+    df["Percentage"] = df.groupby("Type")["AbsEUR"].transform(lambda x: x / x.sum())
+
+    # --- 3. Split for plotting ---
+    df_cost = df[df["Type"] == "Cost"]
+    df_rev = df[df["Type"] == "Revenue"]
+
+    def pie_chart(df_sub, title):
+        base  = alt.Chart(df_sub).encode(theta=alt.Theta("AbsEUR:Q", type="quantitative", stack=True), color=alt.Color("Component:N", type="nominal", legend=alt.Legend(title=title))).properties(width=400, height=400)
+        pie   = base.mark_arc(outerRadius=120)
+        text  = base.mark_text(radius=150, size=15).encode(text=alt.Text("Percentage:Q", format=".1%"))
+        chart = pie+text
+        # chart = chart.resolve_scale(theta="independent")
+        chart = alt.layer(pie, text, data=df_sub).resolve_scale(theta="independent")
+
+        return chart
+
+    # --- 5. Build charts ---
+    chart_cost = pie_chart(df_cost, "Cost Breakdown")
+    chart_rev = pie_chart(df_rev, "Revenue Breakdown")
+
+    # --- 6. Show side by side ---
+    main_chart = (chart_cost | chart_rev).resolve_scale(color="independent")
+
+    # Save the chart
+    main_chart.save(f"{_path}/oM_Plot_01_rObjFunComponents_{CaseName}.html", embed_options={'renderer':'svg'})
+
     # %% outputting the electrical energy balance
     #%%  Power balance per period, scenario, and load level
     # incoming and outgoing lines (lin) (lout)
@@ -534,7 +567,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         StartTime = time.time()
 
         # filter component 'EV_01' and 'EV_02' from the Output_FixedAvailability
-        Output_FixedAvailability = Output_FixedAvailability[Output_FixedAvailability['Component'].isin(['EV_01'])]
+        Output_FixedAvailability = Output_FixedAvailability[Output_FixedAvailability['Component'].isin([list(model.egs)[0]])]
         # Base chart for FixedAvailability with the primary y-axis and dashed line style
         ele_fAv_chart = alt.Chart(Output_FixedAvailability).mark_point(color='red').encode(
             x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
@@ -552,6 +585,39 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_' + CaseName + '.html', embed_options={'renderer':'svg'})
         # Save the chart to a PNG file
         #chart.save(_path + '/oM_Plot_rEleStateOfEnergy_' + CaseName + '.png')
+
+        # --- Ensure 'Date' is datetime ---
+        Output_EleSOE['Date'] = pd.to_datetime(Output_EleSOE['Date'])
+        Output_FixedAvailability['Date'] = pd.to_datetime(Output_FixedAvailability['Date'])
+
+        # --- Filter for first 7 days ---
+        start_date = Output_EleSOE['Date'].min()
+        end_date = start_date + pd.Timedelta(days=7)
+
+        soe_data_7days = Output_EleSOE[(Output_EleSOE['Date'] >= start_date) & (Output_EleSOE['Date'] < end_date)]
+        ava_data_7days = Output_FixedAvailability[(Output_FixedAvailability['Date'] >= start_date) & (Output_FixedAvailability['Date'] < end_date)]
+
+        ele_soe_chart = alt.Chart(soe_data_7days).mark_line(color='green', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE')),
+            color = 'Component:N'
+        )
+
+        ele_fAv_chart = alt.Chart(ava_data_7days).mark_point(color='red').encode(
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
+            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right')),
+        )
+
+        chart = alt.layer(ele_soe_chart, ele_fAv_chart).resolve_scale(
+            y='independent'  # Ensures each chart has its own y-axis
+        ).properties(
+            width=800,
+            height=400
+        ).interactive()
+
+        # Save the chart to an HTML file
+        chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_7days_' + CaseName + '.html', embed_options={'renderer':'svg'})
+
 
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
@@ -694,51 +760,141 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults.columns.names = [None, None]
     OutputResults.to_csv(_path+'/oM_Result_07_rEleOutputSummary_'+CaseName+'.csv', index=True, sep=',')
 
-    data = OutputResults[['Spot Price [EUR/kWh]', 'FCR-D Upward Price [EUR/kWh]', 'FCR-D Downward Price [EUR/kWh]', 'Production/Discharge [kWh]', 'FCR-D Upward Discharge [kWh]', 'FCR-D Downward Discharge [kWh]', 'Consumption/Charge [kWh]', 'FCR-D Upward Charge [kWh]', 'FCR-D Downward Charge [kWh]']]
+    # -----------------------------------------------------------
+    # 1) COLUMN SELECTION AND RENAMING
+    # -----------------------------------------------------------
+
+    rename_cols = {
+        'Spot Price [EUR/kWh]': 'Price Spot',
+        'EleCost [EUR/kWh]': 'Price Import',
+        'FCR-D Upward Price [EUR/kWh]': 'Price FCR-D Upward',
+        'FCR-D Downward Price [EUR/kWh]': 'Price FCR-D Downward',
+        'Production/Discharge [kWh]': 'Discharge Day-Ahead',
+        'FCR-D Upward Discharge [kWh]': 'Discharge FCR-D Upward',
+        'FCR-D Downward Discharge [kWh]': 'Discharge FCR-D Downward',
+        'Consumption/Charge [kWh]': 'Charge Day-Ahead',
+        'FCR-D Upward Charge [kWh]': 'Charge FCR-D Upward',
+        'FCR-D Downward Charge [kWh]': 'Charge FCR-D Downward'
+    }
+
+    keep_cols = list(rename_cols.keys())
+
+    # Extract + flatten columns
+    data = OutputResults[keep_cols]
     data.columns = data.columns.get_level_values(0)
-    data = data.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Date', 'Spot Price [EUR/kWh]': 'Price Spot', 'FCR-D Upward Price [EUR/kWh]': 'Price FCR-D Upward', 'FCR-D Downward Price [EUR/kWh]': 'Price FCR-D Downward', 'Production/Discharge [kWh]': 'Discharge Day-Ahead', 'FCR-D Upward Discharge [kWh]': 'Discharge FCR-D Upward', 'FCR-D Downward Discharge [kWh]': 'Discharge FCR-D Downward', 'Consumption/Charge [kWh]': 'Charge Day-Ahead', 'FCR-D Upward Charge [kWh]': 'Charge FCR-D Upward', 'FCR-D Downward Charge [kWh]': 'Charge FCR-D Downward'}, inplace=False)
-    bar_data = data[['Date', 'Discharge Day-Ahead', 'Charge Day-Ahead', 'Discharge FCR-D Upward', 'Discharge FCR-D Downward', 'Charge FCR-D Upward', 'Charge FCR-D Downward']]
-    line_data = data[['Date', 'Price Spot', 'Price FCR-D Upward', 'Price FCR-D Downward']]
-    bar_data = bar_data.melt(id_vars=['Date'], var_name='Component', value_name='Value')
-    line_data = line_data.melt(id_vars=['Date'], var_name='Component', value_name='Value')
 
-    # --- Ensure 'Date' is datetime ---
-    bar_data['Date'] = pd.to_datetime(bar_data['Date'])
-    line_data['Date'] = pd.to_datetime(line_data['Date'])
+    # Flatten index
+    data = data.reset_index().rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
 
-    # --- Filter for first 7 days ---
-    start_date = bar_data['Date'].min()
+    # Ensure datetime
+    data['Date'] = pd.to_datetime(data['Date'])
+
+    # -----------------------------------------------------------
+    # 2) RESHAPE INTO LONG FORMAT
+    # -----------------------------------------------------------
+
+    bar_components = ['Discharge Day-Ahead', 'Charge Day-Ahead','Discharge FCR-D Upward', 'Discharge FCR-D Downward','Charge FCR-D Upward', 'Charge FCR-D Downward']
+
+    line_components = ['Price Spot', 'Price Import','Price FCR-D Upward', 'Price FCR-D Downward']
+
+    bar_data = data[['Date'] + bar_components].melt(id_vars='Date', var_name='Component', value_name='Value')
+    line_data = data[['Date'] + line_components].melt(id_vars='Date', var_name='Component', value_name='Value')
+
+    line_data_FCR = line_data[line_data['Component'].str.contains('FCR-D')]
+
+    # -----------------------------------------------------------
+    # 3) DATE WINDOW (FIRST 7 DAYS)
+    # -----------------------------------------------------------
+    start_date = data['Date'].min()
     end_date = start_date + pd.Timedelta(days=7)
 
-    bar_data_7days = bar_data[(bar_data['Date'] >= start_date) & (bar_data['Date'] < end_date)]
-    line_data_7days = line_data[(line_data['Date'] >= start_date) & (line_data['Date'] < end_date)]
+    LabelSize = 16
+    TitleSize = 18
 
-    # combined plot where it has 2 y-axes
-    ele_summary_chart = alt.Chart(bar_data_7days).mark_bar().encode(
-        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=14, titleFontSize=16)),
-        y=alt.Y('sum(Value):Q', axis=alt.Axis(title='[kWh]', labelFontSize=14, titleFontSize=16)),
-        color=alt.Color('Component:N', scale=alt.Scale(scheme='category10'), legend=alt.Legend(title='', labelFontSize=14, titleFontSize=16)),
-    ).properties(
-        width=1200,
-        height=400
-    )
+    def filter_7d(df):
+        return df[(df['Date'] >= start_date) & (df['Date'] < end_date)]
 
-    ele_summary_chart_price = alt.Chart(line_data_7days).mark_line(color='orange', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill='white')).encode(
-        x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=14, titleFontSize=16)),
-        y=alt.Y('Value:Q', axis=alt.Axis(title='[SEK/kWh]', labelFontSize=14, titleFontSize=16)),
-        color=alt.Color('Component:N', scale=alt.Scale(scheme='category10'), legend=alt.Legend(title='', labelFontSize=14, titleFontSize=16)),
-    ).properties(
-        width=1200,
-        height=400
-    )
+    bar_7d      = filter_7d(bar_data)
+    line_7d     = filter_7d(line_data)
+    line_FCR_7d = filter_7d(line_data_FCR)
 
-    combined_chart = alt.layer(ele_summary_chart, ele_summary_chart_price).resolve_scale(
-        y='independent'  # Ensures each chart has its own y-axis
-    ).interactive()
-    # Save the chart to an HTML file
-    combined_chart.save(_path + '/oM_Plot_06_rEleOutputSummary_' + CaseName + '.html', embed_options={'renderer':'svg'})
-    # Save the chart to a PNG file
-    #combined_chart.save(_path + '/oM_Plot_rEleOutputSummary_' + CaseName + '.png')
+    # -----------------------------------------------------------
+    # 4) HELPER FUNCTIONS FOR PLOT BUILDING
+    # -----------------------------------------------------------
+
+    def make_bar_chart(df):
+        return (alt.Chart(df)
+                .mark_bar()
+                .encode(
+            x=alt.X('Date:T',axis=alt.Axis(title='',labelAngle=-90,format="%a, %b %d, %H:%M",tickCount=30,labelLimit=1000,labelFontSize=16,titleFontSize=18)),
+            y=alt.Y('sum(Value):Q',axis=alt.Axis(title='[kWh]',labelFontSize=LabelSize,titleFontSize=TitleSize)),
+            color=alt.Color('Component:N',scale=alt.Scale(scheme='category10'),legend=alt.Legend(title='', labelFontSize=LabelSize, titleFontSize=TitleSize)
+            )
+        ).properties(width=1200, height=400)
+                )
+
+    def make_line_chart(df):
+        return (alt.Chart(df)
+                .mark_line(strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False))
+                .encode(
+            x=alt.X('Date:T',axis=alt.Axis(title='',labelAngle=-90,format="%a, %b %d, %H:%M",tickCount=30,labelLimit=1000,labelFontSize=LabelSize,titleFontSize=TitleSize)),
+            y=alt.Y('Value:Q',axis=alt.Axis(title='[SEK/kWh]',labelFontSize=LabelSize,titleFontSize=TitleSize)),
+            color=alt.Color('Component:N',scale=alt.Scale(scheme='category10'),legend=alt.Legend(title='', labelFontSize=LabelSize, titleFontSize=TitleSize)
+            )
+        ).properties(width=1200, height=400)
+                )
+
+    def save_plot(chart, name):
+        chart.save(f"{_path}/oM_Plot_06_{name}_{CaseName}.html",embed_options={"renderer": "svg"})
+
+    # -----------------------------------------------------------
+    # 5) BUILD & SAVE ALL CHARTS (NO DUPLICATION)
+    # -----------------------------------------------------------
+
+    # Full period
+    save_plot(alt.layer(make_bar_chart(bar_data), make_line_chart(line_data)).resolve_scale(y='independent').interactive(),"rEleOutputSummary")
+
+    save_plot(make_line_chart(line_data), "rEleOutputPrices")
+    save_plot(make_line_chart(line_data_FCR), "rEleOutputFCRDPrices")
+
+    # 7 days
+    save_plot(alt.layer(make_bar_chart(bar_7d), make_line_chart(line_7d)).resolve_scale(y='independent').interactive(),"rEleOutputSummary_7days")
+
+    save_plot(make_line_chart(line_7d), "rEleOutputPrices_7days")
+    save_plot(make_line_chart(line_FCR_7d), "rEleOutputFCRDPrices_7days")
+
+    # -----------------------------------------------------------
+    # 1) COMPUTE NET POWER & FILTER OUT ZERO ROWS
+    # -----------------------------------------------------------
+
+    # Compute Net Power directly on the processed dataset
+    data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
+
+    # Filter out rows where NetPower = 0
+    data_filtered = data[data['NetPower'] != 0].copy()
+    # -----------------------------------------------------------
+    # 2) HELPER FUNCTION FOR SCATTER PLOTS
+    # -----------------------------------------------------------
+
+    def make_scatter(df, x_field, y_field, x_title, y_title, color_field, tooltip_fields):
+        return (
+            alt.Chart(df)
+            .mark_circle(size=70, opacity=0.6)
+            .encode(
+                x=alt.X(f'{x_field}:Q', axis=alt.Axis(title=x_title, labelFontSize=14, titleFontSize=16)),
+                y=alt.Y(f'{y_field}:Q', axis=alt.Axis(title=y_title, labelFontSize=14, titleFontSize=16)),
+                color=alt.Color(f'{color_field}:Q', scale=alt.Scale(scheme='redyellowgreen')),
+                tooltip=tooltip_fields)
+            .properties(width=700, height=500)
+            .configure_title(fontSize=18)
+        )
+
+    scatter_discharge = make_scatter(data_filtered, x_field='Price Spot', y_field='Discharge Day-Ahead', x_title='Spot Price [SEK/kWh]', y_title='Discharge [kWh]', color_field='Discharge Day-Ahead', tooltip_fields=['Date:T', 'Price Spot:Q', 'Discharge Day-Ahead:Q'])
+    scatter_discharge.save(f"{_path}/oM_Plot_07_rEleOutputScatter_{CaseName}.html", embed_options={'renderer': 'svg'})
+
+    scatter_charge    = make_scatter(data_filtered, x_field='Price Import', y_field='Charge Day-Ahead', x_title='Import Price [SEK/kWh]', y_title='Charge [kWh]', color_field='Charge Day-Ahead', tooltip_fields=['Date:T', 'Price Import:Q', 'Charge Day-Ahead:Q'])
+
+    scatter_charge.save(f"{_path}/oM_Plot_07_rEleChargeScatter_{CaseName}.html", embed_options={'renderer': 'svg'})
 
     # ---- Index & small helpers --------------------------------------------------
     I_psn = pd.MultiIndex.from_tuples(model.psn)
