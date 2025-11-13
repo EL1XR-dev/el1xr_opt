@@ -982,11 +982,31 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     # Extract + flatten columns
     data = OutputResults[keep_cols]
-    data.columns = data.columns.get_level_values(0)
+    # data.columns = data.columns.get_level_values(0)
+    # data.columns = [f"{a}_{b}" if b else a for a, b in data.columns]
+
+    # Step 0 — Rebuild the MultiIndex columns (important!)
+    lvl0 = data.columns.get_level_values(0)  # Component
+    lvl1 = data.columns.get_level_values(1)  # Technology
+    data.columns = pd.MultiIndex.from_arrays([lvl0, lvl1])
+
+    # Step 1 — Stack the first column level = Component
+    stacked = data.stack(level=1, future_stack=True)
+
+    # After stacking:
+    # Index = (period, scenario, time, timestamp, Technology)
+    # Columns = Component
+
+    # Step 2 — Name the stacked value column
+    stacked.name = "Value"
+
+    # Step 3 — Convert to tidy DataFrame
+    tidy = stacked.reset_index()
+    tidy = tidy.rename(columns={"level_4": "Technology"})  # in case pandas names it level_4
 
     # Flatten index
-    data = data.reset_index().rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
-
+    data = tidy.reset_index().rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
+    data = data.fillna(0)
     # Ensure datetime
     data['Date'] = pd.to_datetime(data['Date'])
 
@@ -998,8 +1018,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     line_components = ['Price Spot', 'Price Import','Price FCR-D Upward', 'Price FCR-D Downward']
 
-    bar_data = data[['Date'] + bar_components].melt(id_vars='Date', var_name='Component', value_name='Value')
-    line_data = data[['Date'] + line_components].melt(id_vars='Date', var_name='Component', value_name='Value')
+    bar_data = data[['Date', 'Technology'] + bar_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
+    line_data = data[['Date', 'Technology'] + line_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
 
     line_data_FCR = line_data[line_data['Component'].str.contains('FCR-D')]
 
@@ -1068,11 +1088,14 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # 1) COMPUTE NET POWER & FILTER OUT ZERO ROWS
     # -----------------------------------------------------------
 
-    # Compute Net Power directly on the processed dataset
-    data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
+    # # Compute Net Power directly on the processed dataset
+    # data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
+    data_filtered = pd.pivot_table(data, index=['Date', 'Period', 'Scenario', 'LoadLevel'], values=['Price Spot', 'Price Import', 'Discharge Day-Ahead', 'Charge Day-Ahead']).reset_index()
+    data_filtered['NetPower'] = data_filtered['Discharge Day-Ahead'] - data_filtered['Charge Day-Ahead']
+    # data_filtered = data_filtered[data_filtered['NetPower'] != 0].copy()
 
-    # Filter out rows where NetPower = 0
-    data_filtered = data[data['NetPower'] != 0].copy()
+    # # # Filter out rows where Discharge Day-Ahead = 0 and Charge Day-Ahead = 0
+    # data_filtered = data[(data['Discharge Day-Ahead'] != 0) | (data['Charge Day-Ahead'] != 0)].copy()
     # -----------------------------------------------------------
     # 2) HELPER FUNCTION FOR SCATTER PLOTS
     # -----------------------------------------------------------
