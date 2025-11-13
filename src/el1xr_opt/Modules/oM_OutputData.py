@@ -567,7 +567,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     main_chart = (chart_cost | chart_rev).resolve_scale(color="independent")
 
     # Save the chart
-    main_chart.save(f"{_path}/oM_Plot_01_rObjFunComponents_{CaseName}.html", embed_options={'renderer':'svg'})
+    save_chart(main_chart, _path, f'oM_Plot_01_rObjFunComponents_{CaseName}.html')
 
     # %% outputting the electrical energy balance
     #%%  Power balance per period, scenario, and load level
@@ -717,9 +717,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     )
 
     # --- Save chart as HTML (SVG embedded) ---
-    main_chart.save(f"{_path}/oM_Plot_03_rEleDemand_{CaseName}.html", embed_options={'renderer': 'svg'})
-    # Save the chart to a PNG file
-    #chart.save(_path + '/oM_Plot_rElectricityDemand_' + CaseName + '.png')
+    save_chart(main_chart, _path, f'oM_Plot_03_rEleDemand_{CaseName}.html')
     if sum(model.Par['pEleDemFlexible'][ed] for ed in model.ed) != 0.0:
         vDemand_chart = alt.Chart(Output_vDemand).mark_line(color='blue', point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
             # x='Date:T',
@@ -786,9 +784,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         ).interactive()
 
         # Save the chart to an HTML file
-        chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_' + CaseName + '.html', embed_options={'renderer':'svg'})
-        # Save the chart to a PNG file
-        #chart.save(_path + '/oM_Plot_rEleStateOfEnergy_' + CaseName + '.png')
+        save_chart(chart, _path, f'oM_Plot_05_rEleStateOfEnergy_{CaseName}.html')
 
         # --- Ensure 'Date' is datetime ---
         Output_EleSOE['Date'] = pd.to_datetime(Output_EleSOE['Date'])
@@ -820,7 +816,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         ).interactive()
 
         # Save the chart to an HTML file
-        chart.save(_path + '/oM_Plot_05_rEleStateOfEnergy_7days_' + CaseName + '.html', embed_options={'renderer':'svg'})
+        save_chart(chart, _path, f'oM_Plot_05_rEleStateOfEnergy_7days_{CaseName}.html')
 
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
