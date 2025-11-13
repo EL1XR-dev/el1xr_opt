@@ -231,7 +231,7 @@ def _write_parameter_to_csv(path, par, par_name, case_name):
         writer.writerow(['Name', 'Index', 'Value'])
         if par.is_indexed():
             for index in par:
-                value = par[index] if (isinstance(index, tuple) and not par.mutable) or not par.mutable else par[index].value
+                value = par[index] if not par.mutable else par[index].value
                 writer.writerow([par_name, index, value])
         else:
             writer.writerow([par_name, 'NA', par.value])
