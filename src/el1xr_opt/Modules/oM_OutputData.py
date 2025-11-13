@@ -753,9 +753,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         # plot
         # Base chart for SOC with the primary y-axis and dashed line style
         ele_soe_chart = alt.Chart(Output_EleSOE).mark_line(color='green', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE')),
-            color = 'Component:N'
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE', labelFontSize=16, titleFontSize=18)),
+            color=alt.Color('Component:N', legend=alt.Legend(title='Component', labelFontSize=16, titleFontSize=18))
         )
 
     if len(model.egv):
@@ -772,8 +772,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         Output_FixedAvailability = Output_FixedAvailability[Output_FixedAvailability['Component'].isin([list(model.egs)[0]])]
         # Base chart for FixedAvailability with the primary y-axis and dashed line style
         ele_fAv_chart = alt.Chart(Output_FixedAvailability).mark_point(color='red').encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right')),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right', labelFontSize=16, titleFontSize=18)),
         )
 
         chart = alt.layer(ele_soe_chart, ele_fAv_chart).resolve_scale(
@@ -798,14 +798,14 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         ava_data_7days = Output_FixedAvailability[(Output_FixedAvailability['Date'] >= start_date) & (Output_FixedAvailability['Date'] < end_date)]
 
         ele_soe_chart = alt.Chart(soe_data_7days).mark_line(color='green', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE')),
-            color = 'Component:N'
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('SOE:Q', axis=alt.Axis(title='SOE', labelFontSize=16, titleFontSize=18)),
+            color = alt.Color('Component:N', legend=alt.Legend(title='Component', labelFontSize=16, titleFontSize=18))
         )
 
         ele_fAv_chart = alt.Chart(ava_data_7days).mark_point(color='red').encode(
-            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right')),
+            x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000, labelFontSize=16, titleFontSize=18)),
+            y=alt.Y('FixedAvailability:Q', axis=alt.Axis(title='FixedAvailability', orient='right', labelFontSize=16, titleFontSize=18)),
         )
 
         chart = alt.layer(ele_soe_chart, ele_fAv_chart).resolve_scale(
