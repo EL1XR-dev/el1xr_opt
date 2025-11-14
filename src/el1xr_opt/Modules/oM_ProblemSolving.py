@@ -9,7 +9,10 @@
 import time          # count clock time
 import os
 import psutil        # access the number of CPUs
-from pyomo.environ import Var, Suffix, SolverFactory
+import logging
+from pyomo.opt     import SolverFactory, SolverStatus, TerminationCondition
+from pyomo.environ import Var, Suffix
+from pyomo.util.infeasible import log_infeasible_constraints
 from .oM_SolverSetup import pick_solver
 from .utils.oM_Utils import log_time
 
@@ -153,6 +156,12 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
             tee=True,
             report_timing=True,
         )
+
+    # print('Termination condition: ', SolverResults.solver.termination_condition)
+    # if SolverResults.solver.termination_condition == TerminationCondition.infeasible or SolverResults.solver.termination_condition == TerminationCondition.maxTimeLimit or SolverResults.solver.termination_condition == TerminationCondition.infeasible.maxIterations:
+    #     log_infeasible_constraints(optmodel, log_expression=True, log_variables=True)
+    #     logging.basicConfig(filename=f'{_path}/openTEPES_infeasibilities_{CaseName}_{p}_{sc}_{st}.log', level=logging.INFO)
+    #     raise ValueError('Problem infeasible')
 
     SolverResults.write()  # summary of results
 
