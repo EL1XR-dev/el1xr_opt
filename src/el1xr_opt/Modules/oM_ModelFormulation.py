@@ -1224,15 +1224,15 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the minimum up and down time:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
-    # def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
-    #     if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv:
-    #         if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] < model.Par['pVarFixedAvailability'][egs][p,sc,n]:
-    #             return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= model.Par['pEleMinStorage'][egs][p,sc,n] * model.factor1
-    #         else:
-    #             return Constraint.Skip
-    #     else:
-    #         return Constraint.Skip
-    # optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
+    def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
+        if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv:
+            if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] < model.Par['pVarFixedAvailability'][egs][p,sc,n]:
+                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] == model.Par['pEleMinStorage'][egs][p,sc,n] * model.factor1
+            else:
+                return Constraint.Skip
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
 
     def eEleTotalMaxChargeConditioned(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
@@ -1254,8 +1254,9 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy
@@ -1271,8 +1272,9 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1285,8 +1287,9 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1316,8 +1319,9 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p, sc, d, er] >= adjusted_buy
         else:
@@ -1339,8 +1343,9 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er]
+            adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er] + sum_factor
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
@@ -1353,8 +1358,9 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er]
+            adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er] + sum_factor
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
