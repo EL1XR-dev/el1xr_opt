@@ -541,7 +541,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     df = Output_AdditionalCosts.copy()
 
     # --- 1. Separate cost and revenue ---
-    df["Type"] = df["EUR"].apply(lambda x: "Cost" if x >= 0 else "Revenue")
+    # type -- Cost is Cost is in the name of the component, and Revenue otherwise
+    df["Type"] = df["Component"].apply(lambda x: "Cost" if "Cost" in x else "Revenue")
+    # df["Type"] = df["EUR"].apply(lambda x: "Cost" if x >= 0 else "Revenue")
     df["AbsEUR"] = df["EUR"].abs()
 
     # --- 2. Compute percentages within each Type ---
@@ -975,7 +977,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         'FCR-D Downward Discharge [kWh]': 'Discharge FCR-D Downward',
         'Consumption/Charge [kWh]': 'Charge Day-Ahead',
         'FCR-D Upward Charge [kWh]': 'Charge FCR-D Upward',
-        'FCR-D Downward Charge [kWh]': 'Charge FCR-D Downward'
+        'FCR-D Downward Charge [kWh]': 'Charge FCR-D Downward',
+        'Availability [0,1]': 'Availability'
     }
 
     keep_cols = list(rename_cols.keys())
@@ -1005,23 +1008,45 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     tidy = tidy.rename(columns={"level_4": "Technology"})  # in case pandas names it level_4
 
     # Flatten index
-    data = tidy.reset_index().rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
-    data = data.fillna(0)
-    # Ensure datetime
+    data = tidy.rename(columns={'level_0': 'Period','level_1': 'Scenario','level_2': 'LoadLevel','level_3': 'Date'}).rename(columns=rename_cols)
+    data.set_index(['Period', 'Scenario', 'LoadLevel', 'Date', 'Technology'], inplace=True)
+
+    data = data.stack().reset_index().rename(columns={'level_5': 'Component', 0: 'Value'})
+
+
+
+    # data = data.fillna(0)
+    # # Ensure datetime
     data['Date'] = pd.to_datetime(data['Date'])
 
     # -----------------------------------------------------------
     # 2) RESHAPE INTO LONG FORMAT
     # -----------------------------------------------------------
 
-    bar_components = ['Discharge Day-Ahead', 'Charge Day-Ahead','Discharge FCR-D Upward', 'Discharge FCR-D Downward','Charge FCR-D Upward', 'Charge FCR-D Downward']
+    bar_components = ['Discharge Day-Ahead', 'Charge Day-Ahead']
+    # bar_components = ['Discharge Day-Ahead', 'Charge Day-Ahead','Discharge FCR-D Upward', 'Discharge FCR-D Downward','Charge FCR-D Upward', 'Charge FCR-D Downward']
 
-    line_components = ['Price Spot', 'Price Import','Price FCR-D Upward', 'Price FCR-D Downward']
+    line_components = ['Price Spot', 'Price Import', 'Availability']
+    # line_components = ['Price Spot', 'Price Import','Price FCR-D Upward', 'Price FCR-D Downward']
 
-    bar_data = data[['Date', 'Technology'] + bar_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
-    line_data = data[['Date', 'Technology'] + line_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
+    # bar_data is created by filtering the list bar_components from columns component of data
+    bar_data = data[['Date','Technology', 'Component','Value']][data['Component'].isin(bar_components)]
+    line_data = data[['Date','Technology', 'Component','Value']][data['Component'].isin(line_components)]
+
+    # bar_data = data[['Date', 'Technology'] + bar_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
+    # line_data = data[['Date', 'Technology'] + line_components].melt(id_vars=['Date','Technology'], var_name='Component', value_name='Value')
+    #
+    # bar_data = pd.pivot_table(bar_data, index=['Date', 'Component'], values='Value', aggfunc='sum').reset_index()
+    # line_data = pd.pivot_table(line_data, index=['Date', 'Component'], values='Value', aggfunc='mean').reset_index()
+    #
+    # bar_data = bar_data.sort_values('Date')
+    # line_data = line_data.sort_values('Date')
 
     line_data_FCR = line_data[line_data['Component'].str.contains('FCR-D')]
+
+    line_data_FCR = pd.pivot_table(line_data_FCR, index=['Date', 'Component'], values='Value', aggfunc='mean').reset_index()
+
+    line_data_FCR = line_data_FCR.sort_values('Date')
 
     # -----------------------------------------------------------
     # 3) DATE WINDOW (FIRST 7 DAYS)
@@ -1039,6 +1064,10 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     line_7d     = filter_7d(line_data)
     line_FCR_7d = filter_7d(line_data_FCR)
 
+    bar_7d = bar_7d.sort_values('Date')
+    line_7d = line_7d.sort_values('Date')
+    line_FCR_7d = line_FCR_7d.sort_values('Date')
+
     # -----------------------------------------------------------
     # 4) HELPER FUNCTIONS FOR PLOT BUILDING
     # -----------------------------------------------------------
@@ -1049,19 +1078,21 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
                 .encode(
             x=alt.X('Date:T',axis=alt.Axis(title='',labelAngle=-90,format="%a, %b %d, %H:%M",tickCount=30,labelLimit=1000,labelFontSize=16,titleFontSize=18)),
             y=alt.Y('sum(Value):Q',axis=alt.Axis(title='[kWh]',labelFontSize=LabelSize,titleFontSize=TitleSize)),
-            color=alt.Color('Component:N',scale=alt.Scale(scheme='category10'),legend=alt.Legend(title='', labelFontSize=LabelSize, titleFontSize=TitleSize)
-            )
+            color=alt.Color('Component:N',scale=alt.Scale(scheme='category10'),legend=alt.Legend(title='', labelFontSize=LabelSize, titleFontSize=TitleSize),
+            ),
+            order=alt.Order("Date:T")
         ).properties(width=1200, height=400)
                 )
 
     def make_line_chart(df):
         return (alt.Chart(df)
-                .mark_line(strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False))
+                .mark_line(strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=True, size=50, color='black'))
                 .encode(
             x=alt.X('Date:T',axis=alt.Axis(title='',labelAngle=-90,format="%a, %b %d, %H:%M",tickCount=30,labelLimit=1000,labelFontSize=LabelSize,titleFontSize=TitleSize)),
             y=alt.Y('Value:Q',axis=alt.Axis(title='[SEK/kWh]',labelFontSize=LabelSize,titleFontSize=TitleSize)),
             color=alt.Color('Component:N',scale=alt.Scale(scheme='category10'),legend=alt.Legend(title='', labelFontSize=LabelSize, titleFontSize=TitleSize)
-            )
+            ),
+            order=alt.Order("Date:T")
         ).properties(width=1200, height=400)
                 )
 
@@ -1090,7 +1121,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     # # Compute Net Power directly on the processed dataset
     # data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
-    data_filtered = pd.pivot_table(data, index=['Date', 'Period', 'Scenario', 'LoadLevel'], values=['Price Spot', 'Price Import', 'Discharge Day-Ahead', 'Charge Day-Ahead']).reset_index()
+    data_filtered = pd.pivot_table(data, index=['Date', 'Period', 'Scenario', 'LoadLevel'], columns=['Component'], values='Value').reset_index()
     data_filtered['NetPower'] = data_filtered['Discharge Day-Ahead'] - data_filtered['Charge Day-Ahead']
     # data_filtered = data_filtered[data_filtered['NetPower'] != 0].copy()
 
