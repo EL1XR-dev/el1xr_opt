@@ -1343,7 +1343,7 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er] + sum_factor
             # Peak-hour logic
@@ -1358,7 +1358,7 @@ def create_constraints(model, optmodel, indlog):
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
             buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
             adjusted_buy = buy_factor * optmodel.vEleBuy[p,sc,n,er] + sum_factor
             # Peak-hour logic
