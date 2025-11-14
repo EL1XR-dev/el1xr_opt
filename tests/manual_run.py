@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]  # Add more case names as needed
 EXPECTED_COSTS = {
-    "Grid1": 9519.755144361474,
-    "Home1":  672.289224669483}  # Replace with actual expected costs
+    "Grid1": 9341.748957125423,
+    "Home1":  569.0366285211821}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
@@ -29,7 +29,7 @@ def setup_test_case(case_name):
         case=case_name,
         solver="gurobi",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
-        rawresults="False",
+        rawresults="True",
         plots="True",
         indlog="False",
     )
