@@ -965,7 +965,7 @@ def create_constraints(model, optmodel, indlog):
     def eIncompatibilityEleChargeOutflows(optmodel, p,sc,n,egs):
         if (p,sc,egs) in model.psegso:
             if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
-                return (optmodel.vEleEnergyOutflows[p,sc,n,egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n] <= 1.0
+                return (optmodel.vEleEnergyOutflows[p,sc,n,egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
             else:
                 return Constraint.Skip
         else:
@@ -1256,7 +1256,7 @@ def create_constraints(model, optmodel, indlog):
             buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
+            adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy
@@ -1274,7 +1274,7 @@ def create_constraints(model, optmodel, indlog):
             buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
+            adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1289,7 +1289,7 @@ def create_constraints(model, optmodel, indlog):
             buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
+            adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1321,7 +1321,7 @@ def create_constraints(model, optmodel, indlog):
             buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
             sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
-            adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er] + sum_factor
+            adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p, sc, d, er] >= adjusted_buy
         else:
