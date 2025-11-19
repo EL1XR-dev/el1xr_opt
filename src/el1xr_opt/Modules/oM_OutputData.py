@@ -824,13 +824,13 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
-    OutputResults1a = pd.Series(data=[ (sum((optmodel.vEleGenCommitment[p,sc,n,egt]() * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]()) * model.Par['pDuration'][p,sc,n] for egt  in model.egt  if (nd,egt) in model.n2eg and (gt,egt) in model.t2eg) + sum((optmodel.vEleStorDischarge[p,sc,n,egs]() * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs  in model.egs  if (nd,egs ) in model.n2eg and (gt,egs ) in model.t2eg)) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
+    OutputResults1a = pd.Series(data=[ (sum((optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]()) * model.Par['pDuration'][p,sc,n] for egt  in model.egt  if (nd,egt) in model.n2eg and (gt,egt) in model.t2eg) + sum((optmodel.vEleStorDischarge[p,sc,n,egs]() * model.Par['pEleMinPower'][egs][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs  in model.egs  if (nd,egs ) in model.n2eg and (gt,egs ) in model.t2eg)) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
     OutputResults1a['Component'] = 'Production/Discharge [kWh]'
     OutputResults1a['EleGeneration'] *= (1/model.factor1)
     OutputResults1a = OutputResults1a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults1a = OutputResults1a.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleGeneration', aggfunc='sum')
     # series of electricity consumption
-    OutputResults2a = pd.Series(data=[-sum((optmodel.vEleStorCharge[p,sc,n,egs]() * model.Par['pEleMinCharge'][egs][p,sc,n] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleConsumption').reset_index()
+    OutputResults2a = pd.Series(data=[-sum((optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]()) * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleConsumption').reset_index()
     OutputResults2a['Component'] = 'Consumption/Charge [kWh]'
     OutputResults2a['EleConsumption'] *= (1/model.factor1)
     OutputResults2a = OutputResults2a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
