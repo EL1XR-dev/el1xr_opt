@@ -960,31 +960,31 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the total charge of an H2 ESS unit:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
-    # Incompatibility between charge and outflows use of an ESS [p.u.]
-    def eIncompatibilityEleChargeOutflows(optmodel, p,sc,n,egs):
-        if (p,sc,egs) in model.psegso:
-            if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
-                return (optmodel.vEleEnergyOutflows[p,sc,n,egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
-            else:
-                return Constraint.Skip
-        else:
-            return Constraint.Skip
-    optmodel.__setattr__('eIncompatibilityEleChargeOutflows', Constraint(optmodel.psnegs, rule=eIncompatibilityEleChargeOutflows, doc='incompatibility between charge and outflows use [p.u.]'))
-
-    # def eIncompatibilityHydChargeOutflows(optmodel, p,sc,n, hs):
-    #     if (p,sc,hs) in model.pseso:
-    #         if model.Par['pMaxCharge2ndBlock'][hs][p,sc,n]:
-    #             return (optmodel.vHydEnergyOutflows[p,sc,n,hs] + optmodel.vHydTotalCharge2ndBlock[p,sc,n,hs]) / model.Par['pHydMaxCharge2ndBlock'][hs][p,sc,n] <= 1.0
+    # # Incompatibility between charge and outflows use of an ESS [p.u.]
+    # def eIncompatibilityEleChargeOutflows(optmodel, p,sc,n,egs):
+    #     if (p,sc,egs) in model.psegso:
+    #         if model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
+    #             return (optmodel.vEleEnergyOutflows[p,sc,n,egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
     #         else:
     #             return Constraint.Skip
     #     else:
     #         return Constraint.Skip
-    # optmodel.__setattr__('eIncompatibilityHydChargeOutflows', Constraint(optmodel.psnhgs, rule=eIncompatibilityHydChargeOutflows, doc='incompatibility between charge and outflows use [p.u.]'))
-
-    # print if the constraints object len is greater than 0
-    if len(optmodel.eIncompatibilityEleChargeOutflows) > 0: # or len(optmodel.eIncompatibilityHydChargeOutflows) > 0:
-        log_time('--- Declaring the incompatibility between charge and outflows use:', StartTime, ind_log=indlog)
-        StartTime = time.time() # to compute elapsed time
+    # optmodel.__setattr__('eIncompatibilityEleChargeOutflows', Constraint(optmodel.psnegs, rule=eIncompatibilityEleChargeOutflows, doc='incompatibility between charge and outflows use [p.u.]'))
+    #
+    # # def eIncompatibilityHydChargeOutflows(optmodel, p,sc,n, hs):
+    # #     if (p,sc,hs) in model.pseso:
+    # #         if model.Par['pMaxCharge2ndBlock'][hs][p,sc,n]:
+    # #             return (optmodel.vHydEnergyOutflows[p,sc,n,hs] + optmodel.vHydTotalCharge2ndBlock[p,sc,n,hs]) / model.Par['pHydMaxCharge2ndBlock'][hs][p,sc,n] <= 1.0
+    # #         else:
+    # #             return Constraint.Skip
+    # #     else:
+    # #         return Constraint.Skip
+    # # optmodel.__setattr__('eIncompatibilityHydChargeOutflows', Constraint(optmodel.psnhgs, rule=eIncompatibilityHydChargeOutflows, doc='incompatibility between charge and outflows use [p.u.]'))
+    #
+    # # print if the constraints object len is greater than 0
+    # if len(optmodel.eIncompatibilityEleChargeOutflows) > 0: # or len(optmodel.eIncompatibilityHydChargeOutflows) > 0:
+    #     log_time('--- Declaring the incompatibility between charge and outflows use:', StartTime, ind_log=indlog)
+    #     StartTime = time.time() # to compute elapsed time
 
     # Logical relation between commitment, startup and shutdown status of a committed unit (all except the VRES units) [p.u.]
     def eEleCommitmentStartupShutdown(optmodel, p,sc,n,egt):
@@ -1223,15 +1223,15 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the minimum up and down time:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
-    def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
-        if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv:
-            if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] < model.Par['pVarFixedAvailability'][egs][p,sc,n]:
-                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] == model.Par['pEleMinStorage'][egs][p,sc,n] * model.factor1
-            else:
-                return Constraint.Skip
-        else:
-            return Constraint.Skip
-    optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
+    # def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
+    #     if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv:
+    #         if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] < model.Par['pVarFixedAvailability'][egs][p,sc,n]:
+    #             return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] == model.Par['pEleMinStorage'][egs][p,sc,n] * model.factor1
+    #         else:
+    #             return Constraint.Skip
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
 
     def eEleTotalMaxChargeConditioned(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
