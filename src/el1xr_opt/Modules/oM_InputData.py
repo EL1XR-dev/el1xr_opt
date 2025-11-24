@@ -265,6 +265,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     parameters_dict['pEleNetSwitching'         ] = parameters_dict['pEleNetSwitching'         ].map(idxDict)
     parameters_dict['pHydNetBinaryInvestment'  ] = parameters_dict['pHydNetBinaryInvestment'  ].map(idxDict)
+    parameters_dict['pEleGenNoDayAhead'        ] = parameters_dict['pEleGenNoDayAhead'        ].map(idxDict)
     parameters_dict['pEleGenNoFCRD'            ] = parameters_dict['pEleGenNoFCRD'            ].map(idxDict)
     parameters_dict['pEleGenMaxCommitment'     ] = parameters_dict['pEleGenMaxCommitment'     ].map(idxDict)
     parameters_dict['pHydGenStandByStatus'     ] = parameters_dict['pHydGenStandByStatus'     ].map(idxDict)
@@ -1407,6 +1408,12 @@ def create_variables(model, optmodel, indlog):
                 if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
+
+    # if pEleGenNoDayAhead == 1, fix the day-ahead market variables to zero
+    for idx in model.psnegnr:
+        if model.Par['pEleGenNoDayAhead'][idx[-1]] == 1:
+            optmodel.vEleTotalCharge2ndBlock[idx].fix(0.0)
+            optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
 
     # if pEleGenNoFCRD == 1, fix the frequency containment reserve variables to zero
     for idx in model.psnegnr:
