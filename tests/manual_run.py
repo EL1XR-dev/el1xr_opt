@@ -12,10 +12,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
-# CASE_NAMES = ["Home1"]  # Add more case names as needed
+# CASE_NAMES = ["Home2_UC2_EV_03_V1G_wDoD"]  # Add more case names as needed
+# CASE_NAMES = ["Home1"]
 EXPECTED_COSTS = {
-    "Grid1": 9341.748957125423,
-    "Home1":  569.0366285211821}  # Replace with actual expected costs
+    "Grid1": 9577.134752013746,
+    # "Home2_UC2_EV_03_V1G_wDoD":  569.0366285211821}  # Replace with actual expected costs
+    "Home1": 565.6711946788637}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
@@ -26,8 +28,10 @@ def setup_test_case(case_name):
         dir=os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
         ),
+        # dir=r"C:\Users\erikal\OneDrive - RISE\Documents\GitHub\Aurora\MS2",
+        # dir=r"C:\Users\erikal\OneDrive - RISE\Aurora - EPS - Main\WS2\MS2_executions\Cases",
         case=case_name,
-        solver="gurobi",  # You can change the solver here
+        solver="highs",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="True",
         plots="True",
@@ -56,7 +60,7 @@ def setup_test_case(case_name):
             if not match.empty:
                 start_row = original_duration_df.index.get_loc(match[0])
                 print(f'Found start row for modification at index: {start_row}')  # Added print for console feedback
-                modify_and_save_csv(original_duration_df, "Duration", start_row, 720, duration_csv, 0)
+                modify_and_save_csv(original_duration_df, "Duration", start_row, 744, duration_csv, 0)
         else:
             print("Duration column not found in the DataFrame.")  # Added print for console feedback
 
