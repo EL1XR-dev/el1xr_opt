@@ -1253,7 +1253,7 @@ def create_variables(model, optmodel, indlog):
         # fixing spillage based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
         # if model.Par['pVarFixedAvailability'][egs][idx[:3]] == 1:  # no storage operation
         optmodel.__getattribute__('vEleSpillage')[idx].fix(0.0)
-        if model.Par['pEleGenMaximumPower'][egs] >= 1e-5:
+        if model.Par['pEleGenMaximumPower'][egs] <= 1e-5:
             optmodel.__getattribute__('vEleStorDischarge')[idx].fix(0.0)
             nFixedVariables += 1.0
         nFixedVariables += 1.0
