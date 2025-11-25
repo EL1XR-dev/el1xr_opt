@@ -465,12 +465,26 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDisDownDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDisDownDischargeBound, doc='FCR-D downward discharge bound'))
 
-    # def eEleInflowsCharge(optmodel, p,sc,n,egs):
-    #     if model.Par['pEleMaxInflows'][egs][p,sc,n] and model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleGenNoDayAhead'][egs] == 1:
-    #         return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMaxInflows'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
-    #     else:
-    #         return Constraint.Skip
-    # optmodel.__setattr__('eEleInflowsCharge', Constraint(optmodel.psnegs, rule=eEleInflowsCharge, doc='Energy inflows to charge bound'))
+    def eEleInflowsCharge(optmodel, p,sc,n,egs):
+        if model.Par['pEleMaxInflows'][egs][p,sc,n] and model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleGenNoDayAhead'][egs] == 1:
+            return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMaxInflows'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleInflowsCharge', Constraint(optmodel.psnegs, rule=eEleInflowsCharge, doc='Energy inflows to charge bound'))
+
+    def eEleStorageEnduranceUp(optmodel, p,sc,n,egs):
+        if model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleMaxStorage'][egs][p,sc,n]:
+            return optmodel.vEleInventory[p,sc,n,egs] >= (model.Par['pEleGenEndurance'][egs]/60) / model.Par['pEleGenEfficiency_discharge'][egs] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorageEnduranceUp', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUp, doc='Storage endurance for FCR-D upward'))
+
+    def eEleStorageEnduranceDown(optmodel, p,sc,n,egs):
+        if model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleMaxStorage'][egs][p,sc,n]:
+            return model.Par['pEleMaxStorage'][egs][p,sc,n] - optmodel.vEleInventory[p,sc,n,egs] >= (model.Par['pEleGenEndurance'][egs]/60) * model.Par['pEleGenEfficiency_charge'][egs] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D downward'))
 
     # print if the constraints object len is greater than 0
     if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
@@ -770,14 +784,14 @@ def create_constraints(model, optmodel, indlog):
     # Maximum and minimum output of the second block of an electricity ESS [p.u.]
     def eEleMaxESSOutput2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxPower'][egs][p,sc,n]:
-            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
+            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxESSOutput2ndBlock', Constraint(optmodel.psnegs, rule=eEleMaxESSOutput2ndBlock, doc='max output of the second block of an ESS [p.u.]'))
 
     def eEleMinESSOutput2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMinPower'][egs][p,sc,n]:
-            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pEleMinPower'][egs][p,sc,n] >= optmodel.vEleStorDischarge[p,sc,n,egs]
+            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pEleMinPower'][egs][p,sc,n] >= 0.0
         elif model.Par['pEleMinPower'][egs][p,sc,n] == 0.0:
             return optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] >= 0.0
         else:
@@ -801,14 +815,14 @@ def create_constraints(model, optmodel, indlog):
     # Maximum and minimum charge of an ESS [p.u.]
     def eEleMaxESSCharge2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n]:
-            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
+            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxESSCharge2ndBlock', Constraint(optmodel.psnegs, rule=eEleMaxESSCharge2ndBlock, doc='max charge of an ESS [p.u.]'))
 
     def eEleMinESSCharge2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n]:
-            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pEleMinCharge'][egs][p,sc,n] >= optmodel.vEleStorCharge[p,sc,n,egs]
+            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pEleMinCharge'][egs][p,sc,n] >= 0.0
         elif model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0:
             return optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] >= 0.0
         else:
