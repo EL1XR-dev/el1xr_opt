@@ -160,7 +160,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
     # print('Termination condition: ', SolverResults.solver.termination_condition)
     # if SolverResults.solver.termination_condition == TerminationCondition.infeasible or SolverResults.solver.termination_condition == TerminationCondition.maxTimeLimit or SolverResults.solver.termination_condition == TerminationCondition.infeasible.maxIterations:
     #     log_infeasible_constraints(optmodel, log_expression=True, log_variables=True)
-    #     logging.basicConfig(filename=f'{_path}/openTEPES_infeasibilities_{CaseName}_{p}_{sc}_{st}.log', level=logging.INFO)
+    #     logging.basicConfig(filename=f'{_path}/oM_Infeasibilities_{CaseName}.log', level=logging.INFO)
     #     raise ValueError('Problem infeasible')
 
     SolverResults.write()  # summary of results
