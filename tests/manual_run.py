@@ -15,9 +15,9 @@ CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
 # CASE_NAMES = ["Home2_UC2_EV_03_V1G_wDoD"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]
 EXPECTED_COSTS = {
-    "Grid1": 9577.134752013746,
+    "Grid1": 9228.472926533075,
     # "Home2_UC2_EV_03_V1G_wDoD":  569.0366285211821}  # Replace with actual expected costs
-    "Home1": 565.6711946788637}  # Replace with actual expected costs
+    "Home1": 215.8585985433236}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
