@@ -465,6 +465,13 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDisDownDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDisDownDischargeBound, doc='FCR-D downward discharge bound'))
 
+    # def eEleInflowsCharge(optmodel, p,sc,n,egs):
+    #     if model.Par['pEleMaxInflows'][egs][p,sc,n] and model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleGenNoDayAhead'][egs] == 1:
+    #         return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMaxInflows'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleInflowsCharge', Constraint(optmodel.psnegs, rule=eEleInflowsCharge, doc='Energy inflows to charge bound'))
+
     # print if the constraints object len is greater than 0
     if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
         len(optmodel.eEleRelationFreqDisUpBid2Gen) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Gen) > 0 or
