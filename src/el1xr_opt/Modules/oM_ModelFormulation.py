@@ -473,15 +473,15 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleInflowsCharge', Constraint(optmodel.psnegs, rule=eEleInflowsCharge, doc='Energy inflows to charge bound'))
 
     def eEleStorageEnduranceUp(optmodel, p,sc,n,egs):
-        if model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleMaxStorage'][egs][p,sc,n]:
-            return optmodel.vEleInventory[p,sc,n,egs] >= (model.Par['pEleGenEndurance'][egs]/60) / model.Par['pEleGenEfficiency_discharge'][egs] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]
+        if model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleMaxStorage'][egs][p,sc,n] and n != model.n.first():
+            return optmodel.vEleInventory[p,sc,n,egs] >= (model.Par['pEleGenEndurance'][egs]/60) / model.Par['pEleGenEfficiency_discharge'][egs] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,1),egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceUp', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUp, doc='Storage endurance for FCR-D upward'))
 
     def eEleStorageEnduranceDown(optmodel, p,sc,n,egs):
-        if model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleMaxStorage'][egs][p,sc,n]:
-            return model.Par['pEleMaxStorage'][egs][p,sc,n] - optmodel.vEleInventory[p,sc,n,egs] >= (model.Par['pEleGenEndurance'][egs]/60) * model.Par['pEleGenEfficiency_charge'][egs] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]
+        if model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleMaxStorage'][egs][p,sc,n] and n != model.n.first():
+            return model.Par['pEleMaxStorage'][egs][p,sc,n] - optmodel.vEleInventory[p,sc,n,egs] >= (model.Par['pEleGenEndurance'][egs]/60) * model.Par['pEleGenEfficiency_charge'][egs] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D downward'))
