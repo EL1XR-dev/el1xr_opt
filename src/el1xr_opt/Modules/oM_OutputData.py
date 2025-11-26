@@ -949,10 +949,24 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults15['EUR/kWh'] *= (1/model.factor1)
     OutputResults15 = OutputResults15.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
     OutputResults15 = OutputResults15.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
+    # series of FCR-D upwards activation
+    OutputResults16 = pd.Series(data=[ model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='kWh').reset_index()
+    OutputResults16['Component'] = 'FCR-D Upward Activation [kWh]'
+    OutputResults16['Technology'] = ''
+    OutputResults16['kWh'] *= (1/model.factor1)
+    OutputResults16 = OutputResults16.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults16 = OutputResults16.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='kWh', aggfunc='sum')
+    # series of FCR-D downwards activation
+    OutputResults17 = pd.Series(data=[ model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='kWh').reset_index()
+    OutputResults17['Component'] = 'FCR-D Downward Activation [kWh]'
+    OutputResults17['Technology'] = ''
+    OutputResults17['kWh'] *= (1/model.factor1)
+    OutputResults17 = OutputResults17.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults17 = OutputResults17.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='kWh', aggfunc='sum')
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
+            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17], axis=1)
         else:
             OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
