@@ -1143,16 +1143,16 @@ def create_variables(model, optmodel, indlog):
             optmodel.vEleTotalCharge[idx].setub(model.Par['pHydMaxCharge'][idx[-1]][idx[:3]])
             optmodel.vEleTotalCharge2ndBlock[idx].setub(model.Par['pHydMaxCharge2ndBlock'][idx[-1]][idx[:3]])
 
-    for idx in model.psnegs:
-        # if idx[-1] in model.egs:
-        #     if model.Par['pEleMinCharge'][idx[-1]][idx[:3]] > 0.0:
-        #         optmodel.vEleTotalCharge2ndBlock[idx].setlb(model.Par['pEleMinCharge'][idx[-1]][idx[:3]])
-        #     else:
-        #         optmodel.vEleTotalCharge2ndBlock[idx].setlb(0.0)
-        #     if model.Par['pEleMinPower'][idx[-1]][idx[:3]] > 0.0:
-        #         optmodel.vEleTotalOutput2ndBlock[idx].setlb(model.Par['pEleMinPower'][idx[-1]][idx[:3]])
-        #     else:
-        #         optmodel.vEleTotalOutput2ndBlock[idx].setlb(0.0)
+    # for idx in model.psnegs:
+    #     if idx[-1] in model.egs:
+    #         if model.Par['pEleMinCharge'][idx[-1]][idx[:3]] > 0.0:
+    #             optmodel.vEleTotalCharge2ndBlock[idx].setlb(model.Par['pEleMinCharge'][idx[-1]][idx[:3]])
+    #         else:
+    #             optmodel.vEleTotalCharge2ndBlock[idx].setlb(0.0)
+    #         if model.Par['pEleMinPower'][idx[-1]][idx[:3]] > 0.0:
+    #             optmodel.vEleTotalOutput2ndBlock[idx].setlb(model.Par['pEleMinPower'][idx[-1]][idx[:3]])
+    #         else:
+    #             optmodel.vEleTotalOutput2ndBlock[idx].setlb(0.0)
 
         optmodel.vEleEnergyInflows[idx].setlb(model.Par['pEleMinInflows'][idx[-1]][idx[:3]])
         optmodel.vEleEnergyInflows[idx].setub(model.Par['pEleMaxInflows'][idx[-1]][idx[:3]])
