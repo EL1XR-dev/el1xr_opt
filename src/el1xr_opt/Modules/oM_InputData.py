@@ -66,7 +66,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         df.fillna(0.0, inplace=True)
 
     # Define prefixes and suffixes
-    model.reserves_prefixes     = ['FCRD_Up', 'FCRD_Down','FCRN']
+    model.reserves_prefixes     = ['FCRD_Up', 'FCRD_Down','FCRN_Up','FCRN_Down']
     model.FCRD_prefixes         = [i for i in model.reserves_prefixes if "FCRD" in i]
     model.FCRN_prefixes         = [i for i in model.reserves_prefixes if "FCRN" in i]
     model.gen_frames_suffixes   = ['VarMinGeneration', 'VarMaxGeneration',
