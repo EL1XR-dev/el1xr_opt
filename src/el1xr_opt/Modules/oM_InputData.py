@@ -1013,7 +1013,7 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisDownDis',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve downward discharge           [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpGen',       Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency normal       reserve generation                  [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveNorDownGen',     Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency normal       reserve generation                  [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveNorDownGen',     Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward generation         [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpCha',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve charge                      [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpDis',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve discharge                   [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward charge             [kW]'))
