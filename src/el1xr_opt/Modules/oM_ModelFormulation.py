@@ -523,7 +523,7 @@ def create_constraints(model, optmodel, indlog):
             return model.Par['pEleMaxStorage'][egs][p,sc,n] - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,1),egs])
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D downward'))
+    optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D and FCR-N downward'))
 
     # print if the constraints object len is greater than 0
     if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
