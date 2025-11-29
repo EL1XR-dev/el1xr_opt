@@ -848,6 +848,12 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults2b['EleFCRDDown'] *= (1/model.factor1)
     OutputResults2b = OutputResults2b.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2b = OutputResults2b.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDown', aggfunc='sum')
+    # series of FCR-N Bid
+    OutputResults3c = pd.Series(data=[-sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRN').reset_index()
+    OutputResults3c['Component'] = 'FCR-N [kWh]'
+    OutputResults3c['EleFCRN'] *= (1/model.factor1)
+    OutputResults3c = OutputResults3c.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults3c = OutputResults3c.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRN', aggfunc='sum')
     ####################################################################################
     # series of FCR-D upwards when the battery is discharging
     OutputResults1c = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUpDis').reset_index()
@@ -1018,7 +1024,8 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
+            OutputResults = pd.concat([OutputResults3c, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
+            # OutputResults = pd.concat([OutputResults3c, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
         else:
             OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
