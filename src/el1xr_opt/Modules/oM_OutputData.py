@@ -849,7 +849,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults2b = OutputResults2b.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2b = OutputResults2b.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDown', aggfunc='sum')
     # series of FCR-N Bid
-    OutputResults3c = pd.Series(data=[-sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRN').reset_index()
+    OutputResults3c = pd.Series(data=[ sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRN').reset_index()
     OutputResults3c['Component'] = 'FCR-N [kWh]'
     OutputResults3c['EleFCRN'] *= (1/model.factor1)
     OutputResults3c = OutputResults3c.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
