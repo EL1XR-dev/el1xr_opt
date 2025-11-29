@@ -836,18 +836,19 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults2a['EleConsumption'] *= (1/model.factor1)
     OutputResults2a = OutputResults2a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2a = OutputResults2a.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleConsumption', aggfunc='sum')
-    # series of FCR-D upwards
+    # series of FCR-D upwards when the battery is charging
     OutputResults1b = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUp').reset_index()
     OutputResults1b['Component'] = 'FCR-D Upward [kWh]'
     OutputResults1b['EleFCRDUp'] *= (1/model.factor1)
     OutputResults1b = OutputResults1b.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults1b = OutputResults1b.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDUp', aggfunc='sum')
-    # series of FCR-D downwards
+    # series of FCR-D downwards when the battery is charging
     OutputResults2b = pd.Series(data=[-sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDDown').reset_index()
     OutputResults2b['Component'] = 'FCR-D Downward [kWh]'
     OutputResults2b['EleFCRDDown'] *= (1/model.factor1)
     OutputResults2b = OutputResults2b.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2b = OutputResults2b.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDown', aggfunc='sum')
+    ####################################################################################
     # series of FCR-D upwards when the battery is discharging
     OutputResults1c = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUpDis').reset_index()
     OutputResults1c['Component'] = 'FCR-D Upward Discharge [kWh]'
@@ -860,6 +861,20 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults1d['EleFCRDDwDis'] *= (1/model.factor1)
     OutputResults1d = OutputResults1d.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults1d = OutputResults1d.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDwDis', aggfunc='sum')
+    ####################################################################################
+    # series of FCR-N upwards when the battery is discharging
+    OutputResults1e = pd.Series(data=[ sum(optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRNUpDis').reset_index()
+    OutputResults1e['Component'] = 'FCR-N Upward Discharge [kWh]'
+    OutputResults1e['EleFCRNUpDis'] *= (1/model.factor1)
+    OutputResults1e = OutputResults1e.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    # series of FCR-N downwards when the battery is discharging
+    OutputResults1e = OutputResults1e.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRNUpDis', aggfunc='sum')
+    OutputResults1f = pd.Series(data=[-sum(optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRNDwDis').reset_index()
+    OutputResults1f['Component'] = 'FCR-N Downward Discharge [kWh]'
+    OutputResults1f['EleFCRNDwDis'] *= (1/model.factor1)
+    OutputResults1f = OutputResults1f.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults1f = OutputResults1f.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRNDwDis', aggfunc='sum')
+    ####################################################################################
     # series of FCR-D upwards when the battery is charging
     OutputResults2c = pd.Series(data=[ sum(optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRDUpChg').reset_index()
     OutputResults2c['Component'] = 'FCR-D Upward Charge [kWh]'
@@ -872,6 +887,20 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults2d['EleFCRDDwChg'] *= (1/model.factor1)
     OutputResults2d = OutputResults2d.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults2d = OutputResults2d.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRDDwChg', aggfunc='sum')
+    ####################################################################################
+    # series of FCR-N upwards when the battery is charging
+    OutputResults2e = pd.Series(data=[ sum(optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRNUpChg').reset_index()
+    OutputResults2e['Component'] = 'FCR-N Upward Charge [kWh]'
+    OutputResults2e['EleFCRNUpChg'] *= (1/model.factor1)
+    OutputResults2e = OutputResults2e.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults2e = OutputResults2e.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRNUpChg', aggfunc='sum')
+    # series of FCR-N downwards when the battery is charging
+    OutputResults2f = pd.Series(data=[-sum(optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleFCRNDwChg').reset_index()
+    OutputResults2f['Component'] = 'FCR-N Downward Charge [kWh]'
+    OutputResults2f['EleFCRNDwChg'] *= (1/model.factor1)
+    OutputResults2f = OutputResults2f.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
+    OutputResults2f = OutputResults2f.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleFCRNDwChg', aggfunc='sum')
+    ####################################################################################
     # series of electricity inventory
     OutputResults3 = pd.Series(data=[ sum(optmodel.vEleInventory[p,sc,n,egs]() for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleInventory').reset_index()
     OutputResults3['Component'] = 'Inventory [kWh]'
@@ -964,10 +993,32 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults17['kWh'] *= (1/model.factor1)
     OutputResults17 = OutputResults17.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
     OutputResults17 = OutputResults17.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='kWh', aggfunc='sum')
+    # series of FCR-D prices
+    OutputResults18 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR/kWh').reset_index()
+    OutputResults18['Component'] = 'FCR-N Price [EUR/kWh]'
+    OutputResults18['Technology'] = ''
+    OutputResults18['EUR/kWh'] *= (1/model.factor1)
+    OutputResults18 = OutputResults18.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults18 = OutputResults18.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
+    # series of FCR-N upwards activation
+    OutputResults19 = pd.Series(data=[ model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='kWh').reset_index()
+    OutputResults19['Component'] = 'FCR-N Upward Activation [kWh]'
+    OutputResults19['Technology'] = ''
+    OutputResults19['kWh'] *= (1/model.factor1)
+    OutputResults19 = OutputResults19.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults19 = OutputResults19.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='kWh', aggfunc='sum')
+    # series of FCR-N downwards activation
+    OutputResults20 = pd.Series(data=[ model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='kWh').reset_index()
+    OutputResults20['Component'] = 'FCR-N Downward Activation [kWh]'
+    OutputResults20['Technology'] = ''
+    OutputResults20['kWh'] *= (1/model.factor1)
+    OutputResults20 = OutputResults20.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
+    OutputResults20 = OutputResults20.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='kWh', aggfunc='sum')
+    ####################################################################################
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17], axis=1)
+            OutputResults = pd.concat([OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
         else:
             OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
