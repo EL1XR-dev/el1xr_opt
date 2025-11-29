@@ -516,7 +516,7 @@ def create_constraints(model, optmodel, indlog):
             return optmodel.vEleInventory[p,sc,n,egs] >= (1/model.Par['pEleGenEfficiency_discharge'][egs]) * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,1),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,1),egs])
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleStorageEnduranceUp', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUp, doc='Storage endurance for FCR-D upward'))
+    optmodel.__setattr__('eEleStorageEnduranceUp', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUp, doc='Storage endurance for FCR-D and FCR-N upward'))
 
     def eEleStorageEnduranceDown(optmodel, p,sc,n,egs):
         if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n != model.n.first():
