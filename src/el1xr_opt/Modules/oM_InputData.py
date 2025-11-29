@@ -1016,8 +1016,8 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vEleFreqContReserveNorDownGen',     Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency normal       reserve generation                  [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpCha',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve charge                      [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpDis',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve discharge                   [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveNorDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve charge                      [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveNorDownDis',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve discharge                   [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveNorDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward charge             [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveNorDownDis',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward discharge          [kW]'))
 
     if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
         setattr(optmodel, 'vEleDemFlex',                   Var(model.psned,  within=           Reals, doc='flexible electricity demand                 [kW]'))
