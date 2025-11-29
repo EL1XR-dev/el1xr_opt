@@ -460,7 +460,7 @@ def create_constraints(model, optmodel, indlog):
             return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] <= optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleFreqUpChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqUpChargeHeadroom, doc='FCR-D upward charge headroom'))
+    optmodel.__setattr__('eEleFreqUpChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqUpChargeHeadroom, doc='FCR-D and FCR-N upward charge headroom'))
 
     def eEleFreqDownDischargeHeadroom(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
