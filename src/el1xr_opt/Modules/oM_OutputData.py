@@ -533,9 +533,10 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_vTotalEleMrkDARev      = extract_cost_or_rev(optmodel, model, 'vTotalEleMrkDARev',      'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='Day-Ahead Market Revenue')
     Output_vTotalEleFCRDUpRev     = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDUpRev',     'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Upwards Revenue'   )
     Output_vTotalEleFCRDDwRev     = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRDDwRev',     'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-D Downwards Revenue' )
+    Output_vTotalEleFCRNRev        = extract_cost_or_rev(optmodel, model, 'vTotalEleFCRNRev',      'psn', multiplier=True, timeline="Hourly", revenue=True,  component_name='FCR-N Revenue'           )
 
     # === Combine and export ===
-    Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleDCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDUpRev, Output_vTotalEleFCRDDwRev], ignore_index=True)
+    Output_AdditionalCosts = pd.concat([Output_vTotalEleMrkDACost, Output_vTotalEleNetUseFixCost, Output_vTotalEleNetUseVarCost, Output_vTotalElePeakCost, Output_vTotalEleEnergyTaxCost, Output_vTotalEleDCost, Output_vTotalEleMrkDARev, Output_vTotalEleFCRDUpRev, Output_vTotalEleFCRDDwRev, Output_vTotalEleFCRNRev], ignore_index=True)
     Output_AdditionalCosts.to_csv(f"{_path}/oM_Result_01_rObjFunComponents_{CaseName}.csv", index=False)
 
     df = Output_AdditionalCosts.copy()
