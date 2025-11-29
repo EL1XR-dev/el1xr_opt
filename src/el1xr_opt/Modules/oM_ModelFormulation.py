@@ -502,7 +502,7 @@ def create_constraints(model, optmodel, indlog):
             return (optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleFreqDownDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDownDischargeBound, doc='FCR-D downward discharge bound'))
+    optmodel.__setattr__('eEleFreqDownDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDownDischargeBound, doc='FCR-D and FCR-N downward discharge bound'))
 
     def eEleInflowsCharge(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxInflows'][egs][p,sc,n] and model.Par['pEleGenNoFCRD'][egs] == 0 and model.Par['pEleGenNoDayAhead'][egs] == 1:
