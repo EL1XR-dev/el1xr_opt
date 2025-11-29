@@ -481,7 +481,7 @@ def create_constraints(model, optmodel, indlog):
             return (optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleFreqUpChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqUpChargeBound, doc='FCR-D upward charge bound'))
+    optmodel.__setattr__('eEleFreqUpChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqUpChargeBound, doc='FCR-D and FCR-N upward charge bound'))
 
     def eEleFreqUpDischargeBound(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
