@@ -93,15 +93,15 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [kEUR]'))
 
     def eEleMarketFCRDUpRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr]) * (1 + model.Par['pEleRetMoms'][model.Par['pEleGenRetailer'][egnr]]) for egnr in model.egnr)
+        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr]) for egnr in model.egnr)
     optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [kEUR]'))
 
     def eEleMarketFCRDDwRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) * (1 + model.Par['pEleRetMoms'][model.Par['pEleGenRetailer'][egnr]]) for egnr in model.egnr)
+        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) for egnr in model.egnr)
     optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [kEUR]'))
 
     def eEleMarketFCRNRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * model.factor1 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egnr]) * (1 + model.Par['pEleRetMoms'][model.Par['pEleGenRetailer'][egnr]]) for egnr in model.egnr)
+        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * model.factor1 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egnr]) for egnr in model.egnr)
     optmodel.__setattr__('eEleMarketFCRNRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRNRevenue, doc='Total electricity market FCR-N revenues [kEUR]'))
 
     #%% Total hydrogen market costs
