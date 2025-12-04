@@ -1257,6 +1257,48 @@ def create_variables(model, optmodel, indlog):
     #%% fixing variables
     nFixedVariables = 0.0
 
+    if model.Par['pParNumberPowerPeaks'] == 0:
+        for idx in model.psmer:
+            optmodel.vEleDemPeakGlobal[idx].fix(0.0)
+            nFixedVariables += 1.0
+        for idx in model.psmhr:
+            optmodel.vHydDemPeakGlobal[idx].fix(0.0)
+            nFixedVariables += 1.0
+        for idx in model.psder:
+            optmodel.vEleDemPeakDay[idx].fix(0.0)
+            nFixedVariables += 1.0
+        for idx in model.psdhr:
+            optmodel.vHydDemPeakDay[idx].fix(0.0)
+            nFixedVariables += 1.0
+        # fixing vElePeakGlobalInd, model.psner and model.Peaks
+        for idx in model.psner:
+            for peak in model.Peaks:
+                optmodel.__getattribute__('vElePeakGlobalInd')[idx, peak].fix(0.0)
+                nFixedVariables += 1.0
+        # fixing vHydPeakGlobalInd, model.psner and model.Peaks
+        for idx in model.psner:
+            for peak in model.Peaks:
+                optmodel.__getattribute__('vHydPeakGlobalInd')[idx, peak].fix(0.0)
+                nFixedVariables += 1.0
+        # fixing vElePeakMonthInd, model.psder and model.Peaks
+        for idx in model.psder:
+            for peak in model.Peaks:
+                optmodel.__getattribute__('vElePeakMonthInd')[idx, peak].fix(0.0)
+                nFixedVariables += 1.0
+        # fixing vHydPeakMonthInd, model.psder and model.Peaks
+        for idx in model.psder:
+            for peak in model.Peaks:
+                optmodel.__getattribute__('vHydPeakMonthInd')[idx, peak].fix(0.0)
+                nFixedVariables += 1.0
+        # fixing vElePeakDayInd, model.psdner
+        for idx in model.psdner:
+            optmodel.__getattribute__('vElePeakDayInd')[idx].fix(0.0)
+            nFixedVariables += 1.0
+        # fixing vHydPeakDayInd, model.psdner
+        for idx in model.psdner:
+            optmodel.__getattribute__('vHydPeakDayInd')[idx].fix(0.0)
+            nFixedVariables += 1.0
+
     for idx in model.psnegs:
         egs = idx[-1]
         # fixing spillage based on the model.Par['pVarFixedAvailability'][egs][p,sc,n]
