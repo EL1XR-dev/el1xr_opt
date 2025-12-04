@@ -1442,6 +1442,10 @@ def create_variables(model, optmodel, indlog):
                 optmodel.vEleFreqContReserveDisDownCha[idx].fix(0.0)
                 optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
                 nFixedVariables += 4
+        elif model.Par['pEleGenNoFCRD'][idx[-1]] == 0 and model.Par['pEleGenNoDayAhead'][idx[-1]] == 0 and model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx) - 1)]] <= 1e-5:
+                optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
+                optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
+                nFixedVariables += 2
         if model.Par['pEleGenNoFCRN'][idx[-1]] == 1:
             optmodel.vEleFreqContReserveNorBid[idx].fix(0.0)
             if idx[-1] in model.egt:
