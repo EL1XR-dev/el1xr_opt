@@ -1259,17 +1259,21 @@ def create_variables(model, optmodel, indlog):
 
     if model.Par['pParNumberPowerPeaks'] == 0:
         for idx in model.psmer:
-            optmodel.vEleDemPeakGlobal[idx].fix(0.0)
+            for peak in model.Peaks:
+                optmodel.__getattribute__('vEleDemPeakGlobal')[idx, peak].fix(0.0)
+                nFixedVariables += 1.0
             nFixedVariables += 1.0
         for idx in model.psmhr:
-            optmodel.vHydDemPeakGlobal[idx].fix(0.0)
+            for peak in model.Peaks:
+                optmodel.__getattribute__('vHydDemPeakGlobal')[idx, peak].fix(0.0)
+                nFixedVariables += 1.0
             nFixedVariables += 1.0
-        for idx in model.psder:
-            optmodel.vEleDemPeakDay[idx].fix(0.0)
-            nFixedVariables += 1.0
-        for idx in model.psdhr:
-            optmodel.vHydDemPeakDay[idx].fix(0.0)
-            nFixedVariables += 1.0
+        # for idx in model.psder:
+        #     optmodel.vEleDemPeakDay[idx].fix(0.0)
+        #     nFixedVariables += 1.0
+        # for idx in model.psdhr:
+        #     optmodel.vHydDemPeakDay[idx].fix(0.0)
+        #     nFixedVariables += 1.0
         # fixing vElePeakGlobalInd, model.psner and model.Peaks
         for idx in model.psner:
             for peak in model.Peaks:
