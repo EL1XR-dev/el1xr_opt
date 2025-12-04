@@ -57,7 +57,10 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Total electricity peak costs
     def eTotalElePeakCost(optmodel, p,sc):
-        return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / len(model.Peaks))
+        if model.Par['pParNumberPowerPeaks'] == 0:
+            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * model.factor1 * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        else:
+            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / len(model.Peaks))
     optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [kEUR]'))
 
     # Total electricity net usage costs
@@ -1338,7 +1341,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         # Check applicability
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1356,7 +1359,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourValue', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourValue, doc='peak hour selection'))
 
     def eElePeakHourInd_C1(optmodel, p,sc,n,er,m,peak):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1371,7 +1374,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourInd_C1', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C1, doc='peak hour indicator'))
 
     def eElePeakHourInd_C2(optmodel, p,sc,n,er,m,peak):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1386,7 +1389,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourInd_C2', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C2, doc='peak hour indicator'))
 
     def eElePeakNumberMonths(optmodel, m,peak):
-        if sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Hourly') > 0:
+        if model.Par['pParNumberPowerPeaks'] > 0 and sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Hourly') > 0:
             return sum(optmodel.vElePeakGlobalInd[p,sc,n,er,peak] for p,sc,n,er in model.psner if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m) == 1
         else:
             return Constraint.Skip
@@ -1403,7 +1406,7 @@ def create_constraints(model, optmodel, indlog):
     # daily peak selection (with night discount) for pEleRetPowerTariff = Daily
     def eEleDailyPeakValue(optmodel, p,sc,d,n,er):
         # Check applicability
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1419,7 +1422,7 @@ def create_constraints(model, optmodel, indlog):
 
     # restrict to only one daily peak per day
     def eEleDailyPeakNumber(optmodel, p,sc,d,er):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily':
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily':
             return sum(optmodel.vElePeakDayInd[p,sc,d,n,er] for n in model.n if (n,d) in optmodel.n2d) == 1
         else:
             return Constraint.Skip
@@ -1427,7 +1430,7 @@ def create_constraints(model, optmodel, indlog):
 
     # link the indicator with the daily peak value
     def eEleDailyPeakInd_C1(optmodel, p,sc,d,n,er):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1442,7 +1445,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleDailyPeakInd_C1', Constraint(optmodel.psdner, rule=eEleDailyPeakInd_C1, doc='daily peak hour indicator'))
 
     def eEleDailyPeakInd_C2(optmodel, p,sc,d,n,er):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
@@ -1459,7 +1462,7 @@ def create_constraints(model, optmodel, indlog):
     # Identify top peaks among daily peaks
     def eEleGlobalPeakValue(optmodel, p,sc,m,d,er,peak):
         # Check applicability
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er]
@@ -1471,7 +1474,7 @@ def create_constraints(model, optmodel, indlog):
 
     # constraint that ensures only daily peak is selected per peak slot
     def eElePeakGlobalInd_C1(optmodel, p,sc,m,d,er,peak):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= optmodel.vEleDemPeakDay[p,sc,d,er] - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakMonthInd[p,sc,d,er,peak])
         else:
@@ -1479,7 +1482,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakGlobalInd_C1', Constraint(optmodel.psmd, optmodel.er, optmodel.Peaks, rule=eElePeakGlobalInd_C1, doc='global peak hour indicator from daily peaks'))
 
     def eElePeakGlobalInd_C2(optmodel, p,sc,d,er,m,peak):
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (p,sc,d,er) in optmodel.psder:
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= optmodel.vEleDemPeakDay[p,sc,d,er] + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakMonthInd[p,sc,d,er,peak])
         else:
@@ -1487,7 +1490,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakGlobalInd_C2', Constraint(optmodel.psd, optmodel.er, optmodel.moy, optmodel.Peaks, rule=eElePeakGlobalInd_C2, doc='global peak hour indicator from daily peaks'))
 
     def eElePeakNumberDays(optmodel, m,er,peak):
-        if sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Daily') > 0:
+        if model.Par['pParNumberPowerPeaks'] > 0 and sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Daily') > 0:
             return sum(optmodel.vElePeakMonthInd[p,sc,d,er,peak] for p,sc,d in model.psd if model.Par['pEleRetPowerTariff'][er] and (d,m) in model.d2m) == 1
         else:
             return Constraint.Skip
@@ -1504,7 +1507,7 @@ def create_constraints(model, optmodel, indlog):
     # vGlobal[1] ≥ vGlobal[2] ≥ ... ≥ vGlobal[K]
     def eEleMonthPeakOrder_rule(optmodel, p, sc, mth, er, peak):
         # skip last peak
-        if model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and peak != model.Peaks.last():
+        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and peak != model.Peaks.last():
             next_peak = model.Peaks.next(peak)
             return optmodel.vEleDemPeakGlobal[p, sc, mth, er, peak] >= optmodel.vEleDemPeakGlobal[p, sc, mth, er, next_peak]
         else:
