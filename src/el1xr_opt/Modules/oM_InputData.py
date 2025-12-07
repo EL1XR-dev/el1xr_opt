@@ -1257,7 +1257,7 @@ def create_variables(model, optmodel, indlog):
     #%% fixing variables
     nFixedVariables = 0.0
 
-    # if model.Par['pParNumberPowerPeaks'] == 0:
+    if model.Par['pParNumberPowerPeaks'] == 0:
     #     for idx in model.psmer:
     #         for peak in model.Peaks:
     #             optmodel.__getattribute__('vEleDemPeakGlobal')[idx, peak].fix(0.0)
