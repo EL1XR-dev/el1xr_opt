@@ -1645,6 +1645,35 @@ def create_variables(model, optmodel, indlog):
     #         optmodel.__getattribute__(f'vHydCommitment')[idx].fix(1.0)
     #         nFixedVariables += 2
 
+    # identify if MaxStorage is equal to MinStorage for some ESS units
+    for idx in model.psnegs:
+        if model.n.ord(idx[-2]) > 1:
+            prev_idx = idx[:(len(idx) - 2)] + (model.n.prev(idx[-2]),)
+            if abs(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]) <= 1e-5 and abs(model.Par['pEleMaxStorage'][idx[-1]][prev_idx] - model.Par['pEleMinStorage'][idx[-1]][prev_idx]) <= 1e-5:
+                # compare the pEleMaxStorage of the current time step with the one of the previous time step
+                if model.Par['pEleMaxStorage'][idx[-1]][prev_idx] > model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][prev_idx] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(model.Par['pEleMaxStorage'][idx[-1]][prev_idx] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
+                elif model.Par['pEleMaxStorage'][idx[-1]][prev_idx] < model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][prev_idx])
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][prev_idx])
+                # else:
+                #     optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(0.0)
+                #     optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(0.0)
+                #     nFixedVariables += 2
+        else:
+            if abs(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]) <= 1e-5:
+                if model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] > model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].setub(model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
+                elif model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] < model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+                # else:
+                #     optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(0.0)
+                #     optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(0.0)
+                #     nFixedVariables += 2
+
     model.nFixedVariables = Param(initialize=round(nFixedVariables), within=NonNegativeIntegers, doc='Number of fixed variables')
 
     return optmodel
