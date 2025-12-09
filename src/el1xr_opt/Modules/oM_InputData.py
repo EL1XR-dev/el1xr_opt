@@ -265,6 +265,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     parameters_dict['pEleNetSwitching'         ] = parameters_dict['pEleNetSwitching'         ].map(idxDict)
     parameters_dict['pHydNetBinaryInvestment'  ] = parameters_dict['pHydNetBinaryInvestment'  ].map(idxDict)
+    parameters_dict['pEleGenV2G'               ] = parameters_dict['pEleGenV2G'               ].map(idxDict)
     parameters_dict['pEleGenNoDayAhead'        ] = parameters_dict['pEleGenNoDayAhead'        ].map(idxDict)
     parameters_dict['pEleGenNoFCRD'            ] = parameters_dict['pEleGenNoFCRD'            ].map(idxDict)
     parameters_dict['pEleGenNoFCRN'            ] = parameters_dict['pEleGenNoFCRN'            ].map(idxDict)
@@ -1488,10 +1489,15 @@ def create_variables(model, optmodel, indlog):
                 optmodel.vEleFreqContReserveDisDownCha[idx].fix(0.0)
                 optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
                 nFixedVariables += 4
-        elif model.Par['pEleGenNoFCRD'][idx[-1]] == 0 and model.Par['pEleGenNoDayAhead'][idx[-1]] == 0 and model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx) - 1)]] <= 1e-5:
-                optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
-                optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
-                nFixedVariables += 2
+        elif model.Par['pEleGenNoFCRD'][idx[-1]] == 0 and model.Par['pEleGenNoDayAhead'][idx[-1]] == 0 and model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx) - 1)]] <= 1e-5 and model.Par['pEleGenV2G'][idx[-1]] == 1:
+            optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
+            nFixedVariables += 2
+        elif model.Par['pEleGenNoFCRD'][idx[-1]] == 0 and model.Par['pEleGenNoDayAhead'][idx[-1]] == 0 and model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx) - 1)]] <= 1e-5 and model.Par['pEleGenV2G'][idx[-1]] == 0:
+            optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisUpDis[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisDownDis[idx].fix(0.0)
+            nFixedVariables += 2
         if model.Par['pEleGenNoFCRN'][idx[-1]] == 1:
             optmodel.vEleFreqContReserveNorBid[idx].fix(0.0)
             if idx[-1] in model.egt:
@@ -1504,6 +1510,15 @@ def create_variables(model, optmodel, indlog):
                 optmodel.vEleFreqContReserveNorDownCha[idx].fix(0.0)
                 optmodel.vEleFreqContReserveNorDownDis[idx].fix(0.0)
                 nFixedVariables += 4
+        elif model.Par['pEleGenNoFCRN'][idx[-1]] == 0 and model.Par['pEleGenNoDayAhead'][idx[-1]] == 0 and model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx) - 1)]] <= 1e-5 and model.Par['pEleGenV2G'][idx[-1]] == 1:
+            optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
+            optmodel.vEleFreqContReserveNorDownDis[idx].fix(0.0)
+            nFixedVariables += 2
+        elif model.Par['pEleGenNoFCRN'][idx[-1]] == 0 and model.Par['pEleGenNoDayAhead'][idx[-1]] == 0 and model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx) - 1)]] <= 1e-5 and model.Par['pEleGenV2G'][idx[-1]] == 0:
+            optmodel.vEleTotalOutput2ndBlock[idx].fix(0.0)
+            optmodel.vEleFreqContReserveNorUpDis[idx].fix(0.0)
+            optmodel.vEleFreqContReserveNorDownDis[idx].fix(0.0)
+            nFixedVariables += 2
 
     # if there are no energy outflows no variable is needed
     iset = model.psn
