@@ -111,9 +111,9 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         Solver.options["Presolve"]        = 2
         Solver.options["RINS"]            = 100
         Solver.options["Crossover"]       = -1
-        Solver.options["FeasibilityTol"]  = 1e-9
-        # Solver.options["FeasibilityTol"]  = 1e-8
-        # Solver.options["NumericFocus"]    = 1
+        # Solver.options["FeasibilityTol"]  = 1e-9
+        Solver.options["FeasibilityTol"]  = 1e-8
+        Solver.options["NumericFocus"]    = 1
         Solver.options["MIPGap"]          = 0.02
         Solver.options["Threads"]         = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
         Solver.options["TimeLimit"]       = 1500
