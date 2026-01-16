@@ -492,7 +492,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
             component_name (str): Label for the output DataFrame
 
         Returns:
-            pd.DataFrame: DataFrame with Period, Scenario, EUR, and Component columns
+            pd.DataFrame: DataFrame with Period, Scenario, SEK, and Component columns
         """
         var       = getattr(optmodel, var_name)
         index_set = getattr(model, set_name)
@@ -544,18 +544,18 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # --- 1. Separate cost and revenue ---
     # type -- Cost is Cost is in the name of the component, and Revenue otherwise
     df["Type"] = df["Component"].apply(lambda x: "Cost" if "Cost" in x else "Revenue")
-    # df["Type"] = df["EUR"].apply(lambda x: "Cost" if x >= 0 else "Revenue")
-    df["AbsEUR"] = df["EUR"].abs()
+    # df["Type"] = df["SEK"].apply(lambda x: "Cost" if x >= 0 else "Revenue")
+    df["AbsSEK"] = df["SEK"].abs()
 
     # --- 2. Compute percentages within each Type ---
-    df["Percentage"] = df.groupby("Type")["AbsEUR"].transform(lambda x: x / x.sum())
+    df["Percentage"] = df.groupby("Type")["AbsSEK"].transform(lambda x: x / x.sum())
 
     # --- 3. Split for plotting ---
     df_cost = df[df["Type"] == "Cost"]
     df_rev = df[df["Type"] == "Revenue"]
 
     def pie_chart(df_sub, title):
-        base  = alt.Chart(df_sub).encode(theta=alt.Theta("AbsEUR:Q", type="quantitative", stack=True), color=alt.Color("Component:N", type="nominal", legend=alt.Legend(title=title))).properties(width=400, height=400)
+        base  = alt.Chart(df_sub).encode(theta=alt.Theta("AbsSEK:Q", type="quantitative", stack=True), color=alt.Color("Component:N", type="nominal", legend=alt.Legend(title=title))).properties(width=400, height=400)
         pie   = base.mark_arc(outerRadius=120)
         text  = base.mark_text(radius=150, size=15).encode(text=alt.Text("Percentage:Q", format=".1%"))
         chart = pie+text
@@ -615,7 +615,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     Output_EleBalance = OutputResults.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Node', 'Component', 'Date'], axis=0).reset_index().rename(columns={0: 'MWh'}, inplace=False)
     # scaling the results to KWh
-    Output_EleBalance['KWh'] = (1/model.factor1) * Output_EleBalance['MWh']
+    Output_EleBalance['kWh'] = (1/model.factor1) * Output_EleBalance['MWh']
     save_to_csv(Output_EleBalance, _path, f'oM_Result_02_rElectricityBalance_{CaseName}.csv')
     model.Output_EleBalance = Output_EleBalance
 
@@ -627,7 +627,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     main_chart = alt.Chart(Output_EleBalance).mark_bar().encode(
         # x='Date:T',
         x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-        y=alt.Y('sum(KWh):Q', axis=alt.Axis(title='KWh')),
+        y=alt.Y('sum(kWh):Q', axis=alt.Axis(title='kWh')),
         color='Component:N'
     ).properties(
         width=800,
@@ -636,7 +636,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     slider_chart = alt.Chart(Output_EleBalance).mark_bar().encode(
         x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-        y=alt.Y('sum(KWh):Q', axis=alt.Axis(title='KWh')),
+        y=alt.Y('sum(kWh):Q', axis=alt.Axis(title='kWh')),
         color='Component:N'
     ).properties(
         width=800,
@@ -653,10 +653,10 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # net demand by filtering Solar-PV, BESS, and ElectricityDemand in Output_EleBalance, column Component
     Output_NetDemand = Output_EleBalance[Output_EleBalance['Component'].isin(['BESS', 'Solar-PV', 'EV', 'ElectricityDemand'])]
     # aggregate the columns 'Period', 'Scenario', 'LoadLevel', 'Date', 'MWh' and 'KWh'
-    Output_NetDemand = Output_NetDemand.groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['MWh', 'KWh']].sum().reset_index()
+    Output_NetDemand = Output_NetDemand.groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['MWh', 'kWh']].sum().reset_index()
     # changing the sign of the values in the column 'MWh' and 'KWh'
     Output_NetDemand['MWh'] = Output_NetDemand['MWh'].apply(lambda x: x)
-    Output_NetDemand['KWh'] = Output_NetDemand['KWh'].apply(lambda x: x)
+    Output_NetDemand['kWh'] = Output_NetDemand['kWh'].apply(lambda x: x)
     # save the results to a csv file
     save_to_csv(Output_NetDemand, _path, f'oM_Result_03_rElectricityNetDemand_{CaseName}.csv')
 
@@ -666,13 +666,13 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     model.Output_NetDemand = Output_NetDemand
     Output_NetDemand['Type'] ='NetDemand'
     Output_OrgDemand = Output_EleBalance[Output_EleBalance['Component'].isin(['ElectricityDemand'])]
-    Output_OrgDemand = Output_OrgDemand.groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['MWh', 'KWh']].sum().reset_index()
+    Output_OrgDemand = Output_OrgDemand.groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['MWh', 'kWh']].sum().reset_index()
     # changing the sign of the values in the column 'MWh' and 'KWh'
     Output_OrgDemand['MWh'] = Output_OrgDemand['MWh'].apply(lambda x: x)
-    Output_OrgDemand['KWh'] = Output_OrgDemand['KWh'].apply(lambda x: x)
+    Output_OrgDemand['kWh'] = Output_OrgDemand['kWh'].apply(lambda x: x)
     Output_OrgDemand['Type'] ='OrgDemand'
     # series of the electricity cost
-    Output_EleCost = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/KWh').reset_index()
+    Output_EleCost = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/kWh').reset_index()
     Output_EleCost = Output_EleCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Component'}, inplace=False).set_index(['Period', 'Scenario', 'LoadLevel', 'Component'], inplace=False)
     # select the third level of the index and create a new column date using the Date as a initial date
     Output_EleCost['Date'] = Output_EleCost.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
@@ -727,7 +727,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         vDemand_chart = alt.Chart(Output_vDemand).mark_line(color='blue', point=alt.OverlayMarkDef(filled=False, fill="white")).encode(
             # x='Date:T',
             x=alt.X('Date:T', axis=alt.Axis(title='', labelAngle=-90, format="%a, %b %d, %H:%M", tickCount=30, labelLimit=1000)),
-            y=alt.Y('KWh:Q', axis=alt.Axis(title='KWh')),
+            y=alt.Y('kWh:Q', axis=alt.Axis(title='kWh')),
             color='Type:N'
         )
 
