@@ -192,6 +192,6 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
 
     log_time('-- Total time for solving the model:', StartTime, ind_log=indlog)
 
-    print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), 'M€')
+    print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), 'SEK')
 
     return optmodel
