@@ -408,12 +408,12 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         'TotalRevenue': total_revenue
     }).join(df_static) # aappend original static granular components
 
-    Output_TotalCost_Static = df_results.stack().to_frame(name='EUR').rename_axis(['Period', 'Scenario', 'Component']).reset_index()
+    Output_TotalCost_Static = df_results.stack().to_frame(name='SEK').rename_axis(['Period', 'Scenario', 'Component']).reset_index()
     Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
 
     # -- Plotting helper function ---
     def get(df, comp):
-        out = df.loc[df.Component == comp, 'EUR']
+        out = df.loc[df.Component == comp, 'SEK']
         return out.iloc[0] if not out.empty else 0.0
 
     links = [
@@ -472,7 +472,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
             else: return pd.NaT
         except Exception: return pd.NaT
 
-    df_dynamic_output = df_dynamic.stack().to_frame(name='EUR').rename_axis(['Period', 'Scenario', 'LoadLevel', 'Component']).reset_index()
+    df_dynamic_output = df_dynamic.stack().to_frame(name='SEK').rename_axis(['Period', 'Scenario', 'LoadLevel', 'Component']).reset_index()
     df_dynamic_output['Date'] = df_dynamic_output['LoadLevel'].map(compute_date).dt.strftime('%Y-%m-%d %H:%M:%S')
 
     Output_TotalCost_Hourly = df_dynamic_output
@@ -509,15 +509,15 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
             data = [var[p, sc]() for p, sc in index_set]
             df = pd.DataFrame(index_set, columns=['Period', 'Scenario'])
 
-        df['EUR'] = data
+        df['SEK'] = data
 
         # Aggregate if necessary (collapse over Time)
         if 'Hour' or 'Day' in df.columns:
-            df = df.groupby(['Period', 'Scenario'], as_index=False)['EUR'].sum()
+            df = df.groupby(['Period', 'Scenario'], as_index=False)['SEK'].sum()
 
         # Apply sign convention
         if revenue:
-            df['EUR'] *= -1
+            df['SEK'] *= -1
 
         # Add component label
         df['Component'] = component_name
@@ -672,11 +672,11 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_OrgDemand['KWh'] = Output_OrgDemand['KWh'].apply(lambda x: x)
     Output_OrgDemand['Type'] ='OrgDemand'
     # series of the electricity cost
-    Output_EleCost = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
+    Output_EleCost = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/KWh').reset_index()
     Output_EleCost = Output_EleCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Component'}, inplace=False).set_index(['Period', 'Scenario', 'LoadLevel', 'Component'], inplace=False)
     # select the third level of the index and create a new column date using the Date as a initial date
     Output_EleCost['Date'] = Output_EleCost.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
-    Output_EleCost = Output_EleCost.reset_index().groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['EUR/KWh']].sum().reset_index()
+    Output_EleCost = Output_EleCost.reset_index().groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['SEK/kWh']].sum().reset_index()
     Output_EleCost['Type'] ='ElectricityCost'
 
     # merge the results of the original demand with the net demand and electricity cost
@@ -703,13 +703,13 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         )
     )
 
-    # --- EUR/kWh Chart (Cost) ---
+    # --- SEK/kWh Chart (Cost) ---
     eur_chart = (
         alt.Chart(Output_EleCost)
         .mark_line(color='orange', strokeDash=[5, 5], point=alt.OverlayMarkDef(filled=False, fill='white'))
         .encode(
             x=x_axis,
-            y=alt.Y('EUR/KWh:Q', axis=alt.Axis(title='Price [SEK/kWh]', orient='right')),
+            y=alt.Y('SEK/kWh:Q', axis=alt.Axis(title='Price [SEK/kWh]', orient='right')),
             color=alt.Color('Type:N', legend=None)
         )
     )
@@ -956,22 +956,22 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults8 = OutputResults8.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
     OutputResults8 = OutputResults8.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleSell', aggfunc='sum')
     # series of the spot price
-    OutputResults9 = pd.Series(data=[  model.Par['pVarEnergyCost' ] [er][p,sc,n] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
-    OutputResults9['Component'] = 'Spot Price [EUR/kWh]'
+    OutputResults9 = pd.Series(data=[  model.Par['pVarEnergyCost' ] [er][p,sc,n] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/kWh').reset_index()
+    OutputResults9['Component'] = 'Spot Price [SEK/kWh]'
     OutputResults9 = OutputResults9.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
-    OutputResults9 = OutputResults9.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
+    OutputResults9 = OutputResults9.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='SEK/kWh', aggfunc='sum')
     # series of the electricity cost
-    OutputResults10 = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
-    OutputResults10['Component'] = 'EleCost [EUR/kWh]'
-    OutputResults10['EUR/KWh'] *= (1/model.factor1)
+    OutputResults10 = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/kWh').reset_index()
+    OutputResults10['Component'] = 'EleCost [SEK/kWh]'
+    OutputResults10['SEK/kWh'] *= (1/model.factor1)
     OutputResults10 = OutputResults10.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
-    OutputResults10 = OutputResults10.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
+    OutputResults10 = OutputResults10.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='SEK/kWh', aggfunc='sum')
     # series of the electricity price
-    OutputResults11 = pd.Series(data=[  model.Par['pVarEnergyPrice'] [er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='EUR/KWh').reset_index()
-    OutputResults11['Component'] = 'ElePrice [EUR/kWh]'
-    OutputResults11['EUR/KWh'] *= (1/model.factor1)
+    OutputResults11 = pd.Series(data=[  model.Par['pVarEnergyPrice'] [er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/kWh').reset_index()
+    OutputResults11['Component'] = 'ElePrice [SEK/kWh]'
+    OutputResults11['SEK/kWh'] *= (1/model.factor1)
     OutputResults11 = OutputResults11.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Retailer', 0: 'Value'}, inplace=False)
-    OutputResults11 = OutputResults11.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='EUR/KWh', aggfunc='sum')
+    OutputResults11 = OutputResults11.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Retailer'], values='SEK/kWh', aggfunc='sum')
     # series of FixedAvailability
     OutputResults12 = pd.Series(data=[ sum(model.Par['pVarFixedAvailability'][egs][p,sc,n] for egs in model.egs if (nd,egs) in model.n2eg and (gt,egs) in model.t2eg) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='FixedAvailability').reset_index()
     OutputResults12['Component'] = 'Availability [0,1]'
@@ -984,19 +984,19 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults13 = OutputResults13.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
     OutputResults13 = OutputResults13.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EleSpillage', aggfunc='sum')
     # series of FCR-D upwards prices
-    OutputResults14 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR/kWh').reset_index()
-    OutputResults14['Component'] = 'FCR-D Upward Price [EUR/kWh]'
+    OutputResults14 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='SEK/kWh').reset_index()
+    OutputResults14['Component'] = 'FCR-D Upward Price [SEK/kWh]'
     OutputResults14['Technology'] = ''
-    OutputResults14['EUR/kWh'] *= (1/model.factor1)
+    OutputResults14['SEK/kWh'] *= (1/model.factor1)
     OutputResults14 = OutputResults14.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
-    OutputResults14 = OutputResults14.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
+    OutputResults14 = OutputResults14.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='SEK/kWh', aggfunc='sum')
     # series of FCR-D downwards prices
-    OutputResults15 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR/kWh').reset_index()
-    OutputResults15['Component'] = 'FCR-D Downward Price [EUR/kWh]'
+    OutputResults15 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='SEK/kWh').reset_index()
+    OutputResults15['Component'] = 'FCR-D Downward Price [SEK/kWh]'
     OutputResults15['Technology'] = ''
-    OutputResults15['EUR/kWh'] *= (1/model.factor1)
+    OutputResults15['SEK/kWh'] *= (1/model.factor1)
     OutputResults15 = OutputResults15.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
-    OutputResults15 = OutputResults15.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
+    OutputResults15 = OutputResults15.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='SEK/kWh', aggfunc='sum')
     # series of FCR-D upwards activation
     OutputResults16 = pd.Series(data=[ model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='kWh').reset_index()
     OutputResults16['Component'] = 'FCR-D Upward Activation [kWh]'
@@ -1012,12 +1012,12 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults17 = OutputResults17.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
     OutputResults17 = OutputResults17.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='kWh', aggfunc='sum')
     # series of FCR-D prices
-    OutputResults18 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='EUR/kWh').reset_index()
-    OutputResults18['Component'] = 'FCR-N Price [EUR/kWh]'
+    OutputResults18 = pd.Series(data=[ model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='SEK/kWh').reset_index()
+    OutputResults18['Component'] = 'FCR-N Price [SEK/kWh]'
     OutputResults18['Technology'] = ''
-    OutputResults18['EUR/kWh'] *= (1/model.factor1)
+    OutputResults18['SEK/kWh'] *= (1/model.factor1)
     OutputResults18 = OutputResults18.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 0: 'Value'}, inplace=False)
-    OutputResults18 = OutputResults18.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='EUR/kWh', aggfunc='sum')
+    OutputResults18 = OutputResults18.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Technology'], values='SEK/kWh', aggfunc='sum')
     # series of FCR-N upwards activation
     OutputResults19 = pd.Series(data=[ model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] for p,sc,n in model.psn], index=pd.Index(model.psn)).to_frame(name='kWh').reset_index()
     OutputResults19['Component'] = 'FCR-N Upward Activation [kWh]'
@@ -1036,7 +1036,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1Bid, OutputResults2Bid, OutputResults3Bid, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
+            OutputResults = pd.concat([OutputResults1Bid, OutputResults2Bid, OutputResults3Bid, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
             # OutputResults = pd.concat([OutputResults3c, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
         else:
             OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
@@ -1053,10 +1053,10 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # -----------------------------------------------------------
 
     rename_cols = {
-        'Spot Price [EUR/kWh]': 'Price Spot',
-        'EleCost [EUR/kWh]': 'Price Import',
-        'FCR-D Upward Price [EUR/kWh]': 'Price FCR-D Upward',
-        'FCR-D Downward Price [EUR/kWh]': 'Price FCR-D Downward',
+        'Spot Price [SEK/kWh]': 'Price Spot',
+        'EleCost [SEK/kWh]': 'Price Import',
+        'FCR-D Upward Price [SEK/kWh]': 'Price FCR-D Upward',
+        'FCR-D Downward Price [SEK/kWh]': 'Price FCR-D Downward',
         'Production/Discharge [kWh]': 'Discharge Day-Ahead',
         'FCR-D Upward Discharge [kWh]': 'Discharge FCR-D Upward',
         'FCR-D Downward Discharge [kWh]': 'Discharge FCR-D Downward',
