@@ -438,17 +438,32 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleRelationFreqNorUpBid2Stor(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
-            return optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] <= optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]
+            return optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] == optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqNorUpBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqNorUpBid2Stor, doc='Relation FCR-N upward bid to storage'))
 
     def eEleRelationFreqNorDownBid2Stor(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
-            return optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] <= optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
+            return optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] == optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqNorDownBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqNorDownBid2Stor, doc='Relation FCR-N downward bid to storage'))
+
+    # symmetrical FCR-N provision from an electric ESS
+    def eEleSymmFreqNorStor2Ch(optmodel, p,sc,n,egs):
+        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
+            return optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] == optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleSymmFreqNorStor2Ch', Constraint(optmodel.psnegs, rule=eEleSymmFreqNorStor2Ch, doc='Symmetrical FCR-N charge provision from storage'))
+
+    def eEleSymmFreqNorStor2Dis(optmodel, p,sc,n,egs):
+        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
+            return optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] == optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleSymmFreqNorStor2Dis', Constraint(optmodel.psnegs, rule=eEleSymmFreqNorStor2Dis, doc='Symmetrical FCR-N discharge provision from storage'))
 
     # The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
     def eEleFreqUpDischargeHeadroom(optmodel, p,sc,n,egs):
