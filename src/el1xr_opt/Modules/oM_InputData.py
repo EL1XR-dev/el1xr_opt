@@ -1450,9 +1450,9 @@ def create_variables(model, optmodel, indlog):
             nFixedVariables += 1
         # fixing the ESS inventory at the last load level of the stage for every period and scenario if between storage limits in the DA market
         if len(model.n):
-            if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)] and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)]:
-                optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx[:(len(idx)-2)]+(model.n.last(),)+(idx[-1],)].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                nFixedVariables += 1
+            # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)] and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)]:
+            #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx[:(len(idx)-2)]+(model.n.last(),)+(idx[-1],)].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+            #     nFixedVariables += 1
         # fixing the ESS inventory at the end of the following pCycleTimeStep (daily, weekly, monthly), i.e., for daily ESS is fixed at the end of the week, for weekly/monthly ESS is fixed at the end of the year
             if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-1)]]                   and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
                 # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(24/model.Par['pParTimeStep']) == 0:
