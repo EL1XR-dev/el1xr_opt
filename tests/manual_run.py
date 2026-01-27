@@ -11,13 +11,13 @@ from src.el1xr_opt.Modules.oM_Sequence import routine
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
-# CASE_NAMES = ["Home2_FCR-D_Month1_UC2_EV_03_V1G_woDoD"]  # Add more case names as needed
+# CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
+CASE_NAMES = ["Home2_DayAhead_Month2_UC1_EV_01_V1G_woDoD"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]
 EXPECTED_COSTS = {
-    "Grid1": 9228.472926533075,
-    # "Home2_FCR-D_Month1_UC2_EV_03_V1G_woDoD":  569.0366285211821}  # Replace with actual expected costs
-    "Home1": 215.8585985433236}  # Replace with actual expected costs
+    # "Grid1": 9228.472926533075,
+    "Home2_DayAhead_Month2_UC1_EV_01_V1G_woDoD":  569.0366285211821}  # Replace with actual expected costs
+    # "Home1": 215.8585985433236}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
     """
@@ -25,10 +25,10 @@ def setup_test_case(case_name):
     Returns the data required for running el1xr_opt.
     """
     data = dict(
-        dir=os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
-        ),
-        # dir=r"C:\Users\erikal\OneDrive - RISE\Documents\GitHub\Aurora\MS2",
+        # dir=os.path.abspath(
+        #     os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
+        # ),
+        dir=r"C:\Users\erikal\OneDrive - RISE\Desktop\WS2",
         # dir=r"C:\Users\erikal\OneDrive - RISE\Aurora - EPS - Main\WS2\MS3_executions\Cases",
         case=case_name,
         solver="highs",  # You can change the solver here
@@ -60,7 +60,7 @@ def setup_test_case(case_name):
             if not match.empty:
                 start_row = original_duration_df.index.get_loc(match[0])
                 print(f'Found start row for modification at index: {start_row}')  # Added print for console feedback
-                modify_and_save_csv(original_duration_df, "Duration", start_row, 744, duration_csv, 0)
+                modify_and_save_csv(original_duration_df, "Duration", start_row, 672, duration_csv, 0)
         else:
             print("Duration column not found in the DataFrame.")  # Added print for console feedback
 
