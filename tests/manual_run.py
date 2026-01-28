@@ -109,7 +109,7 @@ def test_el1xr_opt_run():
         print(f'Running test for {case_name}...')
         for case_data in setup_test_case(case_name):
             model = routine(**case_data)
-
+            print("Solving status:", model.SolverResults.solver.termination_condition)  # Added print for console feedback
             assert model is not None, f"{case_name} failed: model is None."
             logger.info(f"{case_name} passed. Total system cost: {model.eTotalSCost}")
             print(f"{case_name} - Total system cost: {model.eTotalSCost}")  # Added print for console feedback
