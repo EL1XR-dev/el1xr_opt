@@ -166,6 +166,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
     #     raise ValueError('Problem infeasible')
 
     SolverResults.write()  # summary of results
+    optmodel.SolverResults1 = SolverResults
 
     # %% fix values of binary variables to get dual variables and solve it again
     print('# ============================================================================= #')
@@ -195,6 +196,6 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
     print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), 'SEK')
 
     # Adding SolverResults to optmodel
-    optmodel.SolverResults = SolverResults
+    optmodel.SolverResults2 = SolverResults
 
     return optmodel
