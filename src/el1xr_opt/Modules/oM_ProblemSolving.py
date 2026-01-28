@@ -194,4 +194,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
 
     print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), 'SEK')
 
+    # Adding SolverResults to optmodel
+    optmodel.SolverResults = SolverResults
+
     return optmodel
