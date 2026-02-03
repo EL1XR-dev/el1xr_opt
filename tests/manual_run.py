@@ -12,11 +12,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # CASE_NAMES = ["Grid1", "Home1"]  # Add more case names as needed
-CASE_NAMES = ["Home2_DayAhead_Month2_UC1_EV_01_V1G_woDoD"]  # Add more case names as needed
+CASE_NAMES = ["Home7_DayAhead&FCR-D_Month3_UC7_EV_02_V1G_woDoD"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]
 EXPECTED_COSTS = {
     # "Grid1": 9228.472926533075,
-    "Home2_DayAhead_Month2_UC1_EV_01_V1G_woDoD":  569.0366285211821}  # Replace with actual expected costs
+    "Home7_DayAhead&FCR-D_Month3_UC7_EV_02_V1G_woDoD":  569.0366285211821}  # Replace with actual expected costs
     # "Home1": 215.8585985433236}  # Replace with actual expected costs
 
 def setup_test_case(case_name):
@@ -28,10 +28,10 @@ def setup_test_case(case_name):
         # dir=os.path.abspath(
         #     os.path.join(os.path.dirname(__file__), "../src/el1xr_opt")
         # ),
-        dir=r"C:\Users\erikal\OneDrive - RISE\Desktop\WS2",
+        dir=r"C:\Users\Erik\Desktop\WS2",
         # dir=r"C:\Users\erikal\OneDrive - RISE\Aurora - EPS - Main\WS2\MS3_executions\Cases",
         case=case_name,
-        solver="highs",  # You can change the solver here
+        solver="gurobi",  # You can change the solver here
         date= datetime.datetime.now().replace(second=0, microsecond=0),
         rawresults="True",
         plots="True",
@@ -109,7 +109,7 @@ def test_el1xr_opt_run():
         print(f'Running test for {case_name}...')
         for case_data in setup_test_case(case_name):
             model = routine(**case_data)
-            print("Solving status:", model.SolverResults.solver.termination_condition)  # Added print for console feedback
+            print("Solving status:", model.SolverResults1.solver.termination_condition)  # Added print for console feedback
             assert model is not None, f"{case_name} failed: model is None."
             logger.info(f"{case_name} passed. Total system cost: {model.eTotalSCost}")
             print(f"{case_name} - Total system cost: {model.eTotalSCost}")  # Added print for console feedback

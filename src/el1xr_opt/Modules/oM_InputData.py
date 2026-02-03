@@ -1449,27 +1449,27 @@ def create_variables(model, optmodel, indlog):
             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(0.0)
             nFixedVariables += 1
         # fixing the ESS inventory at the last load level of the stage for every period and scenario if between storage limits in the DA market
-        if len(model.n):
-            # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)] and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)]:
-            #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx[:(len(idx)-2)]+(model.n.last(),)+(idx[-1],)].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-            #     nFixedVariables += 1
-        # fixing the ESS inventory at the end of the following pCycleTimeStep (daily, weekly, monthly), i.e., for daily ESS is fixed at the end of the week, for weekly/monthly ESS is fixed at the end of the year
-            if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-1)]]                   and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
-                # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(24/model.Par['pParTimeStep']) == 0:
-                #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                #     nFixedVariables += 1
-                # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(168/model.Par['pParTimeStep']) == 0:
-                #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                #     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744/model.Par['pParTimeStep']) == 0:
-                    optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                    nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
-                    optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                    nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
-                    optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                    nFixedVariables += 1
+        # if len(model.n):
+        #     # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)] and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-2)]+(model.n.last(),)]:
+        #     #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx[:(len(idx)-2)]+(model.n.last(),)+(idx[-1],)].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+        #     #     nFixedVariables += 1
+        # # fixing the ESS inventory at the end of the following pCycleTimeStep (daily, weekly, monthly), i.e., for daily ESS is fixed at the end of the week, for weekly/monthly ESS is fixed at the end of the year
+        #     if model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] >= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MinStorage'][idx[-1]][idx[:(len(idx)-1)]]                   and model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]] <= model.Par[f'p{model.EnergyPrefix[idx[-1]]}MaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+        #         # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(24/model.Par['pParTimeStep']) == 0:
+        #         #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+        #         #     nFixedVariables += 1
+        #         # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(168/model.Par['pParTimeStep']) == 0:
+        #         #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+        #         #     nFixedVariables += 1
+        #         if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744/model.Par['pParTimeStep']) == 0:
+        #             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+        #             nFixedVariables += 1
+        #         if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
+        #             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+        #             nFixedVariables += 1
+        #         if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
+        #             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+        #             nFixedVariables += 1
 
     # if pEleGenNoDayAhead == 1, fix the day-ahead market variables to zero
     for idx in model.psnegnr:
@@ -1610,14 +1610,14 @@ def create_variables(model, optmodel, indlog):
 
     log_time('--- Fixing the variables', StartTime, ind_log=indlog)
 
-    # detecting infeasibility: total min ESS output greater than total inflows, total max ESS charge lower than total outflows
-    for es in model.egs:
-        # if sum(model.Par['pEleMinPower'][es][idx] for idx in model.psn) - sum(model.Par['pEleMaxInflows'][es][idx] for idx in model.psn) > 0.0:
-        #     print('### Total minimum output greater than total inflows for Electricity ESS unit ', es)
-        #     assert(0==1)
-        if sum(model.Par['pEleMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par['pEleMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
-            print('### Total maximum charge lower than total outflows for Electricity ESS unit ', es)
-            assert(0==1)
+    # # detecting infeasibility: total min ESS output greater than total inflows, total max ESS charge lower than total outflows
+    # for es in model.egs:
+    #     # if sum(model.Par['pEleMinPower'][es][idx] for idx in model.psn) - sum(model.Par['pEleMaxInflows'][es][idx] for idx in model.psn) > 0.0:
+    #     #     print('### Total minimum output greater than total inflows for Electricity ESS unit ', es)
+    #     #     assert(0==1)
+    #     if sum(model.Par['pEleMaxCharge'][es][idx] for idx in model.psn) - sum(model.Par['pEleMaxOutflows'][es][idx] for idx in model.psn) < 0.0:
+    #         print('### Total maximum charge lower than total outflows for Electricity ESS unit ', es)
+    #         assert(0==1)
 
     for es in model.hgs:
         if sum(model.Par['pHydMinPower'][es][idx] for idx in model.psn) - sum(model.Par['pHydMaxInflows'][es][idx] for idx in model.psn) > 0.0:
