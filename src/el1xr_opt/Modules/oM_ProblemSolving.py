@@ -116,7 +116,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         Solver.options["NumericFocus"]    = 1
         Solver.options["MIPGap"]          = 0.02
         Solver.options["Threads"]         = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
-        Solver.options["TimeLimit"]       = 1500
+        Solver.options["TimeLimit"]       = 150
         Solver.options["IterationLimit"]  = 1800000
         print("Gurobi solver options configured.")
 
