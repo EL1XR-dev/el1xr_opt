@@ -1,0 +1,56 @@
+name: Create Repository in EL1XR Organisation
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_name:
+        description: 'Name of the new repository to create'
+        required: true
+        type: string
+      description:
+        description: 'Description of the new repository'
+        required: false
+        type: string
+        default: ''
+      private:
+        description: 'Make the repository private'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  create-repo:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Validate repository name
+        env:
+          REPO_NAME: ${{ github.event.inputs.repo_name }}
+        run: |
+          if [[ ! "$REPO_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Error: Repository name '$REPO_NAME' contains invalid characters."
+            echo "Repository names may only contain alphanumeric characters, hyphens, underscores, and periods."
+            exit 1
+          fi
+          echo "Repository name '$REPO_NAME' is valid."
+
+      - name: Create repository in EL1XR-dev organisation
+        env:
+          GH_TOKEN: ${{ secrets.ORG_ADMIN_TOKEN }}
+          REPO_NAME: ${{ github.event.inputs.repo_name }}
+          REPO_DESC: ${{ github.event.inputs.description }}
+          REPO_PRIVATE: ${{ github.event.inputs.private }}
+        run: |
+          response=$(gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /orgs/EL1XR-dev/repos \
+            -f name="$REPO_NAME" \
+            -f description="$REPO_DESC" \
+            -F private="$REPO_PRIVATE" 2>&1) || {
+            echo "Error: Failed to create repository."
+            echo "$response"
+            exit 1
+          }
+          repo_url=$(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin)['html_url'])")
+          echo "Repository created successfully: $repo_url"
