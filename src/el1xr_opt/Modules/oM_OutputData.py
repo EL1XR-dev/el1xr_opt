@@ -825,7 +825,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     # Creating dataframe with outputs like electricity buy, electricity sell, total production, total consumption, Inventory, energy outflows, VarStartUp, VarShutDown, FixedAvailability, EleDemand, ElectricityCost, ElectricityPrice
     # series of electricity production
-    OutputResults1a = pd.Series(data=[ (sum((optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]()) * model.Par['pDuration'][p,sc,n] for egt  in model.egt  if (nd,egt) in model.n2eg and (gt,egt) in model.t2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs  in model.egs  if (nd,egs ) in model.n2eg and (gt,egs ) in model.t2eg)) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
+    OutputResults1a = pd.Series(data=[ (sum((optmodel.vEleTotalOutput[p,sc,n,egr]()) * model.Par['pDuration'][p,sc,n] for egr  in model.egr  if (nd,egr) in model.n2eg and (gt,egr) in model.t2eg) + sum((optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt]()) * model.Par['pDuration'][p,sc,n] for egt  in model.egt  if (nd,egt) in model.n2eg and (gt,egt) in model.t2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]() * model.Par['pDuration'][p,sc,n] for egs  in model.egs  if (nd,egs ) in model.n2eg and (gt,egs ) in model.t2eg)) for p,sc,n,nd,gt in sPNNDGT], index=pd.Index(sPNNDGT)).to_frame(name='EleGeneration' ).reset_index()
     OutputResults1a['Component'] = 'Production/Discharge [kWh]'
     OutputResults1a['EleGeneration'] *= (1/model.factor1)
     OutputResults1a = OutputResults1a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 'level_4': 'Technology', 0: 'Value'}, inplace=False)
@@ -955,6 +955,18 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults8['EleSell'] *= (1/model.factor1)
     OutputResults8 = OutputResults8.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
     OutputResults8 = OutputResults8.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleSell', aggfunc='sum')
+    # series of the electricity import
+    OutputResults7a = pd.Series(data=[    optmodel.vEleImport[p,sc,n,nd]() * model.Par['pDuration'][p,sc,n]                                            for p,sc,n,nd in sPNND], index=pd.Index(sPNND)).to_frame(name='EleImport').reset_index()
+    OutputResults7a['Component'] = 'Electricity Import [kWh]'
+    OutputResults7a['EleImport'] *= (1/model.factor1)
+    OutputResults7a = OutputResults7a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
+    OutputResults7a = OutputResults7a.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleImport', aggfunc='sum')
+    # series of the electricity export
+    OutputResults8a = pd.Series(data=[-optmodel.vEleExport[p,sc,n,nd]() * model.Par['pDuration'][p,sc,n]                                            for p,sc,n,nd in sPNND], index=pd.Index(sPNND)).to_frame(name='EleExport').reset_index()
+    OutputResults8a['Component'] = 'Electricity Export [kWh]'
+    OutputResults8a['EleExport'] *= (1/model.factor1)
+    OutputResults8a = OutputResults8a.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Node', 0: 'Value'}, inplace=False)
+    OutputResults8a = OutputResults8a.pivot_table(index=['Period', 'Scenario', 'LoadLevel'], columns=['Component','Node'], values='EleExport', aggfunc='sum')
     # series of the spot price
     OutputResults9 = pd.Series(data=[  model.Par['pVarEnergyCost' ] [er][p,sc,n] for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/kWh').reset_index()
     OutputResults9['Component'] = 'Spot Price [SEK/kWh]'
@@ -1036,10 +1048,10 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
 
     if len(model.egs):
         if len(model.egv):
-            OutputResults = pd.concat([OutputResults1Bid, OutputResults2Bid, OutputResults3Bid, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
+            OutputResults = pd.concat([OutputResults1Bid, OutputResults2Bid, OutputResults3Bid, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults7a, OutputResults8a, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
             # OutputResults = pd.concat([OutputResults3c, OutputResults1a, OutputResults1c, OutputResults1d, OutputResults1e, OutputResults1f, OutputResults2a, OutputResults2c, OutputResults2d, OutputResults2e, OutputResults2f, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults12, OutputResults3, OutputResults5, OutputResults13, OutputResults14, OutputResults15, OutputResults9, OutputResults10, OutputResults11, OutputResults16, OutputResults17, OutputResults18, OutputResults19, OutputResults20], axis=1)
         else:
-            OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
+            OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults7a, OutputResults8a, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
         OutputResults = pd.concat([OutputResults1a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults9, OutputResults10, OutputResults11], axis=1)
     OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
