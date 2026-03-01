@@ -1599,14 +1599,14 @@ def create_variables(model, optmodel, indlog):
             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}GenCommitment')[idx].fix(0)
             nFixedVariables += 1
 
-    # fixing electricity buys in hours when electricity cost is equal o greater than 1000
-    for idx in model.psner + model.psnhr:
-        if model.Par['pVarEnergyCost'][idx[-1]][idx[:(len(idx)-1)]] >= 1000.0:
-            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Buy')[idx].fix(0.0)
-            nFixedVariables += 1
-        if model.Par['pVarEnergyPrice'][idx[-1]][idx[:(len(idx)-1)]] <= 0:
-            optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Sell')[idx].fix(0.0)
-            nFixedVariables += 1
+    # # fixing electricity buys in hours when electricity cost is equal o greater than 1000
+    # for idx in model.psner + model.psnhr:
+    #     if model.Par['pVarEnergyCost'][idx[-1]][idx[:(len(idx)-1)]] >= 1000.0:
+    #         optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Buy')[idx].fix(0.0)
+    #         nFixedVariables += 1
+    #     if model.Par['pVarEnergyPrice'][idx[-1]][idx[:(len(idx)-1)]] <= 0:
+    #         optmodel.__getattribute__(f'v{model.RetailPrefix[idx[-1]]}Sell')[idx].fix(0.0)
+    #         nFixedVariables += 1
 
     log_time('--- Fixing the variables', StartTime, ind_log=indlog)
 
