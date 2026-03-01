@@ -65,7 +65,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Total electricity net usage costs
     def eTotalEleNetUseVarCost(optmodel, p,sc):
-        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * optmodel.vEleBuy[p,sc,n,er] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
@@ -79,7 +79,7 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er]) * (sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
+        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er]) * (optmodel.vEleBuy[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
 
     #%% Total electricity market revenues
@@ -88,7 +88,7 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [kEUR]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
+        return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (optmodel.vEleSell[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
 
     def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
@@ -132,7 +132,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # VAT on electricity taxes costs
     def eEleTaxEnergyCost(optmodel, p,sc):
-        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] * model.factor1 * sum(optmodel.vEleBuy[p,sc,n,er] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] * model.factor1 * sum(optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eEleTaxEnergyCost', Constraint(optmodel.ps, rule=eEleTaxEnergyCost, doc='Total electricity taxes costs [kEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
@@ -141,7 +141,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Incentives on electricity taxes revenues
     def eEleTaxISRevenue(optmodel, p,sc):
-        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] * model.factor1 * sum(optmodel.vEleSell[p,sc,n,er] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] * model.factor1 * sum(optmodel.vEleExport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) for er in model.er))
     optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [kEUR]'))
 
     #%% Total electricity operation and maintenance costs
@@ -250,6 +250,15 @@ def create_constraints(model, optmodel, indlog):
             hgs2n[nd].append(hgs)
 
     #%% Constraints
+    def eEleRetNodeBalance(optmodel, p,sc,n,er):
+        if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
+            return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+                    - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
+                    + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleRetNodeBalance', Constraint(optmodel.psner, rule=eEleRetNodeBalance, doc='Electricity balance in nodes [kWh]'))
+
     # Maximum electricity buys
     def eEleRetMaxBuy(optmodel, p,sc,n,er):
         if model.Par['pEleRetMaxBuy'][er] > 0:
@@ -258,12 +267,12 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleRetMaxBuy', Constraint(optmodel.psner, rule=eEleRetMaxBuy, doc='Maximum electricity buys [kWh]'))
 
-    def eEleBuyComposition(optmodel, p,sc,n,er):
-        if model.Par['pEleRetMaxBuy'][er] > 0:
-            return optmodel.vEleBuy[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
-        else:
-            return Constraint.Skip
-    optmodel.__setattr__('eEleBuyComposition', Constraint(optmodel.psner, rule=eEleBuyComposition, doc='Electricity buy composition [kWh]'))
+    # def eEleBuyComposition(optmodel, p,sc,n,er):
+    #     if model.Par['pEleRetMaxBuy'][er] > 0:
+    #         return optmodel.vEleBuy[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleBuyComposition', Constraint(optmodel.psner, rule=eEleBuyComposition, doc='Electricity buy composition [kWh]'))
 
     # Maximum electricity sells
     def eEleRetMaxSell(optmodel, p,sc,n,er):
@@ -273,13 +282,13 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleRetMaxSell', Constraint(optmodel.psner, rule=eEleRetMaxSell, doc='Maximum electricity sells [kWh]'))
 
-    def eEleSellComposition(optmodel, p,sc,n,er):
-        if model.Par['pEleRetMaxSell'][er] > 0:
-            return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr if (er,egr) in model.r2eg)
-            # return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
-        else:
-            return Constraint.Skip
-    optmodel.__setattr__('eEleSellComposition', Constraint(optmodel.psner, rule=eEleSellComposition, doc='Electricity sell composition [kWh]'))
+    # def eEleSellComposition(optmodel, p,sc,n,er):
+    #     if model.Par['pEleRetMaxSell'][er] > 0:
+    #         return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr if (er,egr) in model.r2eg)
+    #         # return optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
+    #     else:
+    #         return Constraint.Skip
+    # optmodel.__setattr__('eEleSellComposition', Constraint(optmodel.psner, rule=eEleSellComposition, doc='Electricity sell composition [kWh]'))
 
     # print if the max buy or sell is greater than 0
     if len(optmodel.eEleRetMaxBuy) > 0 or len(optmodel.eEleRetMaxSell) > 0:
@@ -1331,15 +1340,15 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the minimum up and down time:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
-    # def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
-    #     if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv:
-    #         if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] < model.Par['pVarFixedAvailability'][egs][p,sc,n]:
-    #             return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] == model.Par['pEleMinStorage'][egs][p,sc,n] * model.factor1
-    #         else:
-    #             return Constraint.Skip
-    #     else:
-    #         return Constraint.Skip
-    # optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
+    def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
+        if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv and model.Par['pEleGenMinSoCDepart'][egs] > 0.0:
+            if n != model.n.first() and model.Par['pVarFixedAvailability'][egs][p,sc,model.n.prev(n)] > model.Par['pVarFixedAvailability'][egs][p,sc,n]:
+                return optmodel.vEleInventory[p,sc,model.n.prev(n),egs] >= model.Par['pEleGenMinSoCDepart'][egs] * model.factor1
+            else:
+                return Constraint.Skip
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
 
     def eEleTotalMaxChargeConditioned(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
@@ -1364,9 +1373,9 @@ def create_constraints(model, optmodel, indlog):
             sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
             else:
-                adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
+                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy
@@ -1385,9 +1394,9 @@ def create_constraints(model, optmodel, indlog):
             sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
             else:
-                adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
+                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1403,9 +1412,9 @@ def create_constraints(model, optmodel, indlog):
             sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
             else:
-                adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
+                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1438,9 +1447,9 @@ def create_constraints(model, optmodel, indlog):
             sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
             else:
-                adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
+                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p, sc, d, er] >= adjusted_buy
         else:
@@ -1465,9 +1474,9 @@ def create_constraints(model, optmodel, indlog):
             sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
             else:
-                adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
+                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
@@ -1483,9 +1492,9 @@ def create_constraints(model, optmodel, indlog):
             sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleBuy[p, sc, n, er]
+                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
             else:
-                adjusted_buy = buy_factor * (optmodel.vEleBuy[p, sc, n, er] + sum_factor)
+                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
