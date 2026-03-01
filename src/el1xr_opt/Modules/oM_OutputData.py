@@ -1066,7 +1066,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         'Availability [0,1]': 'Availability'
     }
 
-    keep_cols = list(rename_cols.keys())
+    keep_cols = [c for c in rename_cols.keys() if c in OutputResults.columns.get_level_values(0)]
 
     # Extract + flatten columns
     data = OutputResults[keep_cols]
