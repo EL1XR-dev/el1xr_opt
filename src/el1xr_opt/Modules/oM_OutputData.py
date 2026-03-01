@@ -1208,6 +1208,12 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # # Compute Net Power directly on the processed dataset
     # data['NetPower'] = data['Discharge Day-Ahead'] - data['Charge Day-Ahead']
     data_filtered = pd.pivot_table(data, index=['Date', 'Period', 'Scenario', 'LoadLevel'], columns=['Component'], values='Value').reset_index()
+    # Ensure columns exist before computing NetPower
+    for col in ['Discharge Day-Ahead', 'Charge Day-Ahead']:
+        if col not in data_filtered.columns:
+            data_filtered[col] = 0.0
+
+
     data_filtered['NetPower'] = data_filtered['Discharge Day-Ahead'] - data_filtered['Charge Day-Ahead']
     # data_filtered = data_filtered[data_filtered['NetPower'] != 0].copy()
 
