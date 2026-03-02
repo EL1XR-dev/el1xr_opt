@@ -10,7 +10,7 @@ from pathlib import Path
 from itertools import product
 
 # === Base directories ===
-BASE_DIR = Path(r"C:\Users\erikal\OneDrive - RISE\Documents\GitHub\el1xr_opt\data\EEM26")
+BASE_DIR = Path(r"C:\Users\ealvarezq\Documents\GitHub\Comillas\Models\el1xr_opt\data\EEM26")
 CASES_DIR = BASE_DIR / "Cases"
 CASES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -21,7 +21,7 @@ factor0 = ["ClusterA", "ClusterB", "ClusterC", "ClusterD", "ClusterE"]
 factor1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
 # factor1 = ["H1", "H6"]
 factor2 = ["T0", "T1", "T2", "T3", "T4"]
-factor3 = ["wDoD"]
+factor3 = ["woDoD"]
 
 # Define columns
 columns_retailer = ["Case", "TariffType","Fastavgift", "Overforingsavgift", "EnergyTax", "PowerTariff", "Paslag", "Moms"]
@@ -50,8 +50,8 @@ dict_DoD = {
 }
 
 dict_V2G = {
-    "V2G": {"MaximumPower": None, "MinimumPower": 0},  # MaximumPower set from f6
-    "V1G": {"MaximumPower": 1e-5, "MinimumPower": 1e-5},
+    "V2G": {"MaximumPower": 11, "MinimumPower": 0},  # MaximumPower set from f6
+    "V1G": {"MaximumPower": 1e-5, "MinimumPower": 0},
 }
 
 dict_power_peaks = {
@@ -117,7 +117,8 @@ def modify_csv(csv_path: Path, df: pd.DataFrame, f0, f1, f2, f3):
     ev = f"EV_{f1[1:].zfill(2)}"
     bess = f"BESS_01"
 
-    if "Option" in fname and f0 in ["ClusterA", "ClusterE"]:
+    # if "Option" in fname and f0 in ["ClusterA", "ClusterE"]:
+    if "Option" in fname:
         df.loc["Options", "IndBinGenOperat"] = 0
 
     # Activating load according to f1
