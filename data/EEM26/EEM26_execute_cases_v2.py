@@ -5,11 +5,11 @@ from pathlib import Path
 from itertools import product
 import sys
 
-sys.path.append(r"C:\Users\Erik\Documents\GitHub\el1xr_opt\src")
+sys.path.append(r"C:\Users\ealvarezq\Documents\GitHub\Comillas\Models\el1xr_opt\src")
 from el1xr_opt.Modules.oM_Sequence import routine
 
 # === Base directories ===
-BASE_DIR = Path(r"C:\Users\Erik\Desktop\WS2\MS3_exe\Sensitivity")
+BASE_DIR = Path(r"C:\Users\ealvarezq\Documents\GitHub\Comillas\Models\el1xr_opt\data\EEM26")
 CASES_DIR = BASE_DIR / "Cases"
 CASES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -59,11 +59,13 @@ def write_log(f0, f1, f2, f3, case, status, fobj="", error=""):
         completed_cases.discard(case)
 
 # === Factors (ONLY f0..f3) ===
-base_cases = ["Home2"]
-factor0 = ["UC1"]
-factor1 = ["EV_01", "EV_02", "EV_03", "EV_04", "EV_05", "EV_06", "EV_07", "EV_08", "EV_09", "EV_10"]
-factor2 = ["V1G", "V2G"]
-factor3 = ["woDoD"]  # or ["woDoD","wDoD"]
+base_cases = ["Home1"]
+# factor0 = ["ClusterA"]
+factor0 = ["ClusterA", "ClusterB", "ClusterC", "ClusterD", "ClusterE"]
+factor1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
+# factor1 = ["H1", "H6"]
+factor2 = ["T0", "T1", "T2", "T3", "T4"]
+factor3 = ["woDoD"]
 
 abbrev = {"woDoD": "woD", "wDoD": "wD"}
 short_f2 = {f: abbrev.get(f, f) for f in factor2}
