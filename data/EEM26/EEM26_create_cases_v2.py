@@ -46,22 +46,46 @@ FACTOR4 = [
     "Month12",
 ]
 
+_RETAILER_H1_H5 = {
+    "TariffType": "Daily",
+    "Fastavgift": 260,
+    "Overforingsavgift": 0.09,
+    "EnergyTax": 0.439,
+    "PowerTariff": 65.0,
+    "Paslag": 0.05,
+    "Moms": 0.25,
+}
+_RETAILER_H6_H10 = {
+    "TariffType": "Daily",
+    "Fastavgift": 292,
+    "Overforingsavgift": 0.05,
+    "EnergyTax": 0.439,
+    "PowerTariff": 65.0,
+    "Paslag": 0.05,
+    "Moms": 0.25,
+}
 DICT_RETAILER = {
-    "H1": {"TariffType": "Daily", "Fastavgift": 260, "Overforingsavgift": 0.09, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H2": {"TariffType": "Daily", "Fastavgift": 260, "Overforingsavgift": 0.09, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H3": {"TariffType": "Daily", "Fastavgift": 260, "Overforingsavgift": 0.09, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H4": {"TariffType": "Daily", "Fastavgift": 260, "Overforingsavgift": 0.09, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H5": {"TariffType": "Daily", "Fastavgift": 260, "Overforingsavgift": 0.09, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H6": {"TariffType": "Daily", "Fastavgift": 292, "Overforingsavgift": 0.05, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H7": {"TariffType": "Daily", "Fastavgift": 292, "Overforingsavgift": 0.05, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H8": {"TariffType": "Daily", "Fastavgift": 292, "Overforingsavgift": 0.05, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H9": {"TariffType": "Daily", "Fastavgift": 292, "Overforingsavgift": 0.05, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
-    "H10": {"TariffType": "Daily", "Fastavgift": 292, "Overforingsavgift": 0.05, "EnergyTax": 0.439, "PowerTariff": 65.0, "Paslag": 0.05, "Moms": 0.25},
+    "H1": _RETAILER_H1_H5.copy(),
+    "H2": _RETAILER_H1_H5.copy(),
+    "H3": _RETAILER_H1_H5.copy(),
+    "H4": _RETAILER_H1_H5.copy(),
+    "H5": _RETAILER_H1_H5.copy(),
+    "H6": _RETAILER_H6_H10.copy(),
+    "H7": _RETAILER_H6_H10.copy(),
+    "H8": _RETAILER_H6_H10.copy(),
+    "H9": _RETAILER_H6_H10.copy(),
+    "H10": _RETAILER_H6_H10.copy(),
 }
 
 DICT_DOD = {
-    "wDoD": {"DoDS1": 0.25, "DoDS2": 0.5, "DoDS3": 0.25, "DoDC1": 0.2, "DoDC2": 0.4, "DoDC3": 0.8},
-    "woDoD": {"DoDS1": 0, "DoDS2": 0, "DoDS3": 0, "DoDC1": 0, "DoDC2": 0, "DoDC3": 0},
+    "wDoD": {
+        "DoDS1": 0.25, "DoDS2": 0.5, "DoDS3": 0.25,
+        "DoDC1": 0.2, "DoDC2": 0.4, "DoDC3": 0.8,
+    },
+    "woDoD": {
+        "DoDS1": 0, "DoDS2": 0, "DoDS3": 0,
+        "DoDC1": 0, "DoDC2": 0, "DoDC3": 0,
+    },
 }
 
 DICT_V2G = {
@@ -70,7 +94,9 @@ DICT_V2G = {
 }
 
 DICT_POWER_PEAKS = {"T0": 3, "T1": 3, "T2": 3, "T3": 1, "T4": 1}
-DICT_TARIFF_TYPE = {"T0": "Daily", "T1": "Daily", "T2": "Daily", "T3": "Hourly", "T4": "Daily"}
+DICT_TARIFF_TYPE = {
+    "T0": "Daily", "T1": "Daily", "T2": "Daily", "T3": "Hourly", "T4": "Daily",
+}
 
 DICT_CLUSTER = {
     "ClusterA": {"Load": 1.0, "PV": 1.0, "BESS": 0.0, "EV": 0.0},
@@ -95,7 +121,10 @@ DICT_MONTH_HOURS = {
     "Month12": (8017, 8736),
 }
 
-ABBREV = {"ClusterA": "ClA", "ClusterB": "ClB", "ClusterC": "ClC", "ClusterD": "ClD", "ClusterE": "ClE"}
+ABBREV = {
+    "ClusterA": "ClA", "ClusterB": "ClB", "ClusterC": "ClC",
+    "ClusterD": "ClD", "ClusterE": "ClE",
+}
 
 
 def short(factor: str) -> str:
@@ -103,10 +132,26 @@ def short(factor: str) -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Create EEM26 case folders and CSV files.")
-    parser.add_argument("--base-dir", type=Path, default=DEFAULT_BASE_DIR, help="Directory containing base-case folders.")
-    parser.add_argument("--cases-dir", type=Path, default=None, help="Output cases directory (defaults to <base-dir>/Cases).")
-    parser.add_argument("--clean", action="store_true", help="Remove existing case folders before writing new data.")
+    parser = argparse.ArgumentParser(
+        description="Create EEM26 case folders and CSV files.",
+    )
+    parser.add_argument(
+        "--base-dir",
+        type=Path,
+        default=DEFAULT_BASE_DIR,
+        help="Directory containing base-case folders.",
+    )
+    parser.add_argument(
+        "--cases-dir",
+        type=Path,
+        default=None,
+        help="Output cases directory (defaults to <base-dir>/Cases).",
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Remove existing case folders before writing new data.",
+    )
     parser.add_argument(
         "--workers",
         type=int,
@@ -205,7 +250,7 @@ def modify_csv(csv_path: Path, df: pd.DataFrame, f0: str, f1: str, f2: str, f3: 
         num_rows = end_hr - start_row
         df["Duration"] = 0.0
         duration_col = df.columns.get_loc("Duration")
-        df.iloc[start_row : start_row + num_rows, duration_col] = 1
+        df.iloc[start_row:start_row + num_rows, duration_col] = 1
 
     df.to_csv(csv_path, index=True)
 
@@ -262,22 +307,28 @@ def run_parallel_generation(args: argparse.Namespace, cases_dir: Path, csv_cache
             done, in_flight = wait(in_flight, return_when=FIRST_COMPLETED)
             for future in done:
                 case_name, case_folder = future.result()
-                print(f"✅ Case '{case_name}' generated in {case_folder}")
+                print(f"[OK] Case '{case_name}' generated in {case_folder}")
 
         while in_flight:
             done, in_flight = wait(in_flight, return_when=FIRST_COMPLETED)
             for future in done:
                 case_name, case_folder = future.result()
-                print(f"✅ Case '{case_name}' generated in {case_folder}")
+                print(f"[OK] Case '{case_name}' generated in {case_folder}")
 
 
-def run_sequential_generation(args: argparse.Namespace, cases_dir: Path, csv_cache: dict[str, dict[str, bytes]]) -> None:
+def run_sequential_generation(
+    args: argparse.Namespace,
+    cases_dir: Path,
+    csv_cache: dict[str, dict[str, bytes]],
+) -> None:
     for base_case, f2, f1, f0, f3, f4 in iter_case_combinations():
         cache = csv_cache[base_case]
         if not cache:
             continue
-        case_name, case_folder = generate_case(base_case, f2, f1, f0, f3, f4, cases_dir, args.clean, cache)
-        print(f"✅ Case '{case_name}' generated in {case_folder}")
+        case_name, case_folder = generate_case(
+            base_case, f2, f1, f0, f3, f4, cases_dir, args.clean, cache,
+        )
+        print(f"[OK] Case '{case_name}' generated in {case_folder}")
 
 
 def main() -> None:
@@ -290,7 +341,7 @@ def main() -> None:
 
     for base_case in BASE_CASES:
         if not csv_cache[base_case]:
-            print(f"⚠️ No matching CSV files found for {base_case} in {base_dir}")
+            print(f"[WARNING] No matching CSV files found for {base_case} in {base_dir}")
 
     if args.workers == 1:
         run_sequential_generation(args, cases_dir, csv_cache)
