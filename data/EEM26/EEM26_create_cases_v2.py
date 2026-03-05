@@ -22,6 +22,7 @@ factor1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
 # factor1 = ["H1", "H6"]
 factor2 = ["T0", "T1", "T2", "T3", "T4"]
 factor3 = ["woDoD"]
+factor4 = ["Month1", "Month2","Month3","Month4","Month5", "Month6", "Month7", "Month8", "Month9", "Month10","Month11","Month12"]
 
 # Define columns
 columns_retailer = ["Case", "TariffType","Fastavgift", "Overforingsavgift", "EnergyTax", "PowerTariff", "Paslag", "Moms"]
@@ -70,6 +71,13 @@ dict_cluster = {
     "ClusterE": {"Load": 1.0, "PV": 0.0, "BESS": 0.0, "EV": 0.0},
 }
 
+dict_month_hours = {
+    "Month1": (1, 744), "Month2": (745, 1416), "Month3": (1417, 2160), "Month4": (2161, 2880),
+    "Month5": (2881, 3624), "Month6": (3625, 4344), "Month7": (4345, 5088), "Month8": (5089, 5832),
+    "Month9": (5833, 6552), "Month10": (6553, 7296), "Month11": (7297, 8016), "Month12": (8017, 8736),
+}
+
+
 # === Abbreviations ===
 abbrev = {
     "ClusterA": "ClA", "ClusterB": "ClB", "ClusterC": "ClC", "ClusterD": "ClD", "ClusterE": "ClE",
@@ -106,7 +114,7 @@ def read_and_set_index(csv_bytes):
 
 
 # === Optimized modify function ===
-def modify_csv(csv_path: Path, df: pd.DataFrame, f0, f1, f2, f3):
+def modify_csv(csv_path: Path, df: pd.DataFrame, f0, f1, f2, f3, f4):
     """Modify DataFrame in-place and save. Receives pre-parsed values."""
 
     fname = csv_path.name
@@ -203,6 +211,20 @@ def modify_csv(csv_path: Path, df: pd.DataFrame, f0, f1, f2, f3):
         elif f2 == "T4":
             df.loc[retailer_name, "PowerTariff"] = 65.0
 
+    # --- DURATION ---
+    if "Duration" in fname:
+        match = df.index[df["Duration"] == 1]
+        if not match.empty:
+            df["Duration"] = 0.0
+            start_hr, end_hr = dict_month_hours[f4]
+            start_row = start_hr - 1
+            num_rows = end_hr - start_row
+            dur_col = df.columns.get_loc("Duration")
+            df.iloc[start_row:start_row + num_rows, dur_col] = 1
+            # print(f'    ✏️ Set Duration=1 for rows {start_row} to {start_row + num_rows}')
+        else:
+            print("    ⚠️ 'Duration' value of 1 not found.")
+
     # --- Save ---
     df.to_csv(csv_path, index=True)
 
@@ -211,9 +233,9 @@ def modify_csv(csv_path: Path, df: pd.DataFrame, f0, f1, f2, f3):
 # Pre-cache source files (read from disk once per base case)
 csv_cache = {base: preload_source_csvs(base) for base in base_cases}
 
-for base, f2, f1, f0, f3 in product(base_cases, factor2, factor1, factor0, factor3):
+for base, f2, f1, f0, f3, f4 in product(base_cases, factor2, factor1, factor0, factor3, factor4):
 
-    case_name = f"{base}_{short(f2)}_{f1}_{f0}_{f3}"
+    case_name = f"{base}_{short(f2)}_{f1}_{f0}_{f3}_{f4}"
     case_folder = CASES_DIR / case_name
     case_folder.mkdir(parents=True, exist_ok=True)
     print(f"\n📁 Created case folder: {case_folder}")
@@ -230,7 +252,7 @@ for base, f2, f1, f0, f3 in product(base_cases, factor2, factor1, factor0, facto
         if "oM_Data" in src_name:
             # Read from cached bytes, modify, and save (skip shutil.copy2)
             df = read_and_set_index(src_data["bytes"])
-            modify_csv(dest_file, df, f0, f1, f2, f3)
+            modify_csv(dest_file, df, f0, f1, f2, f3, f4)
         else:
             # oM_Dict files: just write cached bytes directly (faster than shutil.copy2)
             dest_file.write_bytes(src_data["bytes"])
