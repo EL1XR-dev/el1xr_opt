@@ -605,7 +605,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults7     = pd.Series(data=[    -optmodel.vEleExport               [p,sc,n,nd      ]() * model.Par['pDuration'][p,sc,n]                                                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='ElectricityExport' )
     OutputResults8     = pd.Series(data=[-sum(optmodel.vEleNetFlow              [p,sc,n,nd,nf,cc]() * model.Par['pDuration'][p,sc,n] for (nf,cc) in lout [nd])                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='PowerFlowOut'      )
     OutputResults9     = pd.Series(data=[ sum(optmodel.vEleNetFlow              [p,sc,n,ni,nd,cc]() * model.Par['pDuration'][p,sc,n] for (ni,cc) in lin  [nd])                                            for p,sc,n,nd    in sPNND  ], index=pd.Index(sPNND  )).to_frame(name='PowerFlowIn'       )
-    OutputResults  = pd.concat([OutputResults1, OutputResults2, OutputResults3, OutputResults4, OutputResults5, OutputResults6, OutputResults7, OutputResults8, OutputResults9], axis=1).stack().to_frame(name='MWh')
+    OutputResults  = pd.concat([OutputResults1, OutputResults2, OutputResults3, OutputResults4, OutputResults5, OutputResults6, OutputResults7, OutputResults8, OutputResults9], axis=1)
+    OutputResults  = OutputResults.T.groupby(level=0).sum().T
+    OutputResults  = OutputResults.stack().to_frame(name='MWh')
     # set the index names
     OutputResults.index.names = ['Period', 'Scenario', 'LoadLevel', 'Node', 'Component']
     OutputResults = OutputResults.groupby(['Period', 'Scenario', 'LoadLevel', 'Node', 'Component'])[['MWh']].sum()
