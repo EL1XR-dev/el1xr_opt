@@ -15,7 +15,7 @@ CASES_DIR.mkdir(parents=True, exist_ok=True)
 
 # === Log file (reduced columns) ===
 LOG_FILE = BASE_DIR / "execution_log.csv"
-LOG_COLUMNS = ["UC", "Charger", "Mode", "DoD", "Case", "Status", "Timestamp", "Objective", "Error"]
+LOG_COLUMNS = ["UC", "Charger", "Mode", "DoD", "Month", "Case", "Status", "Timestamp", "Objective", "Error"]
 
 if not LOG_FILE.exists():
     pd.DataFrame(columns=LOG_COLUMNS).to_csv(LOG_FILE, index=False)
@@ -38,14 +38,14 @@ def _safe_objective(model):
     except Exception:
         return ""
 
-def write_log(f0, f1, f2, f3, case, status, fobj="", error=""):
+def write_log(f0, f1, f2, f3, f4, case, status, fobj="", error=""):
     global df_log, completed_cases
     case = str(case)
 
     df_log = df_log[df_log["Case"].astype(str) != case]
 
     new_row = pd.DataFrame([{
-        "UC": f0, "Charger": f1, "Mode": f2, "DoD": f3,
+        "UC": f0, "Charger": f1, "Mode": f2, "DoD": f3, "Month": f4,
         "Case": case, "Status": status, "Timestamp": _now_ts(),
         "Objective": fobj, "Error": error
     }])
@@ -66,14 +66,16 @@ factor1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
 # factor1 = ["H1", "H6"]
 factor2 = ["T0", "T1", "T2", "T3", "T4"]
 factor3 = ["woDoD"]
+factor4 = ["Month1", "Month2", "Month3", "Month4", "Month5", "Month6",
+           "Month7", "Month8", "Month9", "Month10", "Month11", "Month12"]
 
 abbrev = {"woDoD": "woD", "wDoD": "wD"}
 short_f2 = {f: abbrev.get(f, f) for f in factor2}
 short_f3 = {f: abbrev.get(f, f) for f in factor3}
 
 # === Main loop (reduced) ===
-for base, f0, f1, f2, f3 in product(base_cases, factor0, factor1, factor2, factor3):
-    case_name = f"{base}_{short_f2[f2]}_{f1}_{f0}_{f3}"
+for base, f0, f1, f2, f3, f4 in product(base_cases, factor0, factor1, factor2, factor3, factor4):
+    case_name = f"{base}_{short_f2[f2]}_{f1}_{f0}_{f3}_{f4}"
 
     if case_name in completed_cases:
         print(f"⏭️ Skipping {case_name} — already successful.\n")
@@ -91,7 +93,7 @@ for base, f0, f1, f2, f3 in product(base_cases, factor0, factor1, factor2, facto
         indlog="False",
     )
 
-    write_log(f0, f1, f2, f3, case_name, "RUNNING", "")
+    write_log(f0, f1, f2, f3, f4, case_name, "RUNNING", "")
 
     try:
         model = routine(**data)
@@ -101,14 +103,14 @@ for base, f0, f1, f2, f3 in product(base_cases, factor0, factor1, factor2, facto
         if str(tc1) != "optimal":
             err = f"Termination condition: {tc1}"
             print(f"❌ FAILED: {case_name} - {err}")
-            write_log(f0, f1, f2, f3, case_name, "FAILED", obj_val, error=err)
+            write_log(f0, f1, f2, f3, f4, case_name, "FAILED", obj_val, error=err)
         else:
             print(f"✔ SUCCESS: {case_name}")
-            write_log(f0, f1, f2, f3, case_name, "SUCCESS", obj_val)
+            write_log(f0, f1, f2, f3, f4, case_name, "SUCCESS", obj_val)
 
     except Exception:
         err_msg = traceback.format_exc()
         print(f"❌ FAILED: {case_name}\n{err_msg}")
-        write_log(f0, f1, f2, f3, case_name, "FAILED", "", error=err_msg)
+        write_log(f0, f1, f2, f3, f4, case_name, "FAILED", "", error=err_msg)
 
 print("\n🏁 Process finished. Check execution_log.csv for results.")
