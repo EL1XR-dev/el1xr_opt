@@ -35,8 +35,8 @@ FACTOR2 = ["T0"]
 FACTOR3 = ["wDoD"]
 FACTOR4 = [
     # "Month1",
-    "Month2",
-    # "Month3",
+    # "Month2",
+    "Month3",
     # "Month4",
     # "Month5",
     # "Month6",
