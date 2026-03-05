@@ -24,22 +24,24 @@ COPY_KEYWORDS = ("oM_Data", "oM_Dict")
 # === Factors definition ===
 BASE_CASES = ["Home1"]
 FACTOR0 = ["ClusterA", "ClusterB", "ClusterC", "ClusterD", "ClusterE"]
-FACTOR1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
-FACTOR2 = ["T0", "T1", "T2", "T3", "T4"]
-FACTOR3 = ["woDoD"]
+# FACTOR1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
+FACTOR1 = ["H1"]
+# FACTOR2 = ["T0", "T1", "T2", "T3", "T4"]
+FACTOR2 = ["T0"]
+FACTOR3 = ["wDoD"]
 FACTOR4 = [
     "Month1",
-    "Month2",
-    "Month3",
-    "Month4",
-    "Month5",
-    "Month6",
-    "Month7",
-    "Month8",
-    "Month9",
-    "Month10",
-    "Month11",
-    "Month12",
+    # "Month2",
+    # "Month3",
+    # "Month4",
+    # "Month5",
+    # "Month6",
+    # "Month7",
+    # "Month8",
+    # "Month9",
+    # "Month10",
+    # "Month11",
+    # "Month12",
 ]
 
 DICT_RETAILER = {
@@ -126,6 +128,9 @@ def read_and_set_index(csv_bytes: bytes) -> pd.DataFrame:
 
 def _safe_loc_set(df: pd.DataFrame, row: str, col: str, value: object) -> None:
     if row in df.index and col in df.columns:
+        # Upcast integer columns to float if needed to avoid LossySetitemError
+        if pd.api.types.is_integer_dtype(df[col]) and isinstance(value, float):
+            df[col] = df[col].astype(float)
         df.loc[row, col] = value
 
 
