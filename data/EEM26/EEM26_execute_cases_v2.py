@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import datetime
 import sys
 import traceback
@@ -52,6 +53,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--plots", default="True", help="plots flag passed to routine().")
     parser.add_argument("--rawresults", default="False", help="rawresults flag passed to routine().")
     parser.add_argument("--indlog", default="False", help="indlog flag passed to routine().")
+    parser.add_argument("--workers", type=int, default=1, help="Number of worker processes used to run cases in parallel.")
     parser.add_argument("--force-rerun", action="store_true", help="Run even if case is already SUCCESS in execution log.")
     return parser.parse_args()
 
@@ -110,6 +112,56 @@ def write_log(df_log: pd.DataFrame, log_file: Path, *, f0: str, f1: str, f2: str
     return updated
 
 
+def _run_case_worker(*, src_dir: Path, run_data: dict, f0: str, f1: str, f2: str, f3: str, f4: str, case_name: str) -> dict:
+    if str(src_dir) not in sys.path:
+        sys.path.append(str(src_dir))
+
+    from el1xr_opt.Modules.oM_Sequence import routine
+
+    try:
+        model = routine(**run_data)
+        termination = getattr(model.SolverResults1.solver, "termination_condition", None)
+        objective = _safe_objective(model)
+
+        if str(termination) != "optimal":
+            return {
+                "f0": f0,
+                "f1": f1,
+                "f2": f2,
+                "f3": f3,
+                "f4": f4,
+                "case_name": case_name,
+                "status": "FAILED",
+                "objective": objective,
+                "error": f"Termination condition: {termination}",
+            }
+
+        return {
+            "f0": f0,
+            "f1": f1,
+            "f2": f2,
+            "f3": f3,
+            "f4": f4,
+            "case_name": case_name,
+            "status": "SUCCESS",
+            "objective": objective,
+            "error": "",
+        }
+
+    except Exception:
+        return {
+            "f0": f0,
+            "f1": f1,
+            "f2": f2,
+            "f3": f3,
+            "f4": f4,
+            "case_name": case_name,
+            "status": "FAILED",
+            "objective": "",
+            "error": traceback.format_exc(),
+        }
+
+
 def main() -> None:
     args = parse_args()
     base_dir = args.base_dir.resolve()
@@ -120,13 +172,13 @@ def main() -> None:
         raise FileNotFoundError(f"Cases directory not found: {cases_dir}")
 
     src_dir = args.src_dir.resolve()
-    if str(src_dir) not in sys.path:
-        sys.path.append(str(src_dir))
 
-    from el1xr_opt.Modules.oM_Sequence import routine
+    if args.workers < 1:
+        raise ValueError("--workers must be >= 1")
 
     df_log = initialize_log(log_file)
     completed_cases = set(df_log.loc[df_log["Status"] == "SUCCESS", "Case"].astype(str).values)
+    pending_cases: list[tuple[str, str, str, str, str, str, dict]] = []
     for base_case, f0, f1, f2, f3, f4 in product(BASE_CASES, FACTOR0, FACTOR1, FACTOR2, FACTOR3, FACTOR4):
         case_name = f"{base_case}_{f2}_{f1}_{f0}_{f3}_{f4}"
 
@@ -134,7 +186,6 @@ def main() -> None:
             print(f"⏭️ Skipping {case_name} — already successful")
             continue
 
-        print(f"▶️ Running: {case_name}")
         run_data = {
             "dir": cases_dir,
             "case": case_name,
@@ -144,50 +195,26 @@ def main() -> None:
             "plots": args.plots,
             "indlog": args.indlog,
         }
+        pending_cases.append((f0, f1, f2, f3, f4, case_name, run_data))
 
-        df_log = write_log(df_log, log_file, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case=case_name, status="RUNNING")
+    if not pending_cases:
+        print("🏁 No pending cases to run.")
+        return
 
-        try:
-            model = routine(**run_data)
-            termination = getattr(model.SolverResults1.solver, "termination_condition", None)
-            objective = _safe_objective(model)
+    if args.workers == 1:
+        print(f"ℹ️ Running {len(pending_cases)} case(s) sequentially")
+        for f0, f1, f2, f3, f4, case_name, run_data in pending_cases:
+            print(f"▶️ Running: {case_name}")
+            df_log = write_log(df_log, log_file, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case=case_name, status="RUNNING")
+            result = _run_case_worker(src_dir=src_dir, run_data=run_data, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case_name=case_name)
 
-            if str(termination) != "optimal":
-                error_msg = f"Termination condition: {termination}"
-                print(f"❌ FAILED: {case_name} - {error_msg}")
-                df_log = write_log(
-                    df_log,
-                    log_file,
-                    f0=f0,
-                    f1=f1,
-                    f2=f2,
-                    f3=f3,
-                    f4=f4,
-                    case=case_name,
-                    status="FAILED",
-                    objective=objective,
-                    error=error_msg,
-                )
-                completed_cases.discard(case_name)
-            else:
+            if result["status"] == "SUCCESS":
                 print(f"✅ SUCCESS: {case_name}")
-                df_log = write_log(
-                    df_log,
-                    log_file,
-                    f0=f0,
-                    f1=f1,
-                    f2=f2,
-                    f3=f3,
-                    f4=f4,
-                    case=case_name,
-                    status="SUCCESS",
-                    objective=objective,
-                )
                 completed_cases.add(case_name)
+            else:
+                print(f"❌ FAILED: {case_name}\n{result['error']}")
+                completed_cases.discard(case_name)
 
-        except Exception:
-            error_msg = traceback.format_exc()
-            print(f"❌ FAILED: {case_name}\n{error_msg}")
             df_log = write_log(
                 df_log,
                 log_file,
@@ -197,10 +224,54 @@ def main() -> None:
                 f3=f3,
                 f4=f4,
                 case=case_name,
-                status="FAILED",
-                error=error_msg,
+                status=result["status"],
+                objective=result["objective"],
+                error=result["error"],
             )
-            completed_cases.discard(case_name)
+    else:
+        print(f"ℹ️ Running {len(pending_cases)} case(s) with {args.workers} worker process(es)")
+        future_to_case = {}
+        with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
+            for f0, f1, f2, f3, f4, case_name, run_data in pending_cases:
+                print(f"▶️ Queued: {case_name}")
+                df_log = write_log(df_log, log_file, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case=case_name, status="RUNNING")
+                future = executor.submit(
+                    _run_case_worker,
+                    src_dir=src_dir,
+                    run_data=run_data,
+                    f0=f0,
+                    f1=f1,
+                    f2=f2,
+                    f3=f3,
+                    f4=f4,
+                    case_name=case_name,
+                )
+                future_to_case[future] = case_name
+
+            for future in concurrent.futures.as_completed(future_to_case):
+                case_name = future_to_case[future]
+                result = future.result()
+
+                if result["status"] == "SUCCESS":
+                    print(f"✅ SUCCESS: {case_name}")
+                    completed_cases.add(case_name)
+                else:
+                    print(f"❌ FAILED: {case_name}\n{result['error']}")
+                    completed_cases.discard(case_name)
+
+                df_log = write_log(
+                    df_log,
+                    log_file,
+                    f0=result["f0"],
+                    f1=result["f1"],
+                    f2=result["f2"],
+                    f3=result["f3"],
+                    f4=result["f4"],
+                    case=case_name,
+                    status=result["status"],
+                    objective=result["objective"],
+                    error=result["error"],
+                )
 
     print(f"🏁 Process finished. Check log at: {log_file}")
 
