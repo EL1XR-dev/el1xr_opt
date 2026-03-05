@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 CASE_NAMES = ["Home1"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]
 EXPECTED_COSTS = {
-    # "Grid1": 9228.472926533075,
+    # "Grid1": 7847.932381485619,
     "Home1":  569.0366285211821}  # Replace with actual expected costs
     # "Home1": 215.8585985433236}  # Replace with actual expected costs
 
