@@ -226,12 +226,20 @@ def create_constraints(model, optmodel, indlog):
         hout [ni].append((nf,cc))
 
     # nodes to generators (g2n)
-    eg2n = defaultdict(list)
-    for nd,eg in model.n2eg:
-        eg2n[nd].append(eg)
-    hg2n = defaultdict(list)
-    for nd,hg in model.n2hg:
-        hg2n[nd].append(hg)
+    eg2r = defaultdict(list)
+    for er,eg in model.r2eg:
+        eg2r[er].append(eg)
+    hg2r = defaultdict(list)
+    for hr,hg in model.r2hg:
+        hg2r[hr].append(hg)
+    egs2r = defaultdict(list)
+    for er,egs in model.r2eg:
+        if (er,egs) in model.r2eg:
+            egs2r[er].append(egs)
+    hgs2r = defaultdict(list)
+    for hr,hgs in model.r2hg:
+        if (hr,hgs) in model.r2hg:
+            hgs2r[hr].append(hgs)
     egt2n = defaultdict(list)
     for nd,egt in model.nd*model.egt:
         if (nd,egt) in model.n2eg:
@@ -240,18 +248,10 @@ def create_constraints(model, optmodel, indlog):
     for nd,hgt in model.nd*model.hgt:
         if (nd,hgt) in model.n2hg:
             hgt2n[nd].append(hgt)
-    egs2n = defaultdict(list)
-    for nd,egs in model.nd*model.egs:
-        if (nd,egs) in model.n2eg:
-            egs2n[nd].append(egs)
-    hgs2n = defaultdict(list)
-    for nd,hgs in model.nd*model.hgs:
-        if (nd,hgs) in model.n2hg:
-            hgs2n[nd].append(hgs)
 
     #%% Constraints
     def eEleRetNodeBalance(optmodel, p,sc,n,er):
-        if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
+        if sum(1 for eg in eg2r[er]) + sum(1 for egs in egs2r[er]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
             return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
                     - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
                     + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
