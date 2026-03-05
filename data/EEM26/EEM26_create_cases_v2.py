@@ -11,9 +11,13 @@ Improvements over the previous version:
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
 from io import BytesIO
 from itertools import product
 from pathlib import Path
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from typing import Iterable
 
 import pandas as pd
 
@@ -103,7 +107,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--base-dir", type=Path, default=DEFAULT_BASE_DIR, help="Directory containing base-case folders.")
     parser.add_argument("--cases-dir", type=Path, default=None, help="Output cases directory (defaults to <base-dir>/Cases).")
     parser.add_argument("--clean", action="store_true", help="Remove existing case folders before writing new data.")
-    return parser.parse_args()
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=max(1, (os.cpu_count() or 1)),
+        help="Number of parallel workers used to generate cases.",
+    )
+    args = parser.parse_args()
+    if args.workers < 1:
+        parser.error("--workers must be >= 1")
+    return args
 
 
 def preload_source_csvs(base_dir: Path, base_case: str) -> dict[str, bytes]:
@@ -197,6 +210,76 @@ def modify_csv(csv_path: Path, df: pd.DataFrame, f0: str, f1: str, f2: str, f3: 
     df.to_csv(csv_path, index=True)
 
 
+def generate_case(
+    base_case: str,
+    f2: str,
+    f1: str,
+    f0: str,
+    f3: str,
+    f4: str,
+    cases_dir: Path,
+    clean: bool,
+    cache: dict[str, bytes],
+) -> tuple[str, str]:
+    case_name = f"{base_case}_{short(f2)}_{f1}_{f0}_{f3}_{f4}"
+    case_folder = cases_dir / case_name
+
+    if clean and case_folder.exists():
+        shutil.rmtree(case_folder)
+    case_folder.mkdir(parents=True, exist_ok=True)
+
+    for src_name, src_bytes in cache.items():
+        new_name = src_name.replace(base_case, case_name)
+        dest_file = case_folder / new_name
+        if "oM_Data" in src_name:
+            df = read_and_set_index(src_bytes)
+            modify_csv(dest_file, df, f0, f1, f2, f3, f4)
+        else:
+            dest_file.write_bytes(src_bytes)
+
+    return case_name, str(case_folder)
+
+
+def iter_case_combinations() -> Iterable[tuple[str, str, str, str, str, str]]:
+    return product(BASE_CASES, FACTOR2, FACTOR1, FACTOR0, FACTOR3, FACTOR4)
+
+
+def run_parallel_generation(args: argparse.Namespace, cases_dir: Path, csv_cache: dict[str, dict[str, bytes]]) -> None:
+    max_in_flight = max(args.workers * 2, 1)
+    in_flight = set()
+    combinations = iter_case_combinations()
+
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        for base_case, f2, f1, f0, f3, f4 in combinations:
+            cache = csv_cache[base_case]
+            if not cache:
+                continue
+
+            in_flight.add(executor.submit(generate_case, base_case, f2, f1, f0, f3, f4, cases_dir, args.clean, cache))
+            if len(in_flight) < max_in_flight:
+                continue
+
+            done, in_flight = wait(in_flight, return_when=FIRST_COMPLETED)
+            for future in done:
+                case_name, case_folder = future.result()
+                print(f"✅ Case '{case_name}' generated in {case_folder}")
+
+        while in_flight:
+            done, in_flight = wait(in_flight, return_when=FIRST_COMPLETED)
+            for future in done:
+                case_name, case_folder = future.result()
+                print(f"✅ Case '{case_name}' generated in {case_folder}")
+
+
+def run_sequential_generation(args: argparse.Namespace, cases_dir: Path, csv_cache: dict[str, dict[str, bytes]]) -> None:
+    for base_case, f2, f1, f0, f3, f4 in iter_case_combinations():
+        cache = csv_cache[base_case]
+        if not cache:
+            continue
+        case_name, case_folder = generate_case(base_case, f2, f1, f0, f3, f4, cases_dir, args.clean, cache)
+        print(f"✅ Case '{case_name}' generated in {case_folder}")
+
+
 def main() -> None:
     args = parse_args()
     base_dir = args.base_dir.resolve()
@@ -205,31 +288,14 @@ def main() -> None:
 
     csv_cache = {base_case: preload_source_csvs(base_dir, base_case) for base_case in BASE_CASES}
 
-    for base_case, f2, f1, f0, f3, f4 in product(BASE_CASES, FACTOR2, FACTOR1, FACTOR0, FACTOR3, FACTOR4):
-        case_name = f"{base_case}_{short(f2)}_{f1}_{f0}_{f3}_{f4}"
-        case_folder = cases_dir / case_name
-
-        if args.clean and case_folder.exists():
-            for file in case_folder.glob("*"):
-                if file.is_file():
-                    file.unlink()
-        case_folder.mkdir(parents=True, exist_ok=True)
-
-        cache = csv_cache[base_case]
-        if not cache:
+    for base_case in BASE_CASES:
+        if not csv_cache[base_case]:
             print(f"⚠️ No matching CSV files found for {base_case} in {base_dir}")
-            continue
 
-        for src_name, src_bytes in cache.items():
-            new_name = src_name.replace(base_case, case_name)
-            dest_file = case_folder / new_name
-            if "oM_Data" in src_name:
-                df = read_and_set_index(src_bytes)
-                modify_csv(dest_file, df, f0, f1, f2, f3, f4)
-            else:
-                dest_file.write_bytes(src_bytes)
-
-        print(f"✅ Case '{case_name}' generated in {case_folder}")
+    if args.workers == 1:
+        run_sequential_generation(args, cases_dir, csv_cache)
+    else:
+        run_parallel_generation(args, cases_dir, csv_cache)
 
 
 if __name__ == "__main__":
