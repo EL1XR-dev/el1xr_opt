@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import datetime
+import os
 import sys
 import traceback
 from itertools import product
@@ -53,7 +54,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--plots", default="True", help="plots flag passed to routine().")
     parser.add_argument("--rawresults", default="False", help="rawresults flag passed to routine().")
     parser.add_argument("--indlog", default="False", help="indlog flag passed to routine().")
-    parser.add_argument("--workers", type=int, default=1, help="Number of worker processes used to run cases in parallel.")
+    parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 1)), help="Number of worker processes used to run cases in parallel.")
     parser.add_argument("--force-rerun", action="store_true", help="Run even if case is already SUCCESS in execution log.")
     return parser.parse_args()
 
