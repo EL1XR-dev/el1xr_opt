@@ -61,9 +61,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         data_frames[f'df{file_set_name}'].set_index(unnamed_columns, inplace=True)
         data_frames[f'df{file_set_name}'].index.names = [None] * len(unnamed_columns)
 
-    # substitute NaN by 0
+    # substitute NaN by 0 (only for numeric columns to avoid TypeError on string columns)
     for df in data_frames.values():
-        df.fillna(0.0, inplace=True)
+        numeric_cols = df.select_dtypes(include='number').columns
+        df[numeric_cols] = df[numeric_cols].fillna(0.0)
 
     # Define prefixes and suffixes
     model.reserves_prefixes     = ['FCRD_Up', 'FCRD_Down','FCRN_Up','FCRN_Down']
@@ -620,8 +621,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     idxOutflows['Yearly' ] = round(8736 / parameters_dict['pParTimeStep'])
 
     for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector}CycleTimeStep'   ] = parameters_dict[f'p{sector}GenStorageType' ].map(idxCycle                                                                                                                                                            ).astype('int')
-        parameters_dict[f'p{sector}OutflowsTimeStep'] = parameters_dict[f'p{sector}GenOutflowsType'].map(idxOutflows).where(parameters_dict['pVarMinOutflows'][dict_sector[sector]].sum() + parameters_dict['pVarMaxOutflows'][dict_sector[sector]].sum() > 0.0, other = 8736).astype('int')
+        parameters_dict[f'p{sector}CycleTimeStep'   ] = parameters_dict[f'p{sector}GenStorageType' ].map(idxCycle                                                                                                                                                            ).fillna(8736).astype('int')
+        parameters_dict[f'p{sector}OutflowsTimeStep'] = parameters_dict[f'p{sector}GenOutflowsType'].map(idxOutflows).where(parameters_dict['pVarMinOutflows'][dict_sector[sector]].sum() + parameters_dict['pVarMaxOutflows'][dict_sector[sector]].sum() > 0.0, other = 8736).fillna(8736).astype('int')
         parameters_dict[f'p{sector}CycleTimeStep'   ] = pd.concat([parameters_dict[f'p{sector}CycleTimeStep'], parameters_dict[f'p{sector}OutflowsTimeStep']], axis=1).min(axis=1)
 
     # mapping the string pParDemandType using the idxCycle dictionary
