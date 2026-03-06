@@ -185,7 +185,7 @@ def main() -> None:
         case_name = f"{base_case}_{f2}_{f1}_{f0}_{f3}_{f4}"
 
         if (not args.force_rerun) and case_name in completed_cases:
-            print(f"⏭️ Skipping {case_name} — already successful")
+            print(f"SKIP: {case_name} - already successful")
             continue
 
         run_data = {
@@ -200,21 +200,21 @@ def main() -> None:
         pending_cases.append((f0, f1, f2, f3, f4, case_name, run_data))
 
     if not pending_cases:
-        print("🏁 No pending cases to run.")
+        print("DONE: No pending cases to run.")
         return
 
     if args.workers == 1:
-        print(f"ℹ️ Running {len(pending_cases)} case(s) sequentially")
+        print(f"INFO: Running {len(pending_cases)} case(s) sequentially")
         for f0, f1, f2, f3, f4, case_name, run_data in pending_cases:
-            print(f"▶️ Running: {case_name}")
+            print(f"RUN: {case_name}")
             df_log = write_log(df_log, log_file, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case=case_name, status="RUNNING")
             result = _run_case_worker(src_dir=src_dir, run_data=run_data, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case_name=case_name)
 
             if result["status"] == "SUCCESS":
-                print(f"✅ SUCCESS: {case_name}")
+                print(f"SUCCESS: {case_name}")
                 completed_cases.add(case_name)
             else:
-                print(f"❌ FAILED: {case_name}\n{result['error']}")
+                print(f"FAILED: {case_name}\n{result['error']}")
                 completed_cases.discard(case_name)
 
             df_log = write_log(
@@ -231,11 +231,11 @@ def main() -> None:
                 error=result["error"],
             )
     else:
-        print(f"ℹ️ Running {len(pending_cases)} case(s) with {args.workers} worker process(es)")
+        print(f"INFO: Running {len(pending_cases)} case(s) with {args.workers} worker process(es)")
         future_to_case = {}
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
             for f0, f1, f2, f3, f4, case_name, run_data in pending_cases:
-                print(f"▶️ Queued: {case_name}")
+                print(f"QUEUED: {case_name}")
                 df_log = write_log(df_log, log_file, f0=f0, f1=f1, f2=f2, f3=f3, f4=f4, case=case_name, status="RUNNING")
                 future = executor.submit(
                     _run_case_worker,
@@ -255,10 +255,10 @@ def main() -> None:
                 result = future.result()
 
                 if result["status"] == "SUCCESS":
-                    print(f"✅ SUCCESS: {case_name}")
+                    print(f"SUCCESS: {case_name}")
                     completed_cases.add(case_name)
                 else:
-                    print(f"❌ FAILED: {case_name}\n{result['error']}")
+                    print(f"FAILED: {case_name}\n{result['error']}")
                     completed_cases.discard(case_name)
 
                 df_log = write_log(
@@ -275,7 +275,7 @@ def main() -> None:
                     error=result["error"],
                 )
 
-    print(f"🏁 Process finished. Check log at: {log_file}")
+    print(f"DONE: Process finished. Check log at: {log_file}")
 
 
 if __name__ == "__main__":
