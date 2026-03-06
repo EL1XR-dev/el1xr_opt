@@ -20,23 +20,24 @@ LOG_COLUMNS = ["UC", "Charger", "Mode", "DoD", "Month", "Case", "Status", "Times
 
 # === Factors definition ===
 BASE_CASES = ["Home1"]
-FACTOR0 = ["ClusterA", "ClusterB", "ClusterC", "ClusterD", "ClusterE"]
+# FACTOR0 = ["ClusterA", "ClusterB", "ClusterC", "ClusterD", "ClusterE"]
+FACTOR0 = ["ClusterC", "ClusterD"]
 # FACTOR1 = ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]
-FACTOR1 = ["H1"]
-# FACTOR2 = ["T0", "T1", "T2", "T3", "T4"]
-FACTOR2 = ["T0"]
+FACTOR1 = ["H7", "H8"]
+FACTOR2 = ["T0", "T1", "T2", "T3", "T4"]
+# FACTOR2 = ["T0"]
 FACTOR3 = ["wDoD"]
 FACTOR4 = [
     # "Month1",
     # "Month2",
-    "Month3",
+    # "Month3",
     # "Month4",
     # "Month5",
     # "Month6",
     # "Month7",
-    # "Month8",
+    "Month8",
     # "Month9",
-    # "Month10",
+    "Month10",
     # "Month11",
     # "Month12",
 ]
@@ -50,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cases-dir", type=Path, default=None, help="Case directory (defaults to <base-dir>/Cases).")
     parser.add_argument("--log-file", type=Path, default=None, help="Execution log CSV file.")
     parser.add_argument("--src-dir", type=Path, default=DEFAULT_SRC_DIR, help="Project src directory to import el1xr_opt modules.")
-    parser.add_argument("--solver", default="highs", help="Solver name passed to routine().")
+    parser.add_argument("--solver", default="gurobi", help="Solver name passed to routine().")
     parser.add_argument("--plots", default="True", help="plots flag passed to routine().")
     parser.add_argument("--rawresults", default="False", help="rawresults flag passed to routine().")
     parser.add_argument("--indlog", default="False", help="indlog flag passed to routine().")
