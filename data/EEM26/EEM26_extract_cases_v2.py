@@ -11,12 +11,12 @@ from __future__ import annotations
 
 import argparse
 import time
+import zipfile
 from itertools import product
 from pathlib import Path
 
 import py7zr
 import rarfile
-import zipfile
 
 DEFAULT_BASE_DIR = Path(__file__).resolve().parent
 
