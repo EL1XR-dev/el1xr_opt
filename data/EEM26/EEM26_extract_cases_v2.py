@@ -114,7 +114,7 @@ def extract_files(archive_path: Path, out_dir: Path, targets: list[str], prefix:
     else:
         targets_set = set(targets)
         with py7zr.SevenZipFile(archive_path, mode="r") as z:
-            files = z.read(targets)
+            files = z.readall()
             if not files:
                 return
             for name, bio in files.items():
