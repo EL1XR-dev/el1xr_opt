@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import time
 import zipfile
 from itertools import product
@@ -57,6 +58,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cases-dir", type=Path, default=None, help="Case directory (defaults to <base-dir>/Cases).")
     parser.add_argument("--results-dir", type=Path, default=None, help="Output directory (defaults to <base-dir>/Results).")
     return parser.parse_args()
+
+
+def detect_parent_prefix(names: list[str]) -> str:
+    """Return the common top-level directory prefix (with trailing '/'), or ''."""
+    prefixes = {n.split("/")[0] for n in names if "/" in n}
+    if len(prefixes) == 1:
+        return prefixes.pop() + "/"
+    return ""
 
 
 def find_archive(base_dir: Path, base_case: str) -> Path | None:
@@ -125,17 +134,22 @@ def main() -> None:
         all_combos = list(product(FACTOR0, FACTOR1, FACTOR2, FACTOR3, FACTOR4))
         print(f"  Combinations : {len(all_combos)}")
 
+        archive_names = get_archive_names(archive_path)
+        prefix = detect_parent_prefix(archive_names)
+        if prefix:
+            print(f"  Archive prefix   : {prefix.rstrip('/')}/")
+
         targets = []
         for f0, f1, f2, f3, f4 in all_combos:
             case_name = build_case_name(base_case, f0, f1, f2, f3, f4)
             for result_file in RESULT_FILES:
-                targets.append(f"{case_name}/{result_file}_{case_name}.csv")
+                targets.append(f"{prefix}{case_name}/{result_file}_{case_name}.csv")
 
         print(f"  Files to extract : {len(targets)}")
 
         t_start = time.time()
 
-        names_set = set(get_archive_names(archive_path))
+        names_set = set(archive_names)
         missing = [t for t in targets if t not in names_set]
         if missing:
             print(f"  WARNING: {len(missing)} files not found in archive:")
@@ -149,6 +163,12 @@ def main() -> None:
 
         print(f"  Extracting {len(targets)} files...")
         extract_files(archive_path, out_dir, targets)
+
+        if prefix:
+            parent_extracted = out_dir / prefix.rstrip("/")
+            for item in parent_extracted.iterdir():
+                shutil.move(str(item), str(out_dir / item.name))
+            parent_extracted.rmdir()
 
         elapsed = time.time() - t_start
         print(f"  Done : {base_case} -> {out_dir}")
