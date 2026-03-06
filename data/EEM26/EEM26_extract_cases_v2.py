@@ -10,12 +10,12 @@ Improvements over the previous version:
 from __future__ import annotations
 
 import argparse
+import os
 import time
 import zipfile
 from itertools import product
 from pathlib import Path
 
-import os
 import py7zr
 import rarfile
 
@@ -99,11 +99,9 @@ def build_case_name(base_case: str, f0: str, f1: str, f2: str, f3: str, f4: str)
 
 def main() -> None:
     args = parse_args()
-    if args.cases_dir is not None:
-        base_dir = os.path.join(args.base_dir, args.cases_dir)
-    else:
-        base_dir = args.base_dir.resolve()
-    results_dir = (args.results_dir or (args.results_dir / "Results")).resolve()
+    base_dir = args.base_dir.resolve()
+    cases_dir = (args.cases_dir or (base_dir / "Cases")).resolve()
+    results_dir = (args.results_dir or (base_dir / "Results")).resolve()
     results_dir.mkdir(parents=True, exist_ok=True)
 
     t_total_start = time.time()
@@ -113,8 +111,8 @@ def main() -> None:
         print(f"Processing base case: {base_case}")
         print(f"{'='*60}")
 
-        archive_path = find_archive(base_dir, base_case)
-        print(f"  Searching for archive in: {base_dir}")
+        archive_path = find_archive(cases_dir, base_case)
+        print(f"  Searching for archive in: {cases_dir}")
         if archive_path is None:
             print(f"  WARNING: No archive found for {base_case}, skipping.")
             continue
