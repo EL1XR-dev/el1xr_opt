@@ -15,6 +15,7 @@ import zipfile
 from itertools import product
 from pathlib import Path
 
+import os
 import py7zr
 import rarfile
 
@@ -53,6 +54,7 @@ RESULT_FILES = [
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Extract EEM26 result files from case archives.")
     parser.add_argument("--base-dir", type=Path, default=DEFAULT_BASE_DIR, help="Directory containing case archives.")
+    parser.add_argument("--cases-dir", type=Path, default=None, help="Case directory (defaults to <base-dir>/Cases).")
     parser.add_argument("--results-dir", type=Path, default=None, help="Output directory (defaults to <base-dir>/Results).")
     return parser.parse_args()
 
@@ -97,8 +99,11 @@ def build_case_name(base_case: str, f0: str, f1: str, f2: str, f3: str, f4: str)
 
 def main() -> None:
     args = parse_args()
-    base_dir = args.base_dir.resolve()
-    results_dir = (args.results_dir or (base_dir / "Results")).resolve()
+    if args.cases_dir is not None:
+        base_dir = os.path.join(args.base_dir, args.cases_dir)
+    else:
+        base_dir = args.base_dir.resolve()
+    results_dir = (args.results_dir or (args.results_dir / "Results")).resolve()
     results_dir.mkdir(parents=True, exist_ok=True)
 
     t_total_start = time.time()
@@ -109,6 +114,7 @@ def main() -> None:
         print(f"{'='*60}")
 
         archive_path = find_archive(base_dir, base_case)
+        print(f"  Searching for archive in: {base_dir}")
         if archive_path is None:
             print(f"  WARNING: No archive found for {base_case}, skipping.")
             continue
