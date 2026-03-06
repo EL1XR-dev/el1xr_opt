@@ -155,8 +155,10 @@ def modify_csv(csv_path: Path, df: pd.DataFrame, f0: str, f1: str, f2: str, f3: 
     ev = f"EV_{f1[1:].zfill(2)}"
     bess = "BESS_01"
 
-    if "Option" in fname:
-        _safe_loc_set(df, "Options", "IndBinGenOperat", 0)
+    if "Option" in fname and "Options" in df.index and "IndBinGenOperat" in df.columns:
+        current_val = df.loc["Options", "IndBinGenOperat"]
+        if pd.isna(current_val):
+            _safe_loc_set(df, "Options", "IndBinGenOperat", 0)
 
     if "ElectricityDemand" in fname:
         df["InitialPeriod"] = 2045
