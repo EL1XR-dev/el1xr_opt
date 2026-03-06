@@ -10,6 +10,7 @@ Improvements over the previous version:
 from __future__ import annotations
 
 import argparse
+import tempfile
 import time
 import zipfile
 from itertools import product
@@ -112,14 +113,14 @@ def extract_files(archive_path: Path, out_dir: Path, targets: list[str], prefix:
             for t in targets:
                 _write_member(z.read(t), t, prefix, out_dir)
     else:
-        targets_set = set(targets)
-        with py7zr.SevenZipFile(archive_path, mode="r") as z:
-            files = z.readall()
-            if not files:
-                return
-            for name, bio in files.items():
-                if name in targets_set:
-                    _write_member(bio.read(), name, prefix, out_dir)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            with py7zr.SevenZipFile(archive_path, mode="r") as z:
+                z.extract(path=tmp_path, targets=targets)
+            for t in targets:
+                src = tmp_path / t
+                if src.exists():
+                    _write_member(src.read_bytes(), t, prefix, out_dir)
 
 
 def build_case_name(base_case: str, f0: str, f1: str, f2: str, f3: str, f4: str) -> str:
