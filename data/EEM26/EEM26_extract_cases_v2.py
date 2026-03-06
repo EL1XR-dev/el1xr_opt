@@ -10,7 +10,6 @@ Improvements over the previous version:
 from __future__ import annotations
 
 import argparse
-import os
 import time
 import zipfile
 from itertools import product
