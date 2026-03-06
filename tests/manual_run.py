@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 CASE_NAMES = ["Home1"]  # Add more case names as needed
 # CASE_NAMES = ["Home1"]
 EXPECTED_COSTS = {
-    # "Grid1": 9228.472926533075,
+    # "Grid1": 7847.932381485619,
     "Home1":  569.0366285211821}  # Replace with actual expected costs
     # "Home1": 215.8585985433236}  # Replace with actual expected costs
 
@@ -34,7 +34,7 @@ def setup_test_case(case_name):
         solver="gurobi",  # You can change the solver here
         # date of 2023-01-01 01:00:00, to ensure consistent results across runs
         date= datetime.datetime(2023, 1, 1, 1, 0, 0),
-        rawresults="True",
+        rawresults="False",
         plots="True",
         indlog="False",
     )
@@ -61,7 +61,7 @@ def setup_test_case(case_name):
             if not match.empty:
                 start_row = original_duration_df.index.get_loc(match[0])
                 print(f'Found start row for modification at index: {start_row}')  # Added print for console feedback
-                modify_and_save_csv(original_duration_df, "Duration", start_row, 168, duration_csv, 0)
+                modify_and_save_csv(original_duration_df, "Duration", start_row, 8736, duration_csv, 0)
         else:
             print("Duration column not found in the DataFrame.")  # Added print for console feedback
 

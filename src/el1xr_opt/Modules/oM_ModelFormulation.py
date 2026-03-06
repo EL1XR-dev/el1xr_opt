@@ -226,12 +226,20 @@ def create_constraints(model, optmodel, indlog):
         hout [ni].append((nf,cc))
 
     # nodes to generators (g2n)
-    eg2n = defaultdict(list)
-    for nd,eg in model.n2eg:
-        eg2n[nd].append(eg)
-    hg2n = defaultdict(list)
-    for nd,hg in model.n2hg:
-        hg2n[nd].append(hg)
+    eg2r = defaultdict(list)
+    for er,eg in model.r2eg:
+        eg2r[er].append(eg)
+    hg2r = defaultdict(list)
+    for hr,hg in model.r2hg:
+        hg2r[hr].append(hg)
+    egs2r = defaultdict(list)
+    for er,egs in model.r2eg:
+        if (er,egs) in model.r2eg:
+            egs2r[er].append(egs)
+    hgs2r = defaultdict(list)
+    for hr,hgs in model.r2hg:
+        if (hr,hgs) in model.r2hg:
+            hgs2r[hr].append(hgs)
     egt2n = defaultdict(list)
     for nd,egt in model.nd*model.egt:
         if (nd,egt) in model.n2eg:
@@ -240,6 +248,14 @@ def create_constraints(model, optmodel, indlog):
     for nd,hgt in model.nd*model.hgt:
         if (nd,hgt) in model.n2hg:
             hgt2n[nd].append(hgt)
+    eg2n = defaultdict(list)
+    for nd,eg in model.nd*model.eg:
+        if (nd,eg) in model.n2eg:
+            eg2n[nd].append(eg)
+    hg2n = defaultdict(list)
+    for nd,hg in model.nd*model.hg:
+        if (nd,hg) in model.n2hg:
+            hg2n[nd].append(hg)
     egs2n = defaultdict(list)
     for nd,egs in model.nd*model.egs:
         if (nd,egs) in model.n2eg:
@@ -251,6 +267,7 @@ def create_constraints(model, optmodel, indlog):
 
     #%% Constraints
     def eEleRetNodeBalance(optmodel, p,sc,n,er):
+        nd = model.Par['pEleRetNode'][er]
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
             return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
                     - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
@@ -1369,8 +1386,8 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            buy_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
+            sum_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
                 adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
@@ -1390,8 +1407,8 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            buy_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
+            sum_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
                 adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
@@ -1408,8 +1425,8 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 1.0 if (hour >= 22 or hour <= 6) else 1.0
+            buy_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
+            sum_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
                 adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
@@ -1443,8 +1460,8 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
+            buy_factor = 0.5 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
+            sum_factor = 2.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 5.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
                 adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
@@ -1470,8 +1487,8 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
+            buy_factor = 0.5 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
+            sum_factor = 2.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 5.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
                 adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
@@ -1488,8 +1505,8 @@ def create_constraints(model, optmodel, indlog):
             # Determine hour of day using ordinal of time index n
             hour = optmodel.n.ord(n) % 24
             # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= 22 or hour <= 6) else 1.0
-            sum_factor = 2.0 if (hour >= 22 or hour <= 6) else 5.0
+            buy_factor = 0.5 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
+            sum_factor = 2.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 5.0
             # Adjusted electric buy variable
             if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
                 adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
