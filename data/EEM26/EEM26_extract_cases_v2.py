@@ -114,7 +114,10 @@ def extract_files(archive_path: Path, out_dir: Path, targets: list[str], prefix:
     else:
         targets_set = set(targets)
         with py7zr.SevenZipFile(archive_path, mode="r") as z:
-            for name, bio in z.read(targets).items():
+            files = z.read(targets)
+            if not files:
+                return
+            for name, bio in files.items():
                 if name in targets_set:
                     _write_member(bio.read(), name, prefix, out_dir)
 
