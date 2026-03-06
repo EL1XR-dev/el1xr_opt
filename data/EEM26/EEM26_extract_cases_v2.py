@@ -138,11 +138,9 @@ def main() -> None:
     args = parse_args()
     base_dir = args.base_dir.resolve()
 
-    raw_cases = args.cases_dir or Path("Cases")
-    cases_dir = (raw_cases if raw_cases.is_absolute() else base_dir / raw_cases).resolve()
+    cases_dir = (args.cases_dir or (base_dir / "Cases")).resolve()
 
-    raw_results = args.results_dir or Path("Results")
-    results_dir = (raw_results if raw_results.is_absolute() else base_dir / raw_results).resolve()
+    results_dir = (args.results_dir or (base_dir / "Results")).resolve()
     results_dir.mkdir(parents=True, exist_ok=True)
 
     t_total_start = time.time()
