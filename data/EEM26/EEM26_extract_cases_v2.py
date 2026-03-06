@@ -78,29 +78,68 @@ def get_archive_names(archive_path: Path) -> list[str]:
             return z.getnames()
 
 
-def extract_files(archive_path: Path, out_dir: Path, targets: list[str]) -> None:
+def _write_member(data: bytes, archive_member: str, prefix: str, out_dir: Path) -> None:
+    """Write extracted bytes to out_dir, stripping the leading prefix from the member path."""
+    rel = archive_member[len(prefix):]  # strip parent folder, e.g. "Home1/"
+    dest = out_dir / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+
+
+def extract_files(archive_path: Path, out_dir: Path, targets: list[str], prefix: str = "") -> None:
+    if not prefix:
+        # No parent folder — extract directly as before
+        if archive_path.suffix == ".zip":
+            with zipfile.ZipFile(archive_path, "r") as z:
+                for t in targets:
+                    z.extract(t, path=out_dir)
+        elif archive_path.suffix == ".rar":
+            with rarfile.RarFile(archive_path, "r") as z:
+                for t in targets:
+                    z.extract(t, path=out_dir)
+        else:
+            with py7zr.SevenZipFile(archive_path, mode="r") as z:
+                z.extract(path=out_dir, targets=targets)
+        return
+
+    # Parent folder present — extract and strip the prefix
     if archive_path.suffix == ".zip":
         with zipfile.ZipFile(archive_path, "r") as z:
             for t in targets:
-                z.extract(t, path=out_dir)
+                _write_member(z.read(t), t, prefix, out_dir)
     elif archive_path.suffix == ".rar":
         with rarfile.RarFile(archive_path, "r") as z:
             for t in targets:
-                z.extract(t, path=out_dir)
+                _write_member(z.read(t), t, prefix, out_dir)
     else:
+        targets_set = set(targets)
         with py7zr.SevenZipFile(archive_path, mode="r") as z:
-            z.extract(path=out_dir, targets=targets)
+            for name, bio in z.read(targets).items():
+                if name in targets_set:
+                    _write_member(bio.read(), name, prefix, out_dir)
 
 
 def build_case_name(base_case: str, f0: str, f1: str, f2: str, f3: str, f4: str) -> str:
     return f"{base_case}_{f2}_{f1}_{f0}_{f3}_{f4}"
 
 
+def detect_archive_prefix(names_set: set[str], base_case: str) -> str:
+    """Return the parent-folder prefix if the archive has one (e.g. 'Home1/'), else ''."""
+    candidate = f"{base_case}/"
+    if any(n.startswith(candidate) for n in names_set):
+        return candidate
+    return ""
+
+
 def main() -> None:
     args = parse_args()
     base_dir = args.base_dir.resolve()
-    cases_dir = (args.cases_dir or (base_dir / "Cases")).resolve()
-    results_dir = (args.results_dir or (base_dir / "Results")).resolve()
+
+    raw_cases = args.cases_dir or Path("Cases")
+    cases_dir = (raw_cases if raw_cases.is_absolute() else base_dir / raw_cases).resolve()
+
+    raw_results = args.results_dir or Path("Results")
+    results_dir = (raw_results if raw_results.is_absolute() else base_dir / raw_results).resolve()
     results_dir.mkdir(parents=True, exist_ok=True)
 
     t_total_start = time.time()
@@ -124,17 +163,21 @@ def main() -> None:
         all_combos = list(product(FACTOR0, FACTOR1, FACTOR2, FACTOR3, FACTOR4))
         print(f"  Combinations : {len(all_combos)}")
 
+        t_start = time.time()
+
+        names_set = set(get_archive_names(archive_path))
+        prefix = detect_archive_prefix(names_set, base_case)
+        if prefix:
+            print(f"  Detected parent folder in archive: '{prefix.rstrip('/')}'")
+
         targets = []
         for f0, f1, f2, f3, f4 in all_combos:
             case_name = build_case_name(base_case, f0, f1, f2, f3, f4)
             for result_file in RESULT_FILES:
-                targets.append(f"{case_name}/{result_file}_{case_name}.csv")
+                targets.append(f"{prefix}{case_name}/{result_file}_{case_name}.csv")
 
         print(f"  Files to extract : {len(targets)}")
 
-        t_start = time.time()
-
-        names_set = set(get_archive_names(archive_path))
         missing = [t for t in targets if t not in names_set]
         if missing:
             print(f"  WARNING: {len(missing)} files not found in archive:")
@@ -147,7 +190,7 @@ def main() -> None:
             continue
 
         print(f"  Extracting {len(targets)} files...")
-        extract_files(archive_path, out_dir, targets)
+        extract_files(archive_path, out_dir, targets, prefix)
 
         elapsed = time.time() - t_start
         print(f"  Done : {base_case} -> {out_dir}")
