@@ -152,7 +152,7 @@ def main() -> None:
 
     total_elapsed = time.time() - t_total_start
     print(f"\n{'='*60}")
-    print(f"All base cases done!")
+    print("All base cases done!")
     print(f"Total time: {total_elapsed:.1f}s ({total_elapsed/60:.1f} min)")
 
 
