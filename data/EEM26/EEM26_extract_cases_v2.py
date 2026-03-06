@@ -127,10 +127,17 @@ def build_case_name(base_case: str, f0: str, f1: str, f2: str, f3: str, f4: str)
 
 
 def detect_archive_prefix(names_set: set[str], base_case: str) -> str:
-    """Return the parent-folder prefix if the archive has one (e.g. 'Home1/'), else ''."""
+    """Return the parent-folder prefix if the archive has one (e.g. 'Home1/' or 'Cases/'), else ''."""
+    # Check for base_case/ prefix (e.g. 'Home1/')
     candidate = f"{base_case}/"
     if any(n.startswith(candidate) for n in names_set):
         return candidate
+    # Detect any other prefix by finding where 'base_case_' appears in archive paths
+    pattern = f"{base_case}_"
+    for name in names_set:
+        idx = name.find(pattern)
+        if idx > 0:
+            return name[:idx]
     return ""
 
 
