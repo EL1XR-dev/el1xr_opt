@@ -22,7 +22,7 @@ from matplotlib.lines import Line2D
 plt.rcParams.update({
     "font.family":          "serif",
     "font.serif":           ["Times New Roman", "DejaVu Serif"],
-    "font.size":            8,
+    "font.size":            10,
     "axes.linewidth":       0.55,
     "xtick.major.width":    0.5,
     "ytick.major.width":    0.5,
@@ -115,22 +115,40 @@ def extract(root):
 
 # ── Aggregation ───────────────────────────────────────────────────────────────
 def aggregate(cost_df, peak_df, dod_df):
-    # ── Top panel: cost change + P95 peak ────────────────────────────────────
-    annual_cost = (cost_df.groupby(["Home", "Scenario"])["NetCost"]
+    # ── Top panel: per-cluster cost change + P95 peak ───────────────────────
+    # Annual cost per Home×Cluster×Scenario, then mean over Homes per Cluster.
+    annual_cost = (cost_df.groupby(["Home", "Cluster", "Scenario"])["NetCost"]
                           .sum().reset_index())
-    mean_cost   = (annual_cost.groupby("Scenario")["NetCost"]
-                              .mean().reset_index())
-    t0_cost     = mean_cost.loc[
-        mean_cost.Scenario == "T0", "NetCost"].values[0]
-    mean_cost["CostChange"] = mean_cost["NetCost"] - t0_cost
+    mean_cost_cl = (annual_cost.groupby(["Cluster", "Scenario"])["NetCost"]
+                               .mean().reset_index())
 
-    p95 = (peak_df.groupby("Scenario")["MonthlyPeak_kW"]
+    # T0 baseline per Cluster (each cluster may have a different absolute cost)
+    t0_by_cl = (mean_cost_cl[mean_cost_cl.Scenario == "T0"]
+                .set_index("Cluster")["NetCost"])
+    mean_cost_cl["CostChange"] = mean_cost_cl.apply(
+        lambda r: r["NetCost"] - t0_by_cl[r["Cluster"]], axis=1)
+
+    # Order correctly
+    order_map = {s: i for i, s in enumerate(SCENARIOS)}
+    mean_cost_cl["_o"] = mean_cost_cl["Scenario"].map(order_map)
+    top_cl = (mean_cost_cl.sort_values(["Cluster","_o"])
+                          .drop(columns="_o")
+                          .reset_index(drop=True))
+
+    # Grand-mean CostChange (for reference / paper_numbers compatibility)
+    mean_cost_grand = (annual_cost.groupby("Scenario")["NetCost"]
+                                  .mean().reset_index())
+    t0_grand = mean_cost_grand.loc[
+        mean_cost_grand.Scenario == "T0", "NetCost"].values[0]
+    mean_cost_grand["CostChange"] = mean_cost_grand["NetCost"] - t0_grand
+
+    # P95 peak per Cluster×Scenario (consistent with per-cluster bars)
+    p95 = (peak_df.groupby(["Cluster", "Scenario"])["MonthlyPeak_kW"]
                   .quantile(0.95).reset_index()
                   .rename(columns={"MonthlyPeak_kW": "P95_kW"}))
 
-    top = (mean_cost.merge(p95, on="Scenario")
-                    .set_index("Scenario")
-                    .loc[SCENARIOS].reset_index())
+    # top: per-cluster df with P95 merged on Cluster+Scenario
+    top = top_cl.merge(p95, on=["Cluster", "Scenario"])
 
     # ── Bottom panel: DoD cost per Cluster ────────────────────────────────────
     annual_dod = (dod_df.groupby(["Home", "Scenario", "Cluster"])["DoD"]
@@ -147,98 +165,93 @@ def aggregate(cost_df, peak_df, dod_df):
 # ── Plot ──────────────────────────────────────────────────────────────────────
 def plot(top, bot, out_stem="fig_combined"):
     clusters = sorted(bot["Cluster"].unique())
+    nc       = len(clusters)
 
     fig, (ax_top, ax_bot) = plt.subplots(
         2, 1,
-        figsize=(4.5, 2.5),
+        figsize=(7.16, 3.8),   # IEEE two-column full width
         sharex=True,
-        gridspec_kw={"hspace": 0.10, "height_ratios": [1, 1]},
-    layout="constrained",
+        gridspec_kw={"hspace": 0.08, "height_ratios": [1, 1]},
+        layout="constrained",
     )
 
-    x = np.arange(len(SCENARIOS), dtype=float)
+    x       = np.arange(len(SCENARIOS), dtype=float)
+    w_bar   = 0.72 / nc                             # group width 0.72, split by cluster
+    offsets = np.linspace(-(nc-1)/2, (nc-1)/2, nc) * w_bar
 
-    # ── Colours ───────────────────────────────────────────────────────────────
-    C_NEG  = "#009E73"
-    C_POS  = "#4878CF"
-    C_BASE = "#AAAAAA"
-    C_LINE = "#D65F5F"
+    # ── Aggregate cost change per Cluster×Scenario from top df ───────────────
+    # top df has CostChange as grand mean; we need per-cluster values from bot
+    # Use the raw per-cluster annual cost stored in top_by_cluster if available,
+    # otherwise fall back to the grand-mean CostChange for all clusters equally.
+    # The aggregate() function must expose per-cluster cost; see note below.
+    p95 = top["P95_kW"].values
 
     # ============================================================
-    # TOP PANEL: cost change bars + P95 peak line
+    # TOP PANEL: grouped cost-change bars per cluster + P95 line
     # ============================================================
     ax_top2 = ax_top.twinx()
 
-    cost_chg   = top["CostChange"].values
-    p95        = top["P95_kW"].values
-    bar_colors = [C_BASE] + [
-        C_NEG if v < 0 else C_POS for v in cost_chg[1:]]
+    all_vals = []
+    for ci, cl in enumerate(clusters):
+        sub  = top[top.Cluster == cl].set_index("Scenario")                if "Cluster" in top.columns else None
+        vals = np.array([
+            sub.loc[s, "CostChange"] if (sub is not None and s in sub.index)
+            else top.loc[top.Scenario == s, "CostChange"].values[0]
+            for s in SCENARIOS])
+        all_vals.append(vals)
+        ax_top.bar(x + offsets[ci], vals, width=w_bar,
+                   color=CLUSTER_COLORS.get(cl, f"C{ci}"),
+                   zorder=3, linewidth=0.45, edgecolor="#333333")
 
-    ax_top.bar(x, cost_chg, width=0.42, color=bar_colors,
-               zorder=3, linewidth=0.45, edgecolor="#333333")
-    ax_top.axhline(0, color="0.40", linewidth=0.55, zorder=4)
+    ax_top.axhline(0, color="0.35", linewidth=0.6, zorder=4)
 
-    ax_top2.plot(x, p95, color=C_LINE, linewidth=1.2, zorder=5,
-                 marker="o", markersize=3.5,
-                 markeredgewidth=0.4, markeredgecolor="#333333",
-                 markerfacecolor=C_LINE, solid_capstyle="round")
+    # P95 lines — one dashed line per cluster, same colour as bars
+    all_p95_vals = []
+    for cl in clusters:
+        sub_p95 = top[top.Cluster == cl].set_index("Scenario")
+        p95_vals = np.array([
+            sub_p95.loc[s, "P95_kW"] if s in sub_p95.index else np.nan
+            for s in SCENARIOS])
+        all_p95_vals.append(p95_vals)
+        ax_top2.plot(x, p95_vals,
+                     color=CLUSTER_COLORS.get(cl, "grey"),
+                     linewidth=1.1, linestyle="--",
+                     marker="o", markersize=3.5,
+                     markeredgewidth=0.4, markeredgecolor="white",
+                     markerfacecolor=CLUSTER_COLORS.get(cl, "grey"),
+                     zorder=5, solid_capstyle="round")
 
-    # grid
-    ax_top.yaxis.grid(True,  linestyle=":", linewidth=0.4,
-                      color="0.72", zorder=0)
+    # grid & axes
+    ax_top.yaxis.grid(True, linestyle=":", linewidth=0.4, color="0.72", zorder=0)
     ax_top.set_axisbelow(True)
     ax_top2.yaxis.grid(False)
 
-    # limits
-    abs_max = max(abs(cost_chg.min()), abs(cost_chg.max()), 1)
-    ax_top.set_ylim(-abs_max * 1.55, abs_max * 1.55)
-    p95_span = max(p95.max() - p95.min(), 0.1)
-    ax_top2.set_ylim(p95.min() - p95_span * 0.9,
-                     p95.max() + p95_span * 0.9)
+    flat = np.concatenate(all_vals)
+    abs_max = max(abs(flat.min()), abs(flat.max()), 1)
+    ax_top.set_ylim(-abs_max * 1.45, abs_max * 1.45)
+    flat_p95 = np.concatenate(all_p95_vals)
+    p95_span = max(float(np.nanmax(flat_p95)) - float(np.nanmin(flat_p95)), 0.1)
+    ax_top2.set_ylim(float(np.nanmin(flat_p95)) - p95_span * 0.5,
+                     float(np.nanmax(flat_p95)) + p95_span * 0.9)
 
-    # labels
     ax_top.set_ylabel(r"$\Delta$ cost vs. $T_0$ [SEK/year]",
-                      fontsize=7, labelpad=4)
-    ax_top2.set_ylabel("Monthly P95 peak [kW]", fontsize=7, labelpad=6,
+                      fontsize=10, labelpad=4)
+    ax_top2.set_ylabel("Monthly P95 peak [kW]", fontsize=10, labelpad=6,
                        rotation=270, va="center")
-    ax_top.tick_params(axis="y", labelsize=6.5)
-    ax_top2.tick_params(axis="y", labelsize=6.5)
+    ax_top.tick_params(axis="y", labelsize=9)
+    ax_top2.tick_params(axis="y", labelsize=9)
     ax_top.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
-
-    # panel label
-    ax_top.text(0.01, 0.97, "(a)", transform=ax_top.transAxes,
-                fontsize=7, va="top", fontweight="bold")
-
-    # spines
+    ax_top.text(0.005, 0.97, "(a)", transform=ax_top.transAxes,
+                fontsize=9, va="top", fontweight="bold")
     ax_top.spines["left"].set_linewidth(0.55)
-    ax_top.spines["bottom"].set_visible(False)   # shared axis — hide bottom
+    ax_top.spines["bottom"].set_visible(False)
     ax_top2.spines["right"].set_linewidth(0.55)
     ax_top2.spines["top"].set_visible(False)
 
-    # legend
-    top_handles = [
-        mpatches.Patch(facecolor=C_NEG,  edgecolor="#333", linewidth=0.45,
-                       label="Cost saving"),
-        mpatches.Patch(facecolor=C_POS,  edgecolor="#333", linewidth=0.45,
-                       label="Cost increase"),
-        Line2D([0], [0], color=C_LINE, linewidth=1.2,
-               marker="o", markersize=3.5,
-               markeredgewidth=0.4, markeredgecolor="#333",
-               label="P95 peak"),
-    ]
-    ax_top.legend(handles=top_handles, fontsize=5.8, loc="lower left",
-                  framealpha=1.0, facecolor="white", edgecolor="0.75",
-                  handlelength=1.4, handletextpad=0.45,
-                  borderpad=0.55, labelspacing=0.3)
-
     # ============================================================
-    # BOTTOM PANEL: DoD cost grouped bars by Cluster
+    # BOTTOM PANEL: DoD cost grouped bars by Cluster (unchanged)
     # ============================================================
-    nc      = len(clusters)
-    w_bar   = 0.65 / nc
-    offsets = np.linspace(-(nc - 1) / 2, (nc - 1) / 2, nc) * w_bar
-
     for ci, cl in enumerate(clusters):
         sub  = bot[bot.Cluster == cl].set_index("Scenario")
         vals = np.array([
@@ -248,38 +261,41 @@ def plot(top, bot, out_stem="fig_combined"):
                    color=CLUSTER_COLORS.get(cl, f"C{ci}"),
                    zorder=3, linewidth=0.45, edgecolor="#333333")
 
-    ax_bot.yaxis.grid(True, linestyle=":", linewidth=0.4,
-                      color="0.72", zorder=0)
+    ax_bot.yaxis.grid(True, linestyle=":", linewidth=0.4, color="0.72", zorder=0)
     ax_bot.set_axisbelow(True)
-
-    ax_bot.set_ylabel("DoD cost [SEK/year]", fontsize=7, labelpad=4)
+    ax_bot.set_ylabel("DoD cost [SEK/year]", fontsize=10, labelpad=4)
     ax_bot.set_xticks(x)
-    ax_bot.set_xticklabels(
-        [f"$T_{{{s[1]}}}$" for s in SCENARIOS], fontsize=8)
-    ax_bot.tick_params(axis="both", labelsize=6.5)
+    ax_bot.set_xticklabels([f"$T_{{{s[1]}}}$" for s in SCENARIOS], fontsize=11)
+    ax_bot.tick_params(axis="both", labelsize=9)
     ax_bot.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
-
-    ax_bot.text(0.01, 0.97, "(b)", transform=ax_bot.transAxes,
-                fontsize=7, va="top", fontweight="bold")
-
+    ax_bot.text(0.005, 0.97, "(b)", transform=ax_bot.transAxes,
+                fontsize=9, va="top", fontweight="bold")
     ax_bot.spines["left"].set_linewidth(0.55)
     ax_bot.spines["bottom"].set_linewidth(0.55)
 
-    bot_handles = [
-        mpatches.Patch(
-            facecolor=CLUSTER_COLORS.get(cl, f"C{i}"),
-            edgecolor="#333", linewidth=0.45,
-            label=f"Cl.\u2009{cl[-1]}")
+    # ── Shared legend: one entry per cluster + marker-style guide ───────────
+    shared_handles = [
+        mpatches.Patch(facecolor=CLUSTER_COLORS.get(cl, f"C{i}"),
+                       edgecolor="#333", linewidth=0.45,
+                       label=f"Cl.\u2009{cl[-1]}")
         for i, cl in enumerate(clusters)
+    ] + [
+        Line2D([0], [0], color="0.4", linewidth=1.0, linestyle="-",
+               label=r"Bars: $\Delta$ cost"),
+        Line2D([0], [0], color="0.4", linewidth=1.0, linestyle="--",
+               marker="o", markersize=3.5, markerfacecolor="0.4",
+               label="Lines: P95 peak"),
     ]
-    ax_bot.legend(handles=bot_handles, fontsize=5.8, loc="upper right",
+    ax_bot.legend(handles=shared_handles, fontsize=8,
+                  loc="upper center",
+                  bbox_to_anchor=(0.5, -0.15),
+                  ncol=len(shared_handles),
                   framealpha=1.0, facecolor="white", edgecolor="0.75",
-                  handlelength=1.2, handletextpad=0.45,
-                  borderpad=0.55, labelspacing=0.3)
+                  handlelength=1.1, handletextpad=0.4,
+                  borderpad=0.45, columnspacing=0.7)
 
     # ── Save ──────────────────────────────────────────────────────────────────
-    # constrained_layout handles spacing
     for ext in ("pdf", "png"):
         fig.savefig(f"{out_stem}.{ext}", dpi=300, bbox_inches="tight")
         print(f"Saved: {out_stem}.{ext}")
