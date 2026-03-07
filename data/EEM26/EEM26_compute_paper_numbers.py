@@ -175,8 +175,9 @@ def compute_all(df, bess_cap=10.0):
     R["T4_conc_vs_T0"] = R["PeakConc_T4"] / R["PeakConc_T0"]
 
     # ── §C: costs ─────────────────────────────────────────────────────────────
-    # Annual net cost per Home×Scenario (all clusters)
-    ann_cost = (df.groupby(["Home", "Scenario"])["NetCost"]
+    # (Home x Cluster) is the observational unit — same home runs under
+    # every cluster, so include Cluster in groupby before taking the mean.
+    ann_cost = (df.groupby(["Home", "Cluster", "Scenario"])["NetCost"]
                   .sum().reset_index())
     mean_c   = ann_cost.groupby("Scenario")["NetCost"].mean()
     t0c      = mean_c["T0"]
