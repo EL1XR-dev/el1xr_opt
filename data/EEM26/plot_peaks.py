@@ -36,7 +36,7 @@ FS = 7
 
 fig = plt.figure(figsize=(IEEE_COL, 3.2))
 # 3D axes takes left ~72% of width, leaving right side for legend
-ax = fig.add_axes([-0.05, 0.10, 0.78, 0.82], projection='3d')
+ax = fig.add_axes([0.02, 0.38, 0.78, 0.5], projection='3d')
 
 days  = np.arange(1, n_days + 1)
 hours = np.arange(n_hours)
@@ -68,8 +68,8 @@ for idx in top3_daily_idx:
     ax.scatter(d, h, v + 0.15, color='green', s=12,
                marker='^', zorder=11, depthshade=False)
 
-ax.set_xlabel('Day in billing month\n(example window)', labelpad=4, fontsize=FS)
-ax.set_ylabel('Hour of day', labelpad=4, fontsize=FS)
+ax.set_xlabel('Day in billing month\n(example window)', labelpad=2, fontsize=FS)
+ax.set_ylabel('Hour of day', labelpad=2, fontsize=FS)
 ax.set_xticks(days)
 ax.set_yticks([0, 5, 10, 15, 20])
 ax.tick_params(axis='both', labelsize=FS - 1, pad=1)
@@ -79,12 +79,12 @@ ax.view_init(elev=22, azim=-55)
 ax.grid(True, linestyle='--', linewidth=0.3, alpha=0.6)
 
 # Annotation at top
-fig.text(0.01, 0.995,
-         "3 design dimensions:\n"
-         r"LEVEL: $\mu^{pk}$ (SEK/kW-month)" + "\n"
-         "WINDOW: daily-reset\nvs monthly-pool\n"
+fig.text(0.01, 0.85,
+         "3 design dimensions: "
+         r"LEVEL: $\mu^{pk}$ (SEK/kW-month) \n" 
+         "WINDOW: daily-reset vs monthly-pool\n"
          "AVERAGING: |K|=3 peaks",
-         va='top', ha='left', fontsize=FS - 1, family='monospace')
+         va='top', ha='left', fontsize=FS, family='monospace')
 
 # Legend placed on the right side to fill blank space
 legend_elements = [
@@ -97,11 +97,11 @@ legend_elements = [
 ]
 fig.legend(handles=legend_elements,
            loc='center left',
-           bbox_to_anchor=(0.74, 0.44),
+           bbox_to_anchor=(0.9, 0.44),
            ncol=1, frameon=True, fontsize=FS,
            handletextpad=0.3, labelspacing=0.6,
            borderpad=0.4)
 
-plt.savefig('/mnt/user-data/outputs/tariff_peaks_3d.png', dpi=300, bbox_inches='tight')
-plt.savefig('/mnt/user-data/outputs/tariff_peaks_3d.pdf', bbox_inches='tight')
+plt.savefig('tariff_peaks_3d.png', dpi=300, bbox_inches='tight')
+plt.savefig('tariff_peaks_3d.pdf', bbox_inches='tight')
 print("Saved.")
