@@ -12,13 +12,14 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
 import matplotlib.ticker as mticker
 
 # -- RC / fonts ----------------------------------------------------------------
 plt.rcParams.update({
     "font.family":          "serif",
     "font.serif":           ["Times New Roman", "DejaVu Serif"],
-    "font.size":            7,
+    "font.size":            10,
     "axes.linewidth":       0.55,
     "xtick.major.width":    0.5,
     "ytick.major.width":    0.5,
@@ -113,7 +114,7 @@ def plot(agg, out_stem="fig_bess_v2g_t0t3t4"):
     ref_v2g = v2g_D[0]
 
     # ── Layout ────────────────────────────────────────────────────────────────
-    fig, ax1 = plt.subplots(figsize=(4.5, 1.5))
+    fig, ax1 = plt.subplots(layout="constrained", figsize=(7.16, 2.3))
     ax2 = ax1.twinx()
 
     n = len(SCENARIOS)
@@ -129,7 +130,9 @@ def plot(agg, out_stem="fig_bess_v2g_t0t3t4"):
 
     rects_B   = ax1.bar(xB, bess_B, color=C_B,   **kw)
     rects_D   = ax1.bar(xD, bess_D, color=C_D,   **kw)
-    rects_V2G = ax2.bar(xV, v2g_D,  color=C_V2G, hatch="///", alpha=0.82, **kw)
+    ax2.plot(x, v2g_D, color=C_V2G, linewidth=1.4, linestyle="--",
+             marker="o", markersize=4.5, markeredgewidth=0.4,
+             markeredgecolor="white", markerfacecolor=C_V2G, zorder=5)
 
     # ── Grid ──────────────────────────────────────────────────────────────────
     ax1.yaxis.grid(True, linestyle=":", linewidth=0.4, color="0.72", zorder=0)
@@ -166,18 +169,18 @@ def plot(agg, out_stem="fig_bess_v2g_t0t3t4"):
         v2g_max = v2g_D.max()
         lbl = pct_label(v2g_D[i], ref_v2g)
         col = "#993333" if v2g_D[i] >= ref_v2g else "#AA3333"
-        ax2.text(xV[i], v2g_D[i] + v2g_max * 0.06, lbl,
+        ax2.text(x[i],  v2g_D[i] + v2g_max * 0.02 - 3.5, lbl,
                  color=col, fontweight="bold", **ann_kw)
 
     # ── Axes labels & ticks ───────────────────────────────────────────────────
-    ax1.set_ylabel("BESS throughput [kWh/year]", fontsize=8, labelpad=4)
-    ax2.set_ylabel("V2G utilisation rate [%]",   fontsize=8, labelpad=6,
+    ax1.set_ylabel("BESS throughput [kWh/year]", fontsize=10, labelpad=4)
+    ax2.set_ylabel("V2G utilisation rate [%]",   fontsize=10, labelpad=6,
                    rotation=270, va="center")
 
     ax1.set_xticks(x)
-    ax1.set_xticklabels([f"$T_{{{s[1]}}}$" for s in SCENARIOS], fontsize=8)
-    ax1.tick_params(axis="both", labelsize=6.5)
-    ax2.tick_params(axis="y",    labelsize=6.5)
+    ax1.set_xticklabels([f"$T_{{{s[1]}}}$" for s in SCENARIOS], fontsize=11)
+    ax1.tick_params(axis="both", labelsize=9)
+    ax2.tick_params(axis="y",    labelsize=9)
 
     ax1.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
@@ -194,18 +197,22 @@ def plot(agg, out_stem="fig_bess_v2g_t0t3t4"):
                        label="BESS, Cl.\u2009B"),
         mpatches.Patch(facecolor=C_D,   edgecolor="#333", linewidth=0.45,
                        label="BESS, Cl.\u2009D"),
-        mpatches.Patch(facecolor=C_V2G, edgecolor="#333", linewidth=0.45,
-                       hatch="///", alpha=0.82,
-                       label="V2G util., Cl.\u2009D"),
+        Line2D([0],[0], color=C_V2G, linewidth=1.4, linestyle="--",
+               marker="o", markersize=4.5, markeredgewidth=0.4,
+               markeredgecolor="white", markerfacecolor=C_V2G,
+               label="V2G util., Cl.\u2009D"),
     ]
     ax1.legend(
-        handles=handles, fontsize=7, loc="upper left",
+        handles=handles, fontsize=8,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.18),
+        ncol=len(handles),
         framealpha=1.0, facecolor="white", edgecolor="0.75",
-        handlelength=1.3, handletextpad=0.45,
-        borderpad=0.55, labelspacing=0.3,
+        handlelength=1.1, handletextpad=0.4,
+        borderpad=0.45, columnspacing=0.7,
     )
 
-    fig.tight_layout(pad=0.35)
+    # constrained_layout handles spacing
 
     for ext in ("pdf", "png"):
         p = f"{out_stem}.{ext}"
