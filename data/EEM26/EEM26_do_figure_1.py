@@ -80,6 +80,7 @@ def extract(root):
                     "Home":          int(home_id),
                     "Scenario":      scenario,
                     "H":             int(hh),
+                    "HType":         "Apt" if int(hh) <= 5 else "SF",
                     "Cluster":       cluster,
                     "Month":         int(month),
                     "BESS_kWh":      bess_throughput,
@@ -92,8 +93,8 @@ def extract(root):
 
 
 def aggregate(df):
-    # Sum months per Home×Scenario×Cluster (V2G: sum hours, then compute rate)
-    per_home = (df.groupby(["Home", "Scenario", "Cluster"])
+    # Sum months per Home×Scenario×Cluster×HType
+    per_home = (df.groupby(["Home", "Scenario", "Cluster", "HType"])
                   .agg(
                       BESS_kWh    = ("BESS_kWh",    "sum"),
                       V2G_hours   = ("V2G_hours",   "sum"),
@@ -101,11 +102,11 @@ def aggregate(df):
                   )
                   .reset_index())
 
-    # V2G rate from summed hours (correct: annual V2G h / annual total h)
+    # V2G rate from summed hours
     per_home["V2G_rate"] = per_home["V2G_hours"] / per_home["total_hours"] * 100
 
-    # Average across Homes within each Scenario×Cluster
-    agg = (per_home.groupby(["Scenario", "Cluster"])
+    # Mean over Homes within each Scenario×Cluster×HType
+    agg = (per_home.groupby(["Scenario", "Cluster", "HType"])
                    .agg(
                        BESS_kWh  = ("BESS_kWh",  "mean"),
                        V2G_rate  = ("V2G_rate",  "mean"),
@@ -118,41 +119,62 @@ def aggregate(df):
 def plot(agg, out_stem="fig_bess_v2g"):
     SCENARIOS = ["T0", "T1", "T2", "T3", "T4"]
 
-    def get(sc, cl, col):
-        row = agg[(agg.Scenario == sc) & (agg.Cluster == cl)]
+    def get(sc, cl, ht, col):
+        row = agg[(agg.Scenario==sc) & (agg.Cluster==cl) & (agg.HType==ht)]
         return float(row[col].iloc[0]) if len(row) else 0.0
 
-    bess_B = np.array([get(s, "ClusterB", "BESS_kWh") for s in SCENARIOS])
-    bess_D = np.array([get(s, "ClusterD", "BESS_kWh") for s in SCENARIOS])
-    v2g_D  = np.array([get(s, "ClusterD", "V2G_rate")  for s in SCENARIOS])
+    # Cluster B
+    bess_B_apt = np.array([get(s,"ClusterB","Apt","BESS_kWh") for s in SCENARIOS])
+    bess_B_sf  = np.array([get(s,"ClusterB","SF", "BESS_kWh") for s in SCENARIOS])
+    # Cluster D
+    bess_D_apt = np.array([get(s,"ClusterD","Apt","BESS_kWh") for s in SCENARIOS])
+    bess_D_sf  = np.array([get(s,"ClusterD","SF", "BESS_kWh") for s in SCENARIOS])
+    # V2G Cluster D
+    v2g_D_apt  = np.array([get(s,"ClusterD","Apt","V2G_rate")  for s in SCENARIOS])
+    v2g_D_sf   = np.array([get(s,"ClusterD","SF", "V2G_rate")  for s in SCENARIOS])
 
     fig, ax1 = plt.subplots(layout="constrained", figsize=(7.16, 2.2))
     ax2 = ax1.twinx()
 
-    n = len(SCENARIOS)
-    x = np.arange(n, dtype=float)
-    w, gap = 0.20, 0.07
+    n   = len(SCENARIOS)
+    x   = np.arange(n, dtype=float)
+    w   = 0.17    # bar width
+    grp = 0.06    # gap between ClB and ClD groups
+    # 4 bars per scenario: [B-Apt, B-SF, gap, D-Apt, D-SF]
+    # group span = 2w + grp; centre bars symmetrically around x
+    xB_apt = x - grp/2 - w*1.5
+    xB_sf  = x - grp/2 - w*0.5
+    xD_apt = x + grp/2 + w*0.5
+    xD_sf  = x + grp/2 + w*1.5
 
-    xB = x - w/2 - gap/2
-    xD = x + w/2 - gap/2
-    xV = x + w   + gap
-
-    C_B, C_D, C_V2G = "#0072B2", "#009E73", "#CC6677"
+    # Colours: full = SF, light = Apt
+    C_B,  C_D  = "#0072B2", "#009E73"
+    C_BA, C_DA = "#7BBDE0", "#5EC4A4"   # lighter shades for apartments
+    C_V2G      = "#CC6677"
     kw = dict(width=w, zorder=3, linewidth=0.45, edgecolor="#333333")
 
-    ax1.bar(xB, bess_B, color=C_B,   **kw)
-    ax1.bar(xD, bess_D, color=C_D,   **kw)
-    ax2.plot(x, v2g_D, color=C_V2G, linewidth=1.4, linestyle="--",
-             marker="o", markersize=4.5, markeredgewidth=0.4,
-             markeredgecolor="white", markerfacecolor=C_V2G, zorder=5)
+    ax1.bar(xB_apt, bess_B_apt, color=C_BA, **kw)
+    ax1.bar(xB_sf,  bess_B_sf,  color=C_B,  **kw)
+    ax1.bar(xD_apt, bess_D_apt, color=C_DA, **kw)
+    ax1.bar(xD_sf,  bess_D_sf,  color=C_D,  **kw)
+
+    # V2G: two dashed lines (Apt = lighter, SF = full colour)
+    line_kw = dict(linewidth=1.3, linestyle="--", markersize=4.0,
+                   markeredgewidth=0.4, markeredgecolor="white", zorder=5)
+    ax2.plot(x, v2g_D_apt, color=C_DA, marker="o",
+             markerfacecolor=C_DA, **line_kw)
+    ax2.plot(x, v2g_D_sf,  color=C_V2G, marker="o",
+             markerfacecolor=C_V2G, **line_kw)
 
     # Grid: left-axis only
     ax1.yaxis.grid(True, linestyle=":", linewidth=0.4, color="0.72", zorder=0)
     ax1.set_axisbelow(True)
     ax2.yaxis.grid(False)
 
-    ax1.set_ylim(0, max(bess_B.max(), bess_D.max()) * 1.38)
-    ax2.set_ylim(0, max(v2g_D.max() * 1.90, 1))
+    bess_max = max(bess_B_apt.max(), bess_B_sf.max(),
+                   bess_D_apt.max(), bess_D_sf.max())
+    ax1.set_ylim(0, bess_max * 1.38)
+    ax2.set_ylim(0, max(max(v2g_D_apt.max(), v2g_D_sf.max()) * 1.90, 1))
 
     ax1.set_ylabel("BESS throughput [kWh/year]", fontsize=10, labelpad=4)
     ax2.set_ylabel("V2G utilisation rate [%]",   fontsize=10, labelpad=6,
@@ -172,26 +194,35 @@ def plot(agg, out_stem="fig_bess_v2g"):
     ax2.spines["top"].set_visible(False)
 
     handles = [
-        mpatches.Patch(facecolor=C_B,   edgecolor="#333", linewidth=0.45,
-                       label="BESS, Cl.\u2009B"),
-        mpatches.Patch(facecolor=C_D,   edgecolor="#333", linewidth=0.45,
-                       label="BESS, Cl.\u2009D"),
-        Line2D([0],[0], color=C_V2G, linewidth=1.4, linestyle="--",
-               marker="o", markersize=4.5, markeredgewidth=0.4,
+        # Cluster B pair
+        mpatches.Patch(facecolor=C_BA, edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009B, Apt."),
+        mpatches.Patch(facecolor=C_B,  edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009B, S.F."),
+        # Cluster D pair
+        mpatches.Patch(facecolor=C_DA, edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009D, Apt."),
+        mpatches.Patch(facecolor=C_D,  edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009D, S.F."),
+        # V2G lines
+        Line2D([0],[0], color=C_DA,  linewidth=1.3, linestyle="--",
+               marker="o", markersize=4.0, markeredgewidth=0.4,
+               markeredgecolor="white", markerfacecolor=C_DA,
+               label="V2G Cl.\u2009D, Apt."),
+        Line2D([0],[0], color=C_V2G, linewidth=1.3, linestyle="--",
+               marker="o", markersize=4.0, markeredgewidth=0.4,
                markeredgecolor="white", markerfacecolor=C_V2G,
-               label="V2G util., Cl.\u2009D"),
+               label="V2G Cl.\u2009D, S.F."),
     ]
     ax1.legend(
-        handles=handles, fontsize=8,
+        handles=handles, fontsize=7.5,
         loc="upper center",
         bbox_to_anchor=(0.5, -0.18),
         ncol=len(handles),
         framealpha=1.0, facecolor="white", edgecolor="0.75",
-        handlelength=1.1, handletextpad=0.4,
-        borderpad=0.45, columnspacing=0.7,
+        handlelength=1.1, handletextpad=0.35,
+        borderpad=0.45, columnspacing=0.55,
     )
-
-    # constrained_layout handles spacing
 
     for ext in ("pdf", "png"):
         p = f"{out_stem}.{ext}"
