@@ -80,12 +80,14 @@ def extract(root):
                         df["Component"] == "Depth of Discharge Cost",
                         "SEK"].sum()
                     cost_rec.append({
-                        "Home": int(home_id), "Scenario": scenario,
+                        "Home": int(home_id), "H": int(hh),
+                        "Scenario": scenario,
                         "Cluster": cluster,   "Month": int(month),
                         "NetCost": net,
                     })
                     dod_rec.append({
-                        "Home": int(home_id), "Scenario": scenario,
+                        "Home": int(home_id), "H": int(hh),
+                        "Scenario": scenario,
                         "Cluster": cluster,   "Month": int(month),
                         "DoD": dod,
                     })
@@ -101,7 +103,8 @@ def extract(root):
                     buy = pd.to_numeric(
                         df[ELECBUY_COL], errors="coerce").fillna(0)
                     peak_rec.append({
-                        "Home": int(home_id), "Scenario": scenario,
+                        "Home": int(home_id), "H": int(hh),
+                        "Scenario": scenario,
                         "Cluster": cluster,   "Month": int(month),
                         "MonthlyPeak_kW": buy.max(),
                     })
@@ -117,8 +120,16 @@ def extract(root):
 def aggregate(cost_df, peak_df, dod_df):
     # ── Top panel: per-cluster cost change + P95 peak ───────────────────────
     # Annual cost per Home×Cluster×Scenario, then mean over Homes per Cluster.
-    annual_cost = (cost_df.groupby(["Home", "Cluster", "Scenario"])["NetCost"]
+    annual_cost = (cost_df.groupby(["Home", "H", "Cluster", "Scenario"])["NetCost"]
                           .sum().reset_index())
+    # Diagnostic: show record count and sample values to verify no inflation
+    _n = annual_cost.groupby(["Cluster","Scenario"]).size()
+    print("\n[Diagnostic] Records per Cluster×Scenario (should = n_homes × n_H):")
+    print(_n.unstack().to_string())
+    print("\n[Diagnostic] Mean annual NetCost per Cluster×Scenario:")
+    _sample = annual_cost.groupby(["Cluster","Scenario"])["NetCost"].mean().unstack()
+    print(_sample.to_string(float_format=lambda x: f"{x:,.0f}"))
+    print()
     mean_cost_cl = (annual_cost.groupby(["Cluster", "Scenario"])["NetCost"]
                                .mean().reset_index())
 
@@ -137,12 +148,13 @@ def aggregate(cost_df, peak_df, dod_df):
 
     # Grand-mean CostChange (for reference / paper_numbers compatibility)
     mean_cost_grand = (annual_cost.groupby("Scenario")["NetCost"]
-                                  .mean().reset_index())
+                                  .mean().reset_index())  # Home×H already annual
     t0_grand = mean_cost_grand.loc[
         mean_cost_grand.Scenario == "T0", "NetCost"].values[0]
     mean_cost_grand["CostChange"] = mean_cost_grand["NetCost"] - t0_grand
 
     # P95 peak per Cluster×Scenario (consistent with per-cluster bars)
+    # P95 over all Home×H×Month observations per Cluster×Scenario
     p95 = (peak_df.groupby(["Cluster", "Scenario"])["MonthlyPeak_kW"]
                   .quantile(0.95).reset_index()
                   .rename(columns={"MonthlyPeak_kW": "P95_kW"}))
@@ -151,7 +163,7 @@ def aggregate(cost_df, peak_df, dod_df):
     top = top_cl.merge(p95, on=["Cluster", "Scenario"])
 
     # ── Bottom panel: DoD cost per Cluster ────────────────────────────────────
-    annual_dod = (dod_df.groupby(["Home", "Scenario", "Cluster"])["DoD"]
+    annual_dod = (dod_df.groupby(["Home", "H", "Scenario", "Cluster"])["DoD"]
                         .sum().reset_index())
     mean_dod   = (annual_dod.groupby(["Scenario", "Cluster"])["DoD"]
                              .mean().reset_index())
