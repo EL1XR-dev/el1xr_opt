@@ -62,6 +62,8 @@ def extract(root):
                 records.append({
                     "Home":        int(home_id),
                     "Scenario":    scenario,
+                    "H":           int(hh),
+                    "HType":       "Apt" if int(hh) <= 5 else "SF",
                     "Cluster":     cluster,
                     "Month":       int(month),
                     "BESS_kWh":    bess_throughput,
@@ -74,13 +76,13 @@ def extract(root):
 
 
 def aggregate(df):
-    per_home = (df.groupby(["Home", "Scenario", "Cluster"])
+    per_home = (df.groupby(["Home", "Scenario", "Cluster", "HType"])
                   .agg(BESS_kWh    = ("BESS_kWh",    "sum"),
                        V2G_hours   = ("V2G_hours",   "sum"),
                        total_hours = ("total_hours", "sum"))
                   .reset_index())
     per_home["V2G_rate"] = per_home["V2G_hours"] / per_home["total_hours"] * 100
-    agg = (per_home.groupby(["Scenario", "Cluster"])
+    agg = (per_home.groupby(["Scenario", "Cluster", "HType"])
                    .agg(BESS_kWh = ("BESS_kWh", "mean"),
                         V2G_rate = ("V2G_rate",  "mean"))
                    .reset_index())
@@ -89,130 +91,137 @@ def aggregate(df):
 
 # -- Plot ----------------------------------------------------------------------
 def pct_label(val, ref):
-    """Return a formatted +X.X% / -X.X% string relative to ref."""
     if ref == 0:
         return ""
     p = (val - ref) / ref * 100
-    sign = "+" if p >= 0 else "\u2212"   # unicode minus for cleaner look
+    sign = "+" if p >= 0 else "−"
     return f"{sign}{abs(p):.1f}%"
 
 
 def plot(agg, out_stem="fig_bess_v2g_t0t3t4"):
     SCENARIOS = ["T0", "T3", "T4"]
 
-    def get(sc, cl, col):
-        row = agg[(agg.Scenario == sc) & (agg.Cluster == cl)]
+    def get(sc, cl, ht, col):
+        row = agg[(agg.Scenario==sc) & (agg.Cluster==cl) & (agg.HType==ht)]
         return float(row[col].iloc[0]) if len(row) else 0.0
 
-    bess_B = np.array([get(s, "ClusterB", "BESS_kWh") for s in SCENARIOS])
-    bess_D = np.array([get(s, "ClusterD", "BESS_kWh") for s in SCENARIOS])
-    v2g_D  = np.array([get(s, "ClusterD", "V2G_rate")  for s in SCENARIOS])
+    bess_B_apt = np.array([get(s,"ClusterB","Apt","BESS_kWh") for s in SCENARIOS])
+    bess_B_sf  = np.array([get(s,"ClusterB","SF", "BESS_kWh") for s in SCENARIOS])
+    bess_D_apt = np.array([get(s,"ClusterD","Apt","BESS_kWh") for s in SCENARIOS])
+    bess_D_sf  = np.array([get(s,"ClusterD","SF", "BESS_kWh") for s in SCENARIOS])
+    v2g_D_apt  = np.array([get(s,"ClusterD","Apt","V2G_rate")  for s in SCENARIOS])
+    v2g_D_sf   = np.array([get(s,"ClusterD","SF", "V2G_rate")  for s in SCENARIOS])
 
-    # Baseline (T0) for % change annotations
-    ref_B   = bess_B[0]
-    ref_D   = bess_D[0]
-    ref_v2g = v2g_D[0]
+    # T0 baselines
+    ref_B_apt, ref_B_sf   = bess_B_apt[0], bess_B_sf[0]
+    ref_D_apt, ref_D_sf   = bess_D_apt[0], bess_D_sf[0]
+    ref_v_apt, ref_v_sf   = v2g_D_apt[0],  v2g_D_sf[0]
 
-    # ── Layout ────────────────────────────────────────────────────────────────
-    fig, ax1 = plt.subplots(layout="constrained", figsize=(7.16, 2.3))
+    fig, ax1 = plt.subplots(layout="constrained", figsize=(7.16, 2.5))
     ax2 = ax1.twinx()
 
-    n = len(SCENARIOS)
-    x = np.arange(n, dtype=float)
-    w, gap = 0.20, 0.07
+    n   = len(SCENARIOS)
+    x   = np.arange(n, dtype=float)
+    w   = 0.17
+    grp = 0.06
+    xB_apt = x - grp/2 - w*1.5
+    xB_sf  = x - grp/2 - w*0.5
+    xD_apt = x + grp/2 + w*0.5
+    xD_sf  = x + grp/2 + w*1.5
 
-    xB = x - w/2 - gap/2
-    xD = x + w/2 - gap/2
-    xV = x + w   + gap
-
-    C_B, C_D, C_V2G = "#0072B2", "#009E73", "#CC6677"
+    C_B,  C_D  = "#0072B2", "#009E73"
+    C_BA, C_DA = "#7BBDE0", "#5EC4A4"
+    C_V2G      = "#CC6677"
     kw = dict(width=w, zorder=3, linewidth=0.45, edgecolor="#333333")
 
-    rects_B   = ax1.bar(xB, bess_B, color=C_B,   **kw)
-    rects_D   = ax1.bar(xD, bess_D, color=C_D,   **kw)
-    ax2.plot(x, v2g_D, color=C_V2G, linewidth=1.4, linestyle="--",
-             marker="o", markersize=4.5, markeredgewidth=0.4,
-             markeredgecolor="white", markerfacecolor=C_V2G, zorder=5)
+    ax1.bar(xB_apt, bess_B_apt, color=C_BA, **kw)
+    ax1.bar(xB_sf,  bess_B_sf,  color=C_B,  **kw)
+    ax1.bar(xD_apt, bess_D_apt, color=C_DA, **kw)
+    ax1.bar(xD_sf,  bess_D_sf,  color=C_D,  **kw)
 
-    # ── Grid ──────────────────────────────────────────────────────────────────
+    line_kw = dict(linewidth=1.3, linestyle="--", markersize=4.0,
+                   markeredgewidth=0.4, markeredgecolor="white", zorder=5)
+    ax2.plot(x, v2g_D_apt, color=C_DA,  marker="o", markerfacecolor=C_DA,  **line_kw)
+    ax2.plot(x, v2g_D_sf,  color=C_V2G, marker="o", markerfacecolor=C_V2G, **line_kw)
+
     ax1.yaxis.grid(True, linestyle=":", linewidth=0.4, color="0.72", zorder=0)
     ax1.set_axisbelow(True)
     ax2.yaxis.grid(False)
 
-    # ── Limits (extra headroom at top for annotations) ────────────────────────
-    bess_max = max(bess_B.max(), bess_D.max())
-    ax1.set_ylim(0, bess_max * 1.52)
-    ax2.set_ylim(0, max(v2g_D.max() * 2.10, 1))
+    bess_max = max(bess_B_apt.max(), bess_B_sf.max(),
+                   bess_D_apt.max(), bess_D_sf.max())
+    v2g_max  = max(v2g_D_apt.max(), v2g_D_sf.max())
+    ax1.set_ylim(0, bess_max * 1.60)   # extra headroom for annotations
+    ax2.set_ylim(0, max(v2g_max * 2.40, 1))
 
-    # ── % change annotations ──────────────────────────────────────────────────
-    # Annotate T3 and T4 bars only (index 1 and 2); T0 gets no label
-    ann_kw = dict(ha="center", va="bottom", fontsize=8, zorder=5,
-                  clip_on=False)
+    # ── % change annotations (T3, T4 only) ────────────────────────────────────
+    ann_kw = dict(ha="center", va="bottom", fontsize=7.5, zorder=5, clip_on=False)
 
     for i, sc in enumerate(SCENARIOS):
         if sc == "T0":
-            continue   # baseline: no annotation
+            continue
+        for xi, val, ref, base_col in [
+            (xB_apt[i], bess_B_apt[i], ref_B_apt, C_BA),
+            (xB_sf[i],  bess_B_sf[i],  ref_B_sf,  C_B),
+            (xD_apt[i], bess_D_apt[i], ref_D_apt, C_DA),
+            (xD_sf[i],  bess_D_sf[i],  ref_D_sf,  C_D),
+        ]:
+            lbl = pct_label(val, ref)
+            col = base_col
+            ax1.text(xi, val + bess_max * 0.025, lbl,
+                     color=col, fontweight="bold", **ann_kw)
 
-        # BESS Cluster B
-        lbl = pct_label(bess_B[i], ref_B)
-        col = "#0072B2" if bess_B[i] >= ref_B else "#AA3333"
-        ax1.text(xB[i], bess_B[i] + bess_max * 0.012, lbl,
-                 color=col, fontweight="bold", **ann_kw)
+        for xi, val, ref, base_col in [
+            (x[i] - 0.07, v2g_D_apt[i], ref_v_apt, C_DA),
+            (x[i] + 0.07, v2g_D_sf[i],  ref_v_sf,  C_V2G),
+        ]:
+            lbl = pct_label(val, ref)
+            col = base_col
+            ax2.text(xi, val + v2g_max * 0.10, lbl,
+                     color=col, fontweight="bold", **ann_kw)
 
-        # BESS Cluster D
-        lbl = pct_label(bess_D[i], ref_D)
-        col = "#006644" if bess_D[i] >= ref_D else "#AA3333"
-        ax1.text(xD[i], bess_D[i] + bess_max * 0.012, lbl,
-                 color=col, fontweight="bold", **ann_kw)
-
-        # V2G rate  (use ax2 data coordinates)
-        v2g_max = v2g_D.max()
-        lbl = pct_label(v2g_D[i], ref_v2g)
-        col = "#993333" if v2g_D[i] >= ref_v2g else "#AA3333"
-        ax2.text(x[i],  v2g_D[i] + v2g_max * 0.02 - 3.5, lbl,
-                 color=col, fontweight="bold", **ann_kw)
-
-    # ── Axes labels & ticks ───────────────────────────────────────────────────
     ax1.set_ylabel("BESS throughput [kWh/year]", fontsize=10, labelpad=4)
     ax2.set_ylabel("V2G utilisation rate [%]",   fontsize=10, labelpad=6,
                    rotation=270, va="center")
-
     ax1.set_xticks(x)
     ax1.set_xticklabels([f"$T_{{{s[1]}}}$" for s in SCENARIOS], fontsize=11)
     ax1.tick_params(axis="both", labelsize=9)
     ax2.tick_params(axis="y",    labelsize=9)
-
     ax1.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
 
-    # ── Spines ────────────────────────────────────────────────────────────────
     for sp in ("left", "bottom"):
         ax1.spines[sp].set_linewidth(0.55)
     ax2.spines["right"].set_linewidth(0.55)
     ax2.spines["top"].set_visible(False)
 
-    # ── Legend ────────────────────────────────────────────────────────────────
     handles = [
-        mpatches.Patch(facecolor=C_B,   edgecolor="#333", linewidth=0.45,
-                       label="BESS, Cl.\u2009B"),
-        mpatches.Patch(facecolor=C_D,   edgecolor="#333", linewidth=0.45,
-                       label="BESS, Cl.\u2009D"),
-        Line2D([0],[0], color=C_V2G, linewidth=1.4, linestyle="--",
-               marker="o", markersize=4.5, markeredgewidth=0.4,
+        mpatches.Patch(facecolor=C_BA, edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009B, Apt."),
+        mpatches.Patch(facecolor=C_B,  edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009B, S.F."),
+        mpatches.Patch(facecolor=C_DA, edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009D, Apt."),
+        mpatches.Patch(facecolor=C_D,  edgecolor="#333", linewidth=0.45,
+                       label="BESS Cl.\u2009D, S.F."),
+        Line2D([0],[0], color=C_DA,  linewidth=1.3, linestyle="--",
+               marker="o", markersize=4.0, markeredgewidth=0.4,
+               markeredgecolor="white", markerfacecolor=C_DA,
+               label="V2G Cl.\u2009D, Apt."),
+        Line2D([0],[0], color=C_V2G, linewidth=1.3, linestyle="--",
+               marker="o", markersize=4.0, markeredgewidth=0.4,
                markeredgecolor="white", markerfacecolor=C_V2G,
-               label="V2G util., Cl.\u2009D"),
+               label="V2G Cl.\u2009D, S.F."),
     ]
     ax1.legend(
-        handles=handles, fontsize=8,
+        handles=handles, fontsize=7.5,
         loc="upper center",
-        bbox_to_anchor=(0.5, -0.18),
+        bbox_to_anchor=(0.5, -0.16),
         ncol=len(handles),
         framealpha=1.0, facecolor="white", edgecolor="0.75",
-        handlelength=1.1, handletextpad=0.4,
-        borderpad=0.45, columnspacing=0.7,
+        handlelength=1.1, handletextpad=0.35,
+        borderpad=0.45, columnspacing=0.55,
     )
-
-    # constrained_layout handles spacing
 
     for ext in ("pdf", "png"):
         p = f"{out_stem}.{ext}"
