@@ -26,14 +26,15 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
     fall back to other configurations depending on the setup in ``oM_SolverSetup``.
 
     The process includes:
-    1.  **Solver Selection**: Chooses and configures the solver (e.g., HiGHS, GAMS, CPLEX).
-    2.  **LP File Generation**: Optionally writes the model to an LP file for debugging.
-    3.  **Initial Solve**: Solves the optimization problem.
-    4.  **Post-processing for Duals**: If the model contains binary or integer variables,
-        it fixes them to their optimal values and re-solves the now-continuous problem.
-        This is a common technique to obtain meaningful dual values (shadow prices)
-        for all constraints in a mixed-integer problem.
-    5.  **Results Logging**: Prints the objective function value and total solving time.
+
+    1. **Solver Selection**: Chooses and configures the solver (e.g., HiGHS, GAMS, CPLEX).
+    2. **LP File Generation**: Optionally writes the model to an LP file for debugging.
+    3. **Initial Solve**: Solves the optimization problem.
+    4. **Post-processing for Duals**: If the model contains binary or integer
+       variables, it fixes them to their optimal values and re-solves the
+       now-continuous problem. This is a common technique to obtain meaningful
+       dual values (shadow prices) for all constraints in a mixed-integer problem.
+    5. **Results Logging**: Prints the objective function value and total solving time.
 
     Args:
         DirName (str): The base directory where case-related files are stored.

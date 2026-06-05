@@ -393,7 +393,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.psnhgt   = [(p, sc, n, t         )     for p, sc, n, t              in model.psn   * model.hgt ]
     model.psnhgs   = [(p, sc, n, hs        )     for p, sc, n, hs             in model.psn   * model.hgs ]
     model.psnhgsc  = [(p, sc, n, hgsc      )     for p, sc, n, hgsc           in model.psn   * model.hgsc]
-    model.psnesc   = [(p, sc, n, es        )     for p, sc, n, es             in model.psc   * model.esc ]
+    model.psnesc   = [(p, sc, n, es        )     for p, sc, n, es             in model.psn   * model.esc ]
     model.psne2h   = [(p, sc, n, h         )     for p, sc, n, h              in model.psn   * model.e2h ]
     model.psnh2e   = [(p, sc, n, g         )     for p, sc, n, g              in model.psn   * model.h2e ]
     model.psneln   = [(p, sc, n, ni, nf, cc)     for p, sc, n, ni, nf, cc     in model.psn   * model.eln ]

@@ -192,8 +192,10 @@ behavior of the model.
 Loaders
 -------
 .. autofunction:: el1xr_opt.Modules.oM_LoadCase.load_case
+    :no-index:
 
 Writers
 -------
 .. automodule:: el1xr_opt.Modules.oM_OutputData
     :members: saving_rawdata, saving_results
+    :no-index:

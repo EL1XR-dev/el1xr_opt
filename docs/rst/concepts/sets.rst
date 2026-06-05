@@ -238,6 +238,7 @@ Demand and Retail
      - :code:`model.hr`
    * - :math:`\nKE`
      - Set of peak indices for demand charge calculation
+     - :code:`model.Peaks`
 
 Indices
 ~~~~~~~

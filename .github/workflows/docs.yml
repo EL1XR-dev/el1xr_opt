@@ -1,0 +1,43 @@
+name: Docs
+
+# Build the Sphinx documentation on every push and pull request.
+# The build treats warnings as errors (-W), so a broken cross-reference, a
+# missing module in the API reference, or a malformed rst block fails the check
+# before it is merged. This is what keeps the docs honest as the code changes:
+# the API pages are generated from the source under src/, so if a documented
+# module is renamed or removed the build breaks here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install documentation dependencies
+        # Heavy runtime libraries (pyomo, solvers, plotting, streamlit, ...) are
+        # mocked in docs/rst/conf.py, so only the docs toolchain plus numpy and
+        # pandas are needed to import the modules for autodoc.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/rst/requirements.txt numpy pandas
+
+      - name: Build HTML docs (warnings as errors)
+        run: |
+          python -m sphinx -b html -W --keep-going docs/rst docs/rst/_build/html
+
+      - name: Upload built docs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-docs
+          path: docs/rst/_build/html

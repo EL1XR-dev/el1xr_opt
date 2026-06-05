@@ -31,11 +31,12 @@ def log_time(message: str,
              right_margin: int = 1,
              anchor_col: int | None = None,
              ensure_colon: bool = True):
-    """
-    Print `message` with elapsed time aligned to the right.
-    - anchor_col: if given, align so the *end* of the time string lands at this column.
-                  Otherwise align to the terminal's right edge.
-    - right_margin: spaces to keep between the time string and the right edge (ignored if anchor_col is set).
+    """Print ``message`` with elapsed time aligned to the right.
+
+    - anchor_col: if given, align so the *end* of the time string lands at this
+      column. Otherwise align to the terminal's right edge.
+    - right_margin: spaces to keep between the time string and the right edge
+      (ignored if anchor_col is set).
     """
     # elapsed time string
     elapsed = time.time() - start_time

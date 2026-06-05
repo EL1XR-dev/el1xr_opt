@@ -26,7 +26,12 @@ def create_objective_function(model, optmodel, indlog):
     optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [kEUR]'))
 
     def eTotalTCost(optmodel):
-        return (optmodel.vTotalSCost == sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
+        # vTotalICost is the investment cost from the capacity-sizing layer
+        # (oM_Investment.create_investment); it is zero when there are no candidate
+        # units. It is already period-weighted by pDiscountFactor there, so it is in
+        # the same currency and on the same discounted footing as the operating
+        # terms summed below.
+        return (optmodel.vTotalSCost == optmodel.vTotalICost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [kEUR]'))
 
     # Cost components of the objective function
