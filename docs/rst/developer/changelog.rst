@@ -20,6 +20,7 @@ Unreleased
 ### Fixed
 
 - Corrected the ``model.psnesc`` index set in ``oM_InputData.py`` (it used ``model.psc`` instead of ``model.psn``, so it produced 3-tuples that could not be unpacked). The set is built only when investment candidates exist, so the error surfaced the first time a case included a candidate unit.
+- Import the output modules (``oM_OutputData``, ``oM_OutputData_duckdb``) lazily inside ``routine`` instead of at the top of ``oM_Sequence``. This keeps the heavy plotting libraries out of the package import path, so the documentation build can import the package and generate the API reference without them, and it removes an import cycle that broke the docs build on Python 3.11.
 
 [1.0.13] - 2025-11-13
 ---------------------
