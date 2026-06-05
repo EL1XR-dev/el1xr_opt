@@ -10,12 +10,18 @@ import time                                         # count clock time
 from   pyomo.environ     import ConcreteModel
 
 from .oM_InputData        import data_processing, create_variables
+from .oM_Investment        import create_investment
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
+from .oM_GreenHydrogen      import create_green_hydrogen
 from .oM_ProblemSolving   import solving_model
-from .oM_OutputData       import saving_results, saving_rawdata
-from .oM_OutputData_duckdb import save_to_duckdb
 from .oM_SolverSetup      import ensure_ampl_solvers
 from .utils.oM_Utils      import log_time
+
+# The output modules (oM_OutputData, oM_OutputData_duckdb) are imported lazily
+# inside routine() rather than here. They pull in heavy plotting libraries
+# (matplotlib, plotly, altair) that are not needed to import the package, and
+# keeping them out of the import-time chain lets documentation tooling import the
+# package without those libraries installed.
 
 def routine(dir, case, solver, date, rawresults, plots, indlog):
     initial_time = time.time()
@@ -37,6 +43,10 @@ def routine(dir, case, solver, date, rawresults, plots, indlog):
     model = create_variables(model, model, indlog)
     log_time('- Total time for defining the variables:', start_time, ind_log=indlog)
     start_time = time.time()
+    # defining the investment (capacity-sizing) layer
+    model = create_investment(model, model, indlog)
+    log_time('- Total time for defining the investment layer:', start_time, ind_log=indlog)
+    start_time = time.time()
     # defining the objective function
     model = create_objective_function(model, model, indlog)
     log_time('- Total time for defining the objective function:', start_time, ind_log=indlog)
@@ -49,6 +59,10 @@ def routine(dir, case, solver, date, rawresults, plots, indlog):
     model = create_constraints(model, model, indlog)
     log_time('- Total time for defining the constraints:', start_time, ind_log=indlog)
     start_time = time.time()
+    # defining green-hydrogen temporal matching and electricity PPA
+    model = create_green_hydrogen(model, model, indlog)
+    log_time('- Total time for defining the green-hydrogen layer:', start_time, ind_log=indlog)
+    start_time = time.time()
     # solving the model
     pWrittingLPFile = 1
     model = solving_model(dir, case, solver, model, pWrittingLPFile, indlog)
@@ -56,15 +70,18 @@ def routine(dir, case, solver, date, rawresults, plots, indlog):
     start_time = time.time()
     # outputting the results
     if rawresults == 'True':
+        from .oM_OutputData import saving_rawdata
         model = saving_rawdata(dir, case, solver, model, model, indlog)
         log_time('- Total time for outputting the raw data:', start_time, ind_log=indlog)
         start_time = time.time()
     # outputting the results
     if plots == 'True':
+        from .oM_OutputData import saving_results
         model = saving_results(dir, case, date, model, model, indlog)
         log_time('- Total time for outputting the results:', start_time, ind_log=indlog)
         start_time = time.time()
     # # outputting the results to duckdb
+    # from .oM_OutputData_duckdb import save_to_duckdb
     # save_to_duckdb(dir, case, model, model)
     # log_time('- Total time for outputting the results to duckdb:', start_time, ind_log=indlog)
     for i in range(0, 117):

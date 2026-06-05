@@ -50,15 +50,46 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
 ]
-autosummary_generate = False
-napoleon_google_docstring = False
-napoleon_numpy_docstring = False
+# Generate API stub pages automatically from the autosummary directives in
+# docs/rst/api/. This is what keeps the API reference in sync with the source:
+# every build re-reads the modules under src/ and regenerates the pages.
+autosummary_generate = True
 
+# Parse both NumPy- and Google-style docstrings. Write docstrings in the source
+# and they show up here on the next build.
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+
+# Defaults applied to every autodoc directive so undocumented functions still
+# appear (with their signatures and a source link) until docstrings are written.
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "show-inheritance": True,
+    "member-order": "bysource",
+}
+autodoc_typehints = "description"
+
+# Heavy or optional runtime dependencies are mocked so the docs build (locally,
+# in CI, and on Read the Docs) without installing the full solver/plotting stack.
+# Anything imported at module top in src/ that is not needed to read signatures
+# belongs here.
 autodoc_mock_imports = [
     "pyomo",
     "gurobipy",
     "gurobi",
-    # add any other large/optional deps used only at runtime
+    "matplotlib",
+    "plotly",
+    "networkx",
+    "streamlit",
+    "duckdb",
+    "altair",
+    "ausankey",
+    "amplpy",
+    "colour",
+    "psutil",
+    "jsonschema",
+    "scipy",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -615,12 +646,15 @@ mathjax3_config = {
             "pfcrddwrequirement": r"FCRD^{DW}",                 # Frequency containment reserve - downwards
             "pfcrdact": r"FCRD^{act}",                          # Frequency containment reserve activation
             "pgennofcrd": r"NoFCRD",                            # Generator with no FCR-D capability flag
+            "pgennofcrn": r"NoFCRN",                            # Generator with no FCR-N capability flag
             "pafrruprequirement": r"REG^{A,UP}",                # Automatic frequency restoration reserve - upwards
             "pafrddwrequirement": r"REG^{A,DW}",                # Automatic frequency restoration reserve - downwards
             "pmfrruprequirement": r"REG^{M,UP}",                # Manual frequency restoration reserve - upwards
             "pmfrddwrequirement": r"REG^{M,DW}",                # Manual frequency restoration reserve - downwards
             "pfcrdupreqactivation": r"FCRD^{UP,act}",           # FCR-D upwards reserve activation
             "pfcrddwreqactivation": r"FCRD^{DW,act}",           # FCR-D downwards reserve activation
+            "pelegenendurancefcrd": r"T^{FCRD}",                # FCR-D endurance requirement [minutes]
+            "pelegenendurancefcrn": r"T^{FCRN}",                # FCR-N endurance requirement [minutes]
 
             # =======================================================
             #                       VARIABLES
@@ -728,6 +762,17 @@ mathjax3_config = {
             # activated power from FCR-D DW
             "velefcrddwactch": r"p^{DD,ch}",                    # Electrical FCR-D DW activation when charging
             "velefcrddwactdi": r"p^{DD,di}",                    # Electrical FCR-D DW activation when discharging
+            # FCR provision quantities by direction and operating mode (g=gen, di=discharge, ch=charge)
+            "velefcrnupgen": r"r^{NU,g}",                       # FCR-N upward provision, generator
+            "velefcrndowngen": r"r^{ND,g}",                     # FCR-N downward provision, generator
+            "velefcrnupdis": r"r^{NU,di}",                      # FCR-N upward provision, storage discharging
+            "velefcrnupcha": r"r^{NU,ch}",                      # FCR-N upward provision, storage charging
+            "velefcrndowndis": r"r^{ND,di}",                    # FCR-N downward provision, storage discharging
+            "velefcrndowncha": r"r^{ND,ch}",                    # FCR-N downward provision, storage charging
+            "velefcrdupdis": r"r^{DU,di}",                      # FCR-D upward provision, storage discharging
+            "velefcrdupcha": r"r^{DU,ch}",                      # FCR-D upward provision, storage charging
+            "velefcrddwdis": r"r^{DD,di}",                      # FCR-D downward provision, storage discharging
+            "velefcrddwcha": r"r^{DD,ch}",                      # FCR-D downward provision, storage charging
             # activation fractions for FCR-D
             "velefcrdupfraction": r"\Lambda^{DU}",              # Electrical FCR-D UP activation fraction
             "velefcrddwfraction": r"\Lambda^{DD}",              # Electrical FCR-D DW activation fraction

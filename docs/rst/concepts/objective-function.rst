@@ -22,8 +22,8 @@ And the total cost is the sum of all operational costs, discounted to present va
 
 where:
 
-* :math:`C_{\periodindex,\scenarioindex}` is the total cost component for a given period and scenario, as defined in :eq:`eq:TotalCComponent`.
-* :math:`R_{\periodindex,\scenarioindex}` is the total revenue component for a given period and scenario, as defined in :eq:`eq:TotalRComponent`.
+* :math:`C_{\periodindex,\scenarioindex}` is the total cost component for a given period and scenario, defined by «``eTotalCComponent``» (see :eq:`eq:TotalCComponent`).
+* :math:`R_{\periodindex,\scenarioindex}` is the total revenue component for a given period and scenario, defined by «``eTotalRComponent``» (see :eq:`eq:TotalRComponent`).
 
 .. math::
    :label: eq:TotalCComponent
@@ -47,7 +47,7 @@ The total cost is broken down into several components, each represented by a spe
 
 Electricity Grid Usage
 ----------------------
-This component models capacity-based and tariffs, and considers the power peak penalization cost.
+This component models capacity-based and tariffs, and considers the power peak penalization cost. The formulation is defined by «``eNetGridUsageCost``».
 
 .. math::
    :label: eq:EleNetGridUsageCost
@@ -100,7 +100,7 @@ The formulation is defined by «``eEleMarketCost``».
 
    \elemarketcost_{\periodindex,\scenarioindex,\timeindex} = \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} + \elemarketcostPPA_{\periodindex,\scenarioindex,\timeindex}
 
-*   **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eTotalEleTradeCost``» and includes variable energy costs, taxes, and other fees.
+*   **Electricity Purchase**: The cost incurred from purchasing electricity from the market. This cost is defined by the constraint «``eEleMarketDayAheadCost``» and includes variable energy costs, taxes, and other fees.
 
 .. math::
    :label: eq:TotalEleTradeCost
@@ -163,18 +163,37 @@ The total revenue from ancillary services (:math:`\elemarketrevenueancillary_{\p
 .. math::
    :label: eq:EleMarketFrequencyRevenue
 
-   \elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex} = \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex}
+   \elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex} = \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} + \freqcontnormalrevenue_{\periodindex,\scenarioindex,\timeindex}
 
-Frequency Containment Reserve for Disturbance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This revenue subcomponent is earned by providing frequency containment reserves to manage disturbances in the grid, as defined by «``eEleMarketFCRDRevenue``».
+Frequency Containment Reserve for Disturbance (FCR-D)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This revenue subcomponent is earned by bidding upward and downward frequency
+containment reserves for disturbances. The upward and downward parts are defined
+by «``eEleMarketFCRDUpRevenue``» and «``eEleMarketFCRDDwRevenue``», and their sum is:
 
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( (\pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \cdot \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}) \cdot (1 + \pelemarketmoms_{\traderindex(\genindex)}) \right)
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
 
-where :math:`Retailer(\genindex)` is the retailer associated with generator :math:`\genindex`.
+Frequency Containment Reserve for Normal operation (FCR-N)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This revenue subcomponent is earned by bidding frequency containment reserve for
+normal operation, defined by «``eEleMarketFCRNRevenue``». FCR-N is a symmetric
+product, so the price is the average of the upward and downward FCR-N prices:
+
+.. math::
+    :label: eq:EleMarketFCRNRevenue
+
+    \freqcontnormalrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \pelefcrnprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
+
+where :math:`\pelefcrnprice` is the average of the upward and downward FCR-N prices.
+
+.. note::
+   Value-added tax (:math:`1 + \pelemarketmoms`) is applied to energy purchases
+   and sales, but **not** to the ancillary-service (FCR-D and FCR-N) revenues in the
+   current model. Confirm this is intended before relying on the ancillary revenue
+   figures.
 
 Taxes and Pass-Throughs
 -----------------------
@@ -182,7 +201,7 @@ This component accounts for various taxes, surcharges, pass-through costs and in
 
 Tax Costs
 ~~~~~~~~~
-The formulation is defined by «``eEleTaxCost``».
+The total electricity tax cost is the energy tax («``eEleTaxCost``»), whose value is set by the energy-tax constraint («``eEleTaxEnergyCost``»):
 
 .. math::
    :label: eq:EleTaxCost
@@ -191,7 +210,7 @@ The formulation is defined by «``eEleTaxCost``».
 
 Incentives and Certificate Revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The formulation is defined by «``eEleTaxISRevenue``».
+The total electricity tax revenue («``eEleTaxRevenue``») is the incentive/certificate revenue, defined by «``eEleTaxISRevenue``»:
 
 .. math::
    :label: eq:EleTaxISRevenue
@@ -305,7 +324,7 @@ The formulation is defined by «``eTotalHydRCost``».
 
 Degradation
 -----------
-This component models the degradation cost of electricity storage units, which is a function of the depth of discharge (DoD).
+This component models the degradation cost of electricity storage units, which is a function of the depth of discharge (DoD). The formulation is defined by «``eTotalEleDCost``».
 
 .. math::
    :label: eq:TotalEleDCost

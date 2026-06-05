@@ -62,6 +62,12 @@ Index
 
 .. toctree::
    :maxdepth: 2
+   :caption: API reference
+
+   api/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: Developer
 
    developer/contributing

@@ -71,6 +71,8 @@ instance/
 # Sphinx documentation
 docs/_build/
 docs/rst/_build/
+# Auto-generated API stub pages (rebuilt from source on every docs build)
+docs/rst/api/generated/
 
 # PyBuilder
 .pybuilder/
@@ -165,3 +167,9 @@ cython_debug/
 # el1xr_opt output
 src/el1xr_opt/Home1/*
 src/el1xr_opt/Grid1/*
+
+# el1xr_opt solver run artifacts (regenerated on every solve)
+data/**/oM_*.lp
+data/**/oM_Result_*
+data/**/oM_*.log
+data/**/*.sol

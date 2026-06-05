@@ -29,6 +29,10 @@ The composition of electricity bought from the market is defined by («``eEleBuy
    \sum_{\storageindex \in \nEES, (\eltraderindex,\storageindex) \in \nREGE} \veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex
 
+.. note::
+   ``eEleBuyComposition`` is currently disabled in the model (commented out in
+   ``oM_ModelFormulation.py``). The relation above documents its intended form.
+
 Electricity sold to the market is enabled if :math:`\pelemaxmarketsell_{\eltraderindex} >= 0.0`. The upper bound is defined by («``eEleRetMaxSell``»):
 
 .. math::
@@ -41,6 +45,10 @@ The composition of electricity sold to the market is defined by («``eEleSellCom
    \velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} =
    \sum_{\genindex \in \nGENR, (\eltraderindex,\genindex) \in \nREGE} \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex
+
+.. note::
+   ``eEleSellComposition`` is currently disabled in the model (commented out in
+   ``oM_ModelFormulation.py``). The relation above documents its intended form.
 
 Day-ahead Hydrogen Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,13 +82,47 @@ The composition of hydrogen sold to the market is defined by («``eHydSellCompos
 
 Reserve Electricity Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-..
-    Frequency containment reserves in normal operation (FCR-N) (to be implemented)
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    FCR-N is modeled through the next constraint, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
+Frequency containment reserves in normal operation (FCR-N)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FCR-N is a symmetric product. The total FCR-N bid from eligible generators and storage units is limited by the FCR-N requirement, taken as the average of the upward and downward requirements («``eEleFreqContReserveNor``»):
 
-    .. math::
-       \sum_{\genindex} rp^{FN}_{\periodindex,\scenarioindex,\timeindex,\genindex} \!+\! \sum_{\storageindex} rc^{FN}_{\periodindex,\scenarioindex,\timeindex,\storageindex} \leq R^{FN}_{\periodindex, \scenarioindex,\timeindex} \quad \forall \periodindex, \scenarioindex,\timeindex
+.. math::
+   \sum_{\genindex \in \nGET, \pgennofcrn_{\genindex}=0} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+   \sum_{\storageindex \in \nEES, \pgennofcrn_{\storageindex}=0} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \le \frac{1}{2}\left(\pfcrnrequirement^{up}_{\periodindex,\scenarioindex,\timeindex} + \pfcrnrequirement^{dn}_{\periodindex,\scenarioindex,\timeindex}\right)
+   \quad \forall \periodindex,\scenarioindex,\timeindex
+
+For a generator, the FCR-N bid is bounded by both its upward and downward provision («``eEleRelationFreqNorUpBid2Gen``», «``eEleRelationFreqNorDownBid2Gen``»):
+
+.. math::
+   \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \le \velefcrnupgen_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET, \pgennofcrn_{\genindex}=0
+
+.. math::
+   \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \le \velefcrndowngen_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGET, \pgennofcrn_{\genindex}=0
+
+For a storage unit, the FCR-N bid equals the sum of its discharging and charging provision in each direction («``eEleRelationFreqNorUpBid2Stor``», «``eEleRelationFreqNorDownBid2Stor``»):
+
+.. math::
+   \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} =
+   \velefcrnupdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrn_{\storageindex}=0
+
+.. math::
+   \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} =
+   \velefcrndowndis_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrn_{\storageindex}=0
+
+Because FCR-N is symmetric, a storage unit provides equal upward and downward reserve in each operating mode («``eEleSymmFreqNorStor2Ch``», «``eEleSymmFreqNorStor2Dis``»):
+
+.. math::
+   \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \velefcrnupdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} = \velefcrndowndis_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -126,33 +168,93 @@ And for an electric ESS («``eEleRelationFreqDisUpBid2Stor``», «``eEleRelation
    \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
 
-The tight headroom bounds for FCR-D provision from an electric ESS are defined by («``eEleFreqDisUpDischargeHeadroom``», «``eEleFreqDisUpChargeHeadroom``», «``eEleFreqDisDownDischargeHeadroom``», «``eEleFreqDisDownChargeHeadroom``»):
+Combined headroom for FCR-D and FCR-N provision from an electric ESS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The headroom constraints limit the **sum** of the FCR-D and FCR-N provision in each
+direction and operating mode to the remaining capacity. The upward headroom is
+defined by («``eEleFreqUpDischargeHeadroom``», «``eEleFreqUpChargeHeadroom``»):
 
 .. math::
-   \velefcrdupactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
-   \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
-   (\velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
-   \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex})
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
+   \velefcrdupdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrnupdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
+   \pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 .. math::
-   \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
-   \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+   \velefcrdupcha_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
    \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+and the downward headroom by («``eEleFreqDownDischargeHeadroom``», «``eEleFreqDownChargeHeadroom``»):
 
 .. math::
-   \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
-   \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+   \velefcrddwdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrndowndis_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
    \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 .. math::
-   \velefcrddwactch_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
-   \pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} -
-   (\velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}\peleminconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
-   \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex})
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
+   \velefcrddwcha_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\storageindex} \le
+   \pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. note::
+   For a unit that does not participate in the day-ahead market (or whose maximum
+   discharge power is numerically zero), the two discharge headroom constraints
+   instead bound the provision by the maximum charge power
+   :math:`\pelemaxcharge`. The constraints are active when the unit is eligible
+   for FCR-D (:math:`\pgennofcrd=0`) or FCR-N (:math:`\pgennofcrn=0`).
+
+Availability bounds for FCR-D and FCR-N provision from an electric ESS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The total provision in each mode, as a fraction of the unit capacity, is limited by
+the time-varying availability. The upward bounds are («``eEleFreqUpDischargeBound``», «``eEleFreqUpChargeBound``»):
+
+.. math::
+   \frac{\velefcrdupdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrnupdis_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \frac{\velefcrdupcha_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+and the downward bounds are («``eEleFreqDownDischargeBound``», «``eEleFreqDownChargeBound``»):
+
+.. math::
+   \frac{\velefcrddwdis_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrndowndis_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \frac{\velefcrddwcha_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+Storage endurance for FCR-D and FCR-N
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Endurance constraints make sure a storage unit holds enough energy (for upward
+reserve) or enough free capacity (for downward reserve) to sustain its reserve bid
+for the required duration. The reserve bid of the previous time step
+(:math:`\timeindex-\ptimestep`) is used, with the endurance requirements
+:math:`\pelegenendurancefcrd` and :math:`\pelegenendurancefcrn` given in minutes.
+The upward and downward endurance are defined by («``eEleStorageEnduranceUp``», «``eEleStorageEnduranceDown``»):
+
+.. math::
+   \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge
+   \frac{1}{\pdischeff_{\storageindex}} \left(
+   \frac{\pelegenendurancefcrd_{\storageindex}}{60} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} +
+   \frac{\pelegenendurancefcrn_{\storageindex}}{60} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \right)
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. math::
+   \pelemaxstorage_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \veleinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge
+   \pcheff_{\storageindex} \left(
+   \frac{\pelegenendurancefcrd_{\storageindex}}{60} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} +
+   \frac{\pelegenendurancefcrn_{\storageindex}}{60} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \right)
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. note::
+   An earlier activation-based version of the headroom constraints (named
+   ``eEleFreqDis...Headroom``) appeared here; those constraint names are not present
+   in the current code. The constraints above match the implemented
+   ``eEleFreq...Headroom`` family, which bound the combined FCR-D and FCR-N
+   provision. Please review the formulation against ``oM_ModelFormulation.py``.
 
 Peak Power Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,6 +337,28 @@ The electricity balance at each node is enforced by («``eEleBalance``»):
    - \vloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex})
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
    \end{aligned}
+
+Electricity Retailer Balance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At each retailer connection point, the balance links the retailer's own generators
+and storage, its market purchases and sales, and the demand it serves
+(«``eEleRetNodeBalance``»):
+
+.. math::
+   \begin{aligned}
+   &\sum_{\genindex \in \nGER} \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   + \sum_{\genindex \in \nGET} \left( \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
+   + \sum_{\storageindex \in \nEES} \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \\
+   &- \sum_{\storageindex \in \nEES} \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \sum_{\genindex \in \nGHE} \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   + \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} - \velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} \\
+   &= \sum_{\demandindex \in \nDE} \left( \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex} \right)
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex \in \nRE
+   \end{aligned}
+
+where every sum is restricted to the generators, storage units, electrolysers and
+demands assigned to retailer :math:`\eltraderindex` (the retailer-to-asset mappings
+:math:`\nREGE`, :math:`\nREDE`, and the retailer-to-hydrogen-generator mapping).
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~
@@ -471,7 +595,7 @@ Maximum and minimum electricity generation of the second block for an electricit
    \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrddwactdi_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
-Maximum and minimum hydrogen generation of the second block («``eHydMaxOutput2ndBlock``», «``eMinHydOutput2ndBlock``»):
+Maximum and minimum hydrogen generation of the second block for a committed unit («``eHydMaxOutput2ndBlock``», «``eHydMinOutput2ndBlock``»):
 
 .. math::
    \frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}}
@@ -481,6 +605,25 @@ Maximum and minimum hydrogen generation of the second block («``eHydMaxOutput2n
 .. math::
    \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT
+
+Maximum and minimum hydrogen output of the second block for a hydrogen ESS («``eHydMaxESSOutput2ndBlock``», «``eHydMinESSOutput2ndBlock``»):
+
+.. math::
+   \frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+   \le \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+.. math::
+   \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge 0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+.. note::
+   In the code the hydrogen ESS output is bounded by the charging-mode binary
+   (:math:`\vhydstorchargebin`), while the electricity equivalent
+   (``eEleMaxESSOutput2ndBlock``) uses the discharging-mode binary. Likewise the
+   hydrogen ESS charge (``eMaxHydESSCharge2ndBlock``) is bounded by the
+   discharging-mode binary. The charge/discharge binaries appear swapped relative
+   to the electricity formulation — verify this is intended.
 
 3. Energy Storage Dynamics
 --------------------------
@@ -612,6 +755,13 @@ Upper bounds for each DoD segment are defined by («``eEleInventoryDoDS1Upper``�
    \pdodsc_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
+.. note::
+   The per-segment DoD bounds (``eEleInventoryDoDS1Upper``/``S2Upper``/``S3Upper``
+   and the matching lower bounds) are currently disabled in the model (commented
+   out in ``oM_ModelFormulation.py``). The daily DoD (``eEleInventoryDoD``) and the
+   segment split (``eEleInventoryDoDSegments``) are active. The bounds above
+   document the intended segment limits.
+
 Energy Inflows and Outflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Energy inflows and outflows are constrained by the ESS commitment decision and physical limits.
@@ -626,6 +776,12 @@ Maximum and minimum electricity inflows («``eEleMaxInflows2Commitment``», «``
    \frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemininflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \ge 1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
+For storage units that provide FCR-D and do not participate in the day-ahead market, the energy inflow is allowed only while the unit is in charging mode («``eEleInflowsCharge``»):
+
+.. math::
+   \frac{\veleenergyinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxinflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \velestorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
+
 Maximum and minimum electricity outflows («``eEleMaxOutflows2Commitment``», «``eEleMinOutflows2Commitment``»):
 
 .. math::
@@ -637,6 +793,12 @@ Maximum and minimum electricity outflows («``eEleMaxOutflows2Commitment``», «
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Similar constraints apply to hydrogen storage systems («``eHydMaxInflows2Commitment``», «``eHydMinInflows2Commitment``», «``eHydMaxOutflows2Commitment``», «``eHydMinOutflows2Commitment``»).
+
+For an electricity-consuming unit (storage or electrolyser) with no minimum charge and a fixed-availability profile, the total charge is limited by the availability profile («``eEleTotalMaxChargeConditioned``»):
+
+.. math::
+   \frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 ESS electricity outflows over a cycle are constrained by («``eEleMaxEnergyOutflows``», «``eEleMinEnergyOutflows``»):
 
@@ -650,11 +812,29 @@ ESS electricity outflows over a cycle are constrained by («``eEleMaxEnergyOutfl
    (\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \peleminoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex}) \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
+ESS hydrogen outflows over a cycle are constrained by («``eHydMaxEnergyOutflows``», «``eHydMinEnergyOutflows``»):
+
+.. math::
+   \sum_{\timeindex'=\timeindex-\poutflowtimestep_{\storageindex}+1}^{\timeindex}
+   (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \phydmaxoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex}) \le 0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+.. math::
+   \sum_{\timeindex'=\timeindex-\poutflowtimestep_{\storageindex}+1}^{\timeindex}
+   (\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex} - \phydminoutflow_{\periodindex,\scenarioindex,\timeindex',\storageindex}) \ge 0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
 Incompatibility between charge and outflows for an electricity ESS is defined by («``eIncompatibilityEleChargeOutflows``»):
 
 .. math::
    \frac{\veleenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex} + \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}} \le 1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+.. note::
+   ``eIncompatibilityEleChargeOutflows`` (and its hydrogen counterpart
+   ``eIncompatibilityHydChargeOutflows``) are currently disabled in the model
+   (commented out in ``oM_ModelFormulation.py``). The relation above documents
+   the intended behaviour.
 
 Operation Ramping Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -672,7 +852,31 @@ Maximum ramp-up and ramp-down for charging an electricity ESS («``eEleMaxRampUp
    \le 1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
-Similar ramping constraints apply to hydrogen storage systems for both charging and outflows.
+Hydrogen storage systems have the same ramping limits, without the frequency-reserve activation terms (hydrogen provides no reserves).
+
+Maximum ramp-up and ramp-down for charging a hydrogen ESS («``eHydMaxRampUpCharge``», «``eHydMaxRampDwCharge``»):
+
+.. math::
+   \frac{-\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+   \ge -1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+.. math::
+   \frac{-\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+   \le 1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+Maximum ramp-up and ramp-down for the outflows of a hydrogen ESS («``eHydMaxRampUpOutflows``», «``eHydMaxRampDwOutflows``»):
+
+.. math::
+   \frac{-\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampuprate_{\storageindex}}
+   \le 1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+.. math::
+   \frac{-\vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} + \vhydenergyoutflow_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\storageindex}}
+   \ge -1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
 Second Block and Reserve Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -689,6 +893,18 @@ Maximum and minimum charge of the second block for an electricity ESS («``eEleM
    \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
    \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+
+Maximum and minimum charge of the second block for a hydrogen ESS («``eMaxHydESSCharge2ndBlock``», «``eHydMinESSCharge2ndBlock``»). As noted above, the bounding mode binary is swapped relative to the electricity case:
+
+.. math::
+   \frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+   \le \vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
+
+.. math::
+   \frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
+   \ge 0
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
 Reserve provision from an ESS is constrained by charging and discharging status («``eEleFreqDisUpChargeBound``», «``eEleFreqDisUpDischargeBound``», etc.):
 
@@ -773,7 +989,7 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 
     .. math::
        \veleinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \ge 0.8 \cdot \pelemaxstorage_{\storageindex}
-   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+       \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 *   **Driving Consumption**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
 

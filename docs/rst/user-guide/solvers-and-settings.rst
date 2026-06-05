@@ -33,3 +33,4 @@ The solver configuration is managed by the `oM_SolverSetup` module, which is res
 
 .. automodule:: el1xr_opt.Modules.oM_SolverSetup
     :members:
+    :no-index:
