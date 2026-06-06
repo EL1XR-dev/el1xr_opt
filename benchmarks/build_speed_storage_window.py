@@ -92,16 +92,16 @@ def build_pyomo_linexpr(B, C, G, inv0, with_obj=False):
 
     def bal(m, b, g):
         coefs = [1.0]
-        vars = [m.inv[b, g]]
+        lvars = [m.inv[b, g]]
         if b != 0:
             coefs.append(-1.0)
-            vars.append(m.inv[b - 1, g])
+            lvars.append(m.inv[b - 1, g])
         for c in m.C:
             coefs.append(-ETA_C)
-            vars.append(m.cha[b, c, g])
+            lvars.append(m.cha[b, c, g])
             coefs.append(1.0 / ETA_D)
-            vars.append(m.dis[b, c, g])
-        le = LinearExpression(constant=0.0, linear_coefs=coefs, linear_vars=vars)
+            lvars.append(m.dis[b, c, g])
+        le = LinearExpression(constant=0.0, linear_coefs=coefs, linear_vars=lvars)
         return le == (inv0[g] if b == 0 else 0.0)
 
     m.bal = pyo.Constraint(m.B, m.G, rule=bal)

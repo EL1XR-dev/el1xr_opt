@@ -174,7 +174,7 @@ def run_sweep(sizes, repeats=1):
         base = results.get(("pyomo-rule", T, G))
         if base:
             speed = {n: base / results[(n, T, G)] for n in BUILDERS}
-            print(f"  -> speedup vs pyomo-rule: " +
+            print("  -> speedup vs pyomo-rule: " +
                   "  ".join(f"{n} {speed[n]:.1f}x" for n in BUILDERS))
     return results
 
