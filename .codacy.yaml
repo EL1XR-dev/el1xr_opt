@@ -1,0 +1,7 @@
+---
+# Test files use pytest's bare `assert` statements, which the security linters
+# flag (B101) even though that is exactly how pytest tests are written. Their
+# correctness is enforced by running them in CI, so they are excluded from static
+# analysis here.
+exclude_paths:
+  - 'tests/**'

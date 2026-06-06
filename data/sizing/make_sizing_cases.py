@@ -47,7 +47,6 @@ OUT_ROOT = HERE
 
 N_LOADLEVELS = 168   # one week
 FCR_CAP = 20.0       # kW per FCR product (home-scale requirement)
-DB_BLOCK_SIZE = 16384  # DuckDB minimum block size; keeps committed case files small
 RELAX_FLAGS = ["IndBinGenOperat", "IndBinGenRamps", "IndBinGenMinTime"]
 FCRD_PRODUCTS = ["FCRD_Up", "FCRD_Down"]
 FCRN_PRODUCTS = ["FCRN_Up", "FCRN_Down"]
@@ -209,7 +208,7 @@ def build_case(case, spec):
 def main(keep_csv=False):
     for case, spec in CASES.items():
         folder = build_case(case, spec)
-        db = csv_case_to_duckdb(OUT_ROOT, case, block_size=DB_BLOCK_SIZE)  # writes data/sizing/<case>.duckdb
+        db = csv_case_to_duckdb(OUT_ROOT, case)        # writes data/sizing/<case>.duckdb
         if not keep_csv:
             shutil.rmtree(folder)                       # keep only the .duckdb
         print(f"built {case} -> {os.path.basename(db)}")

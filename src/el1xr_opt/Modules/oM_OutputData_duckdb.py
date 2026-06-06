@@ -70,10 +70,11 @@ def save_to_duckdb(DirName, CaseName, model, optmodel, date=None, solver=None, e
             meta_rows.append(("date", str(date)))
         if solver is not None:
             meta_rows.append(("solver", str(solver)))
-        try:
-            meta_rows.append(("objective", str(pyo_value(optmodel.eTotalSCost))))
-        except Exception:
-            pass
+        # exception=False returns None instead of raising if the objective has no
+        # value (e.g. an infeasible solve), so no try/except is needed.
+        objective = pyo_value(optmodel.eTotalSCost, exception=False)
+        if objective is not None:
+            meta_rows.append(("objective", str(objective)))
         if elapsed is not None:
             meta_rows.append(("elapsed_seconds", str(elapsed)))
         version = _pkg_version()

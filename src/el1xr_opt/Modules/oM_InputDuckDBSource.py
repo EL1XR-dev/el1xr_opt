@@ -31,21 +31,24 @@ except ImportError:  # pragma: no cover - exercised only in duckdb-free trees
 
 class DuckDBSource(InputSource):
     def __init__(self, db_path) -> None:
-        import duckdb
+        # duckdb is imported at module level (guarded by _HAS_DUCKDB); this class
+        # is only instantiated when that import succeeded.
         self.db_path = Path(db_path)
         self._con = duckdb.connect(str(self.db_path), read_only=True)
-        row = self._con.execute(
-            f'SELECT "Value" FROM "{META_TABLE}" WHERE "Key" = ?', [META_KEY_CASE]
-        ).fetchone()
-        if not row or not row[0]:
-            raise ValueError(
-                f"{self.db_path}: metadata table '{META_TABLE}' has no '{META_KEY_CASE}'"
-            )
-        self.case_name = str(row[0])
+        # Read all tables once. Identifiers come only from our own schema, and
+        # every read below goes through the relational API (con.table) rather than
+        # a composed SQL string, so no table name is ever interpolated into SQL.
         names = self._con.execute(
             "SELECT table_name FROM information_schema.tables"
         ).fetchall()
         self._tables = {r[0] for r in names}
+        meta = self._con.table(META_TABLE).df()
+        match = meta.loc[meta["Key"] == META_KEY_CASE, "Value"]
+        if match.empty or not match.iloc[0]:
+            raise ValueError(
+                f"{self.db_path}: metadata table '{META_TABLE}' has no '{META_KEY_CASE}'"
+            )
+        self.case_name = str(match.iloc[0])
 
     @property
     def dir_name(self) -> str:
@@ -67,13 +70,13 @@ class DuckDBSource(InputSource):
         table = f"{DB_DICT_PREFIX}{stem}"
         if table not in self._tables:
             return pd.DataFrame()
-        return self._con.execute(f'SELECT * FROM "{table}"').df()
+        return self._con.table(table).df()
 
     def read_data(self, stem: str) -> pd.DataFrame:
         table = f"{DB_DATA_PREFIX}{stem}"
         if table not in self._tables:
             raise FileNotFoundError(f"oM_Data_{stem}_*.csv not present in {self.db_path}")
-        df = self._con.execute(f'SELECT * FROM "{table}"').df()
+        df = self._con.table(table).df()
         idx_cols = sorted(
             (c for c in df.columns if is_idx_col(c)),
             key=lambda c: int(c[len(IDX_PREFIX):]),
