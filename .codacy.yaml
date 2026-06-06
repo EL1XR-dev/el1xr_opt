@@ -1,7 +1,9 @@
 ---
-# Test files use pytest's bare `assert` statements, which the security linters
-# flag (B101) even though that is exactly how pytest tests are written. Their
-# correctness is enforced by running them in CI, so they are excluded from static
-# analysis here.
+# Paths excluded from static analysis:
+#  - tests/**       pytest uses bare `assert` (flagged B101) by design; test
+#                   correctness is enforced by running them in CI.
+#  - benchmarks/**  throwaway dev/prototype scripts, not part of the package or
+#                   the test suite, so lint findings there are not worth chasing.
 exclude_paths:
   - 'tests/**'
+  - 'benchmarks/**'
