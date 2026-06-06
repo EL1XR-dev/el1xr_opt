@@ -10,7 +10,8 @@
       .t     { font-size: 14px; fill: #1f2937; }
       .tb    { font-size: 14px; font-weight: 700; fill: #111827; }
       .ts    { font-size: 11.5px; fill: #4b5563; }
-      .flow  { stroke: #555; stroke-width: 2; marker-end: url(#arrow); }
+      .flow  { fill: none; stroke: #555; stroke-width: 2; marker-end: url(#arrow); }
+      .elbow { fill: none; stroke: #555; stroke-width: 2; }
       .note  { font-size: 11.5px; fill: #6b7280; font-style: italic; }
     </style>
   </defs>
@@ -36,8 +37,11 @@
   <text x="320" y="205" text-anchor="middle" class="t">CSVSource</text>
   <text x="470" y="205" text-anchor="middle" class="t">DuckDBSource</text>
   <text x="650" y="205" text-anchor="middle" class="ts">guided by InputSchema</text>
-  <line x1="285" y1="134" x2="320" y2="158" class="flow"/>
-  <line x1="655" y1="134" x2="500" y2="158" class="flow"/>
+  <!-- elbow merge: both inputs drop, turn, and join one arrow into Source -->
+  <polyline points="285,134 285,147 470,147" class="elbow"/>
+  <polyline points="655,134 655,147 470,147" class="elbow"/>
+  <circle cx="470" cy="147" r="2.5" fill="#555"/>
+  <line x1="470" y1="147" x2="470" y2="159" class="flow"/>
 
   <!-- Layer 3: data -->
   <text x="30" y="272" class="lyr">DATA</text>
@@ -74,8 +78,10 @@
   <rect x="570" y="552" width="220" height="64" class="box" fill="#ffffff" stroke="#dc2626"/>
   <text x="680" y="575" text-anchor="middle" class="tb">CSV results</text>
   <text x="680" y="597" text-anchor="middle" class="ts">optional (--rawresults)</text>
-  <line x1="470" y1="518" x2="470" y2="550" class="flow"/>
-  <line x1="550" y1="584" x2="568" y2="584" class="flow"/>
+  <!-- elbow split: the solve feeds both outputs in parallel -->
+  <polyline points="470,518 470,535 350,535 350,551" class="flow"/>
+  <polyline points="470,535 680,535 680,551" class="flow"/>
+  <circle cx="470" cy="535" r="2.5" fill="#555"/>
 
   <!-- side rail -->
   <rect x="828" y="78" width="86" height="538" rx="9" ry="9" fill="#f3f4f6" stroke="#9ca3af"/>

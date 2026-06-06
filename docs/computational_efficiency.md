@@ -112,12 +112,59 @@ part**. Faster solving (Gurobi, Benders) does not help the build; a faster
   realistically buys 1.5-3x on the build, not the 5-30x the others can. It is a
   half-day experiment, so it is worth quantifying first as the cheap baseline.
 
-Suggested path: (1) spend half a day on the Pyomo `LinearExpression` / kernel
-tuning to see how much the cheap fix gives; then (2) port **one** real constraint
-family (e.g. the storage inventory balance) to **linopy** and to **pyoframe** and
-measure the build time on a full-year case - the published speed-ups come from
-clean synthetic problems and will be smaller on this sparse model, so measure our
-own before committing. If the measured linopy build win is large and duals work
-for our marginal prices, linopy is the recommended move; keep JuMP in mind only
-if we decide to adopt Julia for other reasons. Full details and sources are in the
-reference note `amls_build_speed_pyomo_alternatives` in the research memory.
+Suggested path: steps (1) and (2) below are now done and measured (see the table
+that follows); the remaining work is steps (3)-(4).
+
+1. *(done)* Quantify the cheap Pyomo `LinearExpression` fix - result: about
+   1.4-1.5x at scale, a small steady win, not enough on its own.
+2. *(done)* Port one constraint family (the storage inventory balance) to linopy
+   and measure on a full-year case - result: 23-60x faster to build.
+3. Port a **harder** family next - one with the storage-cycle-window sum and the
+   conditional skips the real model has - to both linopy and **pyoframe**, and
+   measure again; the whole-model speed-up will be smaller than 60x on sparse,
+   irregular constraints, so this sets the realistic expectation before a
+   migration.
+4. Design dual extraction in linopy for the unit-commitment marginal prices (the
+   one feature gap), then decide. JuMP stays a fallback only if we adopt Julia for
+   other reasons.
+
+Full details and sources are in the reference note
+`amls_build_speed_pyomo_alternatives` in the research memory.
+
+### Measured prototype (steps 1 and 2, storage inventory balance)
+
+`benchmarks/build_speed_storage.py` builds the storage inventory balance - one of
+the biggest constraint families - three ways and times only the model build. All
+three solve to the same objective on a small forced-charging case (2.105263), so
+they are the same model. Build time on the **Comillas desktop** (Intel i7-8700,
+6c/12t, the machine used for full-year runs; best of two builds):
+
+| size (time x units) | constraints | pyomo-rule | pyomo-LinearExpression | linopy |
+|---------------------|-------------|------------|------------------------|--------|
+| 168 x 10            | 1 680       | 0.031 s    | 0.014 s (2.3x)         | 0.096 s (0.3x) |
+| 1 000 x 10          | 10 000      | 0.292 s    | 0.213 s (1.4x)         | 0.095 s (3.1x) |
+| 8 760 x 10          | 87 600      | 2.611 s    | 1.792 s (1.5x)         | 0.114 s (23x)  |
+| 8 760 x 50          | 438 000     | 12.589 s   | 9.089 s (1.4x)         | 0.211 s (60x)  |
+
+(The development Mac is faster per core, so its absolute times are about 3-4x
+smaller, but the ratios are the same.)
+
+Two clear findings:
+
+- **`LinearExpression` is a small, steady win, not the lever.** It builds about
+  1.4-1.5x faster at full-year scale - real, but far short of what is needed. The
+  cost that dominates is the per-element Python loop over the index set, and
+  `LinearExpression` only speeds up the expression *body*, not the loop.
+- **linopy scales.** Its build time is almost flat as the constraint count grows
+  (0.11 s at 87k, 0.21 s at 438k) because it builds the whole family as one
+  vectorised array operation rather than element by element. At full-year scale it
+  is 23-60x faster to build.
+
+Caveats: this is one constraint family with a simple one-step recurrence; the real
+inventory balance sums over a storage cycle window and other families are sparser
+and more conditional, so the whole-model speed-up will be smaller than 40x. Duals
+for marginal prices still need a design in linopy for the unit-commitment cases.
+But the direction is clear: the build-time lever is a vectorised builder (linopy),
+not Pyomo micro-tuning. The recommended next step is to port a second, harder
+family (one with the cycle-window sum) and measure again before committing to a
+migration.
