@@ -15,6 +15,7 @@ import pandas            as pd
 from   itertools         import product
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
+from  .oM_InputSource     import resolve_source, df_to_set_values
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 def data_processing(DirName, CaseName, DateModel, model, indlog):
@@ -37,29 +38,26 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         'edd': ('ElectricityDemand',     'ed' ), 'hdd': ('HydrogenDemand',     'hd' ),
         'err': ('ElectricityRetail',     'er' ), 'hrr': ('HydrogenRetail',     'hr' ),}
 
-    dictSets = DataPortal()
+    # Open the input source: a CSV case directory or a <case>.duckdb file. Both
+    # backends return identical DataFrames, so the rest of this function is the
+    # same regardless of which one was used.
+    source = resolve_source(DirName, CaseName)
 
-    # Reading dictionaries from CSV and adding elements to the dictSets
+    # Build the model sets from the dimension dicts. Several set names share one
+    # dict file (e.g. ni/nf/nd all come from Node), so dict reads are cached.
+    unordered_sets = {'egg', 'hgg', 'edd', 'hdd', 'err', 'hrr', 'st', 'gt', 'nd', 'ni', 'nf', 'cc', 'c2', 'ndzn'}
+    dict_cache = {}
     for set_name, (file_set_name, set_key) in set_definitions.items():
-        filename = f'oM_Dict_{file_set_name}_{CaseName}.csv'
-        dictSets.load(filename=os.path.join(path_to_read, filename), set=set_key, format='set')
-
-    # Defining sets in the model
-    for set_name, (file_set_name, set_key) in set_definitions.items():
-        is_ordered = set_name not in {'egg', 'hgg', 'edd', 'hdd', 'err', 'hrr', 'st', 'gt', 'nd', 'ni', 'nf', 'cc', 'c2', 'ndzn'}
-        setattr(model, set_name, Set(initialize=dictSets[set_key], ordered=is_ordered, doc=f'{file_set_name}'))
+        if file_set_name not in dict_cache:
+            dict_cache[file_set_name] = df_to_set_values(source.read_dict(file_set_name))
+        is_ordered = set_name not in unordered_sets
+        setattr(model, set_name, Set(initialize=dict_cache[file_set_name], ordered=is_ordered, doc=f'{file_set_name}'))
 
     #%% Reading the input data
     data_frames = {}
-
-    files_list = [file.split("_")[2] for file in os.listdir(os.path.join(path_to_read)) if 'oM_Data' in file]
-
-    for file_set_name in files_list:
-        file_name = f'oM_Data_{file_set_name}_{CaseName}.csv'
-        data_frames[f'df{file_set_name}'] = pd.read_csv(os.path.join(path_to_read, file_name))
-        unnamed_columns = [col for col in data_frames[f'df{file_set_name}'].columns if 'Unnamed' in col]
-        data_frames[f'df{file_set_name}'].set_index(unnamed_columns, inplace=True)
-        data_frames[f'df{file_set_name}'].index.names = [None] * len(unnamed_columns)
+    for stem in source.list_data_stems():
+        data_frames[f'df{stem}'] = source.read_data(stem)
+    source.close()
 
     # substitute NaN by 0 (only for numeric columns to avoid TypeError on string columns)
     for df in data_frames.values():
@@ -314,6 +312,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.hgsc = Set(doc='hydrogen storage       units ', initialize=[hgsc   for hgsc in           model.hgs if  parameters_dict['pHydGenInvestCost']      [hgsc]  >  0.0])
     model.e2h  = Set(doc='ele2hyd                units ', initialize=[hg     for hg   in           model.hg  if  parameters_dict['pHydGenProductionFunction'][hg]  >  0.0])
     model.h2e  = Set(doc='hyd2ele                units ', initialize=[eg     for eg   in           model.eg  if  parameters_dict['pEleGenProductionFunction'][eg]  >  0.0])
+    # Hydrogen analogue of egr (electricity RES). There is no hydrogen RES column,
+    # so this set is empty; it exists because the initial-output loop references it
+    # the same way the electricity loop references egr.
+    model.hgr  = Set(doc='hydrogen RES           units ', within=model.hgg, initialize=[])
     model.ebr  = Set(doc='all input branches           ', initialize=[(ni,nf) for ni,nf in sEleBrList])
     model.eln  = Set(doc='all input lines              ', initialize=data_frames['dfElectricityNetwork'].index.to_list())
     model.ela  = Set(doc='all real lines               ', initialize=[el for el in model.eln if parameters_dict['pEleNetReactance'][el] != 0.0 and  parameters_dict['pEleNetTTC'][el] > 0.0 and parameters_dict['pEleNetTTCBck'][el] > 0.0 and parameters_dict['pEleNetInitialPeriod'][el] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pEleNetFinalPeriod'][el] >= parameters_dict['pParEconomicBaseYear']])
@@ -1165,12 +1167,15 @@ def create_variables(model, optmodel, indlog):
     #         else:
     #             optmodel.vEleTotalOutput2ndBlock[idx].setlb(0.0)
 
-        optmodel.vEleEnergyInflows[idx].setlb(model.Par['pEleMinInflows'][idx[-1]][idx[:3]])
-        optmodel.vEleEnergyInflows[idx].setub(model.Par['pEleMaxInflows'][idx[-1]][idx[:3]])
-        optmodel.vEleEnergyOutflows[idx].setlb(model.Par['pEleMinOutflows'][idx[-1]][idx[:3]])
-        optmodel.vEleEnergyOutflows[idx].setub(model.Par['pEleMaxOutflows'][idx[-1]][idx[:3]])
-        optmodel.vEleInventory[idx].setlb(model.Par['pEleMinStorage'][idx[-1]][idx[:3]] * model.factor1)
-        optmodel.vEleInventory[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:3]] * model.factor1)
+        # Inflows, outflows and inventory exist only for storage units (egs), not
+        # for electrolysers (e2h), which also appear in eh as electricity consumers.
+        if idx[-1] in model.egs:
+            optmodel.vEleEnergyInflows[idx].setlb(model.Par['pEleMinInflows'][idx[-1]][idx[:3]])
+            optmodel.vEleEnergyInflows[idx].setub(model.Par['pEleMaxInflows'][idx[-1]][idx[:3]])
+            optmodel.vEleEnergyOutflows[idx].setlb(model.Par['pEleMinOutflows'][idx[-1]][idx[:3]])
+            optmodel.vEleEnergyOutflows[idx].setub(model.Par['pEleMaxOutflows'][idx[-1]][idx[:3]])
+            optmodel.vEleInventory[idx].setlb(model.Par['pEleMinStorage'][idx[-1]][idx[:3]] * model.factor1)
+            optmodel.vEleInventory[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:3]] * model.factor1)
 
     for idx in model.psnela:
         if model.Par['pOptIndBinSingleNode'] == 0:

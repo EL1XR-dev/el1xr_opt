@@ -173,3 +173,11 @@ data/**/oM_*.lp
 data/**/oM_Result_*
 data/**/oM_*.log
 data/**/*.sol
+# DuckDB case/result files. The variant CI cases under data/sizing/ are rebuilt
+# on the fly from the H2VPP base by make_sizing_cases.py, so they are not
+# committed; only the generator and its README are tracked.
+*.duckdb
+
+# Temporary CSV folders left by data/sizing/make_sizing_cases.py --keep-csv,
+# and any results.duckdb written under a case folder when solving.
+data/sizing/*/

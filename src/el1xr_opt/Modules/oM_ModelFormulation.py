@@ -215,6 +215,13 @@ def create_constraints(model, optmodel, indlog):
     # this function declares constraints
     StartTime = time.time()  # to compute elapsed time
 
+    # Materialise the ordered load-level list once. Several constraint rules slice
+    # it by position (using model.n.ord(n)); rebuilding the list on every rule
+    # call made constraint construction scale quadratically with the number of
+    # load levels. Building it once here keeps the slicing identical but removes
+    # that per-call cost.
+    n2_list = list(model.n2)
+
     print('-- Declaring constraints for the market')
 
     # incoming and outgoing lines (lin) (lout)
@@ -357,7 +364,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleDemandShiftBalance(optmodel, p,sc,n,ed):
         if model.Par['pEleDemFlexible'][ed] == 1.0 and model.Par['pEleDemShiftedSteps'][ed]:
             if model.n.ord(n) % model.Par['pEleDemShiftedSteps'][ed] == 0:
-                return sum(optmodel.vEleDemand[p,sc,n2,ed] for n2 in list(model.n2)[model.n.ord(n) - model.Par['pEleDemShiftedSteps'][ed]:model.n.ord(n)])  == sum(model.Par['pVarMaxDemand'][ed][p,sc,n2] for n2 in list(model.n2)[model.n.ord(n) - model.Par['pEleDemShiftedSteps'][ed]:model.n.ord(n)])
+                return sum(optmodel.vEleDemand[p,sc,n2,ed] for n2 in n2_list[model.n.ord(n) - model.Par['pEleDemShiftedSteps'][ed]:model.n.ord(n)])  == sum(model.Par['pVarMaxDemand'][ed][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pEleDemShiftedSteps'][ed]:model.n.ord(n)])
             else:
                 return Constraint.Skip
         else:
@@ -635,9 +642,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleInventory(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n] + model.Par['pEleMaxPower'][egs][p,sc,n] and (n,egs) in model.negs:
             if   model.n.ord(n) == model.Par['pEleCycleTimeStep'][egs]:
-                return model.Par['pEleInitialInventory'][egs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs]) for n2 in list(model.n2)[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
+                return model.Par['pEleInitialInventory'][egs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs]) for n2 in n2_list[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
             elif model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs]:
-                return optmodel.vEleInventory[p,sc,model.n.prev(n,model.Par['pEleCycleTimeStep'][egs]),egs] + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs]) for n2 in list(model.n2)[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
+                return optmodel.vEleInventory[p,sc,model.n.prev(n,model.Par['pEleCycleTimeStep'][egs]),egs] + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs]) for n2 in n2_list[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
             else:
                 return Constraint.Skip
         else:
@@ -647,9 +654,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydInventory(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.negs:
             if   model.n.ord(n) == model.Par['pHydCycleTimeStep'][hgs]:
-                return model.Par['pHydInitialInventory'][hgs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in list(model.n2)[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
+                return model.Par['pHydInitialInventory'][hgs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
             elif model.n.ord(n) >  model.Par['pHydCycleTimeStep'][hgs]:
-                return optmodel.vHydInventory[p,sc,model.n.prev(n,model.Par['pHydCycleTimeStep'][hgs]),hgs] + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in list(model.n2)[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
+                return optmodel.vHydInventory[p,sc,model.n.prev(n,model.Par['pHydCycleTimeStep'][hgs]),hgs] + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
             else:
                 return Constraint.Skip
         else:
@@ -812,28 +819,28 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleMaxEnergyOutflows(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n] + model.Par['pEleMaxPower'][egs][p,sc,n] and (n,egs) in model.negso:
-            return sum(optmodel.vEleEnergyOutflows[p,sc,n2,egs] - model.Par['pEleMaxOutflows'][egs][p,sc,n2] for n2 in list(model.n2)[model.n.ord(n) - model.Par['pEleOutflowsTimeStep'][egs]:model.n.ord(n)]) <= 0.0
+            return sum(optmodel.vEleEnergyOutflows[p,sc,n2,egs] - model.Par['pEleMaxOutflows'][egs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pEleOutflowsTimeStep'][egs]:model.n.ord(n)]) <= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxEnergyOutflows', Constraint(optmodel.psnegs, rule=eEleMaxEnergyOutflows, doc='electricity energy outflows of an ESS unit [GWh]'))
 
     def eEleMinEnergyOutflows(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] + model.Par['pEleMinPower'][egs][p,sc,n] and (n,egs) in model.negso:
-            return sum(optmodel.vEleEnergyOutflows[p,sc,n2,egs] - model.Par['pEleMinOutflows'][egs][p,sc,n2] for n2 in list(model.n2)[model.n.ord(n) - model.Par['pEleOutflowsTimeStep'][egs]:model.n.ord(n)]) >= 0.0
+            return sum(optmodel.vEleEnergyOutflows[p,sc,n2,egs] - model.Par['pEleMinOutflows'][egs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pEleOutflowsTimeStep'][egs]:model.n.ord(n)]) >= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinEnergyOutflows', Constraint(optmodel.psnegs, rule=eEleMinEnergyOutflows, doc='electricity energy outflows of an ESS unit [GWh]'))
 
     def eHydMaxEnergyOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.nhgso:
-            return sum(optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - model.Par['pHydMaxOutflows'][hgs][p,sc,n2] for n2 in list(model.n2)[model.n.ord(n) - model.Par['pHydOutflowsTimeStep'][hgs]:model.n.ord(n)]) <= 0.0
+            return sum(optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - model.Par['pHydMaxOutflows'][hgs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pHydOutflowsTimeStep'][hgs]:model.n.ord(n)]) <= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxEnergyOutflows', Constraint(optmodel.psnhgs, rule=eHydMaxEnergyOutflows, doc='hydrogen energy outflows of an ESS unit [tH2]'))
 
     def eHydMinEnergyOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydMinCharge'][hgs][p,sc,n] + model.Par['pHydMinPower'][hgs][p,sc,n] and (n,hgs) in model.nhgso:
-            return sum(optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - model.Par['pHydMinOutflows'][hgs][p,sc,n2] for n2 in list(model.n2)[model.n.ord(n) - model.Par['pHydOutflowsTimeStep'][hgs]:model.n.ord(n)]) >= 0.0
+            return sum(optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - model.Par['pHydMinOutflows'][hgs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pHydOutflowsTimeStep'][hgs]:model.n.ord(n)]) >= 0.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMinEnergyOutflows', Constraint(optmodel.psnhgs, rule=eHydMinEnergyOutflows, doc='hydrogen energy outflows of an ESS unit [tH2]'))
@@ -1330,14 +1337,14 @@ def create_constraints(model, optmodel, indlog):
     # Minimum up time and down time of thermal unit [h]
     def eEleMinUpTime(optmodel, p,sc,n,egt):
         if model.Par['pOptIndBinGenMinTime'] == 1 and (model.Par['pEleMinPower'][egt][p,sc,n] or model.Par['pEleGenConstantTerm'][egt]) and egt not in model.egs and model.n.ord(n) > (model.Par['pEleGenUpTime'][egt] - model.Par['pEleGenUpTimeZero'][egt]):
-            return sum(optmodel.vEleGenStartUp[ p,sc,n2,egt] for n2 in list(model.n2)[int(max(model.n.ord(n)-model.Par['pEleGenUpTime'  ][egt], max(0,min(model.n.ord(n),(model.Par['pEleGenUpTime'  ][egt] - model.Par['pEleGenUpTimeZero'  ][egt])*(  model.Par['pEleInitialUC'][p,sc,egt]))))):model.n.ord(n)]) <=     optmodel.vEleGenCommitment[p,sc,n,egt]
+            return sum(optmodel.vEleGenStartUp[ p,sc,n2,egt] for n2 in n2_list[int(max(model.n.ord(n)-model.Par['pEleGenUpTime'  ][egt], max(0,min(model.n.ord(n),(model.Par['pEleGenUpTime'  ][egt] - model.Par['pEleGenUpTimeZero'  ][egt])*(  model.Par['pEleInitialUC'][p,sc,egt]))))):model.n.ord(n)]) <=     optmodel.vEleGenCommitment[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinUpTime', Constraint(optmodel.psnegt, rule=eEleMinUpTime, doc='minimum up   time [h]'))
 
     def eEleMinDownTime(optmodel, p,sc,n,egt):
         if model.Par['pOptIndBinGenMinTime'] == 1 and (model.Par['pEleMinPower'][egt][p,sc,n] or model.Par['pEleGenConstantTerm'][egt]) and egt not in model.egs and model.n.ord(n) > (model.Par['pEleGenDownTime'][egt] - model.Par['pEleGenDownTimeZero'][egt]):
-            return sum(optmodel.vEleGenShutDown[p,sc,n2,egt] for n2 in list(model.n2)[int(max(model.n.ord(n)-model.Par['pEleGenDownTime'][egt], max(0,min(model.n.ord(n),(model.Par['pEleGenDownTime'][egt] - model.Par['pEleGenDownTimeZero'][egt])*(1-model.Par['pEleInitialUC'][p,sc,egt]))))):model.n.ord(n)]) <= 1 - optmodel.vEleGenCommitment[p,sc,n,egt]
+            return sum(optmodel.vEleGenShutDown[p,sc,n2,egt] for n2 in n2_list[int(max(model.n.ord(n)-model.Par['pEleGenDownTime'][egt], max(0,min(model.n.ord(n),(model.Par['pEleGenDownTime'][egt] - model.Par['pEleGenDownTimeZero'][egt])*(1-model.Par['pEleInitialUC'][p,sc,egt]))))):model.n.ord(n)]) <= 1 - optmodel.vEleGenCommitment[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMinDownTime', Constraint(optmodel.psnegt, rule=eEleMinDownTime, doc='minimum down time [h]'))
@@ -1345,14 +1352,14 @@ def create_constraints(model, optmodel, indlog):
     # Minimum up time and down time of an electrolyzer [h]
     def eHydMinUpTime(optmodel, p,sc,n,hgt):
         if model.Par['pOptIndBinGenMinTime'] == 1 and model.Par['pHydGenUpTime'][hgt] > 1 and model.n.ord(n) > (model.Par['pHydGenUpTime'][hgt] - model.Par['pHydGenUpTimeZero'][hgt]):
-            return sum(optmodel.vHydGenStartUp[p,sc,n2,hgt] for n2 in list(model.n2)[int(max(model.n.ord(n)-model.Par['pHydGenUpTime'   ][hgt], max(0,min(model.n.ord(n),(model.Par['pHydGenUpTime'  ][hgt] - model.Par['pHydGenUpTimeZero'  ][hgt])*(  model.Par['pHydInitialUC'][p,sc,hgt]))))):model.n.ord(n)]) <=     optmodel.vHydGenCommitment[p,sc,n,hgt]
+            return sum(optmodel.vHydGenStartUp[p,sc,n2,hgt] for n2 in n2_list[int(max(model.n.ord(n)-model.Par['pHydGenUpTime'   ][hgt], max(0,min(model.n.ord(n),(model.Par['pHydGenUpTime'  ][hgt] - model.Par['pHydGenUpTimeZero'  ][hgt])*(  model.Par['pHydInitialUC'][p,sc,hgt]))))):model.n.ord(n)]) <=     optmodel.vHydGenCommitment[p,sc,n,hgt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMinUpTime', Constraint(optmodel.psnhgt, rule=eHydMinUpTime, doc='minimum up   time [h]'))
 
     def eHydMinDownTime(optmodel, p,sc,n,hgt):
         if model.Par['pOptIndBinGenMinTime'] == 1 and model.Par['pHydGenDownTime'][hgt] > 1 and model.n.ord(n) > (model.Par['pHydGenDownTime'][hgt] - model.Par['pHydGenDownTimeZero'][hgt]):
-            return sum(optmodel.vHydGenShutDown[p,sc,n2,hgt] for n2 in list(model.n2)[int(max(model.n.ord(n)-model.Par['pHydGenDownTime'][hgt], max(0,min(model.n.ord(n),(model.Par['pHydGenDownTime'][hgt] - model.Par['pHydGenDownTimeZero'][hgt])*(1-model.Par['pHydInitialUC'][p,sc,hgt]))))):model.n.ord(n)]) <= 1 - optmodel.vHydGenCommitment[p,sc,n,hgt]
+            return sum(optmodel.vHydGenShutDown[p,sc,n2,hgt] for n2 in n2_list[int(max(model.n.ord(n)-model.Par['pHydGenDownTime'][hgt], max(0,min(model.n.ord(n),(model.Par['pHydGenDownTime'][hgt] - model.Par['pHydGenDownTimeZero'][hgt])*(1-model.Par['pHydInitialUC'][p,sc,hgt]))))):model.n.ord(n)]) <= 1 - optmodel.vHydGenCommitment[p,sc,n,hgt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMinDownTime', Constraint(optmodel.psnhgt, rule=eHydMinDownTime, doc='minimum down time [h]'))
@@ -1373,7 +1380,9 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
 
     def eEleTotalMaxChargeConditioned(optmodel, p,sc,n,egs):
-        if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
+        # This is an ESS-only condition; electrolysers (e2h) also appear in eh but
+        # are not storage, so skip them.
+        if egs in model.egs and model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
             return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip

@@ -18,13 +18,20 @@ reference, add one line to the ``autosummary`` list below.
 
    el1xr_opt.el1xr_Main
    el1xr_opt.Modules.oM_LoadCase
+   el1xr_opt.Modules.oM_InputSchema
+   el1xr_opt.Modules.oM_InputSource
+   el1xr_opt.Modules.oM_InputCSVSource
+   el1xr_opt.Modules.oM_InputDuckDBSource
+   el1xr_opt.Modules.oM_CsvToDuckDB
    el1xr_opt.Modules.oM_InputData
    el1xr_opt.Modules.oM_Investment
    el1xr_opt.Modules.oM_GreenHydrogen
+   el1xr_opt.Modules.oM_HeatSector
    el1xr_opt.Modules.oM_ModelFormulation
    el1xr_opt.Modules.oM_ProblemSolving
    el1xr_opt.Modules.oM_SolverSetup
    el1xr_opt.Modules.oM_OutputData
    el1xr_opt.Modules.oM_OutputData_duckdb
+   el1xr_opt.Modules.oM_Decomposition
    el1xr_opt.Modules.oM_Sequence
    el1xr_opt.Modules.utils.oM_Utils

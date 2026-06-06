@@ -23,7 +23,7 @@ from .utils.oM_Utils      import log_time
 # keeping them out of the import-time chain lets documentation tooling import the
 # package without those libraries installed.
 
-def routine(dir, case, solver, date, rawresults, plots, indlog):
+def routine(dir, case, solver, date, rawresults, plots, indlog, duckdbresults='True'):
     initial_time = time.time()
 
     # %% Model declaration
@@ -80,10 +80,12 @@ def routine(dir, case, solver, date, rawresults, plots, indlog):
         model = saving_results(dir, case, date, model, model, indlog)
         log_time('- Total time for outputting the results:', start_time, ind_log=indlog)
         start_time = time.time()
-    # # outputting the results to duckdb
-    # from .oM_OutputData_duckdb import save_to_duckdb
-    # save_to_duckdb(dir, case, model, model)
-    # log_time('- Total time for outputting the results to duckdb:', start_time, ind_log=indlog)
+    # outputting the results to duckdb (default output; CSV outputs above are optional)
+    if duckdbresults == 'True':
+        from .oM_OutputData_duckdb import save_to_duckdb
+        save_to_duckdb(dir, case, model, model, date=date, solver=solver)
+        log_time('- Total time for outputting the results to duckdb:', start_time, ind_log=indlog)
+        start_time = time.time()
     for i in range(0, 117):
         print('-', end="")
     print('\n')
