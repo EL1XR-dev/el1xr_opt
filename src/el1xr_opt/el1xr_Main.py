@@ -24,6 +24,7 @@ parser.add_argument('--solver', type=str, default=None)
 parser.add_argument('--date',   type=str, default=None)
 parser.add_argument('--rawresults', type=str, default=None)
 parser.add_argument('--plots', type=str, default=None)
+parser.add_argument('--duckdbresults', type=str, default='True')
 parser.add_argument('--indlog', type=str, default='True')
 
 default_DirName    = os.path.dirname(__file__)
@@ -94,7 +95,7 @@ def main():
     print('\n')
 
     # %% model call
-    model = routine(args.dir, args.case, args.solver, args.date, args.rawresults, args.plots, args.indlog)
+    model = routine(args.dir, args.case, args.solver, args.date, args.rawresults, args.plots, args.indlog, args.duckdbresults)
 
     return model
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="840" viewBox="0 0 940 840" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <style>
+      .lyr   { font-size: 13px; font-weight: 700; fill: #6b7280; letter-spacing: .06em; }
+      .box   { rx: 9; ry: 9; stroke-width: 1.5; }
+      .t     { font-size: 14px; fill: #1f2937; }
+      .tb    { font-size: 14px; font-weight: 700; fill: #111827; }
+      .ts    { font-size: 11.5px; fill: #4b5563; }
+      .flow  { stroke: #555; stroke-width: 2; marker-end: url(#arrow); }
+      .note  { font-size: 11.5px; fill: #6b7280; font-style: italic; }
+    </style>
+  </defs>
+
+  <text x="470" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">el1xr_opt architecture</text>
+  <text x="470" y="55" text-anchor="middle" class="note">From a CSV case folder or a single .duckdb file to a Pyomo model and DuckDB results</text>
+
+  <!-- Layer 1: input -->
+  <text x="30" y="100" class="lyr">INPUT</text>
+  <rect x="150" y="78" width="270" height="56" class="box" fill="#e8f1fc" stroke="#3b82f6"/>
+  <text x="285" y="101" text-anchor="middle" class="tb">CSV case folder</text>
+  <text x="285" y="120" text-anchor="middle" class="ts">oM_Dict_*.csv / oM_Data_*.csv</text>
+  <rect x="520" y="78" width="270" height="56" class="box" fill="#e8f1fc" stroke="#3b82f6"/>
+  <text x="655" y="101" text-anchor="middle" class="tb">&lt;case&gt;.duckdb</text>
+  <text x="655" y="120" text-anchor="middle" class="ts">one file, same tables</text>
+  <line x1="420" y1="106" x2="518" y2="106" class="flow"/>
+  <text x="469" y="98" text-anchor="middle" class="note">el1xr-csv2duckdb</text>
+
+  <!-- Layer 2: source abstraction -->
+  <text x="30" y="186" class="lyr">SOURCE</text>
+  <rect x="150" y="160" width="640" height="64" class="box" fill="#e2f6f4" stroke="#0d9488"/>
+  <text x="470" y="183" text-anchor="middle" class="tb">open_source() / resolve_source()  -  picks a backend</text>
+  <text x="320" y="205" text-anchor="middle" class="t">CSVSource</text>
+  <text x="470" y="205" text-anchor="middle" class="t">DuckDBSource</text>
+  <text x="650" y="205" text-anchor="middle" class="ts">guided by InputSchema</text>
+  <line x1="285" y1="134" x2="320" y2="158" class="flow"/>
+  <line x1="655" y1="134" x2="500" y2="158" class="flow"/>
+
+  <!-- Layer 3: data -->
+  <text x="30" y="272" class="lyr">DATA</text>
+  <rect x="150" y="248" width="640" height="56" class="box" fill="#e7f6ea" stroke="#16a34a"/>
+  <text x="470" y="271" text-anchor="middle" class="tb">oM_InputData  -  build Pyomo Sets and Params</text>
+  <text x="470" y="290" text-anchor="middle" class="ts">data_processing  ·  create_variables</text>
+  <line x1="470" y1="224" x2="470" y2="246" class="flow"/>
+
+  <!-- Layer 4: model -->
+  <text x="30" y="372" class="lyr">MODEL</text>
+  <rect x="150" y="320" width="640" height="118" class="box" fill="#fdf3e3" stroke="#d97706"/>
+  <text x="470" y="343" text-anchor="middle" class="tb">Model formulation (Pyomo)</text>
+  <rect x="172" y="356" width="200" height="34" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="272" y="378" text-anchor="middle" class="t">oM_ModelFormulation</text>
+  <rect x="384" y="356" width="170" height="34" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="469" y="378" text-anchor="middle" class="t">oM_Investment</text>
+  <rect x="566" y="356" width="202" height="34" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="667" y="378" text-anchor="middle" class="t">oM_GreenHydrogen</text>
+  <text x="470" y="414" text-anchor="middle" class="ts">carriers:  Electricity   ·   Hydrogen   ·   Heat (scaffold)</text>
+  <line x1="470" y1="304" x2="470" y2="318" class="flow"/>
+
+  <!-- Layer 5: solve -->
+  <text x="30" y="486" class="lyr">SOLVE</text>
+  <rect x="150" y="462" width="640" height="56" class="box" fill="#f0eafb" stroke="#7c3aed"/>
+  <text x="470" y="485" text-anchor="middle" class="tb">oM_SolverSetup  +  oM_ProblemSolving</text>
+  <text x="470" y="504" text-anchor="middle" class="ts">HiGHS / Gurobi / CBC  ·  fix binaries and re-solve for duals</text>
+  <line x1="470" y1="438" x2="470" y2="460" class="flow"/>
+
+  <!-- Layer 6: output -->
+  <text x="30" y="576" class="lyr">OUTPUT</text>
+  <rect x="150" y="552" width="400" height="64" class="box" fill="#fdeaea" stroke="#dc2626"/>
+  <text x="350" y="575" text-anchor="middle" class="tb">results.duckdb  (default)</text>
+  <text x="350" y="597" text-anchor="middle" class="ts">sets · params · variables · duals · run metadata</text>
+  <rect x="570" y="552" width="220" height="64" class="box" fill="#ffffff" stroke="#dc2626"/>
+  <text x="680" y="575" text-anchor="middle" class="tb">CSV results</text>
+  <text x="680" y="597" text-anchor="middle" class="ts">optional (--rawresults)</text>
+  <line x1="470" y1="518" x2="470" y2="550" class="flow"/>
+  <line x1="550" y1="584" x2="568" y2="584" class="flow"/>
+
+  <!-- side rail -->
+  <rect x="828" y="78" width="86" height="538" rx="9" ry="9" fill="#f3f4f6" stroke="#9ca3af"/>
+  <text x="871" y="300" text-anchor="middle" transform="rotate(90 871 300)" class="tb">el1xr-run  /  routine()</text>
+  <text x="871" y="300" text-anchor="middle" transform="rotate(90 871 470)" class="ts">single pipeline</text>
+
+  <!-- footer note -->
+  <text x="470" y="650" text-anchor="middle" class="note">CSV and DuckDB inputs are read through one interface, so a DuckDB run reproduces a CSV run exactly.</text>
+  <text x="470" y="668" text-anchor="middle" class="note">Validation cases in CI: Home1 · Grid1 · EEM26 · H2VPP, each solved from both CSV and DuckDB.</text>
+</svg>

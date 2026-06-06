@@ -173,3 +173,5 @@ data/**/oM_*.lp
 data/**/oM_Result_*
 data/**/oM_*.log
 data/**/*.sol
+# DuckDB case/result files (generated from CSV)
+*.duckdb

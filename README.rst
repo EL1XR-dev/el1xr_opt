@@ -15,8 +15,8 @@ el1xr_opt
    :target: https://pypi.org/project/el1xr_opt/
    :alt: Python version
 
-.. image:: https://img.shields.io/github/actions/workflow/status/EL1XR-dev/el1xr_opt/conda-build.yml
-   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/conda-build.yml   
+.. image:: https://img.shields.io/github/actions/workflow/status/EL1XR-dev/el1xr_opt/ci.yml
+   :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/ci.yml
    :alt: GitHub Actions Workflow Status
 
 .. image:: https://img.shields.io/readthedocs/el1xr_opt
@@ -44,8 +44,26 @@ el1xr_opt
 - Modular formulation for multi-vector energy systems
 - Compatible with **deterministic, stochastic, and equilibrium** approaches
 - Flexible temporal structure: hours, days, representative periods
+- **CSV or DuckDB input**: read a case from a CSV folder or a single ``.duckdb`` file (same results either way)
+- **DuckDB output**: results are written to ``results.duckdb`` by default, with CSV output available on request
 - Built on `Pyomo <https://pyomo.readthedocs.io/en/stable/>`_
 - Interfaces with ``EL1XR-data`` (datasets) and ``EL1XR-examples`` (notebooks)
+
+----
+
+🏗 Architecture
+---------------
+
+el1xr_opt reads a case from either a CSV folder or a single ``.duckdb`` file
+through one common interface, builds a Pyomo model (electricity and hydrogen
+today; heat is scaffolded), solves it, and writes the results back to DuckDB.
+Because both inputs are read the same way, a DuckDB run reproduces a CSV run
+exactly.
+
+.. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/el1xr_opt_architecture.svg
+   :width: 760
+   :align: center
+   :alt: el1xr_opt architecture: CSV or DuckDB input, source abstraction, data, model, solve, DuckDB output
 
 ----
 
@@ -152,8 +170,36 @@ For example:
 - ``--case``: Name of the case to run (e.g., ``Home1``). Defaults to `Home1`.
 - ``--solver``: Solver to use (e.g., ``highs``, ``gurobi``, ``cbc``, ``cplex``). Defaults to `highs`.
 - ``--date``: Model run date in "YYYY-MM-DD HH:MM:SS" format. Defaults to the current time.
-- ``--rawresults``: Save raw results (`True`/`False`). Defaults to `False`.
+- ``--rawresults``: Also save raw results as CSV (`True`/`False`). Defaults to `False`.
 - ``--plots``: Generate plots (`True`/`False`). Defaults to `False`.
+- ``--duckdbresults``: Save results to ``results.duckdb`` (`True`/`False`). Defaults to `True`.
+
+----
+
+🗄 Data formats: CSV and DuckDB
+-------------------------------
+
+A case can be supplied as a folder of CSV files (the historical layout) or as a
+single ``.duckdb`` file holding the same tables. Convert a CSV case to DuckDB
+with:
+
+.. code-block:: bash
+
+   el1xr-csv2duckdb --dir data/EEM26 --case Home1
+
+This writes ``data/EEM26/Home1.duckdb``. Run the model the same way on either
+input:
+
+.. code-block:: bash
+
+   el1xr-run --dir data/EEM26 --case Home1 --solver highs
+
+If both the CSV folder and the ``.duckdb`` file are present, the CSV folder is
+used; the DuckDB file is used when the folder is absent.
+
+Results are written to ``<case>/results.duckdb`` by default (one table per set,
+parameter, variable and constraint dual, plus a ``oM_Result_RunMetadata``
+table). Pass ``--rawresults Yes`` to also write the CSV result tables.
 
 ----
 

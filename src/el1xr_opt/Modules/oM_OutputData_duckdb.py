@@ -9,7 +9,15 @@ import os
 import re
 import duckdb
 import pandas as pd
-from pyomo.environ import Var, Param, Set, Constraint
+from pyomo.environ import Var, Param, Set, Constraint, value as pyo_value
+
+
+def _pkg_version():
+    try:
+        from importlib.metadata import version
+        return version("el1xr_opt")
+    except Exception:
+        return None
 
 
 def safe_identifier(name: str) -> str:
@@ -40,16 +48,38 @@ def _save_df_relation(con: duckdb.DuckDBPyConnection, df: pd.DataFrame, raw_name
         rel.insert_into(table_name)
 
 
-def save_to_duckdb(DirName, CaseName, model, optmodel):
+def save_to_duckdb(DirName, CaseName, model, optmodel, date=None, solver=None, elapsed=None):
     """
     Save optimization model data to a DuckDB database in a Codacy-compliant way
     (no formatted SQL strings).
+
+    Writes one table per Pyomo set, parameter and variable (value, lower and
+    upper bound), one ``*_dual`` table per constraint when duals are available,
+    and a headline ``oM_Result_RunMetadata`` table (case, date, solver, objective,
+    version). The file is ``<DirName>/<CaseName>/results.duckdb``.
     """
     _path = os.path.join(DirName, CaseName)
     os.makedirs(_path, exist_ok=True)
     db_path = os.path.join(_path, "results.duckdb")
 
     with duckdb.connect(database=db_path, read_only=False) as con:
+
+        # ---- Save run metadata (headline result) ----
+        meta_rows = [("case", CaseName)]
+        if date is not None:
+            meta_rows.append(("date", str(date)))
+        if solver is not None:
+            meta_rows.append(("solver", str(solver)))
+        try:
+            meta_rows.append(("objective", str(pyo_value(optmodel.eTotalSCost))))
+        except Exception:
+            pass
+        if elapsed is not None:
+            meta_rows.append(("elapsed_seconds", str(elapsed)))
+        version = _pkg_version()
+        if version is not None:
+            meta_rows.append(("el1xr_opt_version", str(version)))
+        _save_df_relation(con, pd.DataFrame(meta_rows, columns=["Key", "Value"]), "oM_Result_RunMetadata")
 
         # ---- Save sets ----
         for s in optmodel.component_objects(Set, active=True):

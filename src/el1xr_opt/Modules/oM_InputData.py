@@ -15,6 +15,7 @@ import pandas            as pd
 from   itertools         import product
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
+from  .oM_InputSource     import resolve_source, df_to_set_values
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 def data_processing(DirName, CaseName, DateModel, model, indlog):
@@ -37,29 +38,26 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         'edd': ('ElectricityDemand',     'ed' ), 'hdd': ('HydrogenDemand',     'hd' ),
         'err': ('ElectricityRetail',     'er' ), 'hrr': ('HydrogenRetail',     'hr' ),}
 
-    dictSets = DataPortal()
+    # Open the input source: a CSV case directory or a <case>.duckdb file. Both
+    # backends return identical DataFrames, so the rest of this function is the
+    # same regardless of which one was used.
+    source = resolve_source(DirName, CaseName)
 
-    # Reading dictionaries from CSV and adding elements to the dictSets
+    # Build the model sets from the dimension dicts. Several set names share one
+    # dict file (e.g. ni/nf/nd all come from Node), so dict reads are cached.
+    unordered_sets = {'egg', 'hgg', 'edd', 'hdd', 'err', 'hrr', 'st', 'gt', 'nd', 'ni', 'nf', 'cc', 'c2', 'ndzn'}
+    dict_cache = {}
     for set_name, (file_set_name, set_key) in set_definitions.items():
-        filename = f'oM_Dict_{file_set_name}_{CaseName}.csv'
-        dictSets.load(filename=os.path.join(path_to_read, filename), set=set_key, format='set')
-
-    # Defining sets in the model
-    for set_name, (file_set_name, set_key) in set_definitions.items():
-        is_ordered = set_name not in {'egg', 'hgg', 'edd', 'hdd', 'err', 'hrr', 'st', 'gt', 'nd', 'ni', 'nf', 'cc', 'c2', 'ndzn'}
-        setattr(model, set_name, Set(initialize=dictSets[set_key], ordered=is_ordered, doc=f'{file_set_name}'))
+        if file_set_name not in dict_cache:
+            dict_cache[file_set_name] = df_to_set_values(source.read_dict(file_set_name))
+        is_ordered = set_name not in unordered_sets
+        setattr(model, set_name, Set(initialize=dict_cache[file_set_name], ordered=is_ordered, doc=f'{file_set_name}'))
 
     #%% Reading the input data
     data_frames = {}
-
-    files_list = [file.split("_")[2] for file in os.listdir(os.path.join(path_to_read)) if 'oM_Data' in file]
-
-    for file_set_name in files_list:
-        file_name = f'oM_Data_{file_set_name}_{CaseName}.csv'
-        data_frames[f'df{file_set_name}'] = pd.read_csv(os.path.join(path_to_read, file_name))
-        unnamed_columns = [col for col in data_frames[f'df{file_set_name}'].columns if 'Unnamed' in col]
-        data_frames[f'df{file_set_name}'].set_index(unnamed_columns, inplace=True)
-        data_frames[f'df{file_set_name}'].index.names = [None] * len(unnamed_columns)
+    for stem in source.list_data_stems():
+        data_frames[f'df{stem}'] = source.read_data(stem)
+    source.close()
 
     # substitute NaN by 0 (only for numeric columns to avoid TypeError on string columns)
     for df in data_frames.values():
