@@ -21,10 +21,12 @@ Unreleased
 - DuckDB results are now written by default to ``<case>/results.duckdb`` (one table per set, parameter, variable and constraint dual, plus a ``oM_Result_RunMetadata`` headline table with the case, date, solver, objective and version). Controlled by the new ``--duckdbresults`` flag (default on); CSV results stay available via ``--rawresults``.
 - Heat-sector scaffold (``oM_HeatSector``) and heat input stems in ``oM_InputSchema``. The architecture is now heat-ready (home/residential and district heating); the formulation itself is not built yet and is not called from the solve pipeline.
 - Architecture diagram (``docs/img/el1xr_opt_architecture.svg``) and a new Architecture section in the README, plus a note on computational efficiency in ``docs/computational_efficiency.md``.
+- Small variant validation cases generated from the H2VPP base by ``data/sizing/make_sizing_cases.py``: home and neighbourhood battery sizing, a power-tariff on/off pair, and frequency-market variants (FCR-D only, FCR-N only, both, none). They are short LP cases (reproducible cost), read as ``.duckdb`` input, and rebuilt by the test fixture rather than committed, so only the generator and its README are tracked. Two hydrogen cases (H2 tank, electrolyser) are included as feasibility cases; they do not yet size anything because the base case does not link the electrolyser as an electricity-to-hydrogen converter. See ``data/sizing/README.md``.
 
 ### Changed
 
 - Continuous integration reworked into two tiers (``.github/workflows/ci.yml``), replacing the single ``conda-build.yml`` job. A fast tier lints and runs the no-solve tests on Linux, macOS and Windows for Python 3.11, 3.12 and 3.13; a solve tier runs the validation cases on the three operating systems for Python 3.12. Validation now covers four cases (Home1, Grid1, EEM26, H2VPP), each solved from both its CSV folder and its ``.duckdb`` file and checked against a golden cost.
+- CI validation cases are solved over one week of operation (168 load levels) instead of a month. One week is enough to exercise the model in tests, and it cuts the full test-suite run from about six minutes to two. Full-year "proper" runs are meant for a larger machine, not CI.
 
 ### Fixed
 
@@ -32,6 +34,7 @@ Unreleased
 - Import the output modules (``oM_OutputData``, ``oM_OutputData_duckdb``) lazily inside ``routine`` instead of at the top of ``oM_Sequence``. This keeps the heavy plotting libraries out of the package import path, so the documentation build can import the package and generate the API reference without them, and it removes an import cycle that broke the docs build on Python 3.11.
 - Build the ordered load-level list once in ``create_constraints`` instead of rebuilding it on every constraint-rule call. The slicing is identical, so results are unchanged; this removes a quadratic-scaling cost that showed up on cases with long storage cycles or long minimum up/down times.
 - The solve tests back up and restore the ``Duration`` input file byte for byte, so running the test suite no longer leaves the tracked CSV cases reformatted.
+- Fixed the electricity-to-hydrogen (``e2h``) path, which had never run because no shipped case had an active hydrogen generator. Defined the missing ``model.hgr`` set (the hydrogen analogue of the electricity RES set ``egr``, empty since there is no hydrogen RES column) so the initial-output loop no longer raises ``AttributeError``; and guarded two electricity-storage code paths (variable inflow/outflow/inventory bounds in ``oM_InputData`` and the ``eEleTotalMaxChargeConditioned`` constraint in ``oM_ModelFormulation``) so electrolysers, which also consume electricity, are no longer treated as storage. With these fixes a case with an electrolyser builds and solves, and hydrogen storage can be sized.
 
 [1.0.13] - 2025-11-13
 ---------------------

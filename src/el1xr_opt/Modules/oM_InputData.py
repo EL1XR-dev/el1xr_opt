@@ -312,6 +312,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.hgsc = Set(doc='hydrogen storage       units ', initialize=[hgsc   for hgsc in           model.hgs if  parameters_dict['pHydGenInvestCost']      [hgsc]  >  0.0])
     model.e2h  = Set(doc='ele2hyd                units ', initialize=[hg     for hg   in           model.hg  if  parameters_dict['pHydGenProductionFunction'][hg]  >  0.0])
     model.h2e  = Set(doc='hyd2ele                units ', initialize=[eg     for eg   in           model.eg  if  parameters_dict['pEleGenProductionFunction'][eg]  >  0.0])
+    # Hydrogen analogue of egr (electricity RES). There is no hydrogen RES column,
+    # so this set is empty; it exists because the initial-output loop references it
+    # the same way the electricity loop references egr.
+    model.hgr  = Set(doc='hydrogen RES           units ', within=model.hgg, initialize=[])
     model.ebr  = Set(doc='all input branches           ', initialize=[(ni,nf) for ni,nf in sEleBrList])
     model.eln  = Set(doc='all input lines              ', initialize=data_frames['dfElectricityNetwork'].index.to_list())
     model.ela  = Set(doc='all real lines               ', initialize=[el for el in model.eln if parameters_dict['pEleNetReactance'][el] != 0.0 and  parameters_dict['pEleNetTTC'][el] > 0.0 and parameters_dict['pEleNetTTCBck'][el] > 0.0 and parameters_dict['pEleNetInitialPeriod'][el] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pEleNetFinalPeriod'][el] >= parameters_dict['pParEconomicBaseYear']])
@@ -1163,12 +1167,15 @@ def create_variables(model, optmodel, indlog):
     #         else:
     #             optmodel.vEleTotalOutput2ndBlock[idx].setlb(0.0)
 
-        optmodel.vEleEnergyInflows[idx].setlb(model.Par['pEleMinInflows'][idx[-1]][idx[:3]])
-        optmodel.vEleEnergyInflows[idx].setub(model.Par['pEleMaxInflows'][idx[-1]][idx[:3]])
-        optmodel.vEleEnergyOutflows[idx].setlb(model.Par['pEleMinOutflows'][idx[-1]][idx[:3]])
-        optmodel.vEleEnergyOutflows[idx].setub(model.Par['pEleMaxOutflows'][idx[-1]][idx[:3]])
-        optmodel.vEleInventory[idx].setlb(model.Par['pEleMinStorage'][idx[-1]][idx[:3]] * model.factor1)
-        optmodel.vEleInventory[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:3]] * model.factor1)
+        # Inflows, outflows and inventory exist only for storage units (egs), not
+        # for electrolysers (e2h), which also appear in eh as electricity consumers.
+        if idx[-1] in model.egs:
+            optmodel.vEleEnergyInflows[idx].setlb(model.Par['pEleMinInflows'][idx[-1]][idx[:3]])
+            optmodel.vEleEnergyInflows[idx].setub(model.Par['pEleMaxInflows'][idx[-1]][idx[:3]])
+            optmodel.vEleEnergyOutflows[idx].setlb(model.Par['pEleMinOutflows'][idx[-1]][idx[:3]])
+            optmodel.vEleEnergyOutflows[idx].setub(model.Par['pEleMaxOutflows'][idx[-1]][idx[:3]])
+            optmodel.vEleInventory[idx].setlb(model.Par['pEleMinStorage'][idx[-1]][idx[:3]] * model.factor1)
+            optmodel.vEleInventory[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:3]] * model.factor1)
 
     for idx in model.psnela:
         if model.Par['pOptIndBinSingleNode'] == 0:

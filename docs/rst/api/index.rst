@@ -32,5 +32,6 @@ reference, add one line to the ``autosummary`` list below.
    el1xr_opt.Modules.oM_SolverSetup
    el1xr_opt.Modules.oM_OutputData
    el1xr_opt.Modules.oM_OutputData_duckdb
+   el1xr_opt.Modules.oM_Decomposition
    el1xr_opt.Modules.oM_Sequence
    el1xr_opt.Modules.utils.oM_Utils

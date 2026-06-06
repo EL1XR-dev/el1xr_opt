@@ -201,6 +201,11 @@ Results are written to ``<case>/results.duckdb`` by default (one table per set,
 parameter, variable and constraint dual, plus a ``oM_Result_RunMetadata``
 table). Pass ``--rawresults Yes`` to also write the CSV result tables.
 
+Small validation cases for sizing, tariffs and frequency-market participation
+are generated on the fly from the ``H2VPP`` base case by
+``data/sizing/make_sizing_cases.py`` (read as ``.duckdb`` input); see
+``data/sizing/README.md``.
+
 ----
 
 🤝 Contributing

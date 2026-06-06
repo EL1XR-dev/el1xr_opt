@@ -40,8 +40,14 @@ def _flatten_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def csv_case_to_duckdb(dir_name: str, case_name: str, db_path: str | None = None,
-                       overwrite: bool = True) -> str:
-    """Write ``<dir_name>/<case_name>.duckdb`` from the CSV case folder. Returns the path."""
+                       overwrite: bool = True, block_size: int | None = None) -> str:
+    """Write ``<dir_name>/<case_name>.duckdb`` from the CSV case folder. Returns the path.
+
+    ``block_size`` (e.g. 16384, the DuckDB minimum) sets the storage block size.
+    Small cases waste a lot of space at the default 256 KB block size because
+    every table reserves at least one block; a small block size keeps a committed
+    case file small. Leave it as ``None`` for the default.
+    """
     import duckdb
 
     src = CSVSource(os.path.join(dir_name, case_name))
@@ -52,7 +58,12 @@ def csv_case_to_duckdb(dir_name: str, case_name: str, db_path: str | None = None
             raise FileExistsError(db_path)
         os.remove(db_path)
 
-    con = duckdb.connect(db_path)
+    if block_size is not None:
+        con = duckdb.connect()
+        con.execute(f"ATTACH '{db_path}' AS _out (BLOCK_SIZE {int(block_size)})")
+        con.execute("USE _out")
+    else:
+        con = duckdb.connect(db_path)
     try:
         con.execute(f'CREATE TABLE "{META_TABLE}" ("Key" VARCHAR, "Value" VARCHAR)')
         con.execute(f'INSERT INTO "{META_TABLE}" VALUES (?, ?)', [META_KEY_CASE, case_name])
@@ -62,6 +73,7 @@ def csv_case_to_duckdb(dir_name: str, case_name: str, db_path: str | None = None
 
         for stem in sorted(src.list_data_stems()):
             _write_table(con, f"{DB_DATA_PREFIX}{stem}", _flatten_data(src.read_data(stem)))
+        con.execute("CHECKPOINT")
     finally:
         con.close()
     return db_path

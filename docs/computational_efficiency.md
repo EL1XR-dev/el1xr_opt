@@ -71,3 +71,53 @@ Keep the constraint hoist. Treat temporal block decomposition as the next
 efficiency project, starting from the openTEPES Benders module and the paper's
 block-boundary storage formulation. Do not adopt the arc/Block modelling style
 for performance reasons.
+
+## Where to run, and which solver
+
+- **Tests / CI**: one week of operation (168 load levels) on the open-source
+  HiGHS solver. One week is enough to exercise the model, and HiGHS needs no
+  licence, so it runs on the shared CI machines. The full test suite is about two
+  minutes this way.
+- **Local development**: use Gurobi (`--solver gurobi`). It gives the same answer
+  as HiGHS on these cases (checked: the linear cases match to the last digit) and
+  is much faster on the large unit-commitment instances. A licence lives at
+  `~/gurobi.lic`.
+- **Full-year "proper" runs**: these are large and belong on a bigger machine
+  (the Comillas desktop, 64 GB), not on a laptop or in CI. Keep CI on the short
+  horizon and move the full-year studies to that machine.
+
+## Should we stay on Pyomo, or move to another modelling tool?
+
+This matters because, as measured above, **building the model is the bottleneck
+for the linear cases, and Pyomo's Python loops that emit constraints are the slow
+part**. Faster solving (Gurobi, Benders) does not help the build; a faster
+*model builder* does. The options, with the trade-offs that matter here:
+
+- **linopy** (Python, builds vectorised over `xarray` arrays). About 4-6x faster
+  to build than Pyomo and uses roughly half the memory, same language, supports
+  HiGHS and Gurobi and integer variables, and it is the engine PyPSA uses at
+  continental scale, so it is proven on power-system models. LP duals come back
+  directly; duals for unit-commitment cases (the marginal prices) need a
+  fix-and-resolve step that must be designed in. **Lowest-risk option and the
+  front-runner.**
+- **pyoframe** (Python, builds over Polars data frames; this is most likely the
+  "polar-high" idea). Backed by a very fast low-level core, good at the sparse,
+  irregular index sets that unit commitment produces, MILP supported, HiGHS and
+  Gurobi. But it is young with a small community, and its support for duals is not
+  documented - verify that before relying on it. Higher reward, higher risk.
+- **JuMP** (Julia). The fastest builder (around 15-20x over Pyomo) and the most
+  mature, with strong unit-commitment libraries. The cost is a full rewrite in
+  Julia and leaving the Python ecosystem. Worth it only if we commit to Julia.
+- **Staying on Pyomo and tuning it** (`LinearExpression` / the kernel layer)
+  realistically buys 1.5-3x on the build, not the 5-30x the others can. It is a
+  half-day experiment, so it is worth quantifying first as the cheap baseline.
+
+Suggested path: (1) spend half a day on the Pyomo `LinearExpression` / kernel
+tuning to see how much the cheap fix gives; then (2) port **one** real constraint
+family (e.g. the storage inventory balance) to **linopy** and to **pyoframe** and
+measure the build time on a full-year case - the published speed-ups come from
+clean synthetic problems and will be smaller on this sparse model, so measure our
+own before committing. If the measured linopy build win is large and duals work
+for our marginal prices, linopy is the recommended move; keep JuMP in mind only
+if we decide to adopt Julia for other reasons. Full details and sources are in the
+reference note `amls_build_speed_pyomo_alternatives` in the research memory.

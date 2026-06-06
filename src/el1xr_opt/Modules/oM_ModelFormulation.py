@@ -1380,7 +1380,9 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleMinEnergyStartUp', Constraint(optmodel.psnegs, rule=eEleMinEnergyStartUp, doc='minimum energy start up'))
 
     def eEleTotalMaxChargeConditioned(optmodel, p,sc,n,egs):
-        if model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
+        # This is an ESS-only condition; electrolysers (e2h) also appear in eh but
+        # are not storage, so skip them.
+        if egs in model.egs and model.Par['pEleMinCharge'][egs][p,sc,n] == 0.0 and model.Par['pEleGenFixedAvailability'][egs]:
             return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip

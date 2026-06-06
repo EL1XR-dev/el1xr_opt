@@ -106,3 +106,23 @@ def test_df_to_set_values():
     assert df_to_set_values(pd.DataFrame({"a": [1, 2]})) == [1, 2]
     assert df_to_set_values(pd.DataFrame({"a": ["x"], "b": ["y"]})) == [("x", "y")]
     assert df_to_set_values(pd.DataFrame()) == []
+
+
+def test_partition_blocks():
+    """The decomposition block partition covers every (period, scenario, time chunk)."""
+    from el1xr_opt.Modules.oM_Decomposition import partition_blocks, first_stage_components
+
+    levels = [f"t{i:04d}" for i in range(1, 25)]  # 24 load levels
+    # One block per (period, scenario) when not splitting time.
+    blocks = partition_blocks(["p1", "p2"], ["s1"], levels, n_time_blocks=1)
+    assert len(blocks) == 2
+    assert all(b.load_levels == tuple(levels) for b in blocks)
+    # Splitting the time axis multiplies the blocks and covers every load level.
+    split = partition_blocks(["p1"], ["s1"], levels, n_time_blocks=4)
+    assert len(split) == 4
+    covered = [n for b in split for n in b.load_levels]
+    assert covered == levels
+    assert {b.index for b in split} == {0, 1, 2, 3}
+    # The first-stage (master) variables are the investment decisions.
+    fs = first_stage_components()
+    assert "vEleGenInvest" in fs["complicating"]

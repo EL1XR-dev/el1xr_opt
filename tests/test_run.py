@@ -1,7 +1,7 @@
 """Solve-tier validation tests.
 
-Each validation case is truncated to its first 744 load levels (about a month)
-and solved; the total system cost is checked against a stored golden value.
+Each validation case is truncated to its first 168 load levels (one week) and
+solved; the total system cost is checked against a stored golden value.
 Every case is solved twice: once reading the CSV folder and once reading the
 same case as a ``.duckdb`` file, so the two input paths are proven equivalent.
 
@@ -12,6 +12,8 @@ import contextlib
 import datetime
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 
 import numpy as np
@@ -23,15 +25,17 @@ from el1xr_opt.Modules.oM_Sequence import routine
 from el1xr_opt.Modules.oM_CsvToDuckDB import csv_case_to_duckdb
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-TRUNC = 744  # load levels kept (~1 month)
+TRUNC = 168  # load levels kept (one week). One week of operation is enough to
+             # exercise the model in CI; full-year "proper" runs belong on a
+             # bigger machine (see docs/computational_efficiency.md).
 
 # label, parent dir, case, golden cost, relative tolerance.
 # LP cases reproduce the cost exactly; EEM26 carries unit-commitment binaries,
 # so its cost is only reproducible within the solver's MIP gap.
 CASES = [
-    ("home1", os.path.join(REPO, "src", "el1xr_opt"), "Home1", 182.9440915402727,  1e-6),
-    ("grid1", os.path.join(REPO, "src", "el1xr_opt"), "Grid1", 7847.932381485619,  1e-6),
-    ("eem26", os.path.join(REPO, "data", "EEM26"),    "Home1", 787.0389607235827,  2.5e-2),
+    ("home1", os.path.join(REPO, "src", "el1xr_opt"), "Home1", 431.6554910249504,  1e-6),
+    ("grid1", os.path.join(REPO, "src", "el1xr_opt"), "Grid1", 2860.67528768213,   1e-6),
+    ("eem26", os.path.join(REPO, "data", "EEM26"),    "Home1", 522.2614955498034,  2.5e-2),
     ("h2vpp", os.path.join(REPO, "data", "H2VPP"),    "Home1", 354.0527479052698,  1e-6),
 ]
 CASE_IDS = [c[0] for c in CASES]
@@ -94,6 +98,50 @@ def test_cost_from_duckdb(label, d, case, expected, rtol, tmp_path):
     _assert_cost(float(pyo.value(model.eTotalSCost)), expected, rtol)
 
 
+# --- Sizing / tariff / frequency-market variant cases ------------------------
+# These are small LP cases generated from the H2VPP base by
+# data/sizing/make_sizing_cases.py and read as .duckdb input files. The fixture
+# regenerates them so nothing has to be committed. Costs are reproducible (LP).
+SIZING_DIR = os.path.join(REPO, "data", "sizing")
+SIZING_CASES = [
+    ("HomeBatt",          44.27112550985886),
+    ("HoodBatt",         -22.04979393397224),
+    ("HomeBattNoTariff", 125.5211255098589),
+    ("HomeBattNoFCR",    122.8894702739726),
+    ("HomeBattFCRDonly",  67.89854138599155),
+    ("HomeBattFCRNonly",  56.97418403620797),
+    ("H2Tank",            45.2627371208163),
+    ("Electrolyser",      45.26055530263449),
+]
+SIZING_RTOL = 1e-5
+
+
+@pytest.fixture(scope="session")
+def sizing_cases_built():
+    """Build the variant case files (<Case>.duckdb) from the H2VPP base.
+
+    The cases are not committed (only the generator is), so they are rebuilt here
+    once per test session. If they already exist locally the rebuild is skipped.
+    """
+    missing = [c for c, _ in SIZING_CASES
+               if not os.path.isfile(os.path.join(SIZING_DIR, f"{c}.duckdb"))]
+    if missing:
+        subprocess.run([sys.executable, os.path.join(SIZING_DIR, "make_sizing_cases.py")],
+                       check=True, cwd=REPO)
+    return SIZING_DIR
+
+
+@pytest.mark.solve
+@pytest.mark.parametrize("case,expected", SIZING_CASES, ids=[c for c, _ in SIZING_CASES])
+def test_sizing_case_from_duckdb(case, expected, sizing_cases_built):
+    """Solve each variant case from its generated .duckdb and check the golden cost."""
+    model = routine(dir=sizing_cases_built, case=case, solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    _assert_cost(float(pyo.value(model.eTotalSCost)), expected, SIZING_RTOL)
+
+
 @pytest.mark.solve
 def test_duckdb_output_written(tmp_path):
     """Solving with duckdbresults on writes results.duckdb with the headline tables."""
@@ -118,6 +166,6 @@ def test_duckdb_output_written(tmp_path):
         keys = set(meta["Key"])
         assert {"case", "objective", "solver"} <= keys
         obj = float(meta.loc[meta["Key"] == "objective", "Value"].iloc[0])
-        _assert_cost(obj, 182.9440915402727, 1e-6)
+        _assert_cost(obj, 431.6554910249504, 1e-6)
     finally:
         con.close()
