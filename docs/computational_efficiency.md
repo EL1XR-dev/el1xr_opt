@@ -119,14 +119,13 @@ that follows); the remaining work is steps (3)-(4).
    1.4-1.5x at scale, a small steady win, not enough on its own.
 2. *(done)* Port one constraint family (the storage inventory balance) to linopy
    and measure on a full-year case - result: 23-60x faster to build.
-3. Port a **harder** family next - one with the storage-cycle-window sum and the
-   conditional skips the real model has - to both linopy and **pyoframe**, and
-   measure again; the whole-model speed-up will be smaller than 60x on sparse,
-   irregular constraints, so this sets the realistic expectation before a
-   migration.
-4. Design dual extraction in linopy for the unit-commitment marginal prices (the
-   one feature gap), then decide. JuMP stays a fallback only if we adopt Julia for
-   other reasons.
+3. *(done)* Port a **harder** family (the storage-cycle-window sum) to linopy and
+   **pyoframe** and measure again - result: linopy 11-37x, pyoframe only 3-3.6x;
+   marginal-price duals come back from both (for an LP). See the second table.
+4. Decide. linopy is the front-runner: biggest measured build win, keeps Python
+   and HiGHS/Gurobi, duals work for LP. Still to design before a full migration:
+   MILP duals (a fix-and-resolve step) for the unit-commitment marginal prices.
+   JuMP stays a fallback only if we adopt Julia for other reasons.
 
 Full details and sources are in the reference note
 `amls_build_speed_pyomo_alternatives` in the research memory.
@@ -160,11 +159,41 @@ Two clear findings:
   vectorised array operation rather than element by element. At full-year scale it
   is 23-60x faster to build.
 
-Caveats: this is one constraint family with a simple one-step recurrence; the real
-inventory balance sums over a storage cycle window and other families are sparser
-and more conditional, so the whole-model speed-up will be smaller than 40x. Duals
-for marginal prices still need a design in linopy for the unit-commitment cases.
-But the direction is clear: the build-time lever is a vectorised builder (linopy),
-not Pyomo micro-tuning. The recommended next step is to port a second, harder
-family (one with the cycle-window sum) and measure again before committing to a
-migration.
+Caveats: this is one constraint family with a simple one-step recurrence. The
+harder family below is the more realistic test.
+
+### Measured prototype (step 3, harder cycle-window family)
+
+`benchmarks/build_speed_storage_window.py` builds the more realistic storage
+balance: inventory at each cycle boundary equals the previous boundary plus the
+**sum over a window of steps in that cycle** (a windowed sum plus a block lag,
+which is what is genuinely hard to vectorise). Four builders, all solving to the
+same objective (2.105263) on the small forced-charging case. Build time on the
+**Comillas desktop** (best of two; B cycles x C=24 steps x G units):
+
+| size (B x C x G) | rows | pyomo-rule | LinearExpression | linopy | pyoframe |
+|------------------|------|------------|------------------|--------|----------|
+| 365 x 24 x 10    | 3 650 | 0.969 s   | 0.821 s (1.2x)   | 0.085 s (11x) | 0.269 s (3.6x) |
+| 365 x 24 x 50    | 18 250 | 4.483 s  | 3.813 s (1.2x)   | 0.123 s (37x) | 1.471 s (3.0x) |
+
+Findings on the harder family:
+
+- **linopy still wins big but less than the easy case** - 11-37x here vs 23-60x on
+  the one-step family. The windowed sum and the block lag add overhead, as
+  expected, but a vectorised builder is still the clear lever.
+- **pyoframe is viable but well behind linopy here** - 3-3.6x. Its Polars-based
+  block lag (shift the index, then realign) is less ergonomic than linopy's
+  `xarray` `.shift`, and the build is slower on this time-coupled structure.
+- **`LinearExpression` is a steady ~1.2x** - confirms it is not the lever.
+- **Marginal prices work in both** - the shadow price on the inventory balance
+  comes back identically from linopy (`constraint.dual`) and pyoframe
+  (`constraint.dual`), -1.052632 in the probe. That settles the dual question for
+  LP cases; the unit-commitment (MILP) marginal prices would still need a
+  fix-and-resolve step in either tool.
+
+Overall direction (unchanged and now well supported): the build-time lever is a
+vectorised builder, and **linopy is the front-runner** - largest measured win,
+same language, HiGHS/Gurobi, and working LP duals. pyoframe (the "polar-high"
+candidate) is a real option but, on this model's time-coupled structure, slower to
+build and more awkward than linopy. The remaining design item before a full
+migration is MILP dual extraction for marginal prices.
