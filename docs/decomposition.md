@@ -275,17 +275,35 @@ balance -- and confirms the two windows reproduce the monolith's **per-level**
 operating cost exactly (electricity and hydrogen storage, hourly cycle). So the
 windowed build and the boundary-inventory stitching are correct.
 
-**One more coupling to handle: the per-scenario aggregate costs.** el1xr's cost has
-terms that are not per-load-level -- the peak-demand charge, the fixed network
-charge and the energy tax (`vTotalEleNCost` / `vTotalEleXCost`, the `"ps"` cost
-kind). These depend on the whole horizon, so they do not split by time window: a
-naive split double-counts them. They have to be handled at the master, not inside a
-block -- the **peak demand** becomes a linking variable (the master holds the peak
-and each window constrains it to be at least the window's demand, with the peak cost
-in the master objective), and the **fixed charge** is counted once. With the
-per-level cost decomposing exactly (validated) and these aggregate terms moved to
-the master, the temporal Benders reproduces the full monolithic optimum. That master
-cost handling is the remaining step.
+**The per-scenario aggregate costs.** el1xr's cost has terms that are not
+per-load-level -- the peak-demand charge, the fixed network charge and the energy
+tax (`vTotalEleNCost` / `vTotalEleXCost`, the `"ps"` cost kind). These depend on the
+whole horizon, so they do not split by time window: a naive split double-counts
+them. The **fixed charge** is a per-scenario constant, so it is counted once in the
+master and removed from each block's recourse. The **net-use-var** and **energy-tax**
+costs are sums over the load levels (of the grid import), so they split by window
+like any per-level cost. The **peak-demand** charge is the awkward one -- el1xr
+models it as a top-N peak-hour selection (the average of the N highest import hours),
+a horizon-wide combinatorial quantity that the sum-of-N-largest threshold LP would
+decompose via a scalar threshold per month; that is the design for a
+transmission-connected case. All of these costs sit on the grid import, which is
+zero on the prosumer-home cases available (a battery/PV home that meets its small
+elastic demand locally and exports), so the peak / net-use-var / tax costs are
+inactive there and only the fixed charge needs handling.
+
+**`el1xr_temporal_benders` -- validated.** It builds the investment master with the
+boundary inventory levels and the once-counted fixed charge, and one windowed
+operating block per time block (investment and boundary inventory fixed, recourse
+excluding the fixed charge). Two implementation points matter: the boundary
+coupling (the outgoing inventory tied to the master value, the incoming inventory
+replacing the first-level balance) is kept **hard** so inventory is exactly
+conserved across the split -- making it elastic lets the block leak inventory and
+undercut the monolith; and the master's boundary inventory is **bounded by the
+storage capacity** so the hard tie is always reachable (an unbounded boundary sends
+the block infeasible and the run diverges). With both, the solve reproduces the
+monolithic optimum exactly for 2, 3 and 4 time blocks
+(`tests/test_benders_temporal_el1xr.py`). The peak threshold-LP for
+transmission-import cases remains the one open extension.
 
 ## 7. Suggested order of work
 
@@ -295,10 +313,10 @@ cost handling is the remaining step.
 2. Parallelize the subproblem solves. **Done** (process pool).
 3. Per-block scenario subsetting so each block builds one scenario, not all.
    **Done.**
-4. Temporal block splitting with boundary-storage linking. Algorithm validated
-   (`tests/test_benders_temporal.py`); el1xr storage-boundary mechanics validated
-   per-level (`tests/test_benders_temporal_el1xr.py`); handling the per-scenario
-   aggregate costs (peak as a linking variable, fixed charge once) is the remaining
-   step before the full el1xr temporal solve matches the monolith.
+4. Temporal block splitting with boundary-storage linking. **Done** for the
+   storage-coupled case: `el1xr_temporal_benders` reproduces the monolith exactly on
+   the home cases (`tests/test_benders_temporal_el1xr.py`), with the fixed network
+   charge counted once in the master. The peak-demand threshold-LP for a
+   transmission-import case is the one open extension.
 5. Only then consider the arc/asset reformulation and Dantzig-Wolfe, together,
    as a larger modernization.
