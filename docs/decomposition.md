@@ -198,6 +198,28 @@ grew quadratically, so the gain widens with the scenario count — exactly the r
 a stochastic study runs in. This shortens both the sequential and the parallel
 solve (it is per-block work), and it stacks with the process parallelism above.
 
+### Combined: subsetting plus parallel workers
+
+The two optimizations stack. Re-running the same eight-block case on the remote
+desktop (Gurobi) with the single-scenario block build in place, across worker
+counts, against the earlier numbers without subsetting (same objective every run):
+
+| workers | without subsetting (s) | with subsetting (s) | total vs 1 worker, no subsetting |
+|--------:|-----------------------:|--------------------:|---------------------------------:|
+| 1       | 122.0                  | 65.3                | 1.9                              |
+| 2       | 75.6                   | 41.0                | 3.0                              |
+| 4       | 47.9                   | 28.2                | 4.3                              |
+| 8       | 41.2                   | 25.5                | 4.8                              |
+
+Subsetting gives about 1.9x on the sequential build and the worker pool about 2.6x
+on top, for roughly 4.8x end to end (122 s to 25.5 s). The parallel speed-up alone
+is a little lower with subsetting than without (2.6x vs 3.0x at eight workers),
+because subsetting shrinks the per-block work, so the fixed costs that do not
+parallelize — worker start-up, the master solves, the pipe traffic — are a larger
+share of a now-smaller total. The absolute wall-clock is what matters, and it is
+markedly lower. At higher scenario counts the subsetting factor grows (it is
+roughly linear-vs-quadratic), so the combined gain widens further.
+
 ## 7. Suggested order of work
 
 1. Benders over `(period, scenario)` with investment in the master, reusing the
