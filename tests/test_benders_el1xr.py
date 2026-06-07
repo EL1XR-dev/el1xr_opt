@@ -70,3 +70,21 @@ def test_el1xr_benders_matches_monolithic():
     assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
     assert abs(res["objective"] - mono) / abs(mono) < 1e-4, \
         f"benders {res['objective']:.4f} vs monolithic {mono:.4f}"
+
+
+@pytest.mark.solve
+def test_el1xr_benders_parallel_matches_sequential():
+    """Parallel subproblem solve (worker processes) reaches the same optimum as the
+    sequential solve. The blocks are solved in separate processes (Pyomo solvers are
+    not thread-safe); the result must be identical (the iteration count may differ
+    because LP dual degeneracy yields different but equally valid cuts)."""
+    work = tempfile.mkdtemp(prefix="benders_par_")
+    gen.build(work)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    seq = el1xr_benders(work, "Home1", date, solver=_SOLVER,
+                        config=BendersConfig(max_iterations=60, relative_gap=1e-6, n_workers=1))
+    par = el1xr_benders(work, "Home1", date, solver=_SOLVER,
+                        config=BendersConfig(max_iterations=60, relative_gap=1e-6, n_workers=4))
+    assert par["converged"], f"parallel did not converge: gap={par['gap']:.2e}"
+    assert abs(par["objective"] - seq["objective"]) / abs(seq["objective"]) < 1e-4, \
+        f"parallel {par['objective']:.4f} vs sequential {seq['objective']:.4f}"
