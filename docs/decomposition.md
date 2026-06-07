@@ -172,12 +172,31 @@ thrown away, but it is a small saving: the build cost is dominated by
 series), not by the model construction. Measured at eight scenarios, the structure
 read is about 2.9 s versus 3.3 s for the full build (~10%).
 
-The real floor is elsewhere: **each block build re-reads the whole multi-scenario
-dataset even though it builds a single-scenario subproblem** (about 2.7 s per
-block, almost all of it `data_processing`). Subsetting each block to its own
-scenario's data — so a block reads one scenario instead of all of them — is the
-next optimization and is the one that would shorten both the sequential and the
-parallel wall-clock.
+The bigger lever was per-block scenario subsetting, now done. Each block solves a
+single-scenario subproblem, but the block build used to keep **all** scenarios in
+the scenario dimension dict, so `data_processing` built every parameter over the
+full N-scenario set product — for every one of the N blocks. That is roughly
+quadratic in the scenario count. `_build_block` now produces a genuine
+single-scenario case (the kept scenario is the only one in the dict, and the other
+scenarios' rows are dropped from the data files; the scenario column is found by
+content, not position, so node-indexed files like the networks are left alone), so
+each block build is constant in the scenario count. The kept scenario's data —
+including its probability, which `data_processing` reads unnormalised — is
+untouched, so the subproblem and the optimum are unchanged.
+
+End-to-end Benders wall-clock, sequential, old vs new block build (8/16/24
+scenarios; same optimum every time):
+
+| scenarios | old (s) | new (s) | speed-up |
+|----------:|--------:|--------:|---------:|
+| 8         | 57.3    | 23.6    | 2.4      |
+| 16        | 214.7   | 57.5    | 3.7      |
+| 24        | 511.2   | 100.5   | 5.1      |
+
+The new build scales about linearly with the number of blocks while the old one
+grew quadratically, so the gain widens with the scenario count — exactly the regime
+a stochastic study runs in. This shortens both the sequential and the parallel
+solve (it is per-block work), and it stacks with the process parallelism above.
 
 ## 7. Suggested order of work
 
