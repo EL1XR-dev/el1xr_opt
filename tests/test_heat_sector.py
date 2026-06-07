@@ -15,7 +15,8 @@ import pytest
 from pyomo.environ import (ConcreteModel, Set, Var, Constraint, Objective,
                            NonNegativeReals, minimize, value, SolverFactory)
 
-from el1xr_opt.Modules.oM_HeatSector import create_heat_sector, heat_electricity_load
+from el1xr_opt.Modules.oM_HeatSector import (create_heat_sector, heat_electricity_load,
+                                            heat_to_power_output)
 
 LEVELS = ["t1", "t2", "t3"]
 DEMAND = {"t1": 10.0, "t2": 22.0, "t3": 15.0}
@@ -105,3 +106,55 @@ def test_heat_sector_noop_without_heat_sets():
     out = create_heat_sector(m, m)
     assert out is m
     assert not hasattr(m, "eHeatBalance")
+
+
+@pytest.mark.solve
+def test_heat_to_power_closes_the_loop():
+    """A heat-to-power unit (ORC/CHP) consumes heat and makes electricity -- the
+    analogue of the hydrogen fuel cell. Here a cheap boiler makes heat, the
+    heat-to-power unit turns it into electricity to meet an electricity demand
+    (the grid is expensive), so the power<->heat loop is exercised in the
+    heat->power direction."""
+    m = ConcreteModel()
+    m.n = Set(initialize=LEVELS, ordered=True)
+    m.htd = ["HD"]
+    m.htg = ["BOIL"]
+    m.htp = []                                       # no heat pump here
+    m.htw = ["ORC"]                                  # heat-to-power unit
+    m.hts = []
+    m.n2htd = [("H", "HD")]
+    m.n2htg = [("H", "BOIL")]
+    m.n2hts = []
+    m.n2htw = [("H", "ORC")]
+    eff = 0.4
+    elec_dem = {"t1": 6.0, "t2": 8.0, "t3": 5.0}
+    m.Par = {
+        "pHeatDemand":       {"HD": {"t1": 3.0, "t2": 4.0, "t3": 2.0}},
+        "pHeatGenMaxPower":   {"BOIL": 100.0},
+        "pHeatGenCost":       {"BOIL": 1.0},          # cheap heat
+        "pHeatPumpCOP":       {},
+        "pHeatToEleMaxHeat":  {"ORC": 80.0},
+        "pHeatToEleEff":      {"ORC": eff},
+        "pHeatStoMax":        {}, "pHeatStoEff": {}, "pHeatStoInitial": {},
+        "pHeatNSCost":        1000.0,
+        "pDuration":          {n: 1.0 for n in LEVELS},
+    }
+    create_heat_sector(m, m)
+    # electricity side: meet a demand from the heat-to-power unit or an expensive grid
+    m.vGrid = Var(m.n, within=NonNegativeReals)
+    m.eElec = Constraint(m.n, rule=lambda mm, n:
+                         heat_to_power_output(mm, ["ORC"], n) + mm.vGrid[n] == elec_dem[n])
+    m.obj = Objective(expr=m.HeatOperatingCost + sum(50.0 * m.vGrid[n] for n in m.n),
+                      sense=minimize)
+    SolverFactory("appsi_highs").solve(m)
+
+    for n in LEVELS:
+        # heat-to-power coupling: electricity = efficiency x heat consumed
+        assert abs(value(m.vHeatToEle["ORC", n]) - eff * value(m.vHeatConsumed["ORC", n])) < 1e-6
+        # heat balance: boiler == heat demand + heat consumed by the ORC
+        assert abs(value(m.vHeatOutput["BOIL", n])
+                   - (m.Par["pHeatDemand"]["HD"][n] + value(m.vHeatConsumed["ORC", n]))) < 1e-5
+        # electricity demand met, and the ORC (not the expensive grid) supplies it
+        assert abs(value(m.vHeatToEle["ORC", n]) + value(m.vGrid[n]) - elec_dem[n]) < 1e-6
+    assert sum(value(m.vHeatToEle["ORC", n]) for n in LEVELS) > 1e-3
+    assert sum(value(m.vGrid[n]) for n in LEVELS) < 1e-5      # grid too expensive

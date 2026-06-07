@@ -96,6 +96,7 @@ def create_heat_sector(model, optmodel, indlog='False'):
     StartTime = time.time()
     Par = model.Par
     htp = set(getattr(model, "htp", []) or [])        # heat pumps (electricity-driven)
+    htw = list(getattr(model, "htw", []) or [])        # heat-to-power units (ORC/CHP)
     hts = list(getattr(model, "hts", []) or [])
     levels = list(model.n)
 
@@ -113,24 +114,40 @@ def create_heat_sector(model, optmodel, indlog='False'):
     setattr(optmodel, "vHeatInventory", Var(hts, levels, within=NonNegativeReals,
             bounds=lambda mm, s, n: (0, float(Par["pHeatStoMax"][s]))))
     setattr(optmodel, "vHeatNotServed", Var(htd, levels, within=NonNegativeReals))
+    # heat-to-power (the analogue of the hydrogen fuel cell): consumes heat, makes
+    # electricity. Present only when the case has htw units; it is what closes the
+    # power<->heat loop (heat pump = power->heat, this = heat->power).
+    setattr(optmodel, "vHeatConsumed", Var(htw, levels, within=NonNegativeReals,
+            bounds=lambda mm, w, n: (0, float(Par["pHeatToEleMaxHeat"][w]))))
+    setattr(optmodel, "vHeatToEle", Var(htw, levels, within=NonNegativeReals))
 
     nodes = sorted({nd for (nd, _u) in getattr(model, "n2htd", [])}
-                   | {nd for (nd, _u) in getattr(model, "n2htg", [])})
+                   | {nd for (nd, _u) in getattr(model, "n2htg", [])}
+                   | {nd for (nd, _u) in getattr(model, "n2htw", [])})
 
     def _balance(mm, nd, n):
         gens = _at("n2htg", nd)
         stos = _at("n2hts", nd)
         dems = _at("n2htd", nd)
-        if not (gens or stos or dems):
+        h2ps = _at("n2htw", nd)
+        if not (gens or stos or dems or h2ps):
             return Constraint.Skip
-        # generation + store discharge - store charge + not-served == demand
+        # generation + store discharge - store charge + not-served
+        #   == fixed demand + heat-to-power consumption
         supply = (sum(mm.vHeatOutput[g, n] for g in gens)
                   + sum(mm.vHeatDischarge[s, n] - mm.vHeatCharge[s, n] for s in stos)
                   + sum(mm.vHeatNotServed[d, n] for d in dems))
-        demand = sum(float(Par["pHeatDemand"][d][n]) for d in dems)
+        demand = (sum(float(Par["pHeatDemand"][d][n]) for d in dems)
+                  + sum(mm.vHeatConsumed[w, n] for w in h2ps))
         return supply == demand
     optmodel.eHeatBalance = Constraint(nodes, levels, rule=_balance,
                                        doc="nodal home-heat balance")
+
+    optmodel.eHeatToEle = Constraint(
+        htw, levels,
+        rule=lambda mm, w, n: mm.vHeatToEle[w, n]
+        == float(Par["pHeatToEleEff"][w]) * mm.vHeatConsumed[w, n],
+        doc="heat-to-power: electricity out = efficiency x heat in")
 
     optmodel.eHeatPumpCOP = Constraint(
         list(htp), levels,
@@ -163,6 +180,17 @@ def heat_electricity_load(optmodel, node_units, n):
     balance adds this as a load so the heat-pump COP coupling closes across sectors.
     Returns 0 when the model has no heat pumps (no heat case)."""
     v = getattr(optmodel, "vHeatPumpElec", None)
+    if v is None or not node_units:
+        return 0.0
+    return sum(v[g, n] for g in node_units if (g, n) in v)
+
+
+def heat_to_power_output(optmodel, node_units, n):
+    """Electricity produced by the heat-to-power units at a node in load level
+    ``n`` (the analogue of the hydrogen fuel cell's electricity output). The
+    electricity balance adds this as generation, closing the power<->heat loop.
+    Returns 0 when the model has no heat-to-power units."""
+    v = getattr(optmodel, "vHeatToEle", None)
     if v is None or not node_units:
         return 0.0
     return sum(v[g, n] for g in node_units if (g, n) in v)
