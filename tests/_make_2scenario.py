@@ -20,8 +20,15 @@ TRUNC = 24
 RELAX = ["IndBinGenOperat", "IndBinGenRamps", "IndBinGenMinTime"]
 
 
-def build(work):
-    """Create the 2-scenario case under ``work/<CASE>`` and return the parent dir."""
+def build(work, n_scenarios=2, trunc=TRUNC):
+    """Create an ``n_scenarios``-scenario case under ``work/<CASE>`` and return the
+    parent dir. Scenarios sc02..scN duplicate sc01 (equal probability 1/N), so the
+    stochastic optimum equals the single-scenario one while giving Benders N blocks
+    coupled by the shared investment. ``trunc`` sets the horizon length (load levels
+    kept per scenario). Defaults (2, 24) match the original wiring test."""
+    extra = [f"sc{ i + 2:02d}" for i in range(n_scenarios - 1)]   # sc02..scN
+    all_scen = ["sc01"] + extra
+    prob = 1.0 / n_scenarios
     dst = os.path.join(work, CASE)
     if os.path.isdir(dst):
         shutil.rmtree(dst)
@@ -66,27 +73,34 @@ def build(work):
             df["HydD1"] = 0.0
             df.to_csv(f, index=False)
 
-    # add sc02 to the scenario dimension dict (the scenario SET is built from this)
+    # add sc02..scN to the scenario dimension dict (the scenario SET is built here)
     dscen = os.path.join(dst, f"oM_Dict_Scenario_{CASE}.csv")
     dd = pd.read_csv(dscen)
-    if "sc02" not in dd.iloc[:, 0].values:
-        dd = pd.concat([dd, pd.DataFrame({dd.columns[0]: ["sc02"]})], ignore_index=True)
+    have = set(dd.iloc[:, 0].values)
+    new = [s for s in extra if s not in have]
+    if new:
+        dd = pd.concat([dd, pd.DataFrame({dd.columns[0]: new})], ignore_index=True)
         dd.to_csv(dscen, index=False)
 
-    # scenario probabilities: sc01=0.5, sc02=0.5
+    # scenario probabilities: 1/N each (sc01 plus the duplicates)
     sc = pd.read_csv(path("Scenario"))
     i1 = sc.columns[1]                               # scenario index column
     sc["Probability"] = sc["Probability"].astype(float)
-    row = sc[sc[i1] == "sc01"].iloc[0].copy()
-    sc.loc[sc[i1] == "sc01", "Probability"] = 0.5
-    row["Probability"] = 0.5
-    row[i1] = "sc02"
-    sc = pd.concat([sc, pd.DataFrame([row])], ignore_index=True)
+    base = sc[sc[i1] == "sc01"].iloc[0].copy()
+    sc.loc[sc[i1] == "sc01", "Probability"] = prob
+    rows = []
+    for s in extra:
+        row = base.copy()
+        row["Probability"] = prob
+        row[i1] = s
+        rows.append(row)
+    if rows:
+        sc = pd.concat([sc, pd.DataFrame(rows)], ignore_index=True)
     sc.to_csv(path("Scenario"), index=False)
 
     # every data file indexed by (period, scenario, loadlevel): duplicate the full
-    # sc01 rows as sc02 (same load levels, so all files stay consistent). Detect by
-    # 3 leading unnamed index columns.
+    # sc01 rows as each sc02..scN (same load levels, so all files stay consistent).
+    # Detect by 3 leading unnamed index columns.
     for fname in os.listdir(dst):
         if not (fname.startswith("oM_Data_") and fname.endswith(f"_{CASE}.csv")):
             continue
@@ -99,19 +113,22 @@ def build(work):
         sc01 = df[df[c1] == "sc01"].copy()
         if sc01.empty:
             continue
-        dup = sc01.copy()
-        dup[c1] = "sc02"
-        pd.concat([df, dup], ignore_index=True).to_csv(fpath, index=False)
+        dups = []
+        for s in extra:
+            dup = sc01.copy()
+            dup[c1] = s
+            dups.append(dup)
+        pd.concat([df] + dups, ignore_index=True).to_csv(fpath, index=False)
 
-    # truncate the horizon to TRUNC load levels via the Duration column (the proven
-    # method: blank durations past TRUNC for each scenario), so the model uses a
-    # short horizon while every file keeps all load levels.
+    # truncate the horizon to ``trunc`` load levels via the Duration column (the
+    # proven method: blank durations past trunc for each scenario), so the model uses
+    # a short horizon while every file keeps all load levels.
     dpath = path("Duration")
     dur = pd.read_csv(dpath)
     c1, ccol = dur.columns[1], "Duration"
-    for s in ("sc01", "sc02"):
+    for s in all_scen:
         idx = dur.index[dur[c1] == s].tolist()
-        for j in idx[TRUNC:]:
+        for j in idx[trunc:]:
             dur.at[j, ccol] = np.nan
     dur.to_csv(dpath, index=False)
     return work

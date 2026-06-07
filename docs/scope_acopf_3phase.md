@@ -44,7 +44,7 @@ So the IEEE 13-bus (distributed as OpenDSS) runs out of the box, already validat
 Cost: a Julia dependency for this one decoupled analysis module — consistent with
 the framework decision (Pyomo backbone for the big linear model; a specialist tool
 for the conic/NLP AC OPF, which Pyomo/linopy do not do well or at all). We already
-run Julia/JuMP on the Comillas box for the benchmarks, so the toolchain exists.
+run Julia/JuMP on the remote desktop for the benchmarks, so the toolchain exists.
 
 Sources: PMD.jl docs (lanl-ansi.github.io/PowerModelsDistribution.jl) and the
 SoftwareX/arXiv paper (arXiv:2004.10081).
@@ -108,7 +108,7 @@ How `oM_ACOPF3ph` calls PMD.jl (to decide during 5c-1):
   fragile across environments; defer unless the subprocess overhead matters.
 
 Subprocess + JSON is the recommended first integration (matches how we already run
-Julia benchmarks on Comillas).
+Julia benchmarks on the remote desktop).
 
 ## 5. Validation target (IEEE 13-bus)
 
@@ -144,7 +144,7 @@ Julia benchmarks on Comillas).
   not modelling — PMD.jl carries the validated physics. A native build (B/C) would
   move risk back onto our own modelling.
 - **Dependencies:** Julia + PMD.jl for Option A (already used for benchmarks on
-  Comillas); an Ipopt/SCS-class solver for exact/relaxed solves (PMD.jl uses the
+  remote desktop); an Ipopt/SCS-class solver for exact/relaxed solves (PMD.jl uses the
   same JuMP solver stack we set up for the build benchmarks).
 
 ## 8. Recommendation summary

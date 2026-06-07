@@ -132,6 +132,41 @@ standard exact-penalty alternative to a separate feasibility-cut pass, and it ke
 `benders_solve` a pure optimality-cut loop. The penalty is configurable via
 `BendersConfig.extra["feasibility_penalty"]`.
 
+### Parallel subproblem solve
+
+The subproblems are independent given the investment decision, so each Benders
+iteration solves them in parallel. Pyomo solvers are **not thread-safe** (shared
+model-writer, tempfile-manager and solver state — a `ThreadPoolExecutor` deadlocks
+after the first solve), so the parallelism is by **process**, not thread. With
+`BendersConfig.n_workers > 1`, `el1xr_benders` starts a pool of worker processes;
+each worker builds and owns a round-robin slice of the blocks once and reuses them
+across iterations. The master loop sends the trial investment `x_hat` to every
+worker over a pipe and collects each block's cost and fixing-constraint duals. The
+result is identical to the sequential solve (the iteration count can differ because
+LP dual degeneracy yields different but equally valid cuts).
+
+`benders_solve` stays generic: parallelism enters through an optional
+`solve_blocks(x_hat) -> {block: (cost, duals)}` callback. When it is given the
+subproblems are not built in the main process (the pool owns them); when it is
+`None` the blocks are built and solved sequentially in-process (the default).
+
+Measured on the remote desktop (12 logical CPUs, Gurobi) for an 8-block case
+(8 scenarios, 48-hour horizon):
+
+| workers | wall time (s) | speed-up |
+|--------:|--------------:|---------:|
+| 1       | 122.0         | 1.00     |
+| 2       | 75.6          | 1.61     |
+| 4       | 47.9          | 2.55     |
+| 8       | 41.2          | 2.96     |
+
+Every run reached the same objective (2832.142) in the same number of iterations.
+The speed-up flattens past four workers because of a serial floor: `el1xr_benders`
+still does one full multi-scenario build up front just to read the investment
+structure (generator/storage candidate lists, costs, the block list). Removing that
+redundant build — reading the structure from the data instead of from a fully built
+operating model — is the next optimization and would lift the achievable speed-up.
+
 ## 7. Suggested order of work
 
 1. Benders over `(period, scenario)` with investment in the master, reusing the

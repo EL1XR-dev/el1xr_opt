@@ -104,7 +104,7 @@ sub-model."
 Built (`build_speed_acopf_nlp.py` / `.jl`) — polar-form AC OPF on a feeder, the two
 tools that can express general non-convex NLP. Both solve the small case to the
 same optimum (0.82162…, Pyomo with idaes-Ipopt vs JuMP with Ipopt.jl, agree to
-~1e-9), so both models are correct. Build time on Comillas:
+~1e-9), so both models are correct. Build time on the remote desktop:
 
 | N buses | constraints | Pyomo  | JuMP          |
 |---------|-------------|--------|---------------|

@@ -83,7 +83,7 @@ for performance reasons.
   is much faster on the large unit-commitment instances. A licence lives at
   `~/gurobi.lic`.
 - **Full-year "proper" runs**: these are large and belong on a bigger machine
-  (the Comillas desktop, 64 GB), not on a laptop or in CI. Keep CI on the short
+  (the remote desktop, 64 GB), not on a laptop or in CI. Keep CI on the short
   horizon and move the full-year studies to that machine.
 
 ## Should we stay on Pyomo, or move to another modelling tool?
@@ -139,7 +139,7 @@ Full details and sources are in the reference note
 `benchmarks/build_speed_storage.py` builds the storage inventory balance - one of
 the biggest constraint families - three ways and times only the model build. All
 three solve to the same objective on a small forced-charging case (2.105263), so
-they are the same model. Build time on the **Comillas desktop** (Intel i7-8700,
+they are the same model. Build time on the **remote desktop** (Intel i7-8700,
 6c/12t, the machine used for full-year runs; best of two builds):
 
 | size (time x units) | constraints | pyomo-rule | pyomo-LinearExpression | linopy |
@@ -173,7 +173,7 @@ balance: inventory at each cycle boundary equals the previous boundary plus the
 **sum over a window of steps in that cycle** (a windowed sum plus a block lag,
 which is what is genuinely hard to vectorise). Five builders (four Python plus
 JuMP/Julia), all solving to the same objective (2.105263) on the small
-forced-charging case. Build time on the **Comillas desktop** (best of two; B
+forced-charging case. Build time on the **remote desktop** (best of two; B
 cycles x C=24 steps x G units; JuMP on the latest Julia, 1.12.6, timed after a
 warm-up build to exclude Julia's first-call compilation):
 
@@ -225,7 +225,7 @@ metric hid:
 - Pyomo's **export is its slowest part** (LP/NL writing or the appsi in-memory
   load), which construct-only excluded entirely.
 
-End-to-end on Comillas (construct + export to solver-ready):
+End-to-end on the remote desktop (construct + export to solver-ready):
 
 | rows   | linopy total | Pyomo (LP file) | Pyomo (appsi in-memory) |
 |--------|--------------|-----------------|-------------------------|
@@ -240,12 +240,12 @@ verified complete and correct: variable and constraint counts match exactly and 
 solves to the same objective, so the speed is real, not a truncated or lazy model.
 The construct-only ratios remain a valid measure of *construction* cost, but the
 end-to-end figure is the one to quote. (The construct-only numbers are also larger
-on the older Comillas CPU, where Pyomo's pure-Python loops suffer more than
+on the older remote desktop CPU, where Pyomo's pure-Python loops suffer more than
 linopy's vectorised numpy.)
 
 ### Scaling to very large models (rows and columns)
 
-Pushing the same family far past any real case (Comillas; pyomo / JuMP / pyoframe
+Pushing the same family far past any real case (remote desktop; pyomo / JuMP / pyoframe
 build element by element, linopy builds vectorised). Rows = constraints, columns =
 variables; this family has about `2C+1` columns per row. **These are construct-only
 times** (see the end-to-end correction above; the real-world multiple is ~5–20x,

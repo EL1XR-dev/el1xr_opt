@@ -127,7 +127,7 @@ the only complete option).
 
 ## Measured: SOCP (DistFlow AC-OPF relaxation)
 
-Built (`benchmarks/build_speed_socp.py` and `.jl`) and run on the Comillas
+Built (`benchmarks/build_speed_socp.py` and `.jl`) and run on the remote desktop
 desktop. The model is the rotated-cone DistFlow relaxation above on a radial
 feeder of N buses (4N variables, 4N constraints incl. N second-order cones).
 linopy is absent — it cannot express the cone. All four tools solve the small
@@ -167,7 +167,7 @@ SOCP/SDP sub-problems.
 
 ## Measured: SDP (semidefinite relaxation, AC-OPF style)
 
-Built (`benchmarks/build_speed_sdp.py` and `.jl`) and run on Comillas. Only JuMP
+Built (`benchmarks/build_speed_sdp.py` and `.jl`) and run on the remote desktop. Only JuMP
 and CVXPY can express it — Pyomo, pyoframe and linopy have no PSD-matrix variable,
 so they are not in the table at all. The instance is a PSD matrix W ⪰ 0 with fixed
 diagonal minimising trace(C W), C the ring (cycle) adjacency — the max-cut /
