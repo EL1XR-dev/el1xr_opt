@@ -55,6 +55,18 @@ What changes, honestly:
   investment). That is the structure Benders and Dantzig-Wolfe want, so the arc
   form and decomposition reinforce each other.
 
+The choice is wired as a flag, the same way the other capabilities are. A
+`BalanceMode` parameter (`pParBalanceMode`) selects `nodal` (default) or `arc`,
+catalogued in `oM_Features.BALANCE_MODES` next to the network modes. It is a
+**separate, orthogonal axis** from the network mode: the network mode is the physics
+(single node / DC / AC / three-phase), the balance is the bookkeeping. Every balance
+expresses every network mode -- `arc` works with the AC and three-phase modes too
+(the arc carries active and reactive power and both line ends, so losses), and the
+branch-flow modes (`distflow_socp`, `lindist3flow`) are arc-based by construction.
+The problem class is set by the physics, not the balance. Only `nodal` is wired into
+the main model today; selecting `arc` raises a clear error pointing here, rather than
+silently building a nodal model.
+
 Recommendation: treat the arc/asset-balance form as a **formulation
 modernization for maintainability and multi-vector support** (and as a clean base
 for decomposition), not as a standalone speed-up. Do it deliberately, on its own,

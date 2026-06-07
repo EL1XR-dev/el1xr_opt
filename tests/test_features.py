@@ -66,3 +66,42 @@ def test_cost_registry_seed_and_extend():
     import pytest
     with pytest.raises(ValueError):
         F.register_cost(m, "vBad", "bogus_kind")
+
+
+def test_balance_mode_default_and_validation():
+    # apply_flag_defaults seeds the balance mode for cases that predate the flag
+    params = {}
+    F.apply_flag_defaults(params)
+    assert params["pParBalanceMode"] == "nodal"
+
+    class _M:
+        Par = {}
+    assert F.select_balance_mode(_M()) == "nodal"          # default when absent
+    _M.Par = {"pParBalanceMode": "ARC"}                     # case/whitespace tolerant
+    assert F.select_balance_mode(_M()) == "arc"
+    _M.Par = {"pParBalanceMode": "bogus"}
+    import pytest
+    with pytest.raises(ValueError):
+        F.select_balance_mode(_M())
+
+
+def test_balance_mode_gate():
+    import pytest
+
+    class _M:
+        Par = {"pParBalanceMode": "nodal"}
+    assert F.require_balance_mode_implemented(_M()) == "nodal"
+    _M.Par = {"pParBalanceMode": "arc"}
+    with pytest.raises(NotImplementedError):
+        F.require_balance_mode_implemented(_M())
+
+
+def test_balance_compatible_with_all_network_modes():
+    # balance (bookkeeping) and network mode (physics) are orthogonal: every
+    # balance expresses every network mode, including the AC / three-phase ones.
+    for bm in F.BALANCE_MODES:
+        for nm in F.NETWORK_MODES:
+            assert F.balance_compatible_with_network(bm, nm) is True
+    import pytest
+    with pytest.raises(ValueError):
+        F.balance_compatible_with_network("arc", "bogus_mode")

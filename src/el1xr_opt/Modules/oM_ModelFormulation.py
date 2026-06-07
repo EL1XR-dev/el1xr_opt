@@ -217,6 +217,12 @@ def create_constraints(model, optmodel, indlog):
     # this function declares constraints
     StartTime = time.time()  # to compute elapsed time
 
+    # balance formulation gate: the main model is built with the nodal balance.
+    # Selecting the arc/asset (block-angular) form is recognised but not yet wired
+    # in-core, so it fails clearly here instead of silently building a nodal model.
+    from .oM_Features import require_balance_mode_implemented
+    require_balance_mode_implemented(model)
+
     # Materialise the ordered load-level list once. Several constraint rules slice
     # it by position (using model.n.ord(n)); rebuilding the list on every rule
     # call made constraint construction scale quadratically with the number of

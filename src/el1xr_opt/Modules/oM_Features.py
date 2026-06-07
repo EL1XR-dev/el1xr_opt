@@ -74,6 +74,8 @@ def apply_flag_defaults(parameters_dict):
     flag still runs (no KeyError). Existing values are left untouched."""
     for flag, default in FLAG_DEFAULTS.items():
         parameters_dict.setdefault(f"pOpt{flag}", default)
+    # balance formulation (nodal / arc); orthogonal to the network mode
+    parameters_dict.setdefault("pParBalanceMode", "nodal")
     return parameters_dict
 
 
@@ -105,6 +107,75 @@ def network_mode_class(mode):
     if mode not in NETWORK_MODES:
         raise ValueError(f"unknown network mode '{mode}' (use one of {list(NETWORK_MODES)})")
     return NETWORK_MODES[mode]["problem_class"]
+
+
+# --------------------------------------------------------------------------- #
+# 1c. Balance formulation -- how power conservation is written. This is a
+#     separate, orthogonal axis from the network *mode* above: the mode is the
+#     network physics (single node / DC / AC / three-phase), the balance is the
+#     bookkeeping (one balance per node, or one per asset with explicit arc flows).
+#     Any balance can express any network mode.
+#       * nodal -- one balance per node: incident flows + injections == demand.
+#                  Today's default; the smallest, fastest monolithic model.
+#       * arc   -- one balance per asset with explicit arc-flow variables, the node
+#                  reduced to flow conservation. Block-angular (one block per
+#                  asset), the clean base for decomposition and the multi-vector
+#                  (heat) extension, but ~3-5x larger and ~4x slower solved
+#                  monolithically (benchmarks/balance_formulation.py). It reaches
+#                  the same optimum. Planned modernization; not wired in-core yet.
+#     Compatibility with the network modes: arc expresses all of them. For the AC
+#     modes the arc simply carries active and reactive power and both line ends
+#     (so losses, with P_ij != -P_ji); the branch-flow modes (distflow_socp,
+#     lindist3flow) are arc/branch-based by construction, so arc is their natural
+#     form. The problem class is set by the physics (arc + DC = LP, arc + AC = NLP,
+#     arc + SOC relaxation = SOCP), not by the balance formulation.
+# --------------------------------------------------------------------------- #
+BALANCE_MODES = {
+    "nodal": {"in_core": True,
+              "doc": "one balance per node (incident flows + injections == demand); default"},
+    "arc":   {"in_core": False,
+              "doc": "per-asset balance + explicit arc flows, node = flow conservation; "
+                     "block-angular, same optimum, ~4x slower monolithic; not in-core yet"},
+}
+
+
+def select_balance_mode(model):
+    """Read and validate the balance formulation for a model. Defaults to 'nodal'
+    when the case predates the flag (apply_flag_defaults seeds it)."""
+    par = getattr(model, "Par", {})
+    mode = str(par.get("pParBalanceMode", "nodal")).strip().lower()
+    if mode not in BALANCE_MODES:
+        raise ValueError(f"unknown balance mode '{mode}' (use one of {list(BALANCE_MODES)})")
+    return mode
+
+
+def balance_compatible_with_network(balance_mode, network_mode):
+    """Whether a balance formulation can express a network mode. Always True --
+    balance (bookkeeping) and network mode (physics) are orthogonal axes. The helper
+    exists to validate the names and to make the orthogonality explicit: arc works
+    with the AC and three-phase modes too (carrying active+reactive power and both
+    line ends), and the branch-flow modes are arc-based by construction."""
+    if balance_mode not in BALANCE_MODES:
+        raise ValueError(f"unknown balance mode '{balance_mode}' (use one of {list(BALANCE_MODES)})")
+    if network_mode not in NETWORK_MODES:
+        raise ValueError(f"unknown network mode '{network_mode}' (use one of {list(NETWORK_MODES)})")
+    return True
+
+
+def require_balance_mode_implemented(model):
+    """Guard for the in-core build: only 'nodal' is wired into the main model.
+    Selecting 'arc' raises with a pointer to the modernization plan, rather than
+    silently building a nodal model. Returns the validated mode ('nodal')."""
+    mode = select_balance_mode(model)
+    if not BALANCE_MODES[mode]["in_core"]:
+        raise NotImplementedError(
+            f"balance mode '{mode}' is not wired into the main model yet -- only "
+            "'nodal' is built in-core. The arc/asset (block-angular) formulation is a "
+            "planned modernization: it reaches the same optimum but is about four "
+            "times slower solved monolithically (benchmarks/balance_formulation.py); "
+            "its payoff is decomposition and multi-vector support. See "
+            "docs/decomposition.md section 3.")
+    return mode
 
 
 # --------------------------------------------------------------------------- #
