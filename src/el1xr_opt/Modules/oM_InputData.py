@@ -798,8 +798,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.go = [go for go in model.go if go in model.eg]
 
     # determine the initial committed units and their output
-    parameters_dict['pEleInitialOutput'] = pd.Series([0.0]*len(model.eg), model.ps * model.eg)
-    parameters_dict['pEleInitialUC'    ] = pd.Series([0  ]*len(model.eg), model.ps * model.eg)
+    parameters_dict['pEleInitialOutput'] = pd.Series([0.0]*(len(model.ps)*len(model.eg)), model.ps * model.eg)
+    parameters_dict['pEleInitialUC'    ] = pd.Series([0  ]*(len(model.ps)*len(model.eg)), model.ps * model.eg)
     for p,sc in model.ps:
         parameters_dict['pEleSystemOutput'] = 0.0
         for go in model.go:
@@ -818,8 +818,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
                 parameters_dict['pEleInitialUC'][p,sc,go] = 0
 
     # determine the initial committed hydrogen units and their output
-    parameters_dict['pHydInitialOutput'] = pd.Series([0.0]*len(model.hg), model.ps * model.hg)
-    parameters_dict['pHydInitialUC'    ] = pd.Series([0  ]*len(model.hg), model.ps * model.hg)
+    parameters_dict['pHydInitialOutput'] = pd.Series([0.0]*(len(model.ps)*len(model.hg)), model.ps * model.hg)
+    parameters_dict['pHydInitialUC'    ] = pd.Series([0  ]*(len(model.ps)*len(model.hg)), model.ps * model.hg)
     for p,sc in model.ps:
         parameters_dict['pHydSystemOutput'] = 0.0
         for hg in model.hg:

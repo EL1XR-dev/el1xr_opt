@@ -24,49 +24,37 @@ from .utils.oM_Utils      import log_time
 # keeping them out of the import-time chain lets documentation tooling import the
 # package without those libraries installed.
 
+def build_model(dir_name, case, date, indlog='False'):
+    """Build the full el1xr model (all layers) without solving and return it.
+
+    This is the build half of ``routine``, factored out so other entry points
+    (e.g. the Benders decomposition, which builds an operating subproblem per
+    block) can reuse the exact same, validated construction.
+    """
+    oModel = ConcreteModel('el1xr_opt  - Optimisation Model')
+    model = data_processing(dir_name, case, date, oModel, indlog)
+    model = create_variables(model, model, indlog)
+    model = create_community_variables(model, model, indlog)
+    model = create_investment(model, model, indlog)
+    model = create_objective_function(model, model, indlog)
+    model = create_objective_function_components(model, model, indlog)
+    model = create_constraints(model, model, indlog)
+    model = create_community_constraints(model, model, indlog)
+    model = create_green_hydrogen(model, model, indlog)
+    return model
+
+
 def routine(dir, case, solver, date, rawresults, plots, indlog, duckdbresults='True'):
     initial_time = time.time()
-
-    # %% Model declaration
-    oModel = ConcreteModel('el1xr_opt  - Optimisation Model')
 
     # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.
     ensure_ampl_solvers(["highs"], quiet=True)
     print(f'- Using solver: {solver}\n')
 
-    # reading and processing the data
-    #
+    # reading, processing the data, and building the full model
     print('- Initializing the model\n')
-    model = data_processing(dir, case, date, oModel, indlog)
-    log_time('- Total time for reading and processing the data:', initial_time, ind_log=indlog)
-    start_time = time.time()
-    # defining the variables
-    model = create_variables(model, model, indlog)
-    log_time('- Total time for defining the variables:', start_time, ind_log=indlog)
-    start_time = time.time()
-    # defining the energy-community variables (before constraints, which use them)
-    model = create_community_variables(model, model, indlog)
-    # defining the investment (capacity-sizing) layer
-    model = create_investment(model, model, indlog)
-    log_time('- Total time for defining the investment layer:', start_time, ind_log=indlog)
-    start_time = time.time()
-    # defining the objective function
-    model = create_objective_function(model, model, indlog)
-    log_time('- Total time for defining the objective function:', start_time, ind_log=indlog)
-    start_time = time.time()
-    # defining components of the day-ahead objective function
-    model = create_objective_function_components(model, model, indlog)
-    log_time('- Total time for defining the ObjFunc components:', start_time, ind_log=indlog)
-    start_time = time.time()
-    # defining the constraints
-    model = create_constraints(model, model, indlog)
-    log_time('- Total time for defining the constraints:', start_time, ind_log=indlog)
-    start_time = time.time()
-    # defining the energy-community pool-conservation constraints
-    model = create_community_constraints(model, model, indlog)
-    # defining green-hydrogen temporal matching and electricity PPA
-    model = create_green_hydrogen(model, model, indlog)
-    log_time('- Total time for defining the green-hydrogen layer:', start_time, ind_log=indlog)
+    model = build_model(dir, case, date, indlog)
+    log_time('- Total time for reading, processing and building the model:', initial_time, ind_log=indlog)
     start_time = time.time()
     # solving the model
     pWrittingLPFile = 1
