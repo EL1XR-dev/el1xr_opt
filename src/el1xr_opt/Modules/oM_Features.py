@@ -224,9 +224,9 @@ def builders_for(problem_class):
 
 
 def solver_supports(solver, problem_class):
-    base = str(solver).lower().split("_")[0].replace("appsi", "") or str(solver).lower()
+    name = str(solver).lower()
     for key, cap in SOLVER_CAPABILITIES.items():
-        if key in str(solver).lower():
+        if key in name:
             return problem_class in cap
     return True            # unknown solver: do not block, just cannot vouch
 
