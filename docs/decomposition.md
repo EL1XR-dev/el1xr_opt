@@ -61,6 +61,98 @@ for decomposition), not as a standalone speed-up. Do it deliberately, on its own
 with the output-extraction and investment layers ported and checked against the
 current results — not mixed into an unrelated change.
 
+### Measured: the arc form is larger and slower to solve monolithically
+
+`benchmarks/balance_formulation.py` builds the same synthetic multi-period
+transmission-and-storage model both ways and solves each monolithically (HiGHS),
+checking the objective matches. The arc form adds one injection variable and one
+defining constraint per asset, and turns each node into a flow-conservation sum.
+
+| nodes × steps | form  | variables | constraints | solve (s) |
+|---------------|-------|----------:|------------:|----------:|
+| 20 × 168      | nodal |     7 224  |      3 528  |     0.13  |
+| 20 × 168      | arc   |    20 832  |     17 136  |     0.48  |
+| 40 × 168      | nodal |    13 944  |      6 888  |     0.27  |
+| 40 × 168      | arc   |    40 992  |     33 936  |     1.09  |
+| 60 × 336      | nodal |    41 328  |     20 496  |     1.03  |
+| 60 × 336      | arc   |   122 304  |    101 472  |     4.56  |
+
+The objective is identical in every case (same feasible region). The arc form is
+about three times the variables, five times the constraints, and roughly four times
+slower to solve **monolithically** — consistently across sizes. So the arc/asset
+balance is not a head-on solver speed-up; it is larger and slower when solved as one
+block. Its payoff is the block-angular structure (one block per asset, coupled only
+through the node sums) that a decomposition method exploits, plus the modularity and
+multi-vector reach above. Any solving-time advantage comes from **decomposing** that
+structure, not from the reformulation on its own.
+
+### And does decomposing the block-angular form beat the monolith? Not for LP at this scale
+
+`benchmarks/spatial_decomposition.py` tests the next claim: decompose the
+block-angular form and solve faster. For dispatch the useful blocks are not single
+assets (those are trivial) but **regions** weakly coupled by tie-lines. It builds a
+ring of R regions, one tie-line between neighbours, and solves it as the nodal
+monolith and as a Benders decomposition (tie-line flows in the master, one
+subproblem per region, reusing `benders_solve`).
+
+| regions | nodes/region | steps | monolith (s) | Benders (s) | iters | speed-up |
+|--------:|-------------:|------:|-------------:|------------:|------:|---------:|
+| 6       | 5            | 24    | 0.016        | 0.080       | 2     | 0.20     |
+| 12      | 8            | 24    | 0.030        | 0.265       | 2     | 0.11     |
+| 24      | 10           | 48    | 0.155        | 1.746       | 2     | 0.09     |
+| 48      | 10           | 48    | 0.322        | 6.361       | 2     | 0.05     |
+
+The decomposition reaches the same optimum and the structure is excellent — it
+**converges in two iterations** (the regions are weakly coupled). But it does **not**
+beat the monolith: it is 5–20x slower and falls further behind with scale. The
+reason is that it is **overhead-bound, not solve-bound** — two iterations is only
+about 2R subproblem solves, but each is a separate Pyomo→HiGHS round-trip (tens of
+milliseconds of modelling-layer overhead apiece), whereas the monolith is one very
+efficient HiGHS solve. For tractable LP, HiGHS solves the whole problem faster than
+Python can coordinate the pieces, and parallelism does not help blocks this small
+(process start-up and message passing cost more than the solve).
+
+So the honest conclusion: the block-angular structure helps **convergence** (two
+iterations confirms it), but a wall-clock win needs the per-block *work* to dominate
+the coordination overhead. That happens when the monolith is **intractable** (too
+large to build/solve as one model — the decomposition is then the only way to solve
+it at all) or for **MILP**, where the monolith's branch-and-bound blows up while the
+blocks stay small. For moderate LP it does not pay; the value of the arc/asset form
+remains modularity, multi-vector reach, and being the clean base these decomposition
+methods build on — not a speed-up on its own.
+
+### Where it does win: stochastic MILP at scale
+
+`benchmarks/milp_decomposition.py` shows the case where decomposition beats the
+monolith on wall-clock. It is a stochastic unit-commitment problem: first-stage
+commitment binaries with two conflicting reserve covering constraints (energy and
+ramp — a hard two-dimensional knapsack), and a per-scenario dispatch LP as recourse.
+The monolith is one MILP; its branch-and-bound explores many nodes for the hard
+commitment, and **every node re-solves the whole S-scenario dispatch LP**. Benders
+keeps the binaries in a small master (the knapsack plus cuts, no dispatch) and the
+dispatch in one LP subproblem per scenario, so the master's nodes are cheap and the
+scenario LPs are solved only a few times. Both prove the same optimum (open solver,
+HiGHS):
+
+| scenarios | monolith (s) | Benders (s) | speed-up |
+|----------:|-------------:|------------:|---------:|
+| 10        | 0.63         | 0.72        | 0.87     |
+| 20        | 1.41         | 1.44        | 0.98     |
+| 40        | 3.98         | 2.87        | 1.39     |
+| 80        | 7.39         | 5.78        | 1.28     |
+| 160       | 14.76        | 9.18        | 1.61     |
+
+The monolith grows super-linearly (about 23x over this range — the hard commitment
+makes its branch-and-bound re-solve the ever-larger LP many times), Benders grows
+about linearly, so they cross near 20 scenarios and Benders pulls ahead, reaching
+1.6x at 160 scenarios with the gap still widening. This is the regime the
+decomposition is for: a combinatorial first stage whose nodes are expensive in the
+monolith because they drag the whole second stage along, but cheap in the master
+because the second stage is pushed into the per-scenario subproblems. (With a
+top-tier commercial solver the monolith is faster and the crossover moves to a
+larger scale; the open-solver case here is the one that matters for the HiGHS-only
+cluster, where the el1xr scenario Benders already runs.)
+
 ## 4. Which decomposition fits
 
 - **Benders decomposition (recommended first).** Put the investment / sizing
