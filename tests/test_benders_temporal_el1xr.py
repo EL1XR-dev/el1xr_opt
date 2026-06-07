@@ -12,10 +12,11 @@ It checks the per-level cost, not the full objective, on purpose. el1xr's
 per-scenario aggregate costs (peak demand, fixed network charge, energy tax;
 ``vTotalEleNCost`` / ``vTotalEleXCost``, the ``"ps"`` cost kind) depend on the whole
 horizon, so they do not decompose by time window -- splitting would double-count
-them. Wiring temporal Benders into el1xr therefore needs those handled at the master
-(the peak becomes a linking variable across windows, the fixed charge is counted
-once); the per-level operating cost, validated here, is the part that decomposes.
-See ``docs/decomposition.md``.
+them. The full solve (``test_el1xr_temporal_benders_matches_monolithic``) handles
+that: the fixed network charge is counted once in the master, and on this case the
+peak / net-use-var / energy-tax costs are zero (no grid import). The per-level test
+here isolates and checks the storage-boundary mechanics on their own. See
+``docs/decomposition.md``.
 
 Needs an LP/dual solver; skipped otherwise.
 """
@@ -33,6 +34,7 @@ from pyomo.environ import SolverFactory, Constraint, Param, value
 sys.path.insert(0, os.path.dirname(__file__))
 import _make_2scenario as gen
 from el1xr_opt.Modules.oM_Sequence import build_model
+from el1xr_opt.Modules.oM_Decomposition import el1xr_temporal_benders, BendersConfig
 
 TRUNC = 6
 SPLIT = 3
@@ -147,3 +149,23 @@ def test_el1xr_temporal_boundary_matches_monolithic_perlevel():
     assert len(list(w1.n)) == SPLIT and len(list(w2.n)) == TRUNC - SPLIT
     assert abs(R1 + R2 - mono) / (abs(mono) + 1e-9) < 1e-4, \
         f"per-level windows {R1 + R2:.6f} vs monolith {mono:.6f}"
+
+
+@pytest.mark.solve
+@pytest.mark.parametrize("n_blocks", [2, 3])
+def test_el1xr_temporal_benders_matches_monolithic(n_blocks):
+    """Full temporal Benders solve (investment + boundary inventory in the master,
+    fixed network charge counted once) reproduces the monolithic optimum. Peak /
+    net-use-var / energy-tax costs are zero on this case (no grid import), so the
+    only per-scenario aggregate cost is the fixed charge."""
+    work = tempfile.mkdtemp(prefix="tel1xr_full_")
+    gen.build(work, n_scenarios=1, trunc=8)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    full = build_model(work, "Home1", date)
+    SolverFactory(_SOLVER).solve(full)
+    mono = float(value(full.eTotalSCost))
+    res = el1xr_temporal_benders(work, "Home1", date, n_time_blocks=n_blocks, solver=_SOLVER,
+                                 config=BendersConfig(max_iterations=120, relative_gap=1e-7))
+    assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
+    assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \
+        f"temporal benders {res['objective']:.6f} vs monolithic {mono:.6f}"

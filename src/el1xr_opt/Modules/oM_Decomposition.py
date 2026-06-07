@@ -244,6 +244,247 @@ def _build_block(dir_name, case_name, date, keep_scenario):
     return model
 
 
+def _build_window(dir_name, case_name, date, keep_scenario, level_names):
+    """Build the el1xr model restricted to one scenario and to a window of load
+    levels (Duration kept only for ``level_names``), for temporal block splitting.
+    The window's first level then has ordinal 1, so its inventory balance uses the
+    initial-inventory branch (the hook for injecting the incoming boundary)."""
+    import os
+    import shutil
+    import tempfile
+    import pandas as pd
+    from .oM_Sequence import build_model
+
+    work = tempfile.mkdtemp(prefix="benders_win_")
+    src = os.path.join(dir_name, case_name)
+    dst = os.path.join(work, case_name)
+    shutil.copytree(src, dst)
+    dpath = os.path.join(dst, f"oM_Dict_Scenario_{case_name}.csv")
+    dd = pd.read_csv(dpath)
+    scenarios = set(dd.iloc[:, 0].astype(str))
+    dd[dd.iloc[:, 0] == keep_scenario].to_csv(dpath, index=False)
+    for fname in os.listdir(dst):
+        if not (fname.startswith("oM_Data_") and fname.endswith(f"_{case_name}.csv")):
+            continue
+        fpath = os.path.join(dst, fname)
+        df = pd.read_csv(fpath, header=0)
+        if df.shape[1] < 2:
+            continue
+        scen_col = df.columns[1]
+        values = set(df[scen_col].astype(str).unique())
+        if values and values.issubset(scenarios):
+            df[df[scen_col] == keep_scenario].to_csv(fpath, index=False)
+    dpath = os.path.join(dst, f"oM_Data_Duration_{case_name}.csv")
+    dur = pd.read_csv(dpath)
+    dur.loc[~dur[dur.columns[2]].isin(level_names), "Duration"] = float("nan")
+    dur.to_csv(dpath, index=False)
+    model = build_model(work, case_name, date)
+    shutil.rmtree(work, ignore_errors=True)
+    return model
+
+
+def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
+                           solver="appsi_highs", config=None):
+    """Solve one (period, scenario) el1xr operating horizon by temporal Benders.
+
+    The horizon is split into ``n_time_blocks`` contiguous time blocks coupled by
+    the storage inventory at each boundary. The master holds the investment build
+    fractions and the boundary inventory levels (linking variables, each shared by
+    two adjacent blocks); each block is the operating model over its window with the
+    investment and its incoming/outgoing boundary inventory fixed (the duals of the
+    fixing constraints give the cuts), made always-feasible by the elastic penalty.
+
+    The per-scenario fixed network charge does not split by time window, so it is
+    counted once in the master and removed from each block's recourse. This MVP
+    assumes hourly storage (cycle = 1), a single (period, scenario), and that the
+    horizon-coupling peak charge is inactive (zero grid import) -- it asserts the
+    last. Validate against the monolith (see tests/test_benders_temporal_el1xr.py).
+    """
+    from pyomo.environ import (ConcreteModel, Var, Constraint, ConstraintList, Param,
+                               Objective, Suffix, Reals, Binary, UnitInterval,
+                               NonNegativeReals, minimize, TransformationFactory)
+    from .oM_Sequence import build_structure
+
+    cfg = config or BendersConfig()
+    penalty = float(cfg.extra.get("feasibility_penalty", 1e7))
+
+    full = build_structure(dir_name, case_name, date)
+    ps = list(full.ps)
+    if len(ps) != 1:
+        raise NotImplementedError("temporal Benders MVP handles a single (period, scenario)")
+    p, sc = ps[0]
+    egc, hgc = list(full.egc), list(full.hgc)
+    egs, hgs = list(full.egs), list(full.hgs)
+    levels = list(full.n)
+    factor1 = float(full.factor1)
+    period_weight = sum(float(full.Par['pDiscountFactor'][pp]) for pp in full.p)
+    discount = float(full.Par['pDiscountFactor'][p])
+    invcost = {("e", g): float(full.Par['pEleGenInvestCost'][g]) for g in egc}
+    invcost.update({("h", g): float(full.Par['pHydGenInvestCost'][g]) for g in hgc})
+    inv_names = list(invcost)
+    for g in egs:
+        if int(full.Par['pEleCycleTimeStep'][g]) != 1:
+            raise NotImplementedError("temporal MVP assumes hourly storage (cycle=1)")
+    for g in hgs:
+        if int(full.Par['pHydCycleTimeStep'][g]) != 1:
+            raise NotImplementedError("temporal MVP assumes hourly storage (cycle=1)")
+    n0 = levels[0]
+    initE = {g: float(full.Par['pEleInitialInventory'][g][p, sc, n0]) for g in egs}
+    initH = {g: float(full.Par['pHydInitialInventory'][g][p, sc, n0]) for g in hgs}
+    # storage capacity caps the reachable boundary inventory (so the hard boundary
+    # tie is feasible); take the nominal max over the horizon.
+    maxE = {g: max(float(full.Par['pEleMaxStorage'][g][p, sc, n]) for n in levels) for g in egs}
+    maxH = {g: max(float(full.Par['pHydMaxStorage'][g][p, sc, n]) for n in levels) for g in hgs}
+    nmonths = len(list(full.moy))
+    netfix = sum(float(full.Par['pEleRetFastavgift'][er]) * factor1 * nmonths
+                 * (1 + float(full.Par['pEleRetMoms'][er])) for er in full.er)
+
+    # contiguous time windows
+    K = max(1, n_time_blocks)
+    size = (len(levels) + K - 1) // K
+    windows = [w for w in (levels[i:i + size] for i in range(0, len(levels), size)) if w]
+    K = len(windows)
+    blocks = list(range(K))
+    bnd_names = ([("Se", k, g) for k in range(K - 1) for g in egs]
+                 + [("Sh", k, g) for k in range(K - 1) for g in hgs])
+
+    def _binary(kind, g):
+        key = 'pEleGenBinaryInvestment' if kind == "e" else 'pHydGenBinaryInvestment'
+        try:
+            return int(full.Par[key][g]) == 1
+        except (KeyError, TypeError):
+            return False
+
+    def make_master():
+        m = ConcreteModel()
+        m.xe = Var(egc, within=UnitInterval)
+        m.xh = Var(hgc, within=UnitInterval)
+        for g in egc:
+            if _binary("e", g):
+                m.xe[g].domain = Binary
+        for g in hgc:
+            if _binary("h", g):
+                m.xh[g].domain = Binary
+        x = {("e", g): m.xe[g] for g in egc}
+        x.update({("h", g): m.xh[g] for g in hgc})
+        # boundary inventory levels: no master cost, so initialise (cold start)
+        m.Se = Var(range(max(K - 1, 1)), egs, within=NonNegativeReals,
+                   bounds=lambda mm, k, g: (0, maxE[g]), initialize=lambda mm, k, g: initE[g])
+        m.Sh = Var(range(max(K - 1, 1)), hgs, within=NonNegativeReals,
+                   bounds=lambda mm, k, g: (0, maxH[g]), initialize=lambda mm, k, g: initH[g])
+        for (kind, k, g) in bnd_names:
+            x[(kind, k, g)] = m.Se[k, g] if kind == "Se" else m.Sh[k, g]
+        m.theta = Var(blocks, within=Reals, bounds=(-1e9, 1e12), initialize=0.0)
+        m.cuts = ConstraintList()
+        inv = period_weight * factor1 * sum(invcost[nm] * x[nm] for nm in inv_names)
+        m.obj = Objective(expr=inv + discount * netfix + sum(m.theta[b] for b in blocks),
+                          sense=minimize)
+        return {"model": m, "x": x, "theta": {b: m.theta[b] for b in blocks}, "cuts": m.cuts}
+
+    def make_subproblem(block):
+        k = block
+        win = windows[k]
+        a, b = win[0], win[-1]
+        sub = _build_window(dir_name, case_name, date, sc, win)
+        sub.dual = Suffix(direction=Suffix.IMPORT)
+        sub._bxe = Param(egc, mutable=True, initialize=0.0)
+        sub._bxh = Param(hgc, mutable=True, initialize=0.0)
+        sub.bfix_e = Constraint(egc, rule=lambda mm, g: mm.vEleGenInvest[g] == mm._bxe[g])
+        sub.bfix_h = Constraint(hgc, rule=lambda mm, g: mm.vHydGenInvest[g] == mm._bxh[g])
+        # boundary copies for every boundary (fixed to the master value); only the
+        # incoming (k-1) and outgoing (k) ones enter this block's constraints.
+        sub._se = Param(range(max(K - 1, 1)), egs, mutable=True, initialize=0.0)
+        sub._sh = Param(range(max(K - 1, 1)), hgs, mutable=True, initialize=0.0)
+        sub.Secopy = Var(range(max(K - 1, 1)), egs, within=Reals)
+        sub.Shcopy = Var(range(max(K - 1, 1)), hgs, within=Reals)
+        sub.sefix = Constraint(range(max(K - 1, 1)), egs,
+                               rule=lambda mm, kk, g: mm.Secopy[kk, g] == mm._se[kk, g])
+        sub.shfix = Constraint(range(max(K - 1, 1)), hgs,
+                               rule=lambda mm, kk, g: mm.Shcopy[kk, g] == mm._sh[kk, g])
+
+        # incoming boundary (k > 0): replace the window's first-level inventory
+        # balance (which uses the constant initial inventory) with one reading the
+        # incoming boundary copy. Hourly cycle, so the window over the level is [a].
+        def _rep_e(mm, g):
+            if k == 0 or (p, sc, a, g) not in mm.eEleInventory:
+                return Constraint.Skip
+            return (mm.Secopy[k - 1, g] + mm.Par['pDuration'][p, sc, a] * (
+                mm.vEleEnergyInflows[p, sc, a, g] - mm.vEleEnergyOutflows[p, sc, a, g]
+                - mm.vEleTotalOutput[p, sc, a, g] * (1.0 / mm.Par['pEleGenEfficiency_discharge'][g])
+                + mm.Par['pEleGenEfficiency_charge'][g] * mm.vEleTotalCharge[p, sc, a, g])
+                == mm.vEleInventory[p, sc, a, g] + mm.vEleSpillage[p, sc, a, g])
+        sub.rep_e = Constraint(egs, rule=_rep_e)
+
+        def _rep_h(mm, g):
+            if k == 0 or (p, sc, a, g) not in mm.eHydInventory:
+                return Constraint.Skip
+            return (mm.Shcopy[k - 1, g] + mm.Par['pDuration'][p, sc, a] * (
+                mm.vHydEnergyInflows[p, sc, a, g] - mm.vHydEnergyOutflows[p, sc, a, g]
+                - mm.vHydTotalOutput[p, sc, a, g]
+                + mm.Par['pHydGenEfficiency'][g] * mm.vHydTotalCharge[p, sc, a, g])
+                == mm.vHydInventory[p, sc, a, g] + mm.vHydSpillage[p, sc, a, g])
+        sub.rep_h = Constraint(hgs, rule=_rep_h)
+        if k > 0:
+            for g in egs:
+                if (p, sc, a, g) in sub.eEleInventory:
+                    sub.eEleInventory[p, sc, a, g].deactivate()
+            for g in hgs:
+                if (p, sc, a, g) in sub.eHydInventory:
+                    sub.eHydInventory[p, sc, a, g].deactivate()
+
+        # outgoing boundary (k < K-1): tie the window's last inventory to the copy
+        sub.out_e = Constraint(egs, rule=lambda mm, g: (
+            mm.vEleInventory[p, sc, b, g] == mm.Secopy[k, g]
+            if (k < K - 1 and (p, sc, b, g) in mm.vEleInventory) else Constraint.Skip))
+        sub.out_h = Constraint(hgs, rule=lambda mm, g: (
+            mm.vHydInventory[p, sc, b, g] == mm.Shcopy[k, g]
+            if (k < K - 1 and (p, sc, b, g) in mm.vHydInventory) else Constraint.Skip))
+
+        sub.eTotalSCost.deactivate()
+        # elastic relaxation on the operating constraints (everything except the
+        # fixing and boundary-coupling constraints) so the block is feasible for any
+        # fixed master point. The boundary couplings stay HARD: the inventory must be
+        # exactly the master value at the boundary (so it is conserved across the
+        # split); feasibility for an unreachable boundary comes from the elastic
+        # operating constraints (and the model's own ENS / spillage), and the
+        # fixing-constraint duals carry the (feasibility) cut.
+        keep_hard = ("bfix_e", "bfix_h", "sefix", "shfix",
+                     "rep_e", "rep_h", "out_e", "out_h")
+        targets = [c for c in sub.component_objects(Constraint, active=True)
+                   if c.name not in keep_hard]
+        TransformationFactory('core.add_slack_variables').apply_to(sub, targets=targets)
+        slack_blk = sub._core_add_slack_variables
+        slack_blk._slack_objective.deactivate()
+        slack_sum = sum(v for v in slack_blk.component_data_objects(Var))
+        sub.benders_obj = Objective(
+            expr=discount * (sub.vTotalCComponent[p, sc] - sub.vTotalEleNetUseFixCost[p, sc]
+                             - sub.vTotalRComponent[p, sc]) + penalty * slack_sum,
+            sense=minimize)
+
+        fix = {("e", g): sub.bfix_e[g] for g in egc}
+        fix.update({("h", g): sub.bfix_h[g] for g in hgc})
+        for (kind, kk, g) in bnd_names:
+            fix[(kind, kk, g)] = sub.sefix[kk, g] if kind == "Se" else sub.shfix[kk, g]
+
+        def set_xhat(x_hat):
+            for g in egc:
+                sub._bxe[g] = x_hat[("e", g)]
+            for g in hgc:
+                sub._bxh[g] = x_hat[("h", g)]
+            for (kind, kk, g) in bnd_names:
+                if kind == "Se":
+                    sub._se[kk, g] = x_hat[(kind, kk, g)]
+                else:
+                    sub._sh[kk, g] = x_hat[(kind, kk, g)]
+
+        xcopy = {("e", g): sub.vEleGenInvest[g] for g in egc}
+        xcopy.update({("h", g): sub.vHydGenInvest[g] for g in hgc})
+        return {"model": sub, "xcopy": xcopy, "fix": fix, "set_xhat": set_xhat,
+                "obj": sub.benders_obj}
+
+    return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver)
+
+
 def _build_el1xr_subproblem(dir_name, case_name, date, block, egc, hgc, discount, penalty):
     """Build one (period, scenario) operating subproblem with the investment fixed.
 
