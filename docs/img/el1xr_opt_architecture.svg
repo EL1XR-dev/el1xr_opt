@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="940" height="840" viewBox="0 0 940 840" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="812" viewBox="0 0 940 812" font-family="Helvetica, Arial, sans-serif">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
@@ -37,7 +37,6 @@
   <text x="320" y="205" text-anchor="middle" class="t">CSVSource</text>
   <text x="470" y="205" text-anchor="middle" class="t">DuckDBSource</text>
   <text x="650" y="205" text-anchor="middle" class="ts">guided by InputSchema</text>
-  <!-- elbow merge: both inputs drop, turn, and join one arrow into Source -->
   <polyline points="285,134 285,147 470,147" class="elbow"/>
   <polyline points="655,134 655,147 470,147" class="elbow"/>
   <circle cx="470" cy="147" r="2.5" fill="#555"/>
@@ -52,43 +51,55 @@
 
   <!-- Layer 4: model -->
   <text x="30" y="372" class="lyr">MODEL</text>
-  <rect x="150" y="320" width="640" height="118" class="box" fill="#fdf3e3" stroke="#d97706"/>
+  <rect x="150" y="320" width="640" height="150" class="box" fill="#fdf3e3" stroke="#d97706"/>
   <text x="470" y="343" text-anchor="middle" class="tb">Model formulation (Pyomo)</text>
-  <rect x="172" y="356" width="200" height="34" class="box" fill="#ffffff" stroke="#d97706"/>
-  <text x="272" y="378" text-anchor="middle" class="t">oM_ModelFormulation</text>
-  <rect x="384" y="356" width="170" height="34" class="box" fill="#ffffff" stroke="#d97706"/>
-  <text x="469" y="378" text-anchor="middle" class="t">oM_Investment</text>
-  <rect x="566" y="356" width="202" height="34" class="box" fill="#ffffff" stroke="#d97706"/>
-  <text x="667" y="378" text-anchor="middle" class="t">oM_GreenHydrogen</text>
-  <text x="470" y="414" text-anchor="middle" class="ts">carriers:  Electricity   ·   Hydrogen   ·   Heat (scaffold)</text>
+  <rect x="172" y="354" width="196" height="32" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="270" y="375" text-anchor="middle" class="t">oM_ModelFormulation</text>
+  <rect x="380" y="354" width="160" height="32" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="460" y="375" text-anchor="middle" class="t">oM_Investment</text>
+  <rect x="552" y="354" width="216" height="32" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="660" y="375" text-anchor="middle" class="t">oM_GreenHydrogen</text>
+  <rect x="172" y="392" width="196" height="32" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="270" y="413" text-anchor="middle" class="t">oM_Community</text>
+  <rect x="380" y="392" width="388" height="32" class="box" fill="#ffffff" stroke="#d97706"/>
+  <text x="574" y="413" text-anchor="middle" class="t">oM_Features  -  problem class + cost/revenue registry</text>
+  <text x="470" y="444" text-anchor="middle" class="ts">carriers: Electricity · Hydrogen · Heat (scaffold)   |   class: LP · MILP · QP · SOCP · MISOCP · NLP</text>
+  <text x="470" y="460" text-anchor="middle" class="ts">the problem class chooses the solver (and, in future, the build library)</text>
   <line x1="470" y1="304" x2="470" y2="318" class="flow"/>
 
   <!-- Layer 5: solve -->
-  <text x="30" y="486" class="lyr">SOLVE</text>
-  <rect x="150" y="462" width="640" height="56" class="box" fill="#f0eafb" stroke="#7c3aed"/>
-  <text x="470" y="485" text-anchor="middle" class="tb">oM_SolverSetup  +  oM_ProblemSolving</text>
-  <text x="470" y="504" text-anchor="middle" class="ts">HiGHS / Gurobi / CBC  ·  fix binaries and re-solve for duals</text>
-  <line x1="470" y1="438" x2="470" y2="460" class="flow"/>
+  <text x="30" y="520" class="lyr">SOLVE</text>
+  <rect x="150" y="492" width="640" height="104" class="box" fill="#f0eafb" stroke="#7c3aed"/>
+  <text x="470" y="514" text-anchor="middle" class="tb">oM_SolverSetup  +  oM_ProblemSolving</text>
+  <text x="470" y="532" text-anchor="middle" class="ts">HiGHS / Gurobi / CBC / Ipopt  ·  fix binaries and re-solve for duals</text>
+  <rect x="172" y="544" width="596" height="44" class="box" fill="#ffffff" stroke="#7c3aed"/>
+  <text x="470" y="562" text-anchor="middle" class="t">oM_Decomposition  -  monolithic, or Benders (investment master + operating blocks)</text>
+  <text x="470" y="579" text-anchor="middle" class="ts">parallel worker processes · per-block scenario subsetting · temporal storage-boundary linking</text>
+  <line x1="470" y1="470" x2="470" y2="490" class="flow"/>
 
   <!-- Layer 6: output -->
-  <text x="30" y="576" class="lyr">OUTPUT</text>
-  <rect x="150" y="552" width="400" height="64" class="box" fill="#fdeaea" stroke="#dc2626"/>
-  <text x="350" y="575" text-anchor="middle" class="tb">results.duckdb  (default)</text>
-  <text x="350" y="597" text-anchor="middle" class="ts">sets · params · variables · duals · run metadata</text>
-  <rect x="570" y="552" width="220" height="64" class="box" fill="#ffffff" stroke="#dc2626"/>
-  <text x="680" y="575" text-anchor="middle" class="tb">CSV results</text>
-  <text x="680" y="597" text-anchor="middle" class="ts">optional (--rawresults)</text>
-  <!-- elbow split: the solve feeds both outputs in parallel -->
-  <polyline points="470,518 470,535 350,535 350,551" class="flow"/>
-  <polyline points="470,535 680,535 680,551" class="flow"/>
-  <circle cx="470" cy="535" r="2.5" fill="#555"/>
+  <text x="30" y="640" class="lyr">OUTPUT</text>
+  <rect x="150" y="616" width="400" height="64" class="box" fill="#fdeaea" stroke="#dc2626"/>
+  <text x="350" y="639" text-anchor="middle" class="tb">results.duckdb  (default)</text>
+  <text x="350" y="661" text-anchor="middle" class="ts">sets · params · variables · duals · run metadata</text>
+  <rect x="570" y="616" width="220" height="64" class="box" fill="#ffffff" stroke="#dc2626"/>
+  <text x="680" y="639" text-anchor="middle" class="tb">CSV results</text>
+  <text x="680" y="661" text-anchor="middle" class="ts">optional (--rawresults)</text>
+  <polyline points="470,596 470,605 350,605 350,615" class="flow"/>
+  <polyline points="470,605 680,605 680,615" class="flow"/>
+  <circle cx="470" cy="605" r="2.5" fill="#555"/>
 
   <!-- side rail -->
-  <rect x="828" y="78" width="86" height="538" rx="9" ry="9" fill="#f3f4f6" stroke="#9ca3af"/>
-  <text x="871" y="300" text-anchor="middle" transform="rotate(90 871 300)" class="tb">el1xr-run  /  routine()</text>
-  <text x="871" y="300" text-anchor="middle" transform="rotate(90 871 470)" class="ts">single pipeline</text>
+  <rect x="828" y="78" width="86" height="602" rx="9" ry="9" fill="#f3f4f6" stroke="#9ca3af"/>
+  <text x="871" y="330" text-anchor="middle" transform="rotate(90 871 330)" class="tb">el1xr-run  /  routine()</text>
+  <text x="871" y="500" text-anchor="middle" transform="rotate(90 871 500)" class="ts">single pipeline</text>
+
+  <!-- decoupled analysis -->
+  <rect x="150" y="700" width="640" height="44" class="box" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="470" y="719" text-anchor="middle" class="tb">Decoupled network analysis  (separate from the main solve)</text>
+  <text x="470" y="736" text-anchor="middle" class="ts">oM_ACOPF - AC OPF (SOCP relaxation / NLP)   ·   oM_LinDist3Flow - unbalanced linear OPF (LP)</text>
 
   <!-- footer note -->
-  <text x="470" y="650" text-anchor="middle" class="note">CSV and DuckDB inputs are read through one interface, so a DuckDB run reproduces a CSV run exactly.</text>
-  <text x="470" y="668" text-anchor="middle" class="note">Validation cases in CI: Home1 · Grid1 · EEM26 · H2VPP, each solved from both CSV and DuckDB.</text>
+  <text x="470" y="772" text-anchor="middle" class="note">CSV and DuckDB inputs are read through one interface, so a DuckDB run reproduces a CSV run exactly.</text>
+  <text x="470" y="790" text-anchor="middle" class="note">Validation cases in CI: Home1 · Grid1 · EEM26 · H2VPP, each solved from both CSV and DuckDB.</text>
 </svg>
