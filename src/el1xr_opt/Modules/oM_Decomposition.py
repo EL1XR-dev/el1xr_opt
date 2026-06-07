@@ -192,9 +192,17 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
 
 
 def _build_block(dir_name, case_name, date, keep_scenario):
-    """Build the el1xr model restricted to one scenario, by copying the case and
-    zeroing the probability of every other scenario (so only the kept scenario's
-    operating model is built). Reuses the validated full build."""
+    """Build the el1xr model restricted to one scenario.
+
+    Produces a clean single-scenario copy of the case -- the kept scenario is the
+    only one in the scenario dimension dict, and every other scenario's rows are
+    dropped from the data files -- then builds the model from it. This reads and
+    builds only the kept scenario instead of reading the whole multi-scenario
+    dataset and filtering it down, which is the bulk of a block build. The kept
+    scenario's own data (including its probability, read unnormalised) is left
+    untouched, so the subproblem is identical to the one the full build would
+    produce for that scenario.
+    """
     import os
     import shutil
     import tempfile
@@ -205,11 +213,32 @@ def _build_block(dir_name, case_name, date, keep_scenario):
     src = os.path.join(dir_name, case_name)
     dst = os.path.join(work, case_name)
     shutil.copytree(src, dst)
-    sp = os.path.join(dst, f"oM_Data_Scenario_{case_name}.csv")
-    df = pd.read_csv(sp)
-    scen_col = df.columns[1]
-    df.loc[df[scen_col] != keep_scenario, "Probability"] = 0.0
-    df.to_csv(sp, index=False)
+
+    # scenario dimension dict: keep only the kept scenario, so model.sc = {kept}
+    # and every scenario-indexed set product is built for that one scenario.
+    dpath = os.path.join(dst, f"oM_Dict_Scenario_{case_name}.csv")
+    dd = pd.read_csv(dpath)
+    scenarios = set(dd.iloc[:, 0].astype(str))
+    dd[dd.iloc[:, 0] == keep_scenario].to_csv(dpath, index=False)
+
+    # data files: drop the other scenarios' rows. The scenario is the 2nd index
+    # column in the Scenario file and in every (period, scenario, load level) time
+    # series. Detect that column by its content -- it holds scenario labels -- not
+    # by position, because other files (e.g. the networks, indexed by node, node,
+    # circuit) also have several leading index columns but no scenario index.
+    for fname in os.listdir(dst):
+        if not (fname.startswith("oM_Data_") and fname.endswith(f"_{case_name}.csv")):
+            continue
+        fpath = os.path.join(dst, fname)
+        df = pd.read_csv(fpath, header=0)
+        if df.shape[1] < 2:
+            continue
+        scen_col = df.columns[1]
+        values = set(df[scen_col].astype(str).unique())
+        if not values or not values.issubset(scenarios):
+            continue                                   # 2nd column is not scenarios
+        df[df[scen_col] == keep_scenario].to_csv(fpath, index=False)
+
     model = build_model(work, case_name, date)
     shutil.rmtree(work, ignore_errors=True)
     return model
