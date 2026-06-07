@@ -99,9 +99,14 @@ current results — not mixed into an unrelated change.
   axis) into independent block descriptors (this is real and usable now).
 - `first_stage_components()` — names the complicating variables (investment) and
   the time-block linking variables (boundary storage).
-- Documented `BendersConfig` and `solve_benders(...)` interfaces that raise
-  `NotImplementedError` — the place to implement the loop, mirroring the
-  openTEPES Benders module.
+- `benders_solve(make_master, make_subproblem, blocks, config)` — a **working**
+  generic multi-cut L-shaped Benders solver (optimality cuts from the subproblem
+  fixing-constraint duals), validated against the monolithic optimum on a small
+  stochastic capacity-expansion problem in `tests/test_benders.py`. The callback
+  interface is the template for the el1xr investment/operating split.
+- `solve_benders(...)` — the el1xr-specific entry point, still to be wired (build
+  the investment master and per-block operating subproblems, then call
+  `benders_solve`).
 
 ## 7. Suggested order of work
 

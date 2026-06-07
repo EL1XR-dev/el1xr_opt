@@ -117,7 +117,30 @@ DoD: existing cases pick `dc`/`single-node` and are unchanged; a case can select
 network mode by one option; LinDist3Flow can be added as a builder without
 touching the others.
 
-### Stage D — block-build + solve-mode seam (enables parallelism & decomposition)
+### Stage D — block-build + solve-mode seam (enables parallelism & decomposition) — STARTED (2026-06-07)
+First increment done: the **generic Benders solver is implemented and validated**
+(`oM_Decomposition.benders_solve`, multi-cut L-shaped, callback interface, optimality
+cuts from subproblem fixing-constraint duals). It reaches the exact monolithic
+optimum on a small two-stage stochastic capacity-expansion problem with el1xr's
+structure (`tests/test_benders.py`), which is the "validate the bound before wiring"
+step the plan calls for. Remaining for Stage D: (a) the el1xr-specific wiring
+(`solve_benders` — build the investment master and per-(period,scenario) operating
+subproblems with the investment copy fixed); (b) parallel subproblem solving (the
+subproblems are independent; `n_workers` is in `BendersConfig`); (c) the per-asset /
+arc balance **solve-time** experiment below; (d) temporal block splitting with the
+storage boundary-inventory linking. Original design below.
+
+#### Per-asset (arc) balance — solve-time companion experiment
+The arc / per-asset balance was found earlier *not* to help **build** time, but the
+reference paper's gain is in **solve** time, with several configurations, because
+the arc form is block-angular and suits decomposition. The experiment (to run with
+the Benders work, not before): build the arc-formulation variant of a small case,
+measure **solve** time (monolithic and under Benders/Dantzig-Wolfe) against the
+nodal formulation, and test whether it tightens the relaxation or speeds
+convergence. Keep nodal as the default; adopt per-asset only if the measured
+solve-time/decomposition benefit is real.
+
+
 Refactor the build so it can build either the whole model (today) or one
 `(period, scenario)` block, by having `data_processing` / `create_*` accept an
 optional block filter from `partition_blocks`. Add a **solve mode**:
