@@ -14,6 +14,7 @@ from .oM_Investment        import create_investment
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .oM_GreenHydrogen      import create_green_hydrogen
 from .oM_Community         import create_community_variables, create_community_constraints
+from .oM_HeatSector        import create_heat_sector
 from .oM_ProblemSolving   import solving_model
 from .oM_SolverSetup      import ensure_ampl_solvers
 from .utils.oM_Utils      import log_time
@@ -56,6 +57,8 @@ def build_model(dir_name, case, date, indlog='False'):
     model = create_constraints(model, model, indlog)
     model = create_community_constraints(model, model, indlog)
     model = create_green_hydrogen(model, model, indlog)
+    # heat sector: no-op unless the case carries heat sets (htd/htg)
+    model = create_heat_sector(model, model, indlog)
     return model
 
 
