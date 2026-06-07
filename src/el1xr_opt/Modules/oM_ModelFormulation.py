@@ -34,17 +34,19 @@ def create_objective_function(model, optmodel, indlog):
         return (optmodel.vTotalSCost == optmodel.vTotalICost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [kEUR]'))
 
-    # Cost components of the objective function
+    # Cost / revenue components of the objective, summed from a registry so a new
+    # cost-bearing feature registers its term instead of editing these rules. The
+    # registry is seeded with the built-in terms in their original order, so the
+    # aggregation is identical to the previous hard-coded sum.
+    from .oM_Features import seed_objective_registry, aggregate_terms
+    seed_objective_registry(model)
+
     def eTotalCComponent(optmodel, p,sc):
-        return (optmodel.vTotalCComponent[p,sc] == optmodel.vTotalEleNCost[p,sc] + optmodel.vTotalEleXCost[p,sc] +
-                sum(model.Par['pDuration'][p,sc,n] * sum(optmodel.__getattribute__(f'vTotal{eng}MCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}OCost')[p,sc,n]  for eng in ['Ele','Hyd']) for n in model.n) +
-                sum(optmodel.__getattribute__(f'vTotal{eng}DCost')[p,sc,d] for eng in ['Ele','Hyd'] for d in model.doy))
+        return optmodel.vTotalCComponent[p,sc] == aggregate_terms(model, optmodel, p, sc, model._cost_terms)
     optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [kEUR]'))
 
-    # Revenue components of the objective function
     def eTotalRComponent(optmodel, p,sc):
-        return (optmodel.vTotalRComponent[p,sc] == optmodel.vTotalEleXRev[p,sc] +
-                sum(model.Par['pDuration'][p,sc,n] * (optmodel.vTotalEleMRev[p,sc,n] + optmodel.vTotalHydMRev[p,sc,n]) for n in model.n))
+        return optmodel.vTotalRComponent[p,sc] == aggregate_terms(model, optmodel, p, sc, model._revenue_terms)
     optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [kEUR]'))
 
     log_time('--- Declaring the totals components of the ObjFunc:', StartTime, ind_log=indlog)
