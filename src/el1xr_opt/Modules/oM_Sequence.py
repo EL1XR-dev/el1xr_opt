@@ -52,13 +52,15 @@ def build_model(dir_name, case, date, indlog='False'):
     model = create_variables(model, model, indlog)
     model = create_community_variables(model, model, indlog)
     model = create_investment(model, model, indlog)
+    # heat sector before the constraints: it reads the case's heat tables (if any)
+    # and builds the heat variables, so the electricity balance can couple to the
+    # heat-pump load and heat-to-power output. No-op when the case has no heat.
+    model = create_heat_sector(model, model, indlog, dir_name, case)
     model = create_objective_function(model, model, indlog)
     model = create_objective_function_components(model, model, indlog)
     model = create_constraints(model, model, indlog)
     model = create_community_constraints(model, model, indlog)
     model = create_green_hydrogen(model, model, indlog)
-    # heat sector: no-op unless the case carries heat sets (htd/htg)
-    model = create_heat_sector(model, model, indlog)
     return model
 
 
