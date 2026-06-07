@@ -267,6 +267,26 @@ mutable incoming-inventory parameter set from the master each iteration (the
 `partition_blocks(..., n_time_blocks)` helper and the `linking` entry of
 `first_stage_components()` already mark out this structure.
 
+**The storage-boundary mechanics are validated.** `tests/test_benders_temporal_el1xr.py`
+solves the monolith, splits the horizon into two windows, fixes the boundary
+inventory (and investment) to the monolith's values -- the outgoing inventory on
+window 1's last level, the incoming inventory replacing window 2's first-level
+balance -- and confirms the two windows reproduce the monolith's **per-level**
+operating cost exactly (electricity and hydrogen storage, hourly cycle). So the
+windowed build and the boundary-inventory stitching are correct.
+
+**One more coupling to handle: the per-scenario aggregate costs.** el1xr's cost has
+terms that are not per-load-level -- the peak-demand charge, the fixed network
+charge and the energy tax (`vTotalEleNCost` / `vTotalEleXCost`, the `"ps"` cost
+kind). These depend on the whole horizon, so they do not split by time window: a
+naive split double-counts them. They have to be handled at the master, not inside a
+block -- the **peak demand** becomes a linking variable (the master holds the peak
+and each window constrains it to be at least the window's demand, with the peak cost
+in the master objective), and the **fixed charge** is counted once. With the
+per-level cost decomposing exactly (validated) and these aggregate terms moved to
+the master, the temporal Benders reproduces the full monolithic optimum. That master
+cost handling is the remaining step.
+
 ## 7. Suggested order of work
 
 1. Benders over `(period, scenario)` with investment in the master, reusing the
@@ -276,7 +296,9 @@ mutable incoming-inventory parameter set from the master each iteration (the
 3. Per-block scenario subsetting so each block builds one scenario, not all.
    **Done.**
 4. Temporal block splitting with boundary-storage linking. Algorithm validated
-   (`tests/test_benders_temporal.py`); el1xr wiring (windowed build + mutable
-   incoming inventory) is the remaining step.
+   (`tests/test_benders_temporal.py`); el1xr storage-boundary mechanics validated
+   per-level (`tests/test_benders_temporal_el1xr.py`); handling the per-scenario
+   aggregate costs (peak as a linking variable, fixed charge once) is the remaining
+   step before the full el1xr temporal solve matches the monolith.
 5. Only then consider the arc/asset reformulation and Dantzig-Wolfe, together,
    as a larger modernization.
