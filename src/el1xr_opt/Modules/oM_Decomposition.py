@@ -89,15 +89,87 @@ class BendersConfig:
     extra: dict = field(default_factory=dict)
 
 
-def solve_benders(model, optmodel, solver, config: BendersConfig | None = None):
-    """Solve by Benders decomposition (not implemented).
+def benders_solve(make_master, make_subproblem, blocks, config=None,
+                  solver="appsi_highs"):
+    """Generic multi-cut (L-shaped) Benders decomposition.
 
-    Planned: investment in the master; one operating subproblem per block from
-    :func:`partition_blocks`, solved in parallel; subproblem duals build optimality
-    and feasibility cuts for the master; iterate to ``config.relative_gap``. Mirror
-    openTEPES ``openTEPES_ProblemSolvingBenders``. Validate the bound against the
-    monolithic optimum on a small case before trusting it.
+    Assumes relative complete recourse (subproblems are always feasible — true for
+    the el1xr operating model thanks to energy-not-served), so it adds optimality
+    cuts only. Returns a result dict with the objective, the first-stage solution,
+    the iteration count and the final gap.
+
+    Callbacks return plain Pyomo objects (so this works for the el1xr blocks or any
+    two-stage stochastic program). ``make_master()`` returns a dict with keys
+    ``model`` (master, minimise first-stage cost + sum theta), ``x``
+    (name -> first-stage Var), ``theta`` (block -> recourse Var) and ``cuts`` (a
+    ConstraintList the solver appends optimality cuts to). ``make_subproblem(block)``
+    returns a dict with keys ``model`` (the operating subproblem), ``xcopy``
+    (name -> free copy of the first-stage Var), ``fix`` (name -> Constraint fixing
+    the copy to a mutable-Param value, whose dual is the cut subgradient),
+    ``set_xhat`` (callable setting the fixing-constraint values) and ``obj`` (the
+    subproblem Objective). The subproblem must carry a ``dual`` Suffix.
+    """
+    from pyomo.environ import SolverFactory, value
+    cfg = config or BendersConfig()
+    opt = SolverFactory(solver)
+
+    M = make_master()
+    subs = {b: make_subproblem(b) for b in blocks}
+    names = list(M["x"].keys())
+
+    best_ub = float("inf")
+    gap = float("inf")
+    it = 0
+    for it in range(1, cfg.max_iterations + 1):
+        opt.solve(M["model"])
+        lb = value(M["model"].obj)
+        x_hat = {n: float(value(M["x"][n])) for n in names}
+        theta_hat = {b: float(value(M["theta"][b])) for b in blocks}
+        first_stage_cost = lb - sum(theta_hat.values())
+
+        recourse = 0.0
+        new_cuts = []
+        for b in blocks:
+            sub = subs[b]
+            sub["set_xhat"](x_hat)
+            opt.solve(sub["model"])
+            q_b = float(value(sub["obj"]))
+            recourse += q_b
+            lam = {n: float(sub["model"].dual[sub["fix"][n]]) for n in names}
+            new_cuts.append((b, q_b, lam))
+
+        ub = first_stage_cost + recourse
+        best_ub = min(best_ub, ub)
+        gap = abs(best_ub - lb) / (abs(best_ub) + 1e-12)
+        if gap <= cfg.relative_gap:
+            break
+
+        # add an optimality cut per block: theta_b >= q_b + sum_n lam_n (x_n - x_hat_n)
+        for (b, q_b, lam) in new_cuts:
+            M["cuts"].add(
+                M["theta"][b] >= q_b + sum(lam[n] * (M["x"][n] - x_hat[n]) for n in names))
+
+    return {
+        "objective": best_ub,
+        "lower_bound": lb,
+        "x": x_hat,
+        "iterations": it,
+        "gap": gap,
+        "converged": gap <= cfg.relative_gap,
+    }
+
+
+def solve_benders(model, optmodel, solver, config: BendersConfig | None = None):
+    """Benders entry point for the el1xr operational+investment model.
+
+    Not wired yet: it will build the master (investment + recourse variables) and,
+    per ``partition_blocks`` block, an operating subproblem with a free copy of the
+    investment variables fixed to the master values, then call :func:`benders_solve`.
+    The generic machinery in :func:`benders_solve` is implemented and validated
+    (see ``tests/test_benders.py``); this wrapper is the remaining el1xr-specific
+    wiring.
     """
     raise NotImplementedError(
-        "Benders decomposition is not implemented yet; see docs/decomposition.md"
+        "el1xr Benders wiring is pending; the generic solver is benders_solve(). "
+        "See docs/decomposition.md and tests/test_benders.py."
     )
