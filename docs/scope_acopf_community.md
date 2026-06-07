@@ -75,9 +75,17 @@ A standalone analysis module (mirrors the `benchmarks/build_speed_acopf_nlp.py` 
   guarded on solver availability (SOC needs Gurobi, NLP needs Ipopt). Note: a
   cross-bug found and fixed during this — the polar injection must use the Ybus
   off-diagonal (negated series admittance), not the series value.
-- **5b — multi-snapshot.** Loop over representative periods; summarise voltage/loss
-  violations across the year. Optional feedback: tighten the linear model's line
-  limits where AC OPF finds violations.
+- **5b — multi-snapshot. DONE (2026-06-07).** ``run_acopf_sweep`` runs one AC OPF
+  per snapshot (with permissive voltage bounds so the actual power-flow voltages
+  are found) and summarises min/max voltage, losses and violations vs the nominal
+  limits; ``scaled_snapshots`` builds a load-profile set and ``snapshots_from_case``
+  is the interface to pull per-node net demand per load level from a real case. The
+  summary writes to DuckDB (``oM_Result_ACOPF_Sweep``). Validated on the IEEE
+  33-bus feeder over a 0.5x-1.3x load profile: losses rise (47 -> 360 kW) and
+  minimum voltage falls monotonically (0.958 -> 0.884) with load, violations grow,
+  and the base snapshot reproduces the 5a benchmark (202.68 kW, 0.9131 pu). Test in
+  ``tests/test_acopf.py::test_ieee33_sweep``. Optional feedback (tighten the linear
+  model's line limits where AC OPF finds violations) remains for a later step.
 - **5c — three-phase unbalanced (the roadmap item).** The big one. Replace the
   single-phase branch model with a multi-conductor (3-phase) one: per-phase
   voltages and currents, mutual coupling, unbalanced loads. This is a large
