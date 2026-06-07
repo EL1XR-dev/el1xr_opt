@@ -31,7 +31,7 @@
 import math
 
 from pyomo.environ import (ConcreteModel, Var, Constraint, Objective, Reals,
-                           NonNegativeReals, minimize, cos, sin, value, sqrt)
+                           NonNegativeReals, minimize, cos, sin, value)
 
 
 def build_branches(network_df):
@@ -257,10 +257,104 @@ def solve_acopf(network_df, Pd, Qd, slack, formulation="socp", warm_start=True, 
                                         v0=kw.get("v0", 1.0),
                                         vmin=kw.get("vmin", 0.9), vmax=kw.get("vmax", 1.1))
                 kw.setdefault("init_v", socp["V"])
-            except Exception:
-                pass            # non-radial or no SOC solver; fall back to flat start
+            except Exception as exc:
+                # non-radial network or no cone solver: fall back to a flat start
+                print(f"   AC OPF: SOC warm start unavailable ({exc}); using a flat start")
         return solve_acopf_nlp(branches, Pd, Qd, slack, **kw)
     raise ValueError(f"unknown AC OPF formulation '{formulation}' (use 'socp' or 'nlp')")
+
+
+def run_acopf_sweep(network_df, snapshots, slack, formulation="socp",
+                    vmin_check=0.95, vmax_check=1.05, vmin_solve=0.0, vmax_solve=1.5, **kw):
+    """Run AC OPF over many snapshots and summarise voltage/loss violations.
+
+    ``snapshots`` is a list of ``(label, Pd, Qd)`` (per-unit nodal loads). Each is
+    solved with permissive voltage bounds (``vmin_solve``/``vmax_solve``) so the
+    actual power-flow voltages are found, then checked against the nominal limits
+    ``vmin_check``/``vmax_check`` to count violations. This is the Phase-5b sweep:
+    one AC OPF per representative period, with a year/horizon violation summary.
+
+    Returns a list of per-snapshot dicts: label, loss, vmin, vmax, violations,
+    status. A snapshot that fails to solve (e.g. voltage collapse at high load) is
+    recorded with status 'infeasible/error' rather than aborting the sweep.
+    """
+    rows = []
+    for label, Pd, Qd in snapshots:
+        try:
+            r = solve_acopf(network_df, Pd, Qd, slack, formulation=formulation,
+                            vmin=vmin_solve, vmax=vmax_solve, **kw)
+            V = r["V"]
+            vlo, vhi = min(V.values()), max(V.values())
+            viol = sum(1 for v in V.values() if v < vmin_check - 1e-6 or v > vmax_check + 1e-6)
+            status = r.get("solver_status", "")
+            ok = "optimal" in str(status).lower() or "feasible" in str(status).lower()
+            rows.append({"label": label, "loss_pu": r.get("losses", r["objective"]),
+                         "vmin": vlo, "vmax": vhi, "violations": viol,
+                         "status": status if ok else f"check:{status}"})
+        except Exception as exc:
+            rows.append({"label": label, "loss_pu": None, "vmin": None, "vmax": None,
+                         "violations": None, "status": f"infeasible/error: {str(exc)[:60]}"})
+    return rows
+
+
+def scaled_snapshots(Pd, Qd, factors):
+    """Build snapshots by scaling a base load by each factor in ``factors``
+    (e.g. a daily/seasonal profile). ``factors`` is a dict label -> multiplier."""
+    snaps = []
+    for label, f in factors.items():
+        snaps.append((label,
+                      {n: p * f for n, p in Pd.items()},
+                      {n: q * f for n, q in Qd.items()}))
+    return snaps
+
+
+def snapshots_from_case(dir_name, case_name, load_levels=None):
+    """Build AC OPF snapshots from a case's demand data: per-node net load at each
+    requested load level. Reads the case through the standard input source, maps
+    demands to their nodes, and sums per node. ``load_levels`` defaults to all.
+
+    This is the interface for running the sweep on a real case once it has a
+    multi-bus network; on the current single-zone sample cases it returns one bus
+    of load, so it is mainly the wiring for multi-bus distribution cases.
+    """
+    import pandas as pd
+    from .oM_InputSource import resolve_source
+
+    src = resolve_source(dir_name, case_name)
+    dem_cfg = src.read_dict("ElectricityDemand")
+    vmax = src.read_data("VarMaxDemand")             # wide: index (p,sc,n), cols = demands
+    src.close()
+    # demand -> node map
+    node_of = {}
+    if not dem_cfg.empty and "Node" in dem_cfg.columns:
+        key = dem_cfg.columns[0]
+        node_of = dict(zip(dem_cfg[key], dem_cfg["Node"]))
+    levels = list(vmax.index) if load_levels is None else load_levels
+    snaps = []
+    for lvl in levels:
+        Pd = {}
+        row = vmax.loc[lvl]
+        for dem, val in row.items():
+            nd = node_of.get(dem)
+            if nd is None or pd.isna(val):
+                continue
+            Pd[f"B_{nd}" if not str(nd).startswith("B") else nd] = Pd.get(nd, 0.0) + float(val)
+        snaps.append((str(lvl), Pd, {n: 0.0 for n in Pd}))
+    return snaps
+
+
+def write_acopf_sweep(db_path, case, rows):
+    """Write the per-snapshot sweep summary to a DuckDB table."""
+    import duckdb
+    import pandas as pd
+    df = pd.DataFrame(rows)
+    df.insert(0, "case", case)
+    con = duckdb.connect(db_path)
+    try:
+        duckdb.from_df(df, connection=con).create("oM_Result_ACOPF_Sweep")
+    finally:
+        con.close()
+    return db_path
 
 
 def write_acopf_results(db_path, case, result):
