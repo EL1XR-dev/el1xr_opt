@@ -278,12 +278,18 @@ def create_constraints(model, optmodel, indlog):
             hgs2n[nd].append(hgs)
 
     #%% Constraints
+    # Energy-community sharing terms enter the retail balance like buy/sell but
+    # internal to the community; the term is absent unless the community layer is
+    # on, so existing cases build an identical constraint.
+    community_on = bool(model.Par.get('pOptIndBinCommunity', 0))
+
     def eEleRetNodeBalance(optmodel, p,sc,n,er):
         nd = model.Par['pEleRetNode'][er]
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
+            share = (optmodel.vEleShareIn[p,sc,n,er] - optmodel.vEleShareOut[p,sc,n,er]) if community_on else 0.0
             return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
                     - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
-                    + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
+                    + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] + share == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRetNodeBalance', Constraint(optmodel.psner, rule=eEleRetNodeBalance, doc='Electricity balance in nodes [kWh]'))

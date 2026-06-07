@@ -187,12 +187,14 @@ BUILDERS = {
 }
 
 
-def run_sweep(sizes, repeats=1):
-    print(f"{'builder':16s} {'B':>5s} {'C':>4s} {'G':>4s} {'cons':>8s} {'build_s':>9s}")
+def run_sweep(sizes, repeats=1, only=None):
+    builders = {k: v for k, v in BUILDERS.items() if (only is None or k in only)}
+    print(f"{'builder':16s} {'B':>6s} {'C':>4s} {'G':>5s} {'rows':>11s} {'cols':>12s} {'build_s':>9s}")
     results = {}
     for (B, C, G) in sizes:
+        ncols = B * G * (2 * C + 1)   # cha + dis over (B,C,G) plus inv over (B,G)
         inv0 = _data(B, C, G)
-        for name, fn in BUILDERS.items():
+        for name, fn in builders.items():
             best, ncon = None, 0
             for _ in range(repeats):
                 try:
@@ -204,7 +206,7 @@ def run_sweep(sizes, repeats=1):
                 best = build if best is None else min(best, build)
             if best is not None:
                 results[(name, B, C, G)] = best
-                print(f"{name:16s} {B:5d} {C:4d} {G:4d} {ncon:8d} {best:9.3f}")
+                print(f"{name:16s} {B:6d} {C:4d} {G:5d} {ncon:11d} {ncols:12d} {best:9.3f}")
         base = results.get(("pyomo-rule", B, C, G))
         if base:
             line = []
@@ -291,11 +293,19 @@ def main(argv=None):
     p.add_argument("--check", action="store_true")
     p.add_argument("--duals", action="store_true", help="confirm linopy/pyoframe return duals")
     p.add_argument("--cycle", type=int, default=24, help="steps per cycle (C)")
+    p.add_argument("--b", type=int, default=None, help="custom single run: number of cycles (B)")
+    p.add_argument("--g", type=int, default=None, help="custom single run: number of units (G)")
+    p.add_argument("--only", type=str, default=None,
+                   help="comma list of builders to run (e.g. linopy,pyoframe,jump-not-here). Pyomo OOMs at huge sizes.")
     args = p.parse_args(argv)
 
     C = args.cycle
-    sizes = [(7, C, 10), (365, C, 10), (365, C, 50)]   # week, year, year x50 units
-    run_sweep(sizes, repeats=args.repeats)
+    only = set(args.only.split(",")) if args.only else None
+    if args.b and args.g:
+        sizes = [(args.b, C, args.g)]
+    else:
+        sizes = [(7, C, 10), (365, C, 10), (365, C, 50)]   # week, year, year x50 units
+    run_sweep(sizes, repeats=args.repeats, only=only)
     if args.check:
         correctness_check()
     if args.duals:

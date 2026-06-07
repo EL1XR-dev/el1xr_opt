@@ -105,9 +105,13 @@ part**. Faster solving (Gurobi, Benders) does not help the build; a faster
   irregular index sets that unit commitment produces, MILP supported, HiGHS and
   Gurobi. But it is young with a small community, and its support for duals is not
   documented - verify that before relying on it. Higher reward, higher risk.
-- **JuMP** (Julia). The fastest builder (around 15-20x over Pyomo) and the most
-  mature, with strong unit-commitment libraries. The cost is a full rewrite in
-  Julia and leaving the Python ecosystem. Worth it only if we commit to Julia.
+- **JuMP** (Julia). Reputed the fastest builder (around 15-20x over Pyomo on
+  synthetic benchmarks) and the most mature, with strong unit-commitment
+  libraries. The cost is a full rewrite in Julia and leaving the Python ecosystem.
+  Note: when measured on our own storage family (on the latest Julia, 1.12.6) it
+  was only about 3-5x (see the step-3 results), so its build-speed edge did not
+  reproduce here. Worth it only if we commit to Julia for its broader ecosystem,
+  not for build speed alone.
 - **Staying on Pyomo and tuning it** (`LinearExpression` / the kernel layer)
   realistically buys 1.5-3x on the build, not the 5-30x the others can. It is a
   half-day experiment, so it is worth quantifying first as the cheap baseline.
@@ -167,14 +171,16 @@ harder family below is the more realistic test.
 `benchmarks/build_speed_storage_window.py` builds the more realistic storage
 balance: inventory at each cycle boundary equals the previous boundary plus the
 **sum over a window of steps in that cycle** (a windowed sum plus a block lag,
-which is what is genuinely hard to vectorise). Four builders, all solving to the
-same objective (2.105263) on the small forced-charging case. Build time on the
-**Comillas desktop** (best of two; B cycles x C=24 steps x G units):
+which is what is genuinely hard to vectorise). Five builders (four Python plus
+JuMP/Julia), all solving to the same objective (2.105263) on the small
+forced-charging case. Build time on the **Comillas desktop** (best of two; B
+cycles x C=24 steps x G units; JuMP on the latest Julia, 1.12.6, timed after a
+warm-up build to exclude Julia's first-call compilation):
 
-| size (B x C x G) | rows | pyomo-rule | LinearExpression | linopy | pyoframe |
-|------------------|------|------------|------------------|--------|----------|
-| 365 x 24 x 10    | 3 650 | 0.969 s   | 0.821 s (1.2x)   | 0.085 s (11x) | 0.269 s (3.6x) |
-| 365 x 24 x 50    | 18 250 | 4.483 s  | 3.813 s (1.2x)   | 0.123 s (37x) | 1.471 s (3.0x) |
+| size (B x C x G) | rows | pyomo-rule | LinearExpression | linopy | pyoframe | JuMP (1.12.6) |
+|------------------|------|------------|------------------|--------|----------|------|
+| 365 x 24 x 10    | 3 650 | 0.969 s   | 0.821 s (1.2x)   | 0.085 s (11x) | 0.269 s (3.6x) | 0.193 s (5.0x) |
+| 365 x 24 x 50    | 18 250 | 4.483 s  | 3.813 s (1.2x)   | 0.123 s (37x) | 1.471 s (3.0x) | 1.525 s (2.9x) |
 
 Findings on the harder family:
 
@@ -184,16 +190,97 @@ Findings on the harder family:
 - **pyoframe is viable but well behind linopy here** - 3-3.6x. Its Polars-based
   block lag (shift the index, then realign) is less ergonomic than linopy's
   `xarray` `.shift`, and the build is slower on this time-coupled structure.
+- **JuMP does not win on build time for this family** - about 2.9-5.0x, in
+  pyoframe's range and well behind linopy, and its build time grows roughly with
+  the constraint count while linopy's stays nearly flat. The synthetic-benchmark
+  "JuMP ~15-20x" does not carry over to this windowed, dense-regular structure.
+  This was checked on the latest Julia (1.12.6); an earlier run on the box's old
+  Julia 1.8.5 gave essentially the same numbers, so it is not a stale-version
+  artifact. Fair caveats remain: JuMP builds element by element with the
+  `@constraint` macro, which a dense-regular family flatters linopy's array
+  approach but suits sparse, irregular constraints better than masking does; and
+  JuMP's real strengths are the in-memory solver interface (no LP-file writing),
+  fast warm re-solves, and its unit-commitment libraries - none of which a
+  build-time micro-benchmark captures. So this measures one thing (build time of
+  one regular family), and on that one thing JuMP does not justify a Julia rewrite.
 - **`LinearExpression` is a steady ~1.2x** - confirms it is not the lever.
-- **Marginal prices work in both** - the shadow price on the inventory balance
-  comes back identically from linopy (`constraint.dual`) and pyoframe
-  (`constraint.dual`), -1.052632 in the probe. That settles the dual question for
-  LP cases; the unit-commitment (MILP) marginal prices would still need a
-  fix-and-resolve step in either tool.
+- **Marginal prices work in linopy and pyoframe** - the shadow price on the
+  inventory balance comes back identically from linopy (`constraint.dual`) and
+  pyoframe (`constraint.dual`), -1.052632 in the probe. That settles the dual
+  question for LP cases; the unit-commitment (MILP) marginal prices would still
+  need a fix-and-resolve step in either tool.
 
-Overall direction (unchanged and now well supported): the build-time lever is a
-vectorised builder, and **linopy is the front-runner** - largest measured win,
-same language, HiGHS/Gurobi, and working LP duals. pyoframe (the "polar-high"
-candidate) is a real option but, on this model's time-coupled structure, slower to
-build and more awkward than linopy. The remaining design item before a full
-migration is MILP dual extraction for marginal prices.
+### Honest correction: construct-only vs end-to-end (construct + export)
+
+The build numbers above (and the scaling table below) time **modelling-layer
+construction only**. They exclude the step where the model is handed to the solver
+— Pyomo writes an LP/NL file or loads an in-memory matrix; linopy assembles a
+scipy sparse matrix. Both tools defer that step, so a construct-only number
+flatters the tool with the cheaper construct. A re-check (`build_speed_endtoend.py`)
+measured the full path to solver-ready and found two things the construct-only
+metric hid:
+
+- linopy's own matrix assembly is non-trivial and grows with size (it became the
+  larger part of linopy's time at scale), and
+- Pyomo's **export is its slowest part** (LP/NL writing or the appsi in-memory
+  load), which construct-only excluded entirely.
+
+End-to-end on Comillas (construct + export to solver-ready):
+
+| rows   | linopy total | Pyomo (LP file) | Pyomo (appsi in-memory) |
+|--------|--------------|-----------------|-------------------------|
+| 3 650  | 0.79 s       | 3.9 s (5.0x)    | 4.9 s (6.2x)            |
+| 18 250 | 1.26 s       | 13.0 s (10.4x)  | 20.6 s (16.4x)          |
+| 50 000 | 3.61 s       | 36.4 s (10.1x)  | 71.1 s (19.7x)          |
+
+So the honest headline is **linopy is ~5–20x faster end-to-end** (vs the
+construct-only 37–49x), the multiple growing with size and with Pyomo's export
+path (appsi — which the test suite uses — is the slower one). The linopy model was
+verified complete and correct: variable and constraint counts match exactly and it
+solves to the same objective, so the speed is real, not a truncated or lazy model.
+The construct-only ratios remain a valid measure of *construction* cost, but the
+end-to-end figure is the one to quote. (The construct-only numbers are also larger
+on the older Comillas CPU, where Pyomo's pure-Python loops suffer more than
+linopy's vectorised numpy.)
+
+### Scaling to very large models (rows and columns)
+
+Pushing the same family far past any real case (Comillas; pyomo / JuMP / pyoframe
+build element by element, linopy builds vectorised). Rows = constraints, columns =
+variables; this family has about `2C+1` columns per row. **These are construct-only
+times** (see the end-to-end correction above; the real-world multiple is ~5–20x,
+not the construct-only ratios shown here).
+
+| rows       | columns | pyomo-rule | linopy        | pyoframe   | JuMP        |
+|------------|---------|------------|---------------|------------|-------------|
+| 50 000     | 2.45 M  | 11.6 s     | 0.24 s (49x)  | 4.2 s (2.8x) | 5.0 s (2.3x) |
+| 1 000 000  | 49 M    | (OOM)      | 3.4 s         | 96 s       | 141 s       |
+| 10 000 000 | 490 M   | (OOM)      | 29 s          | (impractical) | (impractical) |
+
+Column-heavy shape (only 1 000 rows but each constraint sums C=5 000 steps, so
+~10 M columns): pyomo-rule 46 s, **linopy 0.95 s (49x)**, pyoframe 17.5 s (2.6x).
+
+Two things stand out:
+
+- **linopy's lead grows with size** - 11x at 3.6k rows, 49x at 50k, and at 1M+
+  rows it is the only tool that stays in seconds while the element-wise builders
+  take minutes or run out of memory. It built a 490-million-variable LP in 29 s.
+- **element-wise building does not scale, in any language** - at 1M rows JuMP
+  (141 s) is even slower than pyoframe (96 s) and ~40x slower than linopy, and
+  Pyomo runs out of memory. Wide constraints (the column-heavy case) hurt the
+  per-element builders most, because they emit every term in Python or Julia,
+  whereas linopy reduces over the cycle dimension in one array operation.
+
+So at the scales where build time actually matters, the case for a vectorised
+builder is even stronger, and JuMP's element-wise `@constraint` does not rescue
+it. (These extreme sizes are well beyond a realistic el1xr_opt case; they are a
+stress test of how each tool scales, not a target model size.)
+
+Overall direction (now measured across all the candidates): the build-time lever
+is a vectorised builder, and **linopy is the front-runner** - largest measured win
+by a wide margin, same language, HiGHS/Gurobi, working LP duals. pyoframe and JuMP
+both land around 3-4x on this family; JuMP's headline advantage from synthetic
+benchmarks did not reproduce here, which (together with the cost of a full Julia
+rewrite) argues against switching languages for build speed alone. The remaining
+design item before a full migration to linopy is MILP dual extraction for
+marginal prices.
