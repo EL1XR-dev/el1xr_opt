@@ -93,10 +93,13 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
                   solver="appsi_highs"):
     """Generic multi-cut (L-shaped) Benders decomposition.
 
-    Assumes relative complete recourse (subproblems are always feasible — true for
-    the el1xr operating model thanks to energy-not-served), so it adds optimality
-    cuts only. Returns a result dict with the objective, the first-stage solution,
-    the iteration count and the final gap.
+    Assumes relative complete recourse (every subproblem is feasible for any
+    first-stage decision), so it adds optimality cuts only. The el1xr subproblems
+    guarantee this with an elastic penalty relaxation (see :func:`el1xr_benders`),
+    which turns any operating infeasibility into a high-cost recourse value whose
+    fixing-constraint dual is a feasibility (steering) cut, so this loop needs no
+    separate feasibility-cut handling. Returns a result dict with the objective,
+    the first-stage solution, the iteration count and the final gap.
 
     Callbacks return plain Pyomo objects (so this works for the el1xr blocks or any
     two-stage stochastic program). ``make_master()`` returns a dict with keys
@@ -203,10 +206,15 @@ def el1xr_benders(dir_name, case_name, date, solver="appsi_highs", config=None):
     result dict. Validate against the monolithic optimum before trusting (see
     ``tests/test_benders_el1xr.py``)."""
     from pyomo.environ import (ConcreteModel, Var, Constraint, ConstraintList, Param,
-                               Objective, Suffix, Reals, Binary, UnitInterval, minimize)
+                               Objective, Suffix, Reals, Binary, UnitInterval, minimize,
+                               TransformationFactory)
     from .oM_Sequence import build_model
 
     cfg = config or BendersConfig()
+    # penalty on the elastic slacks added to the operating constraints (see
+    # make_subproblem). Large vs any real operating cost so slack is used only when
+    # the fixed investment is genuinely infeasible; configurable via config.extra.
+    penalty = float(cfg.extra.get("feasibility_penalty", 1e7))
 
     # one full build to read the investment structure and the block list
     full = build_model(dir_name, case_name, date)
@@ -253,8 +261,27 @@ def el1xr_benders(dir_name, case_name, date, solver="appsi_highs", config=None):
         sub.bfix_e = Constraint(egc, rule=lambda mm, g: mm.vEleGenInvest[g] == mm._bxe[g])
         sub.bfix_h = Constraint(hgc, rule=lambda mm, g: mm.vHydGenInvest[g] == mm._bxh[g])
         sub.eTotalSCost.deactivate()
+
+        # Elastic relaxation -> feasibility cuts. The el1xr operating model is not
+        # complete-recourse w.r.t. investment (too little investment can make a
+        # block infeasible), which optimality-cut-only Benders cannot steer away
+        # from. Add a penalised slack to every operating constraint except the
+        # investment-fixing ones, so the block is always feasible: when the fixed
+        # investment is feasible the slacks stay at zero and the dual is the usual
+        # optimality cut; when it is infeasible the slacks turn on and the
+        # fixing-constraint dual becomes a feasibility (steering) cut that pushes
+        # the master toward feasible investment. The penalty is large vs any real
+        # operating cost, so at the optimum no slack is used and the recourse value
+        # equals the true operating cost (the Benders optimum equals the monolith).
+        targets = [c for c in sub.component_objects(Constraint, active=True)
+                   if c.name not in ("bfix_e", "bfix_h")]
+        TransformationFactory('core.add_slack_variables').apply_to(sub, targets=targets)
+        slack_blk = sub._core_add_slack_variables
+        slack_blk._slack_objective.deactivate()
+        slack_sum = sum(v for v in slack_blk.component_data_objects(Var))
         sub.benders_obj = Objective(
-            expr=discount[p] * (sub.vTotalCComponent[p, sc] - sub.vTotalRComponent[p, sc]),
+            expr=discount[p] * (sub.vTotalCComponent[p, sc] - sub.vTotalRComponent[p, sc])
+            + penalty * slack_sum,
             sense=minimize)
         fix = {("e", g): sub.bfix_e[g] for g in egc}
         fix.update({("h", g): sub.bfix_h[g] for g in hgc})

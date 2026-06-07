@@ -6,13 +6,13 @@ Two things are checked:
     Multi-scenario / multi-period was previously unreachable because of a latent
     sizing bug in the initial-output parameters (fixed in oM_InputData); this test
     is the regression for that fix and exercises the block-restricted build seam.
-  * the el1xr Benders wiring (``el1xr_benders``) runs the master/subproblem loop.
-
-End-to-end Benders == monolithic on el1xr is xfail-marked: the H2VPP-derived case
-is not complete-recourse w.r.t. investment (a low investment makes the operating
-subproblem infeasible), and the optimality-cut-only solver needs feasibility cuts
-for that. The generic Benders machinery itself is validated in ``test_benders.py``;
-feasibility cuts for el1xr are the documented follow-on (see docs/decomposition.md).
+  * el1xr Benders (``el1xr_benders``) reaches the same optimum as the monolithic
+    solve. The H2VPP-derived case is not complete-recourse w.r.t. investment (a low
+    investment can make a block's operating subproblem infeasible); the subproblems
+    handle this with an elastic penalty relaxation that turns those infeasibilities
+    into feasibility (steering) cuts, so the optimality-cut Benders loop still
+    converges to the exact optimum. The generic machinery is in ``test_benders.py``;
+    see docs/decomposition.md.
 
 Needs an LP/dual-capable solver; skipped otherwise.
 """
@@ -58,10 +58,6 @@ def test_multiscenario_builds_and_solves():
 
 
 @pytest.mark.solve
-@pytest.mark.xfail(reason="el1xr operating model is not complete-recourse w.r.t. "
-                          "investment; optimality-cut Benders needs feasibility cuts "
-                          "(follow-on). Generic Benders is validated in test_benders.py.",
-                   strict=False)
 def test_el1xr_benders_matches_monolithic():
     work = tempfile.mkdtemp(prefix="benders_el1xr_")
     gen.build(work)
@@ -71,5 +67,6 @@ def test_el1xr_benders_matches_monolithic():
     mono = float(value(full.eTotalSCost))
     res = el1xr_benders(work, "Home1", date, solver=_SOLVER,
                         config=BendersConfig(max_iterations=60, relative_gap=1e-6))
-    assert res["converged"]
-    assert abs(res["objective"] - mono) / abs(mono) < 1e-4
+    assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
+    assert abs(res["objective"] - mono) / abs(mono) < 1e-4, \
+        f"benders {res['objective']:.4f} vs monolithic {mono:.4f}"

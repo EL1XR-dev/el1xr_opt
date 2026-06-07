@@ -104,9 +104,33 @@ current results — not mixed into an unrelated change.
   fixing-constraint duals), validated against the monolithic optimum on a small
   stochastic capacity-expansion problem in `tests/test_benders.py`. The callback
   interface is the template for the el1xr investment/operating split.
-- `solve_benders(...)` — the el1xr-specific entry point, still to be wired (build
-  the investment master and per-block operating subproblems, then call
-  `benders_solve`).
+- `el1xr_benders(dir, case, date, ...)` — the el1xr-specific entry point. It does
+  one full build to read the investment structure, then builds the investment
+  master (build fractions plus one recourse variable per `(period, scenario)`
+  block) and, per block, an operating subproblem restricted to that scenario with
+  the investment variables fixed (their fixing-constraint duals give the cuts), and
+  calls `benders_solve`. Validated to reach the exact monolithic optimum on a
+  two-scenario case (`tests/test_benders_el1xr.py`).
+
+### Feasibility cuts via an elastic penalty
+
+The el1xr operating model is **not** complete-recourse with respect to investment:
+too little investment can make a block's operating subproblem infeasible, and an
+optimality-cut-only loop cannot steer the master away from such a point. The
+subproblem builder handles this by adding a penalised slack to every operating
+constraint except the investment-fixing ones, so the block is always feasible.
+
+- When the fixed investment is feasible, the slacks stay at zero, the recourse
+  value is the true operating cost, and the dual is the usual optimality cut.
+- When it is infeasible, the slacks turn on, the recourse value jumps by the
+  penalty, and the fixing-constraint dual becomes a feasibility (steering) cut that
+  pushes the master toward feasible investment.
+
+The penalty is large compared with any real operating cost, so at the optimum no
+slack is used and the Benders optimum equals the monolithic optimum. This is the
+standard exact-penalty alternative to a separate feasibility-cut pass, and it keeps
+`benders_solve` a pure optimality-cut loop. The penalty is configurable via
+`BendersConfig.extra["feasibility_penalty"]`.
 
 ## 7. Suggested order of work
 
