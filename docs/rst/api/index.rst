@@ -29,6 +29,7 @@ reference, add one line to the ``autosummary`` list below.
    el1xr_opt.Modules.oM_GreenHydrogen
    el1xr_opt.Modules.oM_Community
    el1xr_opt.Modules.oM_ACOPF
+   el1xr_opt.Modules.oM_LinDist3Flow
    el1xr_opt.Modules.oM_HeatSector
    el1xr_opt.Modules.oM_ModelFormulation
    el1xr_opt.Modules.oM_ProblemSolving
