@@ -78,6 +78,36 @@ def apply_flag_defaults(parameters_dict):
 
 
 # --------------------------------------------------------------------------- #
+# 1b. Network-representation modes (architecture Stage C).
+#    The network model is a selectable mode. Each mode declares the problem class
+#    it implies and whether it is built inside the main operational model
+#    (in_core) or run as a decoupled downstream analysis (like oM_ACOPF).
+#    'lindist3flow' is the unbalanced *linear* OPF — an LP, so it can be built by
+#    linopy and solved by HiGHS, unlike the exact unbalanced AC OPF (NLP/SOCP,
+#    the PowerModelsDistribution.jl path of Phase 5c).
+# --------------------------------------------------------------------------- #
+NETWORK_MODES = {
+    "single_node":   {"problem_class": "LP",   "in_core": True,
+                      "doc": "ignore the network; one aggregated node"},
+    "dc":            {"problem_class": "LP",   "in_core": True,
+                      "doc": "DC power flow (angle + reactance); today's default"},
+    "distflow_socp": {"problem_class": "SOCP", "in_core": False,
+                      "doc": "single-phase branch-flow SOC relaxation (oM_ACOPF)"},
+    "acopf_nlp":     {"problem_class": "NLP",  "in_core": False,
+                      "doc": "single-phase exact polar AC OPF (oM_ACOPF)"},
+    "lindist3flow":  {"problem_class": "LP",   "in_core": False,
+                      "doc": "unbalanced linear three-phase OPF (LinDist3Flow); LP"},
+}
+
+
+def network_mode_class(mode):
+    """Problem class implied by a network mode."""
+    if mode not in NETWORK_MODES:
+        raise ValueError(f"unknown network mode '{mode}' (use one of {list(NETWORK_MODES)})")
+    return NETWORK_MODES[mode]["problem_class"]
+
+
+# --------------------------------------------------------------------------- #
 # 2. Problem-class detection from the built Pyomo model (the source of truth).
 # --------------------------------------------------------------------------- #
 def _class_from_traits(integer, quad_obj, quad_con, nonlinear):

@@ -92,7 +92,18 @@ into the registry so behaviour is identical.
 DoD: golden costs bit-identical; a new feature adds a cost by registering it, with
 no edit to the aggregation rules.
 
-### Stage C — network-representation mode (enables unbalanced linear OPF)
+### Stage C — network-representation mode (enables unbalanced linear OPF) — STARTED (2026-06-07)
+First increment done: a `NETWORK_MODES` catalogue in `oM_Features` (single_node /
+dc / distflow_socp / acopf_nlp / lindist3flow, each with its problem class and
+in-core vs decoupled flag), and the **unbalanced linear OPF** itself —
+`oM_LinDist3Flow.py`, an LP three-phase LinDistFlow analysis module (validated:
+balanced+diagonal reduces to single-phase LinDistFlow exactly; unbalanced loading
+gives the per-phase spread). Remaining for Stage C: consolidate the scattered
+`IndBinSingleNode`/DC branches in the core into the mode dispatch, and validate the
+LinDist3Flow mutual (off-diagonal) terms against OpenDSS/PMD.jl (the 5c follow-on).
+Original design below.
+
+
 Make the network model a selectable **mode** rather than scattered `IndBinSingleNode`
 branches: `single-node | dc | distflow-socp | lindist3flow`. Each mode is a builder
 that contributes the network constraints; the balance references the active mode's
