@@ -95,6 +95,11 @@ A standalone analysis module (mirrors the `benchmarks/build_speed_acopf_nlp.py` 
   external AC-OPF engine (less modelling, adds a Julia dependency for this module
   only — consistent with "Pyomo backbone, specialist tool for the conic/NLP
   sub-problem"). Scope 5c as its own mini-project after 5a/5b prove the interface.
+  **Scoped in detail (2026-06-07) in `docs/scope_acopf_3phase.md`**, anchored on
+  the IEEE 13-bus feeder: recommendation is to adopt PowerModelsDistribution.jl as
+  a decoupled engine (OpenDSS feeders, validated against OpenDSS on IEEE 13/34/123),
+  with an optional native LinDist3Flow screening model later, and to start with a
+  pipeline-proving step (5c-1) that reproduces the IEEE 13-bus per-phase voltages.
 
 ### DoD for Phase 5
 5a: SOCP and NLP AC OPF run on a real case snapshot, agree within the relaxation
