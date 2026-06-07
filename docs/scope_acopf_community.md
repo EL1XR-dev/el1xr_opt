@@ -63,9 +63,18 @@ A standalone analysis module (mirrors the `benchmarks/build_speed_acopf_nlp.py` 
   the standard exactness check) → written to `results.duckdb`.
 
 ### Phasing within Phase 5
-- **5a — single-phase balanced baseline.** SOCP + NLP on one snapshot of an
-  existing case; validate SOCP vs NLP objective and the relaxation gap. (The two
-  formulations are already prototyped and cross-validated in `benchmarks/`.)
+- **5a — single-phase balanced baseline. DONE (2026-06-07).** Implemented in
+  ``oM_ACOPF.py``: reads the el1xr electricity-network format (R, X, TTC per branch),
+  builds the SOC (DistFlow) relaxation (Gurobi, with the relaxation-gap check) and
+  the exact polar NLP (Ipopt, warm-started from the SOC voltages — a flat start
+  fails on a stressed feeder), and writes per-bus voltages + a summary to DuckDB.
+  Validated against the **IEEE 33-bus** feeder (Baran & Wu): both formulations
+  reproduce the published base-case loss (202.68 vs ~202.7 kW) and minimum voltage
+  (0.9131 vs ~0.913 pu) and agree to 0.001 kW; SOC relaxation gap ~7e-5 (exact
+  here). Tests in ``tests/test_acopf.py`` (data in ``tests/_ieee33.py``), skip-
+  guarded on solver availability (SOC needs Gurobi, NLP needs Ipopt). Note: a
+  cross-bug found and fixed during this — the polar injection must use the Ybus
+  off-diagonal (negated series admittance), not the series value.
 - **5b — multi-snapshot.** Loop over representative periods; summarise voltage/loss
   violations across the year. Optional feedback: tighten the linear model's line
   limits where AC OPF finds violations.
