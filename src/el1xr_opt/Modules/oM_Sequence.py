@@ -13,6 +13,7 @@ from .oM_InputData        import data_processing, create_variables
 from .oM_Investment        import create_investment
 from .oM_ModelFormulation import create_objective_function, create_objective_function_components, create_constraints
 from .oM_GreenHydrogen      import create_green_hydrogen
+from .oM_Community         import create_community_variables, create_community_constraints
 from .oM_ProblemSolving   import solving_model
 from .oM_SolverSetup      import ensure_ampl_solvers
 from .utils.oM_Utils      import log_time
@@ -43,6 +44,8 @@ def routine(dir, case, solver, date, rawresults, plots, indlog, duckdbresults='T
     model = create_variables(model, model, indlog)
     log_time('- Total time for defining the variables:', start_time, ind_log=indlog)
     start_time = time.time()
+    # defining the energy-community variables (before constraints, which use them)
+    model = create_community_variables(model, model, indlog)
     # defining the investment (capacity-sizing) layer
     model = create_investment(model, model, indlog)
     log_time('- Total time for defining the investment layer:', start_time, ind_log=indlog)
@@ -59,6 +62,8 @@ def routine(dir, case, solver, date, rawresults, plots, indlog, duckdbresults='T
     model = create_constraints(model, model, indlog)
     log_time('- Total time for defining the constraints:', start_time, ind_log=indlog)
     start_time = time.time()
+    # defining the energy-community pool-conservation constraints
+    model = create_community_constraints(model, model, indlog)
     # defining green-hydrogen temporal matching and electricity PPA
     model = create_green_hydrogen(model, model, indlog)
     log_time('- Total time for defining the green-hydrogen layer:', start_time, ind_log=indlog)
