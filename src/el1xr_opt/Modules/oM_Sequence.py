@@ -24,7 +24,7 @@ from .utils.oM_Utils      import log_time
 # keeping them out of the import-time chain lets documentation tooling import the
 # package without those libraries installed.
 
-def build_model(dir, case, date, indlog='False'):
+def build_model(dir_name, case, date, indlog='False'):
     """Build the full el1xr model (all layers) without solving and return it.
 
     This is the build half of ``routine``, factored out so other entry points
@@ -32,7 +32,7 @@ def build_model(dir, case, date, indlog='False'):
     block) can reuse the exact same, validated construction.
     """
     oModel = ConcreteModel('el1xr_opt  - Optimisation Model')
-    model = data_processing(dir, case, date, oModel, indlog)
+    model = data_processing(dir_name, case, date, oModel, indlog)
     model = create_variables(model, model, indlog)
     model = create_community_variables(model, model, indlog)
     model = create_investment(model, model, indlog)
