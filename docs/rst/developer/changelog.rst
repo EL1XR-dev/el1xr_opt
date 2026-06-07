@@ -11,6 +11,10 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 Unreleased
 ----------
 
+### Changed
+
+- ``el1xr_benders`` now reads the problem structure (candidate sets, costs, the block list) with a new lightweight ``oM_Sequence.build_structure`` (``data_processing`` only, no variables/constraints/objective) instead of a full operating-model build it would throw away. Correctness is unchanged. The end-to-end saving is small, which is itself the useful finding: the build cost is dominated by ``data_processing`` (reading the multi-scenario data), not by model construction (about 2.9 s vs 3.3 s for the full build at eight scenarios). The real remaining floor is that each block build re-reads the whole multi-scenario dataset to build a single-scenario subproblem; subsetting each block to its own scenario's data is the next optimization (see ``docs/decomposition.md``).
+
 ### Added
 
 - Parallel Benders subproblem solve. The per-(period, scenario) subproblems are independent given the investment decision, so each Benders iteration can solve them at once. Pyomo solvers are not thread-safe (shared writer / tempfile / solver state — a thread pool deadlocks after the first solve), so the parallelism is by process: with ``BendersConfig.n_workers > 1`` ``el1xr_benders`` starts a pool of worker processes, each of which builds and owns a round-robin slice of the blocks once and reuses them across iterations; the master sends the trial investment over a pipe and collects each block's cost and duals. ``benders_solve`` stays generic via an optional ``solve_blocks`` callback (sequential, ``n_workers = 1``, is unchanged and remains the default). The result is identical to the sequential solve. Measured on a 12-CPU machine with Gurobi for an 8-block case: about 1.6x at 2 workers, 2.6x at 4, 3.0x at 8 (the same optimum every time); the speed-up flattens past four workers because of the one-time full build still done to read the investment structure. Validated by ``tests/test_benders_el1xr.py``; ``tests/_par_bench.py`` is the benchmark script.

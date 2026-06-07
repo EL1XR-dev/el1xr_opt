@@ -297,7 +297,7 @@ def el1xr_benders(dir_name, case_name, date, solver="appsi_highs", config=None):
     ``tests/test_benders_el1xr.py``)."""
     from pyomo.environ import (ConcreteModel, Var, ConstraintList, Objective, Reals,
                                Binary, UnitInterval, minimize)
-    from .oM_Sequence import build_model
+    from .oM_Sequence import build_structure
 
     cfg = config or BendersConfig()
     # penalty on the elastic slacks added to the operating constraints (see
@@ -305,8 +305,11 @@ def el1xr_benders(dir_name, case_name, date, solver="appsi_highs", config=None):
     # the fixed investment is genuinely infeasible; configurable via config.extra.
     penalty = float(cfg.extra.get("feasibility_penalty", 1e7))
 
-    # one full build to read the investment structure and the block list
-    full = build_model(dir_name, case_name, date)
+    # read only the structure (sets + parameters): the candidate sets, the block
+    # list and the investment costs/flags. This skips a full operating-model build
+    # that would be thrown away, which removes the serial floor on the parallel
+    # speed-up (the subproblems are still built in full, per block).
+    full = build_structure(dir_name, case_name, date)
     egc, hgc = list(full.egc), list(full.hgc)
     blocks = list(full.ps)                                   # (period, scenario) tuples
     factor1 = float(full.factor1)

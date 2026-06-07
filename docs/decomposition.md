@@ -104,9 +104,10 @@ current results — not mixed into an unrelated change.
   fixing-constraint duals), validated against the monolithic optimum on a small
   stochastic capacity-expansion problem in `tests/test_benders.py`. The callback
   interface is the template for the el1xr investment/operating split.
-- `el1xr_benders(dir, case, date, ...)` — the el1xr-specific entry point. It does
-  one full build to read the investment structure, then builds the investment
-  master (build fractions plus one recourse variable per `(period, scenario)`
+- `el1xr_benders(dir, case, date, ...)` — the el1xr-specific entry point. It reads
+  the investment structure with `build_structure` (sets and parameters only), then
+  builds the investment master (build fractions plus one recourse variable per
+  `(period, scenario)`
   block) and, per block, an operating subproblem restricted to that scenario with
   the investment variables fixed (their fixing-constraint duals give the cuts), and
   calls `benders_solve`. Validated to reach the exact monolithic optimum on a
@@ -161,11 +162,22 @@ Measured on the remote desktop (12 logical CPUs, Gurobi) for an 8-block case
 | 8       | 41.2          | 2.96     |
 
 Every run reached the same objective (2832.142) in the same number of iterations.
-The speed-up flattens past four workers because of a serial floor: `el1xr_benders`
-still does one full multi-scenario build up front just to read the investment
-structure (generator/storage candidate lists, costs, the block list). Removing that
-redundant build — reading the structure from the data instead of from a fully built
-operating model — is the next optimization and would lift the achievable speed-up.
+The speed-up flattens past four workers because of a serial floor.
+
+`el1xr_benders` reads the problem structure (candidate lists, costs, the block
+list) with `build_structure` — `data_processing` only, no variables/constraints —
+instead of a full operating-model build. This removes work that was otherwise
+thrown away, but it is a small saving: the build cost is dominated by
+`data_processing` (reading the multi-scenario CSVs and building the parameter
+series), not by the model construction. Measured at eight scenarios, the structure
+read is about 2.9 s versus 3.3 s for the full build (~10%).
+
+The real floor is elsewhere: **each block build re-reads the whole multi-scenario
+dataset even though it builds a single-scenario subproblem** (about 2.7 s per
+block, almost all of it `data_processing`). Subsetting each block to its own
+scenario's data — so a block reads one scenario instead of all of them — is the
+next optimization and is the one that would shorten both the sequential and the
+parallel wall-clock.
 
 ## 7. Suggested order of work
 
