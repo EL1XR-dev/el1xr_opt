@@ -79,6 +79,21 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
             resolved = SolverName
         print(f"Using solver: {resolved}")
 
+    # ---- Detect the problem class and check the solver can handle it ----
+    # The class (LP/MILP/QP/SOCP/MISOCP/NLP) is detected from the built model and
+    # determines which solvers (and, for a future build-library choice, which
+    # modelling libraries) can handle it. A mismatch (e.g. a conic case on HiGHS)
+    # is warned about rather than silently failing inside the solver.
+    try:
+        from .oM_Features import check_solver_for_model
+        pc, ok, msg = check_solver_for_model(optmodel, resolved)
+        print(f"- Problem class: {msg}")
+        if not ok:
+            print(f"WARNING: solver '{resolved}' may not support a {pc} model; "
+                  f"consider one of: see the list above.")
+    except Exception as exc:
+        print(f"- Problem-class detection skipped ({exc})")
+
     # ---- Optional: write LP/MPS if requested ----
     want_lp = (str(pWriteLP).strip().lower() in {"yes", "y", "true", "1"})
     if want_lp:

@@ -106,8 +106,9 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict = {f'pOpt{indicator}': data_frames['dfOption'][indicator].iloc[0].astype('int') for indicator in option_ind}
 
     # Optional feature flags that may be absent from older Option files default to
-    # off, so existing cases are unaffected.
-    parameters_dict.setdefault('pOptIndBinCommunity', 0)
+    # off (from the feature catalogue), so existing cases are unaffected.
+    from .oM_Features import apply_flag_defaults
+    apply_flag_defaults(parameters_dict)
 
     # Parameter Indicators
     parameter_ind = data_frames['dfParameter'].columns.to_list()

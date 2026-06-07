@@ -23,6 +23,7 @@ reference, add one line to the ``autosummary`` list below.
    el1xr_opt.Modules.oM_InputCSVSource
    el1xr_opt.Modules.oM_InputDuckDBSource
    el1xr_opt.Modules.oM_CsvToDuckDB
+   el1xr_opt.Modules.oM_Features
    el1xr_opt.Modules.oM_InputData
    el1xr_opt.Modules.oM_Investment
    el1xr_opt.Modules.oM_GreenHydrogen
