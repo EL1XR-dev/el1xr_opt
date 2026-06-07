@@ -113,6 +113,16 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
     cfg = config or BendersConfig()
     opt = SolverFactory(solver)
 
+    def _solve(mdl):
+        # appsi solvers raise on load if not optimal; ask not to auto-load and load
+        # explicitly so duals come through and a clear error is raised on failure.
+        try:
+            res = opt.solve(mdl)
+        except (ValueError, RuntimeError):
+            res = opt.solve(mdl, load_solutions=False)
+            mdl.solutions.load_from(res)
+        return res
+
     M = make_master()
     subs = {b: make_subproblem(b) for b in blocks}
     names = list(M["x"].keys())
@@ -121,7 +131,7 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
     gap = float("inf")
     it = 0
     for it in range(1, cfg.max_iterations + 1):
-        opt.solve(M["model"])
+        _solve(M["model"])
         lb = value(M["model"].obj)
         x_hat = {n: float(value(M["x"][n])) for n in names}
         theta_hat = {b: float(value(M["theta"][b])) for b in blocks}
@@ -132,7 +142,7 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         for b in blocks:
             sub = subs[b]
             sub["set_xhat"](x_hat)
-            opt.solve(sub["model"])
+            _solve(sub["model"])
             q_b = float(value(sub["obj"]))
             recourse += q_b
             lam = {n: float(sub["model"].dual[sub["fix"][n]]) for n in names}
@@ -159,17 +169,111 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
     }
 
 
-def solve_benders(model, optmodel, solver, config: BendersConfig | None = None):
-    """Benders entry point for the el1xr operational+investment model.
+def _build_block(dir_name, case_name, date, keep_scenario):
+    """Build the el1xr model restricted to one scenario, by copying the case and
+    zeroing the probability of every other scenario (so only the kept scenario's
+    operating model is built). Reuses the validated full build."""
+    import os
+    import shutil
+    import tempfile
+    import pandas as pd
+    from .oM_Sequence import build_model
 
-    Not wired yet: it will build the master (investment + recourse variables) and,
-    per ``partition_blocks`` block, an operating subproblem with a free copy of the
-    investment variables fixed to the master values, then call :func:`benders_solve`.
-    The generic machinery in :func:`benders_solve` is implemented and validated
-    (see ``tests/test_benders.py``); this wrapper is the remaining el1xr-specific
-    wiring.
-    """
-    raise NotImplementedError(
-        "el1xr Benders wiring is pending; the generic solver is benders_solve(). "
-        "See docs/decomposition.md and tests/test_benders.py."
-    )
+    work = tempfile.mkdtemp(prefix="benders_blk_")
+    src = os.path.join(dir_name, case_name)
+    dst = os.path.join(work, case_name)
+    shutil.copytree(src, dst)
+    sp = os.path.join(dst, f"oM_Data_Scenario_{case_name}.csv")
+    df = pd.read_csv(sp)
+    scen_col = df.columns[1]
+    df.loc[df[scen_col] != keep_scenario, "Probability"] = 0.0
+    df.to_csv(sp, index=False)
+    model = build_model(work, case_name, date)
+    shutil.rmtree(work, ignore_errors=True)
+    return model
+
+
+def el1xr_benders(dir_name, case_name, date, solver="appsi_highs", config=None):
+    """Solve the el1xr investment + operating model by Benders decomposition.
+
+    Master: the investment build fractions plus a recourse variable per
+    (period, scenario) block. Subproblem per block: the operating model restricted
+    to that scenario, with the investment variables fixed (their fixing-constraint
+    duals give the cut). Calls the validated :func:`benders_solve`. Returns its
+    result dict. Validate against the monolithic optimum before trusting (see
+    ``tests/test_benders_el1xr.py``)."""
+    from pyomo.environ import (ConcreteModel, Var, Constraint, ConstraintList, Param,
+                               Objective, Suffix, Reals, Binary, UnitInterval, minimize)
+    from .oM_Sequence import build_model
+
+    cfg = config or BendersConfig()
+
+    # one full build to read the investment structure and the block list
+    full = build_model(dir_name, case_name, date)
+    egc, hgc = list(full.egc), list(full.hgc)
+    blocks = list(full.ps)                                   # (period, scenario) tuples
+    factor1 = float(full.factor1)
+    period_weight = sum(float(full.Par['pDiscountFactor'][p]) for p in full.p)
+    discount = {p: float(full.Par['pDiscountFactor'][p]) for p in full.p}
+    invcost = {("e", g): float(full.Par['pEleGenInvestCost'][g]) for g in egc}
+    invcost.update({("h", g): float(full.Par['pHydGenInvestCost'][g]) for g in hgc})
+    names = list(invcost)
+
+    def _binary(kind, g):
+        key = 'pEleGenBinaryInvestment' if kind == "e" else 'pHydGenBinaryInvestment'
+        try:
+            return int(full.Par[key][g]) == 1
+        except (KeyError, TypeError):
+            return False
+
+    def make_master():
+        m = ConcreteModel()
+        m.xe = Var(egc, within=UnitInterval)
+        m.xh = Var(hgc, within=UnitInterval)
+        for g in egc:
+            if _binary("e", g):
+                m.xe[g].domain = Binary
+        for g in hgc:
+            if _binary("h", g):
+                m.xh[g].domain = Binary
+        x = {("e", g): m.xe[g] for g in egc}
+        x.update({("h", g): m.xh[g] for g in hgc})
+        m.theta = Var(blocks, within=Reals, bounds=(-1e9, 1e12))   # recourse cost-to-go
+        m.cuts = ConstraintList()
+        inv = period_weight * factor1 * sum(invcost[nm] * x[nm] for nm in names)
+        m.obj = Objective(expr=inv + sum(m.theta[b] for b in blocks), sense=minimize)
+        return {"model": m, "x": x, "theta": {b: m.theta[b] for b in blocks}, "cuts": m.cuts}
+
+    def make_subproblem(block):
+        p, sc = block
+        sub = _build_block(dir_name, case_name, date, sc)
+        sub.dual = Suffix(direction=Suffix.IMPORT)
+        sub._bxe = Param(egc, mutable=True, initialize=0.0)
+        sub._bxh = Param(hgc, mutable=True, initialize=0.0)
+        sub.bfix_e = Constraint(egc, rule=lambda mm, g: mm.vEleGenInvest[g] == mm._bxe[g])
+        sub.bfix_h = Constraint(hgc, rule=lambda mm, g: mm.vHydGenInvest[g] == mm._bxh[g])
+        sub.eTotalSCost.deactivate()
+        sub.benders_obj = Objective(
+            expr=discount[p] * (sub.vTotalCComponent[p, sc] - sub.vTotalRComponent[p, sc]),
+            sense=minimize)
+        fix = {("e", g): sub.bfix_e[g] for g in egc}
+        fix.update({("h", g): sub.bfix_h[g] for g in hgc})
+
+        def set_xhat(x_hat):
+            for g in egc:
+                sub._bxe[g] = x_hat[("e", g)]
+            for g in hgc:
+                sub._bxh[g] = x_hat[("h", g)]
+
+        xcopy = {("e", g): sub.vEleGenInvest[g] for g in egc}
+        xcopy.update({("h", g): sub.vHydGenInvest[g] for g in hgc})
+        return {"model": sub, "xcopy": xcopy, "fix": fix, "set_xhat": set_xhat,
+                "obj": sub.benders_obj}
+
+    return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver)
+
+
+def solve_benders(model, optmodel, solver, config: BendersConfig | None = None):
+    """Deprecated alias kept for the original scaffold signature. Use
+    :func:`el1xr_benders` (dir, case, date, ...) for the el1xr model."""
+    raise NotImplementedError("use el1xr_benders(dir, case, date, solver, config)")
