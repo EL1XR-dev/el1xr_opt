@@ -10,6 +10,7 @@ import time          # count clock time
 from   pyomo.environ     import Constraint, Objective, minimize
 from   collections       import defaultdict
 from  .utils.oM_Utils    import log_time
+from  .oM_HeatSector     import heat_electricity_load, heat_to_power_output
 
 def create_objective_function(model, optmodel, indlog):
     # this function declares constraints
@@ -31,7 +32,10 @@ def create_objective_function(model, optmodel, indlog):
         # units. It is already period-weighted by pDiscountFactor there, so it is in
         # the same currency and on the same discounted footing as the operating
         # terms summed below.
-        return (optmodel.vTotalSCost == optmodel.vTotalICost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
+        # the heat operating cost is already period-discounted (oM_HeatSector) and is
+        # zero when the case has no heat sector.
+        heat_cost = getattr(optmodel, 'HeatOperatingCost', 0.0)
+        return (optmodel.vTotalSCost == optmodel.vTotalICost + heat_cost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [kEUR]'))
 
     # Cost / revenue components of the objective, summed from a registry so a new
@@ -399,10 +403,23 @@ def create_constraints(model, optmodel, indlog):
         StartTime = time.time() # to compute elapsed time
 
     # electrical energy conservation or balance
+    # heat-sector coupling at the node: heat pumps draw electricity (a load) and
+    # heat-to-power units inject electricity. Both are 0 when there is no heat case.
+    _htp = set(getattr(model, "htp", []) or [])
+    _htp_at = defaultdict(list)
+    for (_nd, _g) in getattr(model, "n2htg", []):
+        if _g in _htp:
+            _htp_at[_nd].append(_g)
+    _htw_at = defaultdict(list)
+    for (_nd, _w) in getattr(model, "n2htw", []):
+        _htw_at[_nd].append(_w)
+
     def eEleBalance(optmodel, p,sc,n,nd):
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
             return (sum(optmodel.vEleTotalOutput[p,sc,n,eg] for eg in model.eg  if (nd,eg) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (nd,egs) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (nd,e2h) in model.n2hg)
-                  - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + optmodel.vEleImport[p,sc,n,nd] - optmodel.vEleExport[p,sc,n,nd] == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
+                  - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + optmodel.vEleImport[p,sc,n,nd] - optmodel.vEleExport[p,sc,n,nd]
+                  + heat_to_power_output(optmodel, _htw_at[nd], p, sc, n) - heat_electricity_load(optmodel, _htp_at[nd], p, sc, n)
+                  == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleBalance', Constraint(optmodel.psnnd, rule=eEleBalance, doc='Electricity balance in the DA market'))
