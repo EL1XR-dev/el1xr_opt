@@ -24,6 +24,21 @@ from .utils.oM_Utils      import log_time
 # keeping them out of the import-time chain lets documentation tooling import the
 # package without those libraries installed.
 
+def build_structure(dir_name, case, date, indlog='False'):
+    """Read the case and build only its sets and parameters (no variables,
+    constraints or objective), returning the model.
+
+    This is ``data_processing`` on its own. It is enough to read the problem
+    structure -- the unit and candidate sets (``eg``, ``egc``, ``hg``, ``hgc``),
+    the period/scenario blocks (``p``, ``ps``), the unit scale ``factor1`` and the
+    ``Par`` dictionary (investment costs, discount factors, binary-investment
+    flags). The Benders entry point uses it to set up the master and the block list
+    without paying for a full operating-model build it would only throw away.
+    """
+    oModel = ConcreteModel('el1xr_opt  - Optimisation Model')
+    return data_processing(dir_name, case, date, oModel, indlog)
+
+
 def build_model(dir_name, case, date, indlog='False'):
     """Build the full el1xr model (all layers) without solving and return it.
 
