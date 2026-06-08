@@ -6,30 +6,41 @@ An external solver is required to solve the optimization problem formulated by t
 Supported solvers
 -----------------
 
-The model supports the following solvers:
+The default solver is **HiGHS**. The supported set is HiGHS, Gurobi, CBC, CPLEX and
+Ipopt; the choice is the ``--solver`` argument (or ``solver=`` to ``routine``). Which
+solver fits depends on the model's problem class -- HiGHS and CBC handle LP/MILP, Gurobi
+adds QP/SOCP, and Ipopt is for the NLP network analysis (see
+:doc:`../concepts/features-and-modes`).
 
-Gurobi
-~~~~~~
-Gurobi is a commercial solver that requires a license. It is not installed automatically and must be installed separately by the user. You can find installation instructions on the official `Gurobi website <https://www.gurobi.com/documentation/>`_.
+HiGHS (default)
+~~~~~~~~~~~~~~~
+HiGHS is open-source and is installed automatically on the first run (an AMPL solver
+module fetched by ``ensure_ampl_solvers``). No manual step is needed.
 
-Example installation commands:
+CBC
+~~~
+CBC is open-source but is **not** auto-installed on a normal run. Install it explicitly
+with the ``el1xr-install-solvers`` console script before selecting ``--solver cbc``.
 
-.. code-block:: bash
+Gurobi / CPLEX
+~~~~~~~~~~~~~~
+Gurobi and CPLEX are commercial and require a licence; install them yourself (for
+Gurobi, ``pip install gurobipy`` or the conda channel). They are reached through Pyomo
+once present.
 
-   # Using pip
-   pip install gurobipy
+Settings
+--------
 
-   # Using conda
-   conda config --add channels http://conda.anaconda.org/gurobi
-   conda install gurobi
+- **Model options and parameters** come from the case's ``oM_Data_Option_*.csv`` and
+  ``oM_Data_Parameter_*.csv`` tables (unit-commitment binaries, ramps, number of power
+  peaks, discount rate, reference nodes, and the feature flags).
+- **Solver tuning** is applied per solver in ``oM_ProblemSolving`` -- for example the
+  barrier method and a MIP gap for Gurobi, and the interior-point method with a time
+  limit for HiGHS. The Benders subproblem solves additionally tighten the feasibility
+  tolerance (see :doc:`decomposition`).
 
-HiGHS & CBC
-~~~~~~~~~~~
-HiGHS and CBC are open-source solvers. They are downloaded and installed automatically by functions within the `oM_SolverSetup` module if they are not already present in your environment. No manual installation is typically required.
-
-Configuration
--------------
-The solver configuration is managed by the `oM_SolverSetup` module, which is responsible for detecting available solvers and preparing them for use by the `oM_ProblemSolving` module.
+The ``oM_SolverSetup`` module detects available solvers and prepares them for use by
+``oM_ProblemSolving``.
 
 .. automodule:: el1xr_opt.Modules.oM_SolverSetup
     :members:

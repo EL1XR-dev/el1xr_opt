@@ -1,6 +1,14 @@
 Sets
 ====
 
+.. note::
+
+   This page covers the core electricity/hydrogen sets. The heat sector, the
+   investment / capacity-sizing layer and the energy-community layer add their own sets
+   (heat ``htd``/``htg``/``htp``/``htw``/``hts``; candidates ``egc``/``hgc``/``egsc``/``hgsc``;
+   the zone/retailer maps for sharing). See :doc:`heat-sector`, :doc:`features-and-modes`
+   and :doc:`community`.
+
 Acronyms
 --------
 

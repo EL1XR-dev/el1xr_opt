@@ -3,31 +3,61 @@
 Testing
 =======
 
-Running the test suite is a crucial step to ensure that your changes are working correctly and have not introduced any regressions.
+Running the tests is a crucial step to ensure your changes work and have not introduced
+regressions. The suite lives under ``tests/`` and is run with ``pytest``.
 
-Running Tests
--------------
+Two test tiers
+--------------
 
-The main test script for this project is ``tests/test_run.py``. To run the test suite, use the following command from the root directory of the project:
+Tests are split with a pytest marker:
 
-.. code-block:: bash
+- **Fast tier** -- import, data-reading and formulation tests that need **no solver**.
+  Run them with::
 
-   python -m pytest tests/test_run.py
+     pytest -m "not solve" tests/
 
-This command will execute the test case defined in the script, which typically involves running a small-scale optimization problem and verifying the results.
+- **Solve tier** -- tests that build and solve a model, so they need an LP/MIP solver
+  (HiGHS is enough). They take longer (minutes). Run them with::
 
-Adding New Tests
+     pytest -m solve --timeout=1800 tests/
+
+Run the whole suite (fast + solve) with ``pytest tests/``.
+
+What the suite covers
+---------------------
+
+There are many test files, not one. Highlights:
+
+- ``test_run.py`` -- the golden validation cases (Home1, Grid1, EEM26, H2VPP) plus the
+  small sizing / tariff / frequency-market variant cases. Each case is solved twice --
+  once from its CSV folder and once from a generated ``.duckdb`` file -- so the two
+  input paths are proven to give the same cost. The two hydrogen sizing cases are
+  marked ``xfail`` (see the model notes).
+- ``test_data_sources.py`` -- CSV vs DuckDB read parity (fast tier).
+- ``test_heat_sector.py``, ``test_community.py``, ``test_features.py``,
+  ``test_problem_class.py`` -- the heat, community and feature/problem-class layers.
+- ``test_benders*.py`` -- the Benders decomposition (generic, el1xr, temporal),
+  validated against the monolith.
+- ``test_acopf.py``, ``test_lindist3flow.py`` -- the network-analysis modules (the AC
+  OPF tests need Gurobi/Ipopt and skip otherwise).
+- ``test_formulation_fixes.py`` -- regression guards for the audited formulation fixes.
+
+Adding new tests
 ----------------
 
-When adding a new feature or fixing a bug, it is highly encouraged to add a corresponding test case. This helps to:
+Add a test with each new feature or bug fix. Mark a test ``@pytest.mark.solve`` if it
+builds and solves a model; leave it unmarked if it does not need a solver, so it runs in
+the fast tier. New tests can go in an existing file or a new ``tests/test_*.py``.
 
-- Verify that your code works as expected.
-- Protect against future regressions.
-- Document the expected behavior of the code.
+Continuous integration
+----------------------
 
-New tests can be added to the ``tests/test_run.py`` file or in new test files within the ``tests/`` directory.
+GitHub Actions runs two jobs on every pull request (``.github/workflows/ci.yml``):
 
-Continuous Integration (CI)
----------------------------
+- **fast** -- a flake8 syntax check (``--select=E9,F63,F7,F82``) and the fast tier
+  (``pytest -m "not solve"``), across Linux/macOS/Windows and Python 3.11/3.12/3.13.
+- **solve** -- the solve tier on the four validation cases, each from CSV and DuckDB,
+  checked against stored golden costs, on the three OSes at Python 3.12.
 
-The project uses GitHub Actions for Continuous Integration. The CI pipeline automatically runs the test suite and builds the documentation for every pull request. This ensures that all changes merged into the main branch are validated.
+A separate workflow builds the documentation with warnings treated as errors, so a
+broken cross-reference or a stale API entry fails the build.

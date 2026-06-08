@@ -5,6 +5,13 @@ Variables
 
 The optimization model determines the values of numerous decision variables to minimize the total system cost while satisfying all constraints. These variables represent the physical and economic operations of the energy system. They are defined as `Var` objects in Pyomo within the ``create_variables`` function.
 
+.. note::
+
+   This page covers the core electricity/hydrogen variables. The heat sector
+   (``vHeat*``), the investment layer (``vEleGenInvest`` / ``vHydGenInvest`` /
+   ``vTotalICost``) and the energy-community layer (``vEleShareIn`` / ``vEleShareOut``)
+   add their own. See :doc:`heat-sector`, :doc:`features-and-modes` and :doc:`community`.
+
 The main variables are indexed by the :doc:`sets <sets>`, primarily by period (:math:`\periodindex`), scenario (:math:`\scenarioindex`), and timestep (:math:`\timeindex`), and are written in **lowercase** letters.
 
 Costs & Objective
@@ -336,25 +343,29 @@ Ancillary Services
      - **Unit**
      - **Pyomo Component**
    * - :math:`rp^{FN}_{neg}, rc^{FN}_{nes}`
-     - FCR from a producer (gen/ESS) or consumer (ESS)
+     - FCR-N bid (the activation splits into ``...NorUp/DownGen`` for generators and ``...NorUp/DownCha`` for charging)
      - kW
-     - ``vEleReserveProd_FN``, ``vEleReserveCons_FN``
+     - ``vEleFreqContReserveNorBid``
    * - :math:`\vPupward_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Upwards FCR-D from a producer (gen/ESS)
+     - Upwards FCR-D from a producer (gen/ESS discharge)
      - kW
-     - ``vEleReserveProd_Up_FD``
+     - ``vEleFreqContReserveDisUpGen``
    * - :math:`\vPdownward_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Downwards FCR-D from a producer (gen/ESS)
+     - Downwards FCR-D from a producer (gen/ESS discharge)
      - kW
-     - ``vEleReserveProd_Down_FD``
+     - ``vEleFreqContReserveDisDownGen``
    * - :math:`\vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Upwards FCR-D from a consumer (ESS)
+     - Upwards FCR-D from a consumer (ESS charge)
      - kW
-     - ``vEleReserveCons_Up_FD``
+     - ``vEleFreqContReserveDisUpCha``
    * - :math:`\vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Downwards FCR-D from a consumer (ESS)
+     - Downwards FCR-D from a consumer (ESS charge)
      - kW
-     - ``vEleReserveCons_Down_FD``
+     - ``vEleFreqContReserveDisDownCha``
+   * - :math:`r^{FD}_{neg}`
+     - FCR-D market bid (upwards / downwards)
+     - kW
+     - ``vEleFreqContReserveDisUpwardBid`` / ``...DisDownwardBid``
 
 Network
 -------

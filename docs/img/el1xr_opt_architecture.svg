@@ -63,7 +63,7 @@
   <text x="270" y="413" text-anchor="middle" class="t">oM_Community</text>
   <rect x="380" y="392" width="388" height="32" class="box" fill="#ffffff" stroke="#d97706"/>
   <text x="574" y="413" text-anchor="middle" class="t">oM_Features  -  problem class + cost/revenue registry</text>
-  <text x="470" y="444" text-anchor="middle" class="ts">carriers: Electricity · Hydrogen · Heat (scaffold)   |   class: LP · MILP · QP · SOCP · MISOCP · NLP</text>
+  <text x="470" y="444" text-anchor="middle" class="ts">carriers: Electricity · Hydrogen · Heat   |   class: LP · MILP · QP · SOCP · MISOCP · NLP</text>
   <text x="470" y="460" text-anchor="middle" class="ts">the problem class chooses the solver (and, in future, the build library)</text>
   <line x1="470" y1="304" x2="470" y2="318" class="flow"/>
 

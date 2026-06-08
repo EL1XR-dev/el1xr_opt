@@ -5,24 +5,30 @@ el1xr_opt
 What is it?
 -----------
 **el1xr_opt** is a Python library for optimization studies in power-system
-**planning** and **operations**, supporting multi-vector flexibility (BESS, H₂, DSM),
-multi-stage/**scenario** formulations, and multiple solvers via Pyomo.
+**planning** and **operations**. It builds a multi-vector model -- **electricity,
+hydrogen and heat** with storage and demand-side flexibility -- over a
+period/scenario/load-level horizon, and solves it with Pyomo.
 
 Key features
 ------------
-- **Modular `src/` layout**: ``data``, ``model``, ``optimization``, ``scenarios``,
-  ``solvers``, ``results``.
-- **Flexible time structure**: ``period → scenario → stage`` (hours or representative periods).
-- **Technologies**: batteries, hydrogen subsystems, DSM, and transmission elements.
-- **Solver-agnostic**: Gurobi, HiGHS, or CBC.
-- **Reproducible I/O**: CSV/Parquet data, YAML/JSON settings.
+- **Multi-vector**: electricity, hydrogen (electrolyser, fuel cell, storage) and a
+  behind-the-meter heat sector (heat pump, boiler, thermal store, heat-to-power),
+  coupled through the energy balances.
+- **Time structure**: ``period → scenario → load level`` (hours or representative
+  periods, with per-level durations).
+- **Investment + operation**: optional capacity-sizing of candidate generators and
+  storage, on the same discounted footing as operation.
+- **Markets**: day-ahead energy, retail tariffs (energy, capacity and a top-N
+  peak-demand charge), and frequency reserves (FCR-D / FCR-N).
+- **Solve modes**: a single monolithic solve, or **Benders decomposition** (by
+  scenario or by time window, with storage-boundary and peak-threshold linking).
+- **Solvers**: HiGHS by default; Gurobi, CBC, CPLEX and Ipopt are also supported.
+- **Input/output**: a case is a folder of CSV files **or** a single ``.duckdb`` file
+  (read identically); results are written to ``results.duckdb`` by default, with CSV
+  and plots available on request.
 
-This documentation is organized around **getting started**, **how‑to guides**, **concepts**,
-and **API reference** generated from the source code under ``src/``.
-
-.. note::
-   Update the package import path below if your top‑level package differs from
-   ``el1xr_opt`` (e.g., ``optmodel`` or ``el1xr``).
+This documentation is organized around **getting started**, **user guide**,
+**concepts**, and an **API reference** generated from the source docstrings.
 
 Index
 --------
@@ -46,6 +52,8 @@ Index
    user-guide/data-and-io
    user-guide/scenarios-and-stages
    user-guide/solvers-and-settings
+   user-guide/decomposition
+   user-guide/network-analysis
    user-guide/examples
 
 .. toctree::
@@ -57,6 +65,9 @@ Index
    concepts/variables
    concepts/objective-function
    concepts/constraints
+   concepts/heat-sector
+   concepts/community
+   concepts/features-and-modes
    concepts/results-and-postprocessing
    concepts/future-developments
 
