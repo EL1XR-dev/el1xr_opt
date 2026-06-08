@@ -97,6 +97,10 @@ def create_investment(model, optmodel, indlog):
     psnegsc = [(p, sc, n, egsc) for (p, sc, n) in model.psn for egsc in model.egsc]
     psnhgc  = [(p, sc, n, hgc ) for (p, sc, n) in model.psn for hgc  in model.hgc ]
     psnhgsc = [(p, sc, n, hgsc) for (p, sc, n) in model.psn for hgsc in model.hgsc]
+    # candidate electrolysers (e2h units that are investment candidates): their
+    # design variable is the ELECTRICITY input, so the build decision must cap it.
+    e2hc    = [g for g in model.e2h if g in model.hgc]
+    psne2hc = [(p, sc, n, g) for (p, sc, n) in model.psn for g in e2hc]
 
     # Electricity candidate output (generators, fuel cells, storage discharge).
     def eEleInvestMaxOutput(optmodel, p, sc, n, egc):
@@ -122,10 +126,16 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vHydInventory[p, sc, n, hgsc] <= model.Par['pHydMaxStorage'][hgsc][p, sc, n] * optmodel.vHydGenInvest[hgsc]
     optmodel.__setattr__('eHydInvestMaxInventory', Constraint(psnhgsc, rule=eHydInvestMaxInventory, doc='candidate hydrogen storage energy limited by build decision'))
 
-    # REVIEW: electrolysers (e2h) and fuel cells (h2e) are sized here only through
-    # their output cap above. If the design variable should be the electrolyser's
-    # ELECTRICITY input capacity, add a cap on vEleTotalCharge[p,sc,n,e2h]
-    # analogous to eEleInvestMaxCharge, indexed over the candidate e2h units.
+    # Candidate electrolyser electricity input. An electrolyser (e2h) converts
+    # electricity to hydrogen at vHydTotalOutput == vEleTotalCharge / ProductionFunction
+    # (eAllEnergy2Hyd), so its production is set by the ELECTRICITY input, not the
+    # hydrogen-output nameplate. Sizing it only through the output cap above leaves the
+    # electricity input fixed at its operating bound, so building a larger unit buys
+    # no extra production. Cap the electricity input by the build decision too, so the
+    # input capacity (the real design variable) scales with the investment.
+    def eHydInvestMaxCharge(optmodel, p, sc, n, e2hc):
+        return optmodel.vEleTotalCharge[p, sc, n, e2hc] <= model.Par['pHydMaxCharge'][e2hc][p, sc, n] * optmodel.vHydGenInvest[e2hc]
+    optmodel.__setattr__('eHydInvestMaxCharge', Constraint(psne2hc, rule=eHydInvestMaxCharge, doc='candidate electrolyser electricity input limited by build decision'))
 
     # %% Total investment cost
     # Unit scaling: model.factor1 is the conversion factor that lets the model work
