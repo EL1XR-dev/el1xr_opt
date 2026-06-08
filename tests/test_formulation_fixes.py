@@ -151,3 +151,29 @@ def test_heat_operating_cost_is_duration_weighted():
     assert coef is not None, "boiler output absent from the heat operating cost"
     assert coef == pytest.approx(DUR * COST), \
         f"coefficient {coef} should be duration*cost={DUR * COST} (duration-weighted)"
+
+
+def test_electrolyser_input_capped_by_build_decision():
+    """A candidate electrolyser's ELECTRICITY input must be capped by its build
+    fraction (eHydInvestMaxCharge). An electrolyser converts electricity to hydrogen
+    at output = input / ProductionFunction, so the input is the real capacity; sizing
+    it only through the hydrogen-output cap left the input fixed at its operating
+    bound, so building a larger unit bought no extra production."""
+    if not os.path.isfile(os.path.join(SIZING_DIR, "Electrolyser.duckdb")):
+        subprocess.run([sys.executable, os.path.join(SIZING_DIR, "make_sizing_cases.py")],
+                       check=True, cwd=REPO)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    m = build_model(SIZING_DIR, "Electrolyser", date)
+    candidates = [g for g in m.e2h if g in m.hgc]
+    assert candidates, "test case has no candidate electrolyser"
+    assert len(m.eHydInvestMaxCharge) > 0, \
+        "candidate electrolyser electricity input is not capped by the build decision"
+    p, sc = list(m.ps)[0]
+    n = list(m.n)[0]
+    g = candidates[0]
+    repn = generate_standard_repn(m.eHydInvestMaxCharge[p, sc, n, g].body)
+    names = {v.name for v in repn.linear_vars}
+    assert any("vEleTotalCharge" in nm and g in nm for nm in names), \
+        "the cap must constrain the electrolyser's electricity input"
+    assert any("vHydGenInvest" in nm and g in nm for nm in names), \
+        "the cap must scale with the build decision"
