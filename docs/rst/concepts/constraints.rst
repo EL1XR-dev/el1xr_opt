@@ -1109,4 +1109,68 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
    -\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLH
 
+Heat sector
+-----------
+
+Built by ``oM_HeatSector.create_heat_sector`` only when a case carries heat data; see
+:doc:`heat-sector`.
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - **Constraint**
+     - **Meaning**
+   * - ``eHeatBalance``
+     - Nodal heat balance: generation + store discharge + heat-pump output meet the
+       heat demand (minus heat-not-served).
+   * - ``eHeatPumpCOP``
+     - Heat-pump output = COP x electricity draw.
+   * - ``eHeatToEle``
+     - Heat-to-power electricity = efficiency x heat consumed.
+   * - ``eHeatInventory``
+     - Thermal-store inventory dynamics.
+
+The electricity balance ``eEleBalance`` additionally subtracts the heat-pump electricity
+load and adds the heat-to-power injection at each node.
+
+Investment / capacity sizing
+----------------------------
+
+Built by the investment layer for candidate units; see :doc:`features-and-modes`.
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - **Constraint**
+     - **Meaning**
+   * - ``eEleInvestMaxOutput`` / ``eHydInvestMaxOutput``
+     - Candidate output limited by ``MaximumPower`` x build fraction.
+   * - ``eEleInvestMaxCharge`` / ``eHydInvestMaxCharge``
+     - Candidate electricity input limited by ``MaximumCharge`` x build fraction (for
+       storage charging and for the electrolyser's electricity input).
+   * - ``eEleInvestMaxInventory`` / ``eHydInvestMaxInventory``
+     - Candidate stored energy limited by ``MaximumStorage`` x build fraction.
+   * - ``eTotalICost``
+     - Total annualised investment cost (period-weighted, ``factor1``-scaled).
+
+Energy community and green hydrogen
+-----------------------------------
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - **Constraint**
+     - **Meaning**
+   * - ``eEleCommunityPool``
+     - Per-zone lossless conservation of shared electricity (on with ``IndBinCommunity``);
+       the retail balance gains ``+ vEleShareIn - vEleShareOut``. See :doc:`community`.
+   * - ``eGreenH2Matching``
+     - RFNBO additionality: electrolyser electricity use is capped by available
+       renewable generation (on with ``pParGreenH2Matching``).
+   * - ``eEleMarketPPACost``
+     - Electricity PPA settlement for renewable units flagged ``pEleGenPPA``.
+
 

@@ -437,6 +437,40 @@ These binary (0 or 1) variables model on/off decisions, operational states, and 
      - '{0,1}'
      - ``vHydStorOperat``
 
+Heat, investment and community
+------------------------------
+
+.. list-table::
+   :widths: 50 20 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Unit**
+     - **Pyomo Component**
+   * - Heat generator output / heat-pump electricity draw
+     - kW
+     - ``vHeatOutput`` / ``vHeatPumpElec``
+   * - Thermal store charge / discharge / inventory
+     - kW, kW, kWh
+     - ``vHeatCharge`` / ``vHeatDischarge`` / ``vHeatInventory``
+   * - Heat-to-power heat consumed / electricity produced
+     - kW
+     - ``vHeatConsumed`` / ``vHeatToEle``
+   * - Heat not served
+     - kW
+     - ``vHeatNotServed``
+   * - Candidate build fraction (electricity / hydrogen)
+     - -
+     - ``vEleGenInvest`` / ``vHydGenInvest``
+   * - Total (annualised) investment cost
+     - €
+     - ``vTotalICost``
+   * - Community electricity shared in / out (per member)
+     - kW
+     - ``vEleShareIn`` / ``vEleShareOut``
+
+See :doc:`heat-sector`, :doc:`features-and-modes` and :doc:`community`.
+
 Variable Bounding and Fixing
 ----------------------------
 

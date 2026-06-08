@@ -1,9 +1,22 @@
 Results & Post-Processing
 =========================
 
-After a successful optimization run, the model automatically post-processes the solution and saves a comprehensive set of results to the case directory (e.g., ``data/case_name/``). This is handled by the ``saving_results`` function in the ``oM_OutputData`` module.
+After a successful optimization run, the model post-processes the solution and saves the
+results. By default they go to ``<dir>/<case>/results.duckdb`` (one table per set,
+parameter, variable and constraint dual, plus an ``oM_Result_RunMetadata`` table), via
+``oM_OutputData_duckdb.save_to_duckdb``. Pass ``--rawresults True`` to also write the CSV
+result tables (``saving_results`` in ``oM_OutputData``), each prefixed ``oM_Result_``, and
+``--plots True`` for the HTML figures.
 
-The primary outputs are a series of CSV files, each prefixed with ``oM_Result_``, which provide detailed insights into the model's decisions. Several plots are also generated as HTML files.
+.. note::
+
+   When a case uses the heat sector, the investment layer or the energy community, their
+   decisions are saved too: the heat balance, the candidate build fractions and
+   investment cost, and the community sharing. The DuckDB output carries every variable,
+   so these appear there even when the curated CSV/plot set focuses on electricity.
+
+The primary CSV outputs are a series of files, each prefixed with ``oM_Result_``, which
+provide detailed insights into the model's decisions.
 
 Key Output Files
 ----------------
