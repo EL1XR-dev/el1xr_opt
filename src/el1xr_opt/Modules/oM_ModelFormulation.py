@@ -199,7 +199,7 @@ def create_objective_function_components(model, optmodel, indlog):
         return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
                                                    sum(model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
                                                    sum(model.Par['pHydGenStartUpCost'    ][hgt] *       optmodel.vHydGenStartUp        [p,sc,n,hgt] for hgt in model.hgt) +
-                                                   sum(model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) -
+                                                   sum(model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) +
                                                    sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
     optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
 
@@ -683,7 +683,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleInventory', Constraint(optmodel.psnegs, rule=eEleInventory, doc='Electricity ESS inventory balance [GWh]'))
 
     def eHydInventory(optmodel, p,sc,n,hgs):
-        if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.negs:
+        if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
             if   model.n.ord(n) == model.Par['pHydCycleTimeStep'][hgs]:
                 return model.Par['pHydInitialInventory'][hgs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
             elif model.n.ord(n) >  model.Par['pHydCycleTimeStep'][hgs]:
@@ -1201,7 +1201,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleMaxRampUpOutput', Constraint(optmodel.psnegt, rule=eEleMaxRampUpOutput, doc='maximum ramp up   [p.u.]'))
 
     def eEleMaxRampDwOutput(optmodel, p,sc,n,egt):
-        if model.Par['pEleGenRampDown'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampDw'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
+        if model.Par['pEleGenRampDown'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampDown'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
                 return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                             + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
             else:
