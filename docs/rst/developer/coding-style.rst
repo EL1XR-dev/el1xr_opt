@@ -8,19 +8,19 @@ To maintain consistency and readability across the codebase, we follow a standar
 Code Formatting
 ---------------
 
-We use ``black`` for code formatting and ``isort`` for import sorting. This ensures a uniform style without any need for manual adjustments.
-
-- **black**: The uncompromising code formatter.
-- **isort**: A Python utility to sort imports alphabetically and automatically separate them into sections.
-
-Before committing your changes, please run these tools to format your code:
+``black`` (code formatting) and ``isort`` (import sorting) are **recommended** for new
+code, but they are not enforced -- the only lint the CI runs is a flake8 syntax check
+(``flake8 --select=E9,F63,F7,F82``), which catches syntax errors and undefined names,
+not style. So a contribution can pass locally and still fail CI on an E9/F-class error;
+run that flake8 check before pushing.
 
 .. code-block:: bash
 
-   # Format code with black
-   black .
+   # the lint CI enforces (syntax / undefined-name errors only)
+   flake8 . --select=E9,F63,F7,F82
 
-   # Sort imports with isort
+   # optional, recommended formatting
+   black .
    isort .
 
 Docstrings
@@ -62,7 +62,9 @@ Here is an example of a well-documented function:
 Type Hints
 ----------
 
-We use `type hints <https://docs.python.org/3/library/typing.html>`_ throughout the codebase to improve code clarity and allow for static analysis. Please add type hints to all new functions and methods.
+`Type hints <https://docs.python.org/3/library/typing.html>`_ are encouraged for new
+code to improve clarity and allow static analysis. The existing modules are largely
+untyped (procedural ``oM_*`` builders), so this is aspirational, not a requirement.
 
 Example with type hints:
 
@@ -87,10 +89,13 @@ Example with type hints:
 Pyomo Model Naming Conventions
 ------------------------------
 
-To ensure clarity and consistency within the `Pyomo` model, we follow a specific naming convention for model components:
+Model components use a single-letter prefix and CamelCase (no underscore), with the
+energy vector in the name:
 
-- **Parameters**: Names should start with the prefix ``p_``. For example, ``p_demand``.
-- **Variables**: Names should start with the prefix ``v_``. For example, ``v_generation``.
-- **Constraints**: Names should start with the prefix ``e_``. For example, ``e_balance``.
+- **Parameters** start with ``p`` -- for example ``pEleMaxPower``, ``pParNumberPowerPeaks``.
+- **Variables** start with ``v`` -- for example ``vEleTotalOutput``, ``vHydInventory``.
+- **Constraints** start with ``e`` -- for example ``eEleBalance``, ``eHydInventory``.
+- **Sets** are short lowercase names -- for example ``psn`` (period, scenario, load level),
+  ``egs`` (electricity storage), ``e2h`` (electrolysers).
 
 This convention makes it easier to identify the type of a model component just by its name.

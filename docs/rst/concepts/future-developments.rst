@@ -5,6 +5,17 @@ Future Developments
 
 This section outlines potential future enhancements to the optimisation model, based on a number of identified challenges and opportunities for more detailed modelling. These items represent a roadmap for increasing the model's accuracy and applicability to real-world scenarios.
 
+.. note::
+
+   Several items once on this roadmap are **now implemented** and documented elsewhere:
+   the :doc:`heat-sector`, the :doc:`community` sharing layer, the modular
+   feature/cost-registry architecture (:doc:`features-and-modes`), the physical
+   electricity PPA and RFNBO matching (green hydrogen), and the depth-of-discharge
+   degradation scaffolding. What remains genuinely future is, for example, district
+   heating with a heat network, virtual/CfD PPAs, and the ``arc`` (block-angular)
+   balance that would underpin a Dantzig-Wolfe decomposition. Treat the list below as
+   indicative and cross-check against the changelog.
+
 To-Do List
 ----------
 

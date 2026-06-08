@@ -55,8 +55,8 @@ el1xr_opt
 ---------------
 
 el1xr_opt reads a case from either a CSV folder or a single ``.duckdb`` file
-through one common interface, builds a Pyomo model (electricity and hydrogen
-today; heat is scaffolded), solves it, and writes the results back to DuckDB.
+through one common interface, builds a Pyomo model (electricity, hydrogen and a
+behind-the-meter heat sector), solves it, and writes the results back to DuckDB.
 Because both inputs are read the same way, a DuckDB run reproduces a CSV run
 exactly.
 

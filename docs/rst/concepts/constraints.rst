@@ -2,6 +2,16 @@ Constraints
 ===========
 The optimization model is governed by a series of constraints that ensure the solution is physically and economically feasible. These constraints, defined in the ``create_constraints`` function, enforce everything from the laws of physics to the operational limits of individual assets.
 
+.. note::
+
+   This page covers the core electricity/hydrogen constraints. The heat balance and
+   conversions (``eHeatBalance``, ``eHeatPumpCOP``, ``eHeatToEle``, ``eHeatInventory``),
+   the investment caps (``e*InvestMax*``, ``eTotalICost``) and the community pool
+   (``eEleCommunityPool``) are documented on the :doc:`heat-sector`,
+   :doc:`features-and-modes` and :doc:`community` pages. Note that the electricity
+   balance ``eEleBalance`` also carries the heat-pump load and heat-to-power injection
+   when a heat case is active, and the retail balance carries the community share terms.
+
 1. Market and Commercial Constraints
 ------------------------------------
 These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.

@@ -5,6 +5,14 @@ Parameters
 
 Parameters are the fixed input values that define the characteristics of the energy system being modeled. They are defined in ``oM_ModelFormulation.py`` and are typically derived from the input data files. In the mathematical notation, they are written in **uppercase** letters.
 
+.. note::
+
+   This page covers the core electricity/hydrogen parameters. The heat sector
+   (``pHeat*``), the investment layer (``pEleGenInvestCost`` / ``pHydGenInvestCost``,
+   ``pDiscountFactor``, ...) and the option/feature flags (``pOptInd*``,
+   ``pParGreenH2Matching``, ``pParBalanceMode``, ...) add their own. See
+   :doc:`heat-sector` and :doc:`features-and-modes`.
+
 General & Time
 --------------
 

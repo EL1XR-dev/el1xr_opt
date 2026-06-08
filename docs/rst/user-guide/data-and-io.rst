@@ -3,9 +3,32 @@ Data & I/O
 
 Data formats
 ------------
-The model is data-driven, with all inputs defined in a collection of CSV files
-located in a dedicated case directory. These files define the model's sets (e.g.,
-periods, technologies, nodes) and parameters (e.g., costs, capacities, efficiencies).
+The model is data-driven. A case is supplied either as a **folder of CSV files** or as a
+**single ``.duckdb`` file** holding the same tables. Both are read through one common
+interface (``open_source`` / ``resolve_source``), so a DuckDB run reproduces a CSV run
+exactly. If both the CSV folder and the ``.duckdb`` file are present, the folder is used.
+Convert a CSV case to DuckDB with::
+
+    el1xr-csv2duckdb --dir data/EEM26 --case Home1   # writes data/EEM26/Home1.duckdb
+
+The tables define the model's sets (periods, technologies, nodes, ...) and parameters
+(costs, capacities, efficiencies, ...).
+
+Outputs
+~~~~~~~
+
+Results are written to ``<dir>/<case>/results.duckdb`` by default -- one table per set,
+parameter, variable and constraint dual, plus an ``oM_Result_RunMetadata`` table. Pass
+``--rawresults True`` to also write the CSV result tables, and ``--plots True`` for the
+figures. Turn the DuckDB output off with ``--duckdbresults False``.
+
+Heat tables
+~~~~~~~~~~~
+
+A heat-bearing case adds ``oM_Dict_HeatGeneration`` / ``oM_Data_HeatGeneration`` (with a
+``Type`` column -- HeatPump / Boiler / Heat2Ele / Storage), ``oM_Data_HeatDemand`` and
+``oM_Data_VarMaxHeatDemand``. They are read only when present, so electricity/hydrogen
+cases are unaffected. See :doc:`../concepts/heat-sector`.
 
 CSV File Naming Conventions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
