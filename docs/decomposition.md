@@ -386,14 +386,20 @@ whole horizon, so they do not split by time window: a naive split double-counts
 them. The **fixed charge** is a per-scenario constant, so it is counted once in the
 master and removed from each block's recourse. The **net-use-var** and **energy-tax**
 costs are sums over the load levels (of the grid import), so they split by window
-like any per-level cost. The **peak-demand** charge is the awkward one -- el1xr
-models it as a top-N peak-hour selection (the average of the N highest import hours),
-a horizon-wide combinatorial quantity that the sum-of-N-largest threshold LP would
-decompose via a scalar threshold per month; that is the design for a
-transmission-connected case. All of these costs sit on the grid import, which is
-zero on the prosumer-home cases available (a battery/PV home that meets its small
-elastic demand locally and exports), so the peak / net-use-var / tax costs are
-inactive there and only the fixed charge needs handling.
+like any per-level cost. The **peak-demand** charge is the awkward one: el1xr models
+it as a top-N peak-hour selection (the sum of the N highest import hours per month),
+a horizon-wide quantity that does not split by window. It is reformulated as a
+**threshold LP**, using the identity that the sum of the N largest of a set
+`{x_n}` is `min over t of [ N*t + sum_n (x_n - t)_+ ]`. The scalar threshold `t`
+per (month, retailer) becomes a **master linking variable**: the master holds the
+`N*t` part and the peak coefficient, and each window adds its own
+`sum_n (import_n - t)_+` over its hours (a non-negative `u_n >= import_n - t`). This
+is a pure LP, and because the peak enters the objective as a positive cost being
+minimised it reproduces the binary top-N selection exactly -- in fact more tightly
+than the model's own big-M peak constraints, whose LP relaxation underprices the
+peak. On the prosumer-home cases the grid import (hence the peak) is zero, so this
+term is inactive there; a single-node case where the costed import is the only
+supply exercises it.
 
 **`el1xr_temporal_benders` -- validated.** It builds the investment master with the
 boundary inventory levels and the once-counted fixed charge, and one windowed
@@ -406,8 +412,21 @@ undercut the monolith; and the master's boundary inventory is **bounded by the
 storage capacity** so the hard tie is always reachable (an unbounded boundary sends
 the block infeasible and the run diverges). With both, the solve reproduces the
 monolithic optimum exactly for 2, 3 and 4 time blocks
-(`tests/test_benders_temporal_el1xr.py`). The peak threshold-LP for
-transmission-import cases remains the one open extension.
+(`tests/test_benders_temporal_el1xr.py`).
+
+The **peak-demand charge** is handled by the threshold LP above, with the per-month
+threshold `t` added to the master linking variables. On a single-node case where the
+costed grid import is the only supply (so the peak is active), the temporal Benders
+reproduces the binary monolith exactly for 2, 3 and 4 time blocks.
+
+**A numerical note on the elastic penalty.** Each block carries a large penalty on
+its feasibility slack variables. At a loose solver feasibility tolerance the solver
+nudges those slacks just below their zero lower bound and harvests a spurious
+`penalty * tolerance` reduction (with `penalty = 1e7` that is tens of cost units),
+which poisons the recourse value and the cuts. The recourse value reported to the
+Benders bound therefore counts only **positive** slack, so the negative tolerance
+drift cannot leak into the bound; the large penalty only steers the solve. The
+subproblem solves also use a tightened primal feasibility tolerance.
 
 ## 7. Suggested order of work
 
@@ -417,10 +436,11 @@ transmission-import cases remains the one open extension.
 2. Parallelize the subproblem solves. **Done** (process pool).
 3. Per-block scenario subsetting so each block builds one scenario, not all.
    **Done.**
-4. Temporal block splitting with boundary-storage linking. **Done** for the
-   storage-coupled case: `el1xr_temporal_benders` reproduces the monolith exactly on
-   the home cases (`tests/test_benders_temporal_el1xr.py`), with the fixed network
-   charge counted once in the master. The peak-demand threshold-LP for a
-   transmission-import case is the one open extension.
+4. Temporal block splitting with boundary-storage linking. **Done**:
+   `el1xr_temporal_benders` reproduces the monolith exactly on the home cases
+   (`tests/test_benders_temporal_el1xr.py`), with the fixed network charge counted
+   once in the master, and the peak-demand charge handled by the threshold LP with a
+   per-month threshold in the master (validated against the binary monolith on a
+   single-node import case).
 5. Only then consider the arc/asset reformulation and Dantzig-Wolfe, together,
    as a larger modernization.

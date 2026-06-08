@@ -139,6 +139,19 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
     from pyomo.environ import SolverFactory, value
     cfg = config or BendersConfig()
     opt = SolverFactory(solver)
+    # Subproblems carry a large elastic penalty on slack variables. At a loose primal
+    # feasibility tolerance the solver drifts those slacks just below their zero lower
+    # bound, which perturbs the recourse solution and stalls convergence. A tight
+    # primal tolerance on the subproblem solves keeps the slacks clean. (The master
+    # has no slacks; tightening its tolerances can make some solvers error, so it
+    # keeps the defaults.)
+    opt_sub = SolverFactory(solver)
+    sub_tol = float(cfg.extra.get("sub_primal_tol", 1e-8))
+    _name = str(solver).lower()
+    if "gurobi" in _name:
+        opt_sub.options.update({"FeasibilityTol": sub_tol})
+    elif "highs" in _name:
+        opt_sub.options.update({"primal_feasibility_tolerance": sub_tol})
 
     M = make_master()
     names = list(M["x"].keys())
@@ -149,9 +162,10 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         for b in blocks:
             sub = subs[b]
             sub["set_xhat"](x_hat)
-            _solve_model(opt, sub["model"])
+            _solve_model(opt_sub, sub["model"])
             lam = {n: float(sub["model"].dual[sub["fix"][n]]) for n in names}
-            solved[b] = (float(value(sub["obj"])), lam)
+            qb = sub["recourse"]() if "recourse" in sub else float(value(sub["obj"]))
+            solved[b] = (qb, lam)
         return solved
 
     solve = solve_blocks if solve_blocks is not None else _solve_sequential
@@ -172,6 +186,8 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         ub = first_stage_cost + recourse
         best_ub = min(best_ub, ub)
         gap = abs(best_ub - lb) / (abs(best_ub) + 1e-12)
+        if cfg.extra.get("verbose"):
+            print(f"  benders it {it:3d}: lb={lb:.4f} ub={ub:.4f} best_ub={best_ub:.4f} gap={gap:.2e}")
         if gap <= cfg.relative_gap:
             break
 
@@ -295,17 +311,27 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
     fixing constraints give the cuts), made always-feasible by the elastic penalty.
 
     The per-scenario fixed network charge does not split by time window, so it is
-    counted once in the master and removed from each block's recourse. This MVP
-    assumes hourly storage (cycle = 1), a single (period, scenario), and that the
-    horizon-coupling peak charge is inactive (zero grid import) -- it asserts the
-    last. Validate against the monolith (see tests/test_benders_temporal_el1xr.py).
+    counted once in the master and removed from each block's recourse. The peak
+    demand charge (the per-month sum of the N largest grid imports) is the other
+    horizon-coupling cost; it is reformulated as a threshold-LP whose scalar
+    threshold per (month, retailer) is a master linking variable -- the master holds
+    N*t and the peak coefficient, each window adds its own sum_n (import_n - t)_+.
+    This MVP assumes hourly storage (cycle = 1), a single (period, scenario), and
+    Hourly power tariffs (it raises on a Daily tariff with a peak charge). Validate
+    against the binary monolith (see tests/test_benders_temporal_el1xr.py).
     """
     from pyomo.environ import (ConcreteModel, Var, Constraint, ConstraintList, Param,
                                Objective, Suffix, Reals, Binary, UnitInterval,
-                               NonNegativeReals, minimize, TransformationFactory)
+                               NonNegativeReals, minimize, value, TransformationFactory)
     from .oM_Sequence import build_structure
 
     cfg = config or BendersConfig()
+    # Penalty on the elastic feasibility slacks, kept well above the model's own
+    # recourse marginal (ENS cost) so a slack is never preferred to real recourse.
+    # The recourse value reported to the Benders bound clamps the slack penalty to
+    # genuine (positive) slack (see make_subproblem.recourse_value), so this large
+    # penalty does not poison the bound through the solver's feasibility-tolerance
+    # drift -- the penalty only steers the solve.
     penalty = float(cfg.extra.get("feasibility_penalty", 1e7))
 
     full = build_structure(dir_name, case_name, date)
@@ -338,6 +364,37 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
     nmonths = len(list(full.moy))
     netfix = sum(float(full.Par['pEleRetFastavgift'][er]) * factor1 * nmonths
                  * (1 + float(full.Par['pEleRetMoms'][er])) for er in full.er)
+
+    # Peak demand charge: the per-month sum of the N largest grid imports per
+    # retailer. This is the only remaining horizon-coupling cost (the fixed charge
+    # is constant; net-use-var and energy tax are import-proportional sums that split
+    # by window on their own). Reformulate the sum of the N largest as a threshold-LP
+    #   sum of N largest of {x_n} = min over scalar t of [ N*t + sum_n (x_n - t)_+ ]
+    # so the scalar threshold t per (month, retailer) becomes a master linking
+    # variable: the master holds N*t (and the peak coefficient), each window adds its
+    # own sum_n (x_n - t)_+ over its hours. This is a pure LP (no binaries, no big-M),
+    # and at the cost-minimising optimum it equals the binary top-N selection exactly
+    # (validated against the binary monolith in tests/test_benders_temporal_el1xr.py).
+    N_peaks = int(full.Par['pParNumberPowerPeaks'])
+
+    def _tariff_type(er):
+        return str(full.Par['pEleRetTariffType'][er])
+
+    def _power_tariff(er):
+        return float(full.Par['pEleRetPowerTariff'][er])
+
+    peak_er = [er for er in full.er
+               if N_peaks > 0 and _power_tariff(er) != 0 and _tariff_type(er) == 'Hourly']
+    if N_peaks > 0 and any(_power_tariff(er) != 0 and _tariff_type(er) == 'Daily'
+                           for er in full.er):
+        raise NotImplementedError(
+            "temporal peak-linking handles Hourly power tariffs only")
+    peak_months = list(full.moy)
+    peak_coeff = {er: _power_tariff(er) * factor1 * (1 + float(full.Par['pEleRetMoms'][er]))
+                  / N_peaks for er in peak_er}
+    peak_node = {er: full.Par['pEleRetNode'][er] for er in peak_er}
+    peak_me = [(m, er) for er in peak_er for m in peak_months]
+    fix_import = dict(cfg.extra.get("fix_import", {}))
 
     # contiguous time windows
     K = max(1, n_time_blocks)
@@ -374,10 +431,18 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                    bounds=lambda mm, k, g: (0, maxH[g]), initialize=lambda mm, k, g: initH[g])
         for (kind, k, g) in bnd_names:
             x[(kind, k, g)] = m.Se[k, g] if kind == "Se" else m.Sh[k, g]
+        # peak threshold per (month, retailer): the master holds the N*t part of the
+        # threshold-LP and its cost; each window adds its sum_n (import_n - t)_+.
+        m.tpk = Var(peak_me, within=NonNegativeReals, bounds=(0, 1e9), initialize=0.0)
+        for me in peak_me:
+            x[("t",) + me] = m.tpk[me]
+        peak_master = discount * sum(peak_coeff[er] * N_peaks * m.tpk[(mm, er)]
+                                     for (mm, er) in peak_me)
         m.theta = Var(blocks, within=Reals, bounds=(-1e9, 1e12), initialize=0.0)
         m.cuts = ConstraintList()
         inv = period_weight * factor1 * sum(invcost[nm] * x[nm] for nm in inv_names)
-        m.obj = Objective(expr=inv + discount * netfix + sum(m.theta[b] for b in blocks),
+        m.obj = Objective(expr=inv + discount * netfix + peak_master
+                          + sum(m.theta[b] for b in blocks),
                           sense=minimize)
         return {"model": m, "x": x, "theta": {b: m.theta[b] for b in blocks}, "cuts": m.cuts}
 
@@ -441,30 +506,79 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
             if (k < K - 1 and (p, sc, b, g) in mm.vHydInventory) else Constraint.Skip))
 
         sub.eTotalSCost.deactivate()
+
+        # peak threshold-LP: drop this window's own peak charge and inject the
+        # window's part of the threshold-LP. The model's peak machinery (the binary
+        # top-N selection) is deactivated and vTotalElePeakCost is pinned to 0 so it
+        # leaves vTotalEleNCost (hence the block recourse); in its place
+        # u[n, er] >= import[n] - t[month(n), er] adds sum_n (import_n - t)_+, with t
+        # fixed from the master (its fixing-constraint dual is the cut subgradient).
+        u_index = []
+        if peak_er:
+            sub.vTotalElePeakCost[p, sc].fix(0.0)
+            for cn in ("eTotalElePeakCost", "eElePeakHourValue", "eElePeakHourInd_C1",
+                       "eElePeakHourInd_C2", "eElePeakNumberMonths"):
+                c = getattr(sub, cn, None)
+                if c is not None:
+                    c.deactivate()
+            sub._tpk = Param(peak_me, mutable=True, initialize=0.0)
+            sub.tpkcopy = Var(peak_me, within=Reals)
+            sub.tpkfix = Constraint(
+                peak_me, rule=lambda mm, m_, er: mm.tpkcopy[m_, er] == mm._tpk[m_, er])
+            month_of = {nn: m_ for (nn, m_) in sub.n2m}
+            u_index = [(nn, er) for er in peak_er for nn in win if nn in month_of]
+            sub.upk = Var(u_index, within=NonNegativeReals)
+            sub.upkdef = Constraint(u_index, rule=lambda mm, nn, er: (
+                mm.upk[nn, er]
+                >= mm.vEleImport[p, sc, nn, peak_node[er]] - mm.tpkcopy[month_of[nn], er]))
+            # optional: pin the window's grid import to a given profile (test support)
+            for nn in win:
+                if nn in fix_import:
+                    for er in peak_er:
+                        if (p, sc, nn, peak_node[er]) in sub.vEleImport:
+                            sub.vEleImport[p, sc, nn, peak_node[er]].fix(float(fix_import[nn]))
+
         # elastic relaxation on the operating constraints (everything except the
         # fixing and boundary-coupling constraints) so the block is feasible for any
         # fixed master point. The boundary couplings stay HARD: the inventory must be
         # exactly the master value at the boundary (so it is conserved across the
         # split); feasibility for an unreachable boundary comes from the elastic
         # operating constraints (and the model's own ENS / spillage), and the
-        # fixing-constraint duals carry the (feasibility) cut.
+        # fixing-constraint duals carry the (feasibility) cut. The peak threshold
+        # fixing and the u-definition are exact too, so they stay hard.
         keep_hard = ("bfix_e", "bfix_h", "sefix", "shfix",
-                     "rep_e", "rep_h", "out_e", "out_h")
+                     "rep_e", "rep_h", "out_e", "out_h", "tpkfix", "upkdef")
         targets = [c for c in sub.component_objects(Constraint, active=True)
                    if c.name not in keep_hard]
         TransformationFactory('core.add_slack_variables').apply_to(sub, targets=targets)
         slack_blk = sub._core_add_slack_variables
         slack_blk._slack_objective.deactivate()
-        slack_sum = sum(v for v in slack_blk.component_data_objects(Var))
-        sub.benders_obj = Objective(
-            expr=discount * (sub.vTotalCComponent[p, sc] - sub.vTotalEleNetUseFixCost[p, sc]
-                             - sub.vTotalRComponent[p, sc]) + penalty * slack_sum,
-            sense=minimize)
+        slack_vars = list(slack_blk.component_data_objects(Var))
+        slack_sum = sum(slack_vars)
+        peak_win = (discount * sum(peak_coeff[er] * sub.upk[nn, er]
+                                   for (nn, er) in u_index)
+                    if u_index else 0.0)
+        # the real operating recourse, kept separate from the elastic penalty so the
+        # bound/cut can read it clean (see recourse_value below)
+        real_recourse = (discount * (sub.vTotalCComponent[p, sc]
+                                     - sub.vTotalEleNetUseFixCost[p, sc]
+                                     - sub.vTotalRComponent[p, sc]) + peak_win)
+        sub.benders_obj = Objective(expr=real_recourse + penalty * slack_sum, sense=minimize)
+
+        def recourse_value():
+            # the value passed to the Benders bound and cut: the true recourse plus
+            # the penalty on any GENUINE slack. Negative slack within the solver's
+            # feasibility tolerance is clamped to zero, so a large penalty cannot turn
+            # that drift into a spurious reduction (which would poison the bound).
+            pos = sum(s for s in (float(value(v)) for v in slack_vars) if s > 0.0)
+            return float(value(real_recourse)) + penalty * pos
 
         fix = {("e", g): sub.bfix_e[g] for g in egc}
         fix.update({("h", g): sub.bfix_h[g] for g in hgc})
         for (kind, kk, g) in bnd_names:
             fix[(kind, kk, g)] = sub.sefix[kk, g] if kind == "Se" else sub.shfix[kk, g]
+        for me in peak_me:
+            fix[("t",) + me] = sub.tpkfix[me]
 
         def set_xhat(x_hat):
             for g in egc:
@@ -476,11 +590,13 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                     sub._se[kk, g] = x_hat[(kind, kk, g)]
                 else:
                     sub._sh[kk, g] = x_hat[(kind, kk, g)]
+            for me in peak_me:
+                sub._tpk[me] = x_hat[("t",) + me]
 
         xcopy = {("e", g): sub.vEleGenInvest[g] for g in egc}
         xcopy.update({("h", g): sub.vHydGenInvest[g] for g in hgc})
         return {"model": sub, "xcopy": xcopy, "fix": fix, "set_xhat": set_xhat,
-                "obj": sub.benders_obj}
+                "obj": sub.benders_obj, "recourse": recourse_value}
 
     return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver)
 
