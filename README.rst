@@ -42,7 +42,6 @@ el1xr_opt
 
 - `Documentation <https://el1xr-opt.readthedocs.io/en/latest/>`_ via ReadTheDocs.
 - Modular formulation for multi-vector energy systems
-- Compatible with **deterministic, stochastic, and equilibrium** approaches
 - Flexible temporal structure: hours, days, representative periods
 - **CSV or DuckDB input**: read a case from a CSV folder or a single ``.duckdb`` file (same results either way)
 - **DuckDB output**: results are written to ``results.duckdb`` by default, with CSV output available on request
