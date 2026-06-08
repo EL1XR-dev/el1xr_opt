@@ -74,7 +74,7 @@
   <text x="470" y="532" text-anchor="middle" class="ts">HiGHS / Gurobi / CBC / Ipopt  ·  fix binaries and re-solve for duals</text>
   <rect x="172" y="544" width="596" height="44" class="box" fill="#ffffff" stroke="#7c3aed"/>
   <text x="470" y="562" text-anchor="middle" class="t">oM_Decomposition  -  monolithic, or Benders (investment master + operating blocks)</text>
-  <text x="470" y="579" text-anchor="middle" class="ts">parallel worker processes · per-block scenario subsetting · temporal storage-boundary linking</text>
+  <text x="470" y="579" text-anchor="middle" class="ts">parallel worker processes · per-block scenario subsetting · temporal storage-boundary + peak-threshold linking</text>
   <line x1="470" y1="470" x2="470" y2="490" class="flow"/>
 
   <!-- Layer 6: output -->

@@ -47,6 +47,7 @@ el1xr_opt
 - **CSV or DuckDB input**: read a case from a CSV folder or a single ``.duckdb`` file (same results either way)
 - **DuckDB output**: results are written to ``results.duckdb`` by default, with CSV output available on request
 - Built on `Pyomo <https://pyomo.readthedocs.io/en/stable/>`_
+- **Monolithic or Benders decomposition** solve: split the investment/operating problem by scenario or by time window (storage inventory and the peak-demand threshold carried in the master), validated to match the monolithic optimum
 - Interfaces with ``EL1XR-data`` (datasets) and ``EL1XR-examples`` (notebooks)
 
 ----
