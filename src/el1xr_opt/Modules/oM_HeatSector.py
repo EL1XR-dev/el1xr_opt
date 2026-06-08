@@ -1,40 +1,35 @@
-"""Heat sector — scaffold (not yet wired into the solve pipeline).
+"""Heat sector -- a third energy carrier alongside electricity and hydrogen.
 
-The model today covers electricity and hydrogen. This module marks out where a
-third energy carrier, heat, will go, following the same pattern the electricity
-and hydrogen sectors already use. It is deliberately a scaffold: the input
-schema and the architecture already make room for heat, but the constraints
-below are not built yet and the function is not called from oM_Sequence.
+``create_heat_sector`` is wired into ``oM_Sequence.build_model`` (after the
+green-hydrogen step) and builds a behind-the-meter heat sector when the case
+carries heat data; it is a no-op otherwise, so electricity/hydrogen-only cases
+are unchanged.
 
-Planned scope (three settings, increasing in size):
+Scope today -- **home / residential heat**: a building-level, nodal heat demand
+met by a heat pump or boiler plus a thermal store, produced and used at the same
+node (no heat network yet -- district heating with pipe flows and losses is the
+planned next setting). The power-heat loop is open with a heat pump alone and
+closed by adding a heat-to-power unit.
 
-  * Home / residential heat: a building-level heat demand met by a heat pump or
-    boiler plus a thermal store. No heat network — heat is produced and used at
-    the same node, like a behind-the-meter battery.
-  * District heating: a heat network (pipes with losses) linking central
-    production (large heat pumps, CHP, boilers) to demand nodes, mirroring the
-    electricity and hydrogen network formulations.
+Input tables (read by ``load_heat_data``):
 
-Expected input tables (already listed in oM_InputSchema for forward
-compatibility; verify the exact columns against a real heat case before use):
+  * oM_Dict_HeatGeneration / oM_Data_HeatGeneration (with a ``Type`` column --
+    HeatPump / Boiler / Heat2Ele / Storage)
+  * oM_Data_HeatDemand / oM_Data_VarMaxHeatDemand
 
-  * oM_Dict_HeatGeneration / HeatDemand / HeatRetail
-  * oM_Data_HeatGeneration / HeatDemand / HeatRetail / HeatNetwork
-  * oM_Data_VarMaxHeatDemand / VarMinHeatDemand
+Sets, variables and constraints:
 
-Intended sets, variables and constraints (by analogy with the existing sectors):
+  * sets:        htg (heat generation), htp (heat pumps), htw (heat-to-power),
+                 hts (thermal storage), htd (heat demand)
+  * variables:   vHeatOutput, vHeatPumpElec, vHeatCharge / vHeatDischarge /
+                 vHeatInventory, vHeatConsumed, vHeatToEle, vHeatNotServed
+  * constraints: nodal heat balance (eHeatBalance), heat-pump coupling
+                 (eHeatPumpCOP), heat-to-power (eHeatToEle), thermal-store
+                 inventory (eHeatInventory).
 
-  * sets:        htg (heat generation), hts (thermal storage), htd (heat demand),
-                 htr (heat retail), hta (heat network arcs)
-  * variables:   vHeatTotalOutput, vHeatTotalCharge, vHeatInventory,
-                 vHeatDemand, vHNS (heat not served), vHeatNetFlow
-  * constraints: nodal heat balance, thermal-store inventory balance, heat-pump
-                 coupling (electricity in -> heat out via COP), network flow
-                 limits and losses for district heating.
-
-When implemented, call create_heat_sector(...) from oM_Sequence.routine right
-after create_green_hydrogen, and add the heat cost and revenue terms to the
-objective components.
+The heat-pump electricity draw and the heat-to-power injection are folded into
+the electricity balance, and the heat operating cost (period-discounted,
+duration-weighted) into the objective.
 """
 from __future__ import annotations
 

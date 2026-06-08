@@ -415,3 +415,60 @@ Parameters specific to Electric Vehicle (EV) modeling.
      - Minimum EV battery state-of-charge at trip end
      - kWh
      - ``pEleMinStorageEnd``
+
+Heat sector
+-----------
+
+.. list-table::
+   :widths: 50 20 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Unit**
+     - **Pyomo Component**
+   * - Heat generator maximum power
+     - kW
+     - ``pHeatGenMaxPower``
+   * - Heat generator running cost
+     - €/kWh
+     - ``pHeatGenCost``
+   * - Heat-pump coefficient of performance (heat / electricity)
+     - -
+     - ``pHeatPumpCOP``
+   * - Heat-to-power maximum heat input / efficiency
+     - kW, -
+     - ``pHeatToEleMaxHeat`` / ``pHeatToEleEff``
+   * - Thermal store maximum energy / round-trip efficiency / initial level
+     - kWh, -, kWh
+     - ``pHeatStoMax`` / ``pHeatStoEff`` / ``pHeatStoInitial``
+   * - Heat demand / heat-not-served cost
+     - kW, €/kWh
+     - ``pHeatDemand`` / ``pHeatNSCost``
+
+Investment and options
+----------------------
+
+.. list-table::
+   :widths: 50 20 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Unit**
+     - **Pyomo Component**
+   * - Annualised investment cost of a candidate (electricity / hydrogen)
+     - €
+     - ``pEleGenInvestCost`` / ``pHydGenInvestCost``
+   * - Build a candidate as a binary (vs continuous fraction)
+     - 0/1
+     - ``pEleGenBinaryInvestment`` / ``pHydGenBinaryInvestment``
+   * - Build-fraction lower / upper bound
+     - -
+     - ``pEleGenInvestmentLo`` / ``...Up`` (and ``pHyd...``)
+   * - Period discount factor
+     - -
+     - ``pDiscountFactor``
+   * - Feature flags (unit commitment, ramps, single node, community, green-H2 matching, balance mode, ...)
+     - 0/1 / text
+     - ``pOptIndBin*``, ``pParGreenH2Matching``, ``pParBalanceMode``
+
+See :doc:`heat-sector` and :doc:`features-and-modes`.

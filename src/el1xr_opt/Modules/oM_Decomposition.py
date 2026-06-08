@@ -1,18 +1,24 @@
-"""Decomposition and parallelization groundwork (scaffold).
+"""Benders decomposition and parallel block solving.
 
-See ``docs/decomposition.md`` for the design. This module marks out the block
-structure the model can be split along and gives a usable block partition, so
-that a Benders (and later Dantzig-Wolfe / column-generation) solver and parallel
-model building can be built on top. The actual decomposition loop is not
-implemented yet; the relevant entry points raise ``NotImplementedError``.
+See ``docs/decomposition.md`` for the design and ``docs/rst/user-guide/decomposition.rst``
+for the user-facing overview. The model is block-angular -- investment is the first
+stage, the operating problem separates by ``(period, scenario)`` and (for long horizons)
+by time window, with storage coupling the time windows -- so it can be solved by Benders
+instead of monolithically, reaching the same optimum.
 
-What is real now:
-  * ``partition_blocks`` returns the independent operating blocks of the problem.
-  * ``first_stage_components`` names the complicating and linking variables.
+Implemented and validated against the monolith:
+  * ``benders_solve`` -- the generic multi-cut L-shaped method (optimality cuts only,
+    with an elastic penalty making every block feasible for any first-stage decision).
+  * ``el1xr_benders`` -- the el1xr investment/operating split, with optional
+    process-parallel subproblem solves (``BendersConfig.n_workers``).
+  * ``el1xr_temporal_benders`` -- splits one operating horizon into time windows coupled
+    by the storage inventory at each boundary, with the fixed network charge counted once
+    in the master and the peak-demand charge handled as a threshold-LP linking variable.
+  * ``partition_blocks`` / ``first_stage_components`` -- the block partition and the
+    complicating / linking variable names.
 
-What is a stub:
-  * ``BendersConfig`` / ``solve_benders`` — the place to implement the loop,
-    mirroring openTEPES ``openTEPES_ProblemSolvingBenders``.
+The only stub is ``solve_benders(model, ...)``, a deprecated alias kept for the original
+scaffold signature; use ``el1xr_benders(dir, case, date, ...)`` instead.
 """
 from __future__ import annotations
 

@@ -120,12 +120,13 @@ Sets
    * - :math:`\nB`
      - Node or bus bar in the network
      - :code:`model.nd`
-   * - :math:`\nC`
-     - Electricity connection (from node, to node, circuit)
-     - :code:`model.cc`
    * - :math:`\nLE`
-     - Electricity arc (transmission line)
+     - Electricity arcs -- all input lines (from node, to node, circuit)
      - :code:`model.eln`
+   * - :math:`\nLE'`
+     - Electricity lines actually modelled (the subset of ``eln`` that passes the
+       reactance / transfer-capacity / period filters; used by the flow constraints)
+     - :code:`model.ela`
    * - :math:`\nLH`
      - Hydrogen arc (pipeline)
      - :code:`model.hpn`
@@ -183,9 +184,15 @@ General Technology Subsets
    * - :math:`\nGENR`
      - Non-renewable electricity generators (subset of :math:`\nGE`)
      - :code:`model.egnr`
-   * - :math:`\nGVRE`
-     - Variable Renewable Energy (VRE) generators (subset of :math:`\nGE`)
-     - :code:`model.egvre`
+   * - :math:`\nGR`
+     - Renewable (RES) electricity generators (subset of :math:`\nGE`)
+     - :code:`model.egr`
+   * - :math:`\nGT`
+     - Thermal (committable) electricity generators (subset of :math:`\nGE`)
+     - :code:`model.egt`
+   * - :math:`\nGV`
+     - Electric-vehicle units (subset of :math:`\nGE`)
+     - :code:`model.egv`
    * - :math:`\nEE`
      - Electricity energy storage systems (subset of :math:`\nGE`)
      - :code:`model.egs`
@@ -193,14 +200,68 @@ General Technology Subsets
      - All hydrogen production units
      - :code:`model.hg`
    * - :math:`\nGHE`
-     - Units converting electricity to hydrogen (e.g., electrolyzers)
+     - Units converting electricity to hydrogen, i.e. electrolysers (``e2h``)
      - :code:`model.e2h`
    * - :math:`\nGEH`
-     - Units converting hydrogen to electricity (e.g., fuel cells)
+     - Units converting hydrogen to electricity, i.e. fuel cells (``h2e``)
      - :code:`model.h2e`
    * - :math:`\nEH`
      - Hydrogen energy storage systems (subset of :math:`\nGH`)
      - :code:`model.hgs`
+
+Heat sector
+~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Pyomo Component**
+     - **Notes**
+   * - Heat demands
+     - :code:`model.htd`
+     - per node via ``n2htd``
+   * - Heat generators (heat pumps and boilers)
+     - :code:`model.htg`
+     - per node via ``n2htg``
+   * - Heat pumps (electricity to heat, subset of ``htg``)
+     - :code:`model.htp`
+     - the cross-sector load on the electricity balance
+   * - Heat-to-power units (ORC / CHP)
+     - :code:`model.htw`
+     - per node via ``n2htw``
+   * - Thermal stores
+     - :code:`model.hts`
+     - per node via ``n2hts``
+
+See :doc:`heat-sector`.
+
+Investment / candidates
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Pyomo Component**
+     - **Notes**
+   * - Electricity investment candidates (positive investment cost)
+     - :code:`model.egc`
+     - candidate generators / storage / fuel cells
+   * - Electricity storage candidates (subset of ``egc``)
+     - :code:`model.egsc`
+     -
+   * - Hydrogen investment candidates
+     - :code:`model.hgc`
+     - candidate electrolysers / storage
+   * - Hydrogen storage candidates (subset of ``hgc``)
+     - :code:`model.hgsc`
+     -
+
+The community layer additionally uses the zone/retailer mapping sets ``n2er`` / ``n2hr``
+and ``z2er`` (see :doc:`community`).
 
 Indices
 ~~~~~~~
