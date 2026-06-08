@@ -1425,19 +1425,43 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the minimum energy start up and total max charge:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
+    # The peak-hour rules compare the grid import against a per-retailer "adjusted
+    # import": a night-discount factor on the import (the night window is set per
+    # retailer by StartNightTime / EndNightTime), plus -- only when the retailer
+    # carries no demand -- a fixed addend so an idle retailer still registers a
+    # baseline. The four night/day factors are read from the retailer data
+    # (PeakNightBuyFactor / PeakDayBuyFactor / PeakNightAddend / PeakDayAddend); when a
+    # column is absent they fall back to the historical defaults, which depend on the
+    # tariff type (Hourly: 1, 1, 1, 1; Daily: 0.5, 1, 2, 5). One helper in place of the
+    # same block previously copied across the six peak rules.
+    def _ret_factor(er, name, default):
+        try:
+            return float(model.Par[f'pEleRet{name}'][er])
+        except (KeyError, TypeError, ValueError):
+            return default
+
+    def _adjusted_import(optmodel, p, sc, n, er):
+        is_daily = model.Par['pEleRetTariffType'][er] == 'Daily'
+        d_buy_night, d_buy_day, d_add_night, d_add_day = (
+            (0.5, 1.0, 2.0, 5.0) if is_daily else (1.0, 1.0, 1.0, 1.0))
+        buy_night = _ret_factor(er, 'PeakNightBuyFactor', d_buy_night)
+        buy_day = _ret_factor(er, 'PeakDayBuyFactor', d_buy_day)
+        add_night = _ret_factor(er, 'PeakNightAddend', d_add_night)
+        add_day = _ret_factor(er, 'PeakDayAddend', d_add_day)
+        hour = optmodel.n.ord(n) % 24
+        is_night = (hour >= model.Par['pEleRetStartNightTime'][er]
+                    or hour <= model.Par['pEleRetEndNightTime'][er])
+        buy_factor = buy_night if is_night else buy_day
+        addend = add_night if is_night else add_day
+        base = optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
+        has_demand = sum(model.Par['pVarMaxDemand'][ed][p, sc, n]
+                         for ed in model.ed if (er, ed) in model.r2ed) > 0
+        return (buy_factor * base) if has_demand else (buy_factor * (base + addend))
+
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         # Check applicability
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
-            # Determine hour of day using ordinal of time index n
-            hour = optmodel.n.ord(n) % 24
-            # Apply night discount (22:00–06:00)
-            buy_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            sum_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            # Adjusted electric buy variable
-            if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
-            else:
-                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy
@@ -1449,16 +1473,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eElePeakHourInd_C1(optmodel, p,sc,n,er,m,peak):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
-            # Determine hour of day using ordinal of time index n
-            hour = optmodel.n.ord(n) % 24
-            # Apply night discount (22:00–06:00)
-            buy_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            sum_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            # Adjusted electric buy variable
-            if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
-            else:
-                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1467,16 +1482,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eElePeakHourInd_C2(optmodel, p,sc,n,er,m,peak):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
-            # Determine hour of day using ordinal of time index n
-            hour = optmodel.n.ord(n) % 24
-            # Apply night discount (22:00–06:00)
-            buy_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            sum_factor = 1.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            # Adjusted electric buy variable
-            if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
-            else:
-                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -1502,16 +1508,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleDailyPeakValue(optmodel, p,sc,d,n,er):
         # Check applicability
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
-            # Determine hour of day using ordinal of time index n
-            hour = optmodel.n.ord(n) % 24
-            # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            sum_factor = 2.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 5.0
-            # Adjusted electric buy variable
-            if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
-            else:
-                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p, sc, d, er] >= adjusted_buy
         else:
@@ -1529,16 +1526,7 @@ def create_constraints(model, optmodel, indlog):
     # link the indicator with the daily peak value
     def eEleDailyPeakInd_C1(optmodel, p,sc,d,n,er):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
-            # Determine hour of day using ordinal of time index n
-            hour = optmodel.n.ord(n) % 24
-            # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            sum_factor = 2.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 5.0
-            # Adjusted electric buy variable
-            if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
-            else:
-                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
@@ -1547,16 +1535,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleDailyPeakInd_C2(optmodel, p,sc,d,n,er):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
-            # Determine hour of day using ordinal of time index n
-            hour = optmodel.n.ord(n) % 24
-            # Apply night discount (22:00–06:00)
-            buy_factor = 0.5 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 1.0
-            sum_factor = 2.0 if (hour >= model.Par['pEleRetStartNightTime'][er] or hour <= model.Par['pEleRetEndNightTime'][er]) else 5.0
-            # Adjusted electric buy variable
-            if  sum(model.Par['pVarMaxDemand'][ed][p,sc,n] for ed in model.ed if (er,ed) in model.r2ed) > 0:
-                adjusted_buy = buy_factor * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
-            else:
-                adjusted_buy = buy_factor * (optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] + sum_factor)
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:

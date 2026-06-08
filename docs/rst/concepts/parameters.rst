@@ -117,6 +117,20 @@ These parameters define the economic environment, including energy prices, tarif
      - €/kWh
      - ``pGenRampUpCost``, ``pGenRampDownCost``
 
+.. note::
+
+   **Peak-hour discount factors (optional retailer columns).** When the model
+   computes the demand-charge peaks, it compares the grid import against an
+   "adjusted import": the import is scaled by a night/day buy factor and, for a
+   retailer with no demand, a fixed addend is added so an idle connection still
+   registers a baseline. The night window itself is set per retailer by
+   ``StartNightTime`` / ``EndNightTime``. The four factors can be set per retailer
+   with the optional columns ``PeakNightBuyFactor``, ``PeakDayBuyFactor``,
+   ``PeakNightAddend`` and ``PeakDayAddend`` in the electricity-retail data (read as
+   ``pEleRetPeakNightBuyFactor`` and so on). If a column is absent the factor falls
+   back to a default that depends on the tariff type -- Hourly uses ``1, 1, 1, 1``
+   and Daily uses ``0.5, 1, 2, 5`` -- so a case without these columns is unchanged.
+
 Asset Performance & Limits
 --------------------------
 
