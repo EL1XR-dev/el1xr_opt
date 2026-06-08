@@ -310,7 +310,13 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.egsc = Set(doc='electricity storage    units ', initialize=[egsc   for egsc in           model.egs if  parameters_dict['pEleGenInvestCost']      [egsc]  >  0.0])
     model.hg   = Set(doc='hydrogen generation    units ', initialize=[hgg    for hgg  in           model.hgg if (parameters_dict['pHydGenMaximumPower']     [hgg]  >  0.0 or   parameters_dict['pHydGenMaximumCharge']     [hgg] >  0 ) and parameters_dict['pHydGenInitialPeriod']     [hgg] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pHydGenFinalPeriod'][hgg]  >= parameters_dict['pParEconomicBaseYear']])
     model.hgt  = Set(doc='hydrogen scheduled     units ', initialize=[hgt    for hgt  in           model.hg  if  parameters_dict['pHydGenConstantVarCost']  [hgt]  >  0.0])
-    model.hd   = Set(doc='hydrogen demand        units ', initialize=[hdd    for hdd  in           model.hdd if  parameters_dict['pHydDemMaximumPower']     [hdd]  == 0.0])
+    # Active hydrogen demands are those whose period window covers the base year --
+    # the same period test as electricity demand (model.ed) and the generation sets.
+    # (Unlike electricity, hydrogen demand is driven by the VarMaxDemand time series,
+    # not a MaximumPower cap, so there is no MaximumPower > 0 filter; the previous
+    # `== 0.0` test had no period window, so future hydrogen demand was active in the
+    # base year while the matching hydrogen supply was correctly excluded.)
+    model.hd   = Set(doc='hydrogen demand        units ', initialize=[hdd    for hdd  in           model.hdd if  parameters_dict['pHydDemInitialPeriod']     [hdd] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pHydDemFinalPeriod'][hdd]  >= parameters_dict['pParEconomicBaseYear']])
     model.hr   = Set(doc='hydrogen retail        units ', initialize=[hrr    for hrr  in           model.hrr if  parameters_dict['pHydRetMaximumEnergyBuy'] [hrr]  >  0.0 or   parameters_dict['pHydRetMaximumEnergySell'] [hrr] >  0.0 or  parameters_dict['pHydRetMinimumEnergyBuy']  [hrr] >  0.0 or parameters_dict['pHydRetMinimumEnergySell'][hrr] > 0.0])
     model.hgs  = Set(doc='hydrogen storage       units ', initialize=[hgs    for hgs  in           model.hg  if  parameters_dict['pHydGenMaximumStorage']   [hgs]  >  0.0 and (parameters_dict['pVarMaxInflows'].sum()     [hgs] >  0.0 or  parameters_dict['pVarMaxOutflows'].sum()    [hgs] >  0.0 or parameters_dict['pHydGenMaximumCharge'][hgs] > 0.0)])
     model.hgc  = Set(doc='hydrogen candidate     units ', initialize=[hgc    for hgc  in           model.hg  if  parameters_dict['pHydGenInvestCost']       [hgc]  >  0.0])

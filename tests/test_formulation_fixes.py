@@ -1,4 +1,4 @@
-"""Regression tests for three formulation bugs found in the 2026-06 model audit.
+"""Regression tests for formulation bugs found in the 2026-06 model audit.
 
 1. The hydrogen O&M variable cost was **subtracted** in ``eTotalHydGCost`` while the
    electricity analogue adds it, so the model was effectively paid to run hydrogen
@@ -10,22 +10,32 @@
 3. The ``eEleMaxRampDwOutput`` guard referenced ``model.Par['pEleGenRampDw']``, a
    misspelled parameter that exists nowhere, which would raise ``KeyError`` for any
    thermal unit with a ramp-down limit under ``IndBinGenRamps == 1``.
+4. The hydrogen demand set ``model.hd`` had no base-year period filter (it kept the
+   units whose ``MaximumPower`` was zero), so a hydrogen demand whose period window
+   does not cover the base year was active anyway.
+5. The heat operating cost was not weighted by the load-level duration, unlike the
+   electricity and hydrogen operating costs, so it was mis-scaled on representative
+   load levels that stand in for several hours.
 
 Bugs 1 and 2 are checked behaviourally on the ``H2Tank`` variant case, the only
 shipped case that brings the hydrogen generation/storage units into the base year
 (so the hydrogen sets are non-empty). The model is only *built*, not solved, so the
-separate "no electricity->hydrogen converter" gap in that case (which makes its
-hydrogen demand unservable) does not matter here.
+separate "hydrogen production does not fully serve the demand" gap in that case does
+not matter here.
 
 Bug 3 is checked at the source, because no shipped case has a thermal generator and
 constructing one by hand trips unrelated set-membership assumptions in the build.
 """
 import datetime
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 
+import pandas as pd
 import pytest
+from pyomo.environ import ConcreteModel, Set
 from pyomo.repn import generate_standard_repn
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -83,3 +93,61 @@ def test_ele_rampdown_uses_correct_param_name():
     assert "pEleGenRampDw'" not in text, \
         "misspelled parameter pEleGenRampDw was reintroduced"
     assert "pEleGenRampDown'" in text
+
+
+def test_hydrogen_demand_respects_base_year_period():
+    """Bug 4: a hydrogen demand whose period window does not cover the base year must
+    be excluded from ``model.hd``. The shipped H2VPP demand (HydD1) runs 2040-2050
+    while the base year is 2025, so it must not be active; with the bug (no period
+    filter) it was."""
+    work = tempfile.mkdtemp(prefix="h2dem_")
+    dst = os.path.join(work, "Home1")
+    shutil.copytree(os.path.join(REPO, "data", "H2VPP", "Home1"), dst)
+    # truncate to a few load levels for a quick build
+    dpath = os.path.join(dst, "oM_Data_Duration_Home1.csv")
+    dur = pd.read_csv(dpath)
+    keep = set(dur[dur.columns[2]].unique()[:6])
+    dur.loc[~dur[dur.columns[2]].isin(keep), "Duration"] = float("nan")
+    dur.to_csv(dpath, index=False)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    m = build_model(work, "Home1", date)
+    assert "HydD1" in list(m.hdd), "test assumption: HydD1 is a declared demand unit"
+    assert "HydD1" not in list(m.hd), \
+        "out-of-period hydrogen demand should be excluded from model.hd"
+
+
+def test_heat_operating_cost_is_duration_weighted():
+    """Bug 5: the heat operating cost must be weighted by the load-level duration
+    (like the electricity/hydrogen operating costs). The boiler-output coefficient in
+    HeatOperatingCost must be duration * cost, not just cost."""
+    from el1xr_opt.Modules.oM_HeatSector import create_heat_sector
+    P, S, DUR, COST = "p1", "s1", 3.0, 7.0
+    levels = ["n0001", "n0002"]
+    m = ConcreteModel()
+    m.n = Set(initialize=levels, ordered=True)
+    m.ps = [(P, S)]
+    m.htd = ["HD"]
+    m.htg = ["HP", "BOIL"]
+    m.htp = ["HP"]
+    m.hts = ["TS"]
+    m.n2htd = [("H", "HD")]
+    m.n2htg = [("H", "HP"), ("H", "BOIL")]
+    m.n2hts = [("H", "TS")]
+    m.Par = {
+        "pHeatDemand":      {"HD": {(P, S, n): 5.0 for n in levels}},
+        "pHeatGenMaxPower": {"HP": 30.0, "BOIL": 50.0},
+        "pHeatGenCost":     {"HP": 0.0, "BOIL": COST},
+        "pHeatPumpCOP":     {"HP": 3.0},
+        "pHeatStoMax":      {"TS": 20.0},
+        "pHeatStoEff":      {"TS": 0.95},
+        "pHeatStoInitial":  {"TS": 5.0},
+        "pHeatNSCost":      1000.0,
+        "pDuration":        {(P, S, n): DUR for n in levels},   # non-unit, (p,sc,n)-keyed
+    }
+    create_heat_sector(m, m)
+    repn = generate_standard_repn(m.HeatOperatingCost)
+    out = m.vHeatOutput[P, S, levels[0], "BOIL"]
+    coef = next((c for v, c in zip(repn.linear_vars, repn.linear_coefs) if v is out), None)
+    assert coef is not None, "boiler output absent from the heat operating cost"
+    assert coef == pytest.approx(DUR * COST), \
+        f"coefficient {coef} should be duration*cost={DUR * COST} (duration-weighted)"

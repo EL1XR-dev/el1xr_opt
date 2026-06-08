@@ -244,20 +244,29 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
                                          doc="thermal store inventory balance")
 
     # heat operating cost (heat-not-served + generator running cost), discounted by
-    # period like the electricity and hydrogen costs (discount 1.0 if unset, as in
-    # the standalone tests). The heat-pump electricity is already costed on the
-    # electricity side, so it is not counted again here.
+    # period and weighted by the load-level duration like the electricity and hydrogen
+    # operating costs (the "psn" cost kind), so a representative load level standing in
+    # for several hours is costed for all of them (discount and duration default to 1.0
+    # if unset, as in the standalone tests). The heat-pump electricity is already costed
+    # on the electricity side, so it is not counted again here.
     disc = Par.get("pDiscountFactor", {})
+    dur = Par.get("pDuration", {})
 
     def _d(p):
         try:
             return float(disc[p])
         except (KeyError, TypeError):
             return 1.0
+
+    def _dur(p, sc, n):
+        try:
+            return float(dur[p, sc, n])
+        except (KeyError, TypeError):
+            return 1.0
     optmodel.HeatOperatingCost = (
-        sum(_d(p) * float(Par["pHeatNSCost"]) * optmodel.vHeatNotServed[p, sc, n, d]
+        sum(_d(p) * _dur(p, sc, n) * float(Par["pHeatNSCost"]) * optmodel.vHeatNotServed[p, sc, n, d]
             for (p, sc, n) in psn for d in htd)
-        + sum(_d(p) * float(Par["pHeatGenCost"][g]) * optmodel.vHeatOutput[p, sc, n, g]
+        + sum(_d(p) * _dur(p, sc, n) * float(Par["pHeatGenCost"][g]) * optmodel.vHeatOutput[p, sc, n, g]
               for (p, sc, n) in psn for g in htg))
 
     log_time('-- Declaring the heat sector:', StartTime, ind_log=indlog)
