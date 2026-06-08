@@ -103,17 +103,17 @@ def test_cost_from_duckdb(label, d, case, expected, rtol, tmp_path):
 # data/sizing/make_sizing_cases.py and read as .duckdb input files. The fixture
 # regenerates them so nothing has to be committed. Costs are reproducible (LP).
 SIZING_DIR = os.path.join(REPO, "data", "sizing")
-# The H2VPP base has no electricity->hydrogen converter (the e2h set is empty), so the
-# 5 kgH2/h demand the H2Tank / Electrolyser cases add cannot be produced. They used to
-# "solve" cheaply only because the hydrogen storage inventory balance was skipped by a
-# bug (eHydInventory was gated on the electricity cycle set), letting the storage
-# discharge hydrogen it never stored. With that fixed the demand is correctly
-# unservable and the cost is dominated by the hydrogen-not-served penalty. Marked xfail
-# until the electrolyser is linked into e2h (a separate modelling task) or the demand
-# is removed; the stored golden below is the old (bug-dependent) value, kept for record.
-_XFAIL_NO_E2H = pytest.mark.xfail(
-    reason="H2 demand unservable: e2h set empty (electrolyser not linked); see "
-           "data/sizing/make_sizing_cases.py", strict=False)
+# The H2Tank / Electrolyser cases add a 5 kgH2/h demand, but the hydrogen-production
+# path does not fully serve it: the electrolyser produces some hydrogen yet not enough
+# to meet the demand, so the cost is dominated by the hydrogen-not-served penalty.
+# (These cases used to "solve" cheaply only because the hydrogen storage inventory
+# balance was skipped by a bug, letting the storage discharge hydrogen it never stored;
+# that is now fixed.) Marked xfail until the hydrogen sizing path is built out -- see
+# the user's plan for electrolyser-technology / tank / daily-quota / closed-loop cases.
+# The stored golden below is the old (bug-dependent) value, kept for record.
+_XFAIL_H2_SIZING = pytest.mark.xfail(
+    reason="H2 demand not fully served: hydrogen production path under development; "
+           "see data/sizing/make_sizing_cases.py", strict=False)
 SIZING_CASES = [
     pytest.param("HomeBatt",          44.27112550985886, id="HomeBatt"),
     pytest.param("HoodBatt",         -22.04979393397224, id="HoodBatt"),
@@ -121,8 +121,8 @@ SIZING_CASES = [
     pytest.param("HomeBattNoFCR",    122.8894702739726,  id="HomeBattNoFCR"),
     pytest.param("HomeBattFCRDonly",  67.89854138599155, id="HomeBattFCRDonly"),
     pytest.param("HomeBattFCRNonly",  56.97418403620797, id="HomeBattFCRNonly"),
-    pytest.param("H2Tank",            45.2627371208163,  id="H2Tank", marks=_XFAIL_NO_E2H),
-    pytest.param("Electrolyser",      45.26055530263449, id="Electrolyser", marks=_XFAIL_NO_E2H),
+    pytest.param("H2Tank",            45.2627371208163,  id="H2Tank", marks=_XFAIL_H2_SIZING),
+    pytest.param("Electrolyser",      45.26055530263449, id="Electrolyser", marks=_XFAIL_H2_SIZING),
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser"]

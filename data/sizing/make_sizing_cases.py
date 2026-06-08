@@ -151,6 +151,11 @@ def _move_h2_demand_node(df):
     # Put the demand on the electrolyser's node so it actually drives production.
     if "Node" in df.columns and "HydD1" in df.index:
         df.loc["HydD1", "Node"] = H2_NODE
+    # Bring the demand into the base year too (the supply is moved to 2020 in
+    # _edit_hyd). Otherwise the demand sits in 2040-2050 and is dropped by the
+    # base-year period filter on the hydrogen-demand set.
+    if "InitialPeriod" in df.columns:
+        df["InitialPeriod"] = 2020
     return df
 
 
