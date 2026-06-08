@@ -11,6 +11,14 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 Unreleased
 ----------
 
+### Fixed
+
+- Three formulation bugs found in the model audit (``tests/test_formulation_fixes.py`` guards each):
+
+  - **Hydrogen O&M cost sign.** ``eTotalHydGCost`` subtracted the O&M variable cost where the electricity analogue adds it, so the model was effectively paid to run hydrogen generators. Now added.
+  - **Hydrogen storage inventory never built.** ``eHydInventory`` was gated on ``model.negs`` -- the *electricity* storage cycle set -- instead of ``model.nhgs``, so it was silently skipped and hydrogen state-of-charge went untracked (the storage could discharge hydrogen it never stored). Now gated on the hydrogen set. This only affects cases where the hydrogen units are active in the base year; on the shipped cases the hydrogen units are out of the base year, so the headline goldens are unchanged. It does correct the ``H2Tank`` / ``Electrolyser`` variant cases, which now reveal a separate gap: the base case has no electricity->hydrogen converter (the ``e2h`` set is empty), so their hydrogen demand cannot be produced -- those two cases are marked ``xfail`` until the electrolyser is linked into ``e2h``.
+  - **Ramp-down parameter typo.** The ``eEleMaxRampDwOutput`` guard read ``pEleGenRampDw`` (a parameter that exists nowhere) instead of ``pEleGenRampDown``, which would ``KeyError`` for any thermal unit with a ramp-down limit under ``IndBinGenRamps == 1``. No shipped case has a thermal generator, so the bug was latent.
+
 ### Changed
 
 - Peak-hour "adjusted import" deduplicated and made data-driven. The six peak-selection rules (``eElePeakHourValue`` / ``...Ind_C1`` / ``...Ind_C2`` for the Hourly tariff and the Daily equivalents) each repeated the same block computing the night-discount factor and the no-demand baseline addend; it is now one helper, ``_adjusted_import``. The four factors it applies (the night and day buy factors and the night and day addends) are read from the retailer data as optional columns ``PeakNightBuyFactor`` / ``PeakDayBuyFactor`` / ``PeakNightAddend`` / ``PeakDayAddend`` (loaded like any retailer column into ``pEleRet...``), so a case can set its real tariff terms instead of relying on the hard-coded numbers. When a column is absent the factor falls back to the previous hard-coded value, which depends on the tariff type (Hourly: 1, 1, 1, 1; Daily: 0.5, 1, 2, 5), so cases without the columns are unchanged -- the four validation cases solve to the same cost.
