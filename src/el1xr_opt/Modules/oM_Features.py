@@ -344,7 +344,7 @@ def register_horizon_threshold(model, cost_var, native_constraints, quantity_var
                                count, items, node_of, coeff_of, subgroups,
                                level_subgroup):
     """Declare a 'sum of the N largest <quantity> per <subgroup>' peak charge for the
-    threshold-LP reformulation. Fields (see ``el1xr_temporal_benders`` for the use):
+    threshold-LP reformulation. Fields (see ``el1xr_temporal_benders`` for the use)::
 
       cost_var           native peak-cost Var name (pinned to 0; the LP replaces it)
       native_constraints native peak constraint names to deactivate
