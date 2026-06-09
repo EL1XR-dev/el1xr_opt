@@ -933,6 +933,16 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eHydElectrolyserColdStart', Constraint(optmodel.psne2h, rule=eHydElectrolyserColdStart, doc='electrolyser cold start (off->on) incurs the start-up cost; a warm start from standby is free'))
 
+    # A start-up only happens when the electrolyser ends up on, so the (cold) start-up
+    # cannot exceed the commitment. With the cold-start lower bound above this pins the
+    # start-up to exactly the off->on transitions, keeping the binary logic airtight.
+    def eHydElectrolyserStartUpBound(optmodel, p,sc,n,e2h):
+        if model.Par['pHydGenStartUpCost'][e2h]:
+            return optmodel.vHydGenStartUp[p,sc,n,e2h] <= optmodel.vHydGenCommitment[p,sc,n,e2h]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydElectrolyserStartUpBound', Constraint(optmodel.psne2h, rule=eHydElectrolyserStartUpBound, doc='electrolyser start-up implies the unit is on'))
+
     def eAllEnergy2Ele(optmodel, p,sc,n,h2e):
         if model.Par['pEleMaxPower'][h2e][p,sc,n] and h2e in model.h2e:
             return optmodel.vEleTotalOutput[p,sc,n,h2e] == optmodel.vHydTotalCharge[p,sc,n,h2e] * model.Par['pEleGenProductionFunction'][h2e]

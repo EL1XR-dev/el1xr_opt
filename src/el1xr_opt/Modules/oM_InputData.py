@@ -1583,10 +1583,14 @@ def create_variables(model, optmodel, indlog):
             nFixedVariables += 3
 
     # An electrolyser's hydrogen output is set by eAllEnergy2Hyd from its electricity
-    # input, so its H2 second-block output variable is unused; fix it to zero.
+    # input, so its H2 second-block output variable is unused; fix it to zero. The
+    # electrolyser's state logic uses commitment (on), standby and start-up (cold start);
+    # it carries no shut-down transition, so its shut-down variable is fixed to zero too
+    # (otherwise it would be a free variable appearing only in the shut-down cost).
     for idx in model.psne2h:
         optmodel.vHydTotalOutput2ndBlock[idx].fix(0.0)
-        nFixedVariables += 1
+        optmodel.vHydGenShutDown[idx].fix(0.0)
+        nFixedVariables += 2
 
     # Standby is an electrolyser (e2h) state, available only where StandByStatus is set.
     # Everywhere else the standby variable is fixed to zero, so the three-state model

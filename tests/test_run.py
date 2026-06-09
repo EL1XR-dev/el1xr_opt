@@ -125,7 +125,8 @@ SIZING_CASES = [
     pytest.param("Electrolyser",      45.26055530263449, id="Electrolyser", marks=_XFAIL_H2_SIZING),
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
-                     "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser"]
+                     "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
+                     "ElectrolyserStandby"]
 SIZING_RTOL = 1e-5
 
 
@@ -153,6 +154,25 @@ def test_sizing_case_from_duckdb(case, expected, sizing_cases_built):
                     rawresults="False", plots="False", indlog="False", duckdbresults="False")
     assert model is not None
     _assert_cost(float(pyo.value(model.eTotalSCost)), expected, SIZING_RTOL)
+
+
+@pytest.mark.solve
+def test_electrolyser_standby_selected(sizing_cases_built):
+    """The three-state electrolyser sits in standby through the idle hour of the
+    (0.09, 0, 0.09) demand burst to avoid a cold restart: standby is actively chosen,
+    it draws only its standby power, and it makes no hydrogen while in standby."""
+    model = routine(dir=sizing_cases_built, case="ElectrolyserStandby", solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    u = "AEL_01"
+    standby = {n: model.vHydGenStandBy["period1", "sc01", n, u]() for n in model.n}
+    assert sum(1 for v in standby.values() if v > 0.5) > 0, "standby state was never selected"
+    # no hydrogen is produced while in standby
+    for n in model.n:
+        if standby[n] > 0.5:
+            assert model.vHydTotalOutput["period1", "sc01", n, u]() < 1e-4, \
+                f"electrolyser produced hydrogen while in standby at {n}"
 
 
 @pytest.mark.solve

@@ -77,6 +77,15 @@ CASES = {
     # less, by the FCR revenue the electrolyser earns.
     "ElectrolyserNoFCR": dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=False),
     "ElectrolyserFCR":   dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=True),
+    # Three-state electrolyser demonstration: binary commitment, a small electrolyser, and
+    # a hydrogen demand burst with a one-hour gap (0.09, 0, 0.09) and no storage buffer.
+    # The electrolyser sits in STANDBY through the idle hour (drawing only its standby
+    # power, making no hydrogen) to avoid a cold restart -- so standby is actively chosen
+    # and the cost is lower than if it had to shut down and cold-start again.
+    "ElectrolyserStandby": dict(battery=("BESS_01", 0.2, None), fcrd=False, fcrn=False,
+                                h2=("AEL_01", 0.10), e2h_charge=(2.0, 20.0), standby=True,
+                                no_h2_buffer=True, binary_uc=True, green=0,
+                                demand_profile=[0.09, 0.0, 0.09] + [0.0] * 9),
 }
 
 
@@ -138,6 +147,20 @@ def _edit_hyd(df, spec):
         if "InitialPeriod" in df.columns:
             df["InitialPeriod"] = 2020
         _set_candidate(df, h2[0], h2[1])
+        if spec.get("e2h_charge"):
+            mn, mx = spec["e2h_charge"]
+            if "MinimumCharge" in df.columns:
+                df.loc[h2[0], "MinimumCharge"] = mn
+            if "MaximumCharge" in df.columns:
+                df.loc[h2[0], "MaximumCharge"] = mx
+        if spec.get("standby") and "StandByStatus" in df.columns:
+            df.loc[h2[0], "StandByStatus"] = "Yes"   # enable the three-state (on/standby/off) model
+        if spec.get("no_h2_buffer") and "InitialPeriod" in df.columns:
+            # keep only the electrolyser active; push the H2 store(s) out of the base year
+            # so the electrolyser must serve demand directly (no buffer to smooth cycling)
+            for u in df.index:
+                if u != h2[0]:
+                    df.loc[u, "InitialPeriod"] = 2040
         if spec.get("e2h_fcr"):
             # The hydrogen-generation data has no FCR columns by default. Add them
             # (every unit off) and opt the electrolyser in, with a 60-minute
@@ -152,9 +175,12 @@ def _edit_hyd(df, spec):
     return df
 
 
-def _set_h2_demand(df, demand=H2_DEMAND):
+def _set_h2_demand(df, demand=H2_DEMAND, profile=None):
     if "HydD1" in df.columns:
-        df["HydD1"] = demand
+        if profile is not None:
+            df["HydD1"] = [profile[i % len(profile)] for i in range(len(df))]
+        else:
+            df["HydD1"] = demand
     return df
 
 
@@ -213,8 +239,13 @@ def build_case(case, spec):
         df = df.copy()
         if stem == "Option":
             df = _relax_uc(df)
-        elif stem == "Parameter" and spec.get("power_peaks") is not None:
-            df = _set_power_peaks(df, spec["power_peaks"])
+            if spec.get("binary_uc") and "IndBinGenOperat" in df.columns:
+                df["IndBinGenOperat"] = 1   # keep binary commitment (3-state needs discrete on/standby/off)
+        elif stem == "Parameter":
+            if spec.get("power_peaks") is not None:
+                df = _set_power_peaks(df, spec["power_peaks"])
+            if spec.get("green") is not None and "GreenH2Matching" in df.columns:
+                df["GreenH2Matching"] = spec["green"]
         elif stem == "OperatingReserveRequire":
             df = _set_fcr_requirement(df, spec["fcrd"], spec["fcrn"])
         elif stem == "ElectricityGeneration":
@@ -224,7 +255,7 @@ def build_case(case, spec):
         elif stem == "HydrogenDemand" and spec.get("h2"):
             df = _move_h2_demand_node(df)
         elif stem in ("VarMaxDemand", "VarMinDemand") and spec.get("h2"):
-            df = _set_h2_demand(df, spec.get("h2_demand", H2_DEMAND))
+            df = _set_h2_demand(df, spec.get("h2_demand", H2_DEMAND), spec.get("demand_profile"))
         df.to_csv(os.path.join(out, f"oM_Data_{stem}_{case}.csv"))
     return out
 
