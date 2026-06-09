@@ -687,7 +687,7 @@ def create_constraints(model, optmodel, indlog):
                 return Constraint.Skip
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleInventory', Constraint(optmodel.psnegs, rule=eEleInventory, doc='Electricity ESS inventory balance [GWh]'))
+    optmodel.__setattr__('eEleInventory', Constraint(optmodel.psnegs, rule=eEleInventory, doc='Electricity ESS inventory balance [kWh]'))
 
     def eHydInventory(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
@@ -699,7 +699,7 @@ def create_constraints(model, optmodel, indlog):
                 return Constraint.Skip
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydInventory', Constraint(optmodel.psnhgs, rule=eHydInventory, doc='Hydrogen ESS inventory balance [KgH2h]'))
+    optmodel.__setattr__('eHydInventory', Constraint(optmodel.psnhgs, rule=eHydInventory, doc='Hydrogen ESS inventory balance [kgH2]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleInventory) > 0 or len(optmodel.eHydInventory) > 0:
@@ -860,28 +860,28 @@ def create_constraints(model, optmodel, indlog):
             return sum(optmodel.vEleEnergyOutflows[p,sc,n2,egs] - model.Par['pEleMaxOutflows'][egs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pEleOutflowsTimeStep'][egs]:model.n.ord(n)]) <= 0.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleMaxEnergyOutflows', Constraint(optmodel.psnegs, rule=eEleMaxEnergyOutflows, doc='electricity energy outflows of an ESS unit [GWh]'))
+    optmodel.__setattr__('eEleMaxEnergyOutflows', Constraint(optmodel.psnegs, rule=eEleMaxEnergyOutflows, doc='electricity energy outflows of an ESS unit [kW]'))
 
     def eEleMinEnergyOutflows(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] + model.Par['pEleMinPower'][egs][p,sc,n] and (n,egs) in model.negso:
             return sum(optmodel.vEleEnergyOutflows[p,sc,n2,egs] - model.Par['pEleMinOutflows'][egs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pEleOutflowsTimeStep'][egs]:model.n.ord(n)]) >= 0.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleMinEnergyOutflows', Constraint(optmodel.psnegs, rule=eEleMinEnergyOutflows, doc='electricity energy outflows of an ESS unit [GWh]'))
+    optmodel.__setattr__('eEleMinEnergyOutflows', Constraint(optmodel.psnegs, rule=eEleMinEnergyOutflows, doc='electricity energy outflows of an ESS unit [kW]'))
 
     def eHydMaxEnergyOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.nhgso:
             return sum(optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - model.Par['pHydMaxOutflows'][hgs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pHydOutflowsTimeStep'][hgs]:model.n.ord(n)]) <= 0.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydMaxEnergyOutflows', Constraint(optmodel.psnhgs, rule=eHydMaxEnergyOutflows, doc='hydrogen energy outflows of an ESS unit [tH2]'))
+    optmodel.__setattr__('eHydMaxEnergyOutflows', Constraint(optmodel.psnhgs, rule=eHydMaxEnergyOutflows, doc='hydrogen energy outflows of an ESS unit [kgH2/h]'))
 
     def eHydMinEnergyOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydMinCharge'][hgs][p,sc,n] + model.Par['pHydMinPower'][hgs][p,sc,n] and (n,hgs) in model.nhgso:
             return sum(optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - model.Par['pHydMinOutflows'][hgs][p,sc,n2] for n2 in n2_list[model.n.ord(n) - model.Par['pHydOutflowsTimeStep'][hgs]:model.n.ord(n)]) >= 0.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydMinEnergyOutflows', Constraint(optmodel.psnhgs, rule=eHydMinEnergyOutflows, doc='hydrogen energy outflows of an ESS unit [tH2]'))
+    optmodel.__setattr__('eHydMinEnergyOutflows', Constraint(optmodel.psnhgs, rule=eHydMinEnergyOutflows, doc='hydrogen energy outflows of an ESS unit [kgH2/h]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxOutflows2Commitment) > 0 or len(optmodel.eEleMinOutflows2Commitment) > 0 or len(optmodel.eHydMaxOutflows2Commitment) > 0 or len(optmodel.eHydMinOutflows2Commitment) > 0 or len(optmodel.eEleMaxEnergyOutflows) > 0 or len(optmodel.eEleMinEnergyOutflows) > 0 or len(optmodel.eHydMaxEnergyOutflows) > 0 or len(optmodel.eHydMinEnergyOutflows) > 0:
@@ -1095,9 +1095,9 @@ def create_constraints(model, optmodel, indlog):
                 return Constraint.Skip
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleTotalOutput', Constraint(optmodel.psnegnr, rule=eEleTotalOutput, doc='total output of a unit [GW]'))
+    optmodel.__setattr__('eEleTotalOutput', Constraint(optmodel.psnegnr, rule=eEleTotalOutput, doc='total output of a unit [kW]'))
 
-    # Total output of an H2 producer unit [tH2]
+    # Total output of an H2 producer unit [kgH2/h]
     def eHydTotalOutput(optmodel, p,sc,n,hgt):
         if model.Par['pHydMaxPower'][hgt][p,sc,n]:
             if model.Par['pHydMinPower'][hgt][p,sc,n] == 0.0:
@@ -1110,7 +1110,7 @@ def create_constraints(model, optmodel, indlog):
                 return Constraint.Skip
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydTotalOutput', Constraint(optmodel.psnhgt, rule=eHydTotalOutput, doc='total output of an H2 producer unit [tH2]'))
+    optmodel.__setattr__('eHydTotalOutput', Constraint(optmodel.psnhgt, rule=eHydTotalOutput, doc='total output of an H2 producer unit [kgH2/h]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleTotalOutput) > 0 or len(optmodel.eHydTotalOutput) > 0:
@@ -1134,9 +1134,9 @@ def create_constraints(model, optmodel, indlog):
                 return Constraint.Skip
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleTotalCharge', Constraint(optmodel.psneh, rule=eEleTotalCharge, doc='total charge of an ESS unit [GW]'))
+    optmodel.__setattr__('eEleTotalCharge', Constraint(optmodel.psneh, rule=eEleTotalCharge, doc='total charge of an ESS unit [kW]'))
 
-    # Total charge of an H2 ESS unit [tH2]
+    # Total charge of an H2 ESS unit [kgH2/h]
     def eHydTotalCharge(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] and model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n]:
             if model.Par['pHydMinCharge'][hgs][p,sc,n] == 0.0:
@@ -1145,7 +1145,7 @@ def create_constraints(model, optmodel, indlog):
                 return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMinCharge'][hgs][p,sc,n] == optmodel.vHydStorCharge[p,sc,n,hgs] + (optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMinCharge'][hgs][p,sc,n])
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydTotalCharge', Constraint(optmodel.psnhgs, rule=eHydTotalCharge, doc='total charge of an H2 ESS unit [tH2]'))
+    optmodel.__setattr__('eHydTotalCharge', Constraint(optmodel.psnhgs, rule=eHydTotalCharge, doc='total charge of an H2 ESS unit [kgH2/h]'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleTotalCharge) > 0:
@@ -1432,7 +1432,7 @@ def create_constraints(model, optmodel, indlog):
             return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pEleMaxCharge'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleTotalMaxChargeConditioned', Constraint(optmodel.psneh, rule=eEleTotalMaxChargeConditioned, doc='total charge of an ESS unit [GW]'))
+    optmodel.__setattr__('eEleTotalMaxChargeConditioned', Constraint(optmodel.psneh, rule=eEleTotalMaxChargeConditioned, doc='total charge of an ESS unit [kW]'))
 
     # print if the constraints object len is greater than 0
     # if len(optmodel.eEleMinEnergyStartUp) > 0 or len(optmodel.eEleTotalMaxChargeConditioned) > 0:

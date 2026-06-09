@@ -20,6 +20,14 @@
    ESS: the 2nd-block limits gated output by the charge binary and charge by the
    discharge binary, and the charge/discharge decisions normalized by the wrong
    capacity (charge by output power, output by charge capacity).
+7. The hydrogen storage-energy bounds (inventory variable bound and investment cap) did
+   not carry the factor1 unit conversion that the electricity bounds and the initial
+   inventory do, so the cap and the accumulated/initial inventory were in different units
+   when factor1 != 1.
+8. The thermal-store inventory balance (``eHeatInventory``) did not weight the
+   charge/discharge by the load-level duration, unlike the electricity/hydrogen
+   inventories and the (duration-weighted) heat operating cost, so on a representative
+   load level the store state and its cost disagreed.
 
 Bugs 1 and 2 are checked behaviourally on the ``H2Tank`` variant case, the only
 shipped case that brings the hydrogen generation/storage units into the base year
@@ -47,8 +55,10 @@ sys.path.insert(0, os.path.join(REPO, "src"))
 from el1xr_opt.Modules.oM_Sequence import build_model  # noqa: E402
 
 SIZING_DIR = os.path.join(REPO, "data", "sizing")
-MODEL_FORMULATION = os.path.join(REPO, "src", "el1xr_opt", "Modules",
-                                 "oM_ModelFormulation.py")
+MODULES = os.path.join(REPO, "src", "el1xr_opt", "Modules")
+MODEL_FORMULATION = os.path.join(MODULES, "oM_ModelFormulation.py")
+INPUT_DATA = os.path.join(MODULES, "oM_InputData.py")
+INVESTMENT = os.path.join(MODULES, "oM_Investment.py")
 
 
 @pytest.fixture(scope="module")
@@ -146,6 +156,25 @@ def test_hydrogen_storage_charge_discharge_not_swapped(h2_model):
             "charge 2nd block must be gated by the charge binary, not the discharge binary"
 
 
+def test_hydrogen_storage_energy_scaled_by_factor1():
+    """Bug 7: hydrogen storage energy must carry the factor1 unit conversion -- on the
+    inventory variable bounds and the investment cap -- like the electricity ESS and the
+    (already factor1-scaled) initial inventory, so the cap, the initial state and the
+    accumulated inventory share one unit. Checked at the source because factor1 is 1.0 by
+    default, so a built model cannot distinguish the scaled from the unscaled form."""
+    inp_lines = open(INPUT_DATA, encoding="utf-8").read().splitlines()
+    hyd_bounds = [ln for ln in inp_lines
+                  if "vHydInventory" in ln and (".setlb(" in ln or ".setub(" in ln)]
+    assert hyd_bounds, "could not find the hydrogen inventory bound lines"
+    assert all("model.factor1" in ln for ln in hyd_bounds), \
+        "hydrogen inventory variable bounds must be scaled by model.factor1"
+    inv_cap = [ln for ln in open(INVESTMENT, encoding="utf-8").read().splitlines()
+               if "vHydInventory" in ln and "vHydGenInvest" in ln]
+    assert inv_cap, "could not find the hydrogen investment inventory cap"
+    assert all("model.factor1" in ln for ln in inv_cap), \
+        "the hydrogen investment storage-energy cap must be scaled by model.factor1"
+
+
 def test_ele_rampdown_uses_correct_param_name():
     """Bug 3: the ramp-down guard must use ``pEleGenRampDown``; the misspelled
     ``pEleGenRampDw`` raised KeyError for any ramp-limited thermal unit."""
@@ -211,6 +240,47 @@ def test_heat_operating_cost_is_duration_weighted():
     assert coef is not None, "boiler output absent from the heat operating cost"
     assert coef == pytest.approx(DUR * COST), \
         f"coefficient {coef} should be duration*cost={DUR * COST} (duration-weighted)"
+
+
+def test_heat_inventory_is_duration_weighted():
+    """Bug 8: the thermal-store inventory balance must weight the charge/discharge by the
+    load-level duration (like the electricity/hydrogen inventories), so the charge term's
+    coefficient is duration*efficiency and the discharge term's is duration -- not just
+    efficiency and 1 as before."""
+    from el1xr_opt.Modules.oM_HeatSector import create_heat_sector
+    P, S, DUR, EFF = "p1", "s1", 3.0, 0.95
+    levels = ["n0001", "n0002"]
+    m = ConcreteModel()
+    m.n = Set(initialize=levels, ordered=True)
+    m.ps = [(P, S)]
+    m.htd = ["HD"]
+    m.htg = ["HP"]
+    m.htp = ["HP"]
+    m.hts = ["TS"]
+    m.n2htd = [("H", "HD")]
+    m.n2htg = [("H", "HP")]
+    m.n2hts = [("H", "TS")]
+    m.Par = {
+        "pHeatDemand":      {"HD": {(P, S, n): 5.0 for n in levels}},
+        "pHeatGenMaxPower": {"HP": 30.0},
+        "pHeatGenCost":     {"HP": 0.0},
+        "pHeatPumpCOP":     {"HP": 3.0},
+        "pHeatStoMax":      {"TS": 100.0},
+        "pHeatStoEff":      {"TS": EFF},
+        "pHeatStoInitial":  {"TS": 5.0},
+        "pHeatNSCost":      1000.0,
+        "pDuration":        {(P, S, n): DUR for n in levels},
+    }
+    create_heat_sector(m, m)
+    repn = generate_standard_repn(m.eHeatInventory[P, S, levels[0], "TS"].body)
+    coefs = {v.name: c for v, c in zip(repn.linear_vars, repn.linear_coefs)}
+    chg = next((c for nm, c in coefs.items() if "vHeatCharge" in nm), None)
+    dis = next((c for nm, c in coefs.items() if "vHeatDischarge" in nm), None)
+    assert chg is not None and dis is not None, "charge/discharge absent from heat inventory"
+    assert abs(chg) == pytest.approx(DUR * EFF), \
+        f"charge coef {chg} should be duration*efficiency={DUR * EFF}"
+    assert abs(dis) == pytest.approx(DUR), \
+        f"discharge coef {dis} should be duration={DUR}"
 
 
 def test_electrolyser_input_capped_by_build_decision():

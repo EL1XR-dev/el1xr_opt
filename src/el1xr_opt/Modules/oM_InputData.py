@@ -985,8 +985,8 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vEleTotalOutput2ndBlock',           Var(model.psnegnr, within=NonNegativeReals, doc='second block of the unit                                                [kW]'))
     setattr(optmodel, 'vEleTotalCharge',                   Var(model.psneh,   within=NonNegativeReals, doc='ESS total charge power                                                  [kW]'))
     setattr(optmodel, 'vEleTotalCharge2ndBlock',           Var(model.psneh,   within=NonNegativeReals, doc='ESS       charge power                                                  [kW]'))
-    setattr(optmodel, 'vEleEnergyInflows',                 Var(model.psnegs,  within=NonNegativeReals, doc='unscheduled inflows  of all ESS units                                  [kWh]'))
-    setattr(optmodel, 'vEleEnergyOutflows',                Var(model.psnegs,  within=NonNegativeReals, doc='scheduled   outflows of all ESS units                                  [kWh]'))
+    setattr(optmodel, 'vEleEnergyInflows',                 Var(model.psnegs,  within=NonNegativeReals, doc='unscheduled inflows  of all ESS units                                  [kW]'))
+    setattr(optmodel, 'vEleEnergyOutflows',                Var(model.psnegs,  within=NonNegativeReals, doc='scheduled   outflows of all ESS units                                  [kW]'))
     setattr(optmodel, 'vEleInventory',                     Var(model.psnegs,  within=NonNegativeReals, doc='ESS inventory                                                          [kWh]'))
     setattr(optmodel, 'vEleInventoryMinDay',               Var(model.psdegs,  within=NonNegativeReals, doc=f'Minimum battery inventory per day                                     [kWh]'))
     setattr(optmodel, 'vEleInventoryMaxDay',               Var(model.psdegs,  within=NonNegativeReals, doc=f'Maximum battery inventory per day                                     [kWh]'))
@@ -1002,12 +1002,12 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vHydSell',                          Var(model.psnhr,   within=NonNegativeReals, doc='hydrogen sell       in node                                           [kgH2]'))
     setattr(optmodel, 'vHydDemand',                        Var(model.psnhd,   within=NonNegativeReals, doc='hydrogen demand                                                       [kgH2]'))
     setattr(optmodel, 'vHNS',                              Var(model.psnhd,   within=NonNegativeReals, doc='hydrogen demand                                                       [kgH2]'))
-    setattr(optmodel, 'vHydTotalOutput',                   Var(model.psnhg,   within=NonNegativeReals, doc='total hydrogen output of the unit                                     [kgH2]'))
-    setattr(optmodel, 'vHydTotalOutput2ndBlock',           Var(model.psnhg,   within=NonNegativeReals, doc='second block of the unit                                              [kgH2]'))
-    setattr(optmodel, 'vHydTotalCharge',                   Var(model.psnhe,   within=NonNegativeReals, doc='H2S total charge power                                                [kgH2]'))
-    setattr(optmodel, 'vHydTotalCharge2ndBlock',           Var(model.psnhe,   within=NonNegativeReals, doc='H2S       charge power                                                [kgH2]'))
-    setattr(optmodel, 'vHydEnergyInflows',                 Var(model.psnhgs,  within=NonNegativeReals, doc='unscheduled inflows  of all H2S units                                 [kgH2]'))
-    setattr(optmodel, 'vHydEnergyOutflows',                Var(model.psnhgs,  within=NonNegativeReals, doc='scheduled   outflows of all H2S units                                 [kgH2]'))
+    setattr(optmodel, 'vHydTotalOutput',                   Var(model.psnhg,   within=NonNegativeReals, doc='total hydrogen output of the unit                                     [kgH2/h]'))
+    setattr(optmodel, 'vHydTotalOutput2ndBlock',           Var(model.psnhg,   within=NonNegativeReals, doc='second block of the unit                                              [kgH2/h]'))
+    setattr(optmodel, 'vHydTotalCharge',                   Var(model.psnhe,   within=NonNegativeReals, doc='H2S total charge power                                                [kgH2/h]'))
+    setattr(optmodel, 'vHydTotalCharge2ndBlock',           Var(model.psnhe,   within=NonNegativeReals, doc='H2S       charge power                                                [kgH2/h]'))
+    setattr(optmodel, 'vHydEnergyInflows',                 Var(model.psnhgs,  within=NonNegativeReals, doc='unscheduled inflows  of all H2S units                                 [kgH2/h]'))
+    setattr(optmodel, 'vHydEnergyOutflows',                Var(model.psnhgs,  within=NonNegativeReals, doc='scheduled   outflows of all H2S units                                 [kgH2/h]'))
     setattr(optmodel, 'vHydInventory',                     Var(model.psnhgs,  within=NonNegativeReals, doc='H2S inventory                                                         [kgH2]'))
     setattr(optmodel, 'vHydSpillage',                      Var(model.psnhgs,  within=NonNegativeReals, doc='H2S spillage                                                          [kgH2]'))
     setattr(optmodel, 'vHydExport',                        Var(model.psnnd,   within=NonNegativeReals, doc='hydrogen    export   in node                                          [kgH2]'))
@@ -1234,8 +1234,11 @@ def create_variables(model, optmodel, indlog):
         optmodel.vHydEnergyInflows[idx].setub(model.Par['pHydMaxInflows'][idx[-1]][idx[:3]])
         optmodel.vHydEnergyOutflows[idx].setlb(model.Par['pHydMinOutflows'][idx[-1]][idx[:3]])
         optmodel.vHydEnergyOutflows[idx].setub(model.Par['pHydMaxOutflows'][idx[-1]][idx[:3]])
-        optmodel.vHydInventory[idx].setlb(model.Par['pHydMinStorage'][idx[-1]][idx[:3]])
-        optmodel.vHydInventory[idx].setub(model.Par['pHydMaxStorage'][idx[-1]][idx[:3]])
+        # storage energy carries the factor1 unit conversion, like the electricity
+        # inventory bounds above and the (already factor1-scaled) initial inventory, so
+        # the bound, the initial state and the accumulated inventory share one unit.
+        optmodel.vHydInventory[idx].setlb(model.Par['pHydMinStorage'][idx[-1]][idx[:3]] * model.factor1)
+        optmodel.vHydInventory[idx].setub(model.Par['pHydMaxStorage'][idx[-1]][idx[:3]] * model.factor1)
 
     for idx in model.psnhpa:
         if model.Par['pOptIndBinSingleNode'] == 0:

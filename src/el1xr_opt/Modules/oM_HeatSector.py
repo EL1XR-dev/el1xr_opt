@@ -178,6 +178,24 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
     def _at(node_map, nd):
         return [u for (n2, u) in getattr(model, node_map, []) if n2 == nd]
 
+    # period discount factor and load-level duration (default 1.0 when unset, as in the
+    # standalone tests). Used by both the inventory balance and the operating cost so a
+    # representative load level that stands in for several hours is treated consistently.
+    disc = Par.get("pDiscountFactor", {})
+    dur = Par.get("pDuration", {})
+
+    def _d(p):
+        try:
+            return float(disc[p])
+        except (KeyError, TypeError):
+            return 1.0
+
+    def _dur(p, sc, n):
+        try:
+            return float(dur[p, sc, n])
+        except (KeyError, TypeError):
+            return 1.0
+
     setattr(optmodel, "vHeatOutput", Var(_idx(htg), within=NonNegativeReals,
             bounds=lambda mm, p, sc, n, g: (0, float(Par["pHeatGenMaxPower"][g]))))
     setattr(optmodel, "vHeatPumpElec", Var(_idx(htp), within=NonNegativeReals))
@@ -233,31 +251,22 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
         prev = (mm.vHeatInventory[p, sc, model.n.prev(n), s] if model.n.ord(n) > 1
                 else float(Par["pHeatStoInitial"][s]))
         eff = float(Par["pHeatStoEff"][s])      # charging (round-trip) efficiency
+        # the charge/discharge are powers, so weight them by the load-level duration to
+        # accumulate energy -- matching the electricity/hydrogen inventory balances and
+        # the (duration-weighted) heat operating cost. (eHeatBalance stays a power
+        # balance, with no duration, like eEleBalance.)
         return (mm.vHeatInventory[p, sc, n, s]
-                == prev + eff * mm.vHeatCharge[p, sc, n, s] - mm.vHeatDischarge[p, sc, n, s])
+                == prev + _dur(p, sc, n) * (eff * mm.vHeatCharge[p, sc, n, s]
+                                            - mm.vHeatDischarge[p, sc, n, s]))
     optmodel.eHeatInventory = Constraint(_idx(hts), rule=_inv,
                                          doc="thermal store inventory balance")
 
     # heat operating cost (heat-not-served + generator running cost), discounted by
     # period and weighted by the load-level duration like the electricity and hydrogen
     # operating costs (the "psn" cost kind), so a representative load level standing in
-    # for several hours is costed for all of them (discount and duration default to 1.0
-    # if unset, as in the standalone tests). The heat-pump electricity is already costed
-    # on the electricity side, so it is not counted again here.
-    disc = Par.get("pDiscountFactor", {})
-    dur = Par.get("pDuration", {})
-
-    def _d(p):
-        try:
-            return float(disc[p])
-        except (KeyError, TypeError):
-            return 1.0
-
-    def _dur(p, sc, n):
-        try:
-            return float(dur[p, sc, n])
-        except (KeyError, TypeError):
-            return 1.0
+    # for several hours is costed for all of them (using the _d / _dur helpers defined
+    # above). The heat-pump electricity is already costed on the electricity side, so it
+    # is not counted again here.
     optmodel.HeatOperatingCost = (
         sum(_d(p) * _dur(p, sc, n) * float(Par["pHeatNSCost"]) * optmodel.vHeatNotServed[p, sc, n, d]
             for (p, sc, n) in psn for d in htd)

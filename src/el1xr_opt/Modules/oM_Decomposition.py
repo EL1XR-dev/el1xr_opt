@@ -562,8 +562,9 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
             if k == 0 or (p, sc, a, s) not in mm.eHeatInventory:
                 return Constraint.Skip
             return (mm.vHeatInventory[p, sc, a, s]
-                    == mm.Stcopy[k - 1, s] + heat_eff[s] * mm.vHeatCharge[p, sc, a, s]
-                    - mm.vHeatDischarge[p, sc, a, s])
+                    == mm.Stcopy[k - 1, s]
+                    + mm.Par['pDuration'][p, sc, a] * (heat_eff[s] * mm.vHeatCharge[p, sc, a, s]
+                                                       - mm.vHeatDischarge[p, sc, a, s]))
         sub.rep_ht = Constraint(hts, rule=_rep_ht)
         if k > 0:
             for g in egs:

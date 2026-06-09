@@ -172,11 +172,19 @@ cosmetic / fragility.
      because those cap **power**. The electricity inventory variable bound
      (oM_InputData.py:1189) carries `factor1` for the same reason, so the invest cap and
      the bound agree.
-   - The electricity-vs-hydrogen storage-energy difference (electricity applies `factor1`
-     to inventory, hydrogen does not -- bound at :1238 and invest cap at :126) is a
-     deliberate-looking design choice (hydrogen kept in its native units), **inert at
-     `factor1 = 1`**. Whether hydrogen storage energy should also be unit-converted is a
-     modelling-judgement call, not a clear bug -- left for review.
+   - The electricity-vs-hydrogen storage-energy difference **was a real inconsistency,
+     FIXED 2026-06-09.** `factor1` scales storage *energy* at the point of use (the
+     inventory variable bound) and the initial inventory (`pHydInitialInventory =
+     GenInitialStorage * factor1`, oM_InputData.py:611) -- the latter for **both**
+     sectors. Electricity also scaled its inventory bounds (:1188-1189) and invest cap
+     (oM_Investment.py:116); hydrogen scaled neither (:1237-1238, :126), so the hydrogen
+     cap was in raw units while its initial state and its accumulated inventory (built
+     from `factor1`-scaled charge/inflow powers) were in scaled units. Inert at
+     `factor1 = 1`, wrong otherwise. Fixed by scaling the hydrogen inventory bounds and
+     invest cap by `factor1`, mirroring electricity; golden-neutral. (Broader, lower
+     priority and symmetric across sectors: the raw `pEle/HydMaxStorage` *parameter* is
+     also compared against the scaled `InitialInventory` in some storage feasibility
+     pre-checks -- a separate `factor1`-convention clean-up, not addressed here.)
    - Day-ahead market / PPA: the per-energy cost flows through parameters
      (`pVarEnergyCost`, `pEleGenLinearVarCost = pEleGenLinearTerm * factor1 * ...`,
      oM_InputData.py:199) that are scaled at build, so there is no missing constraint-level
@@ -215,14 +223,30 @@ cosmetic / fragility.
 7. **[L] Initial-condition asymmetry** between electricity (ramp first-step subtracts a
    `max(pEleSystemOutput - MinPower, 0)` term) and hydrogen (no analogue).
 
+8. **[M] Heat inventory omitted the load-level duration. FIXED 2026-06-09.** The heat
+   operating cost weights output by `pDuration` (after the bug-5 fix), but `eHeatInventory`
+   (oM_HeatSector) updated `inv[n] = prev + eff*charge[n] - discharge[n]` with no
+   `duration`, unlike the electricity/hydrogen inventories which sum `duration * (...)`.
+   So on a representative load level (`duration != 1`) a heat charge/discharge moved the
+   store by one hour's worth while its cost was counted for all the hours the level
+   stands for -- the store state and its cost disagreed. Fixed: the inventory now weights
+   the charge/discharge by `pDuration`, matching the other sectors and the cost. Note
+   `eHeatBalance` correctly stays a duration-free **power** balance (like `eEleBalance`),
+   so only the inventory needed the weight. The temporal-Benders heat boundary (`_rep_ht`)
+   is weighted to match, and the monolith-vs-Benders heat-storage test still agrees.
+   Golden-neutral (the validation cases have no heat sector; heat tests use hourly
+   resolution); guarded by `test_heat_inventory_is_duration_weighted`. Still open: the
+   heat-sector variables carry no unit doc-strings (undocumented, nothing mislabelled).
+
 ---
 
 ## Status / sequencing
 
-1. **Done:** ENS/HNS double-count fixed (item 1); `factor1` investigated and cleared
-   (not bugs). Remaining Part B items (2-7) are flagged for a modelling-judgement review,
-   not changed.
-2. **Next:** rewrite the concept pages from Part A, documenting actual behaviour. Where a
-   Part B item is unresolved (hydrogen storage swap, hydrogen storage-energy units), the
-   page states the actual formula and flags it as a known issue.
-3. Re-run the strict docs build (`sphinx -W`) after the rewrite.
+- **Done (merged or in flight):** Part A concept-page rewrite; ENS/HNS double-count
+  (item 1); hydrogen storage charge/discharge swap (item 2); hydrogen storage-energy
+  `factor1` scaling (item 1 sub-point); electricity + hydrogen storage unit labels
+  (`kW`/`kWh`, `kgH2/h`/`kgH2`); heat inventory duration weighting (item 8).
+- **Flagged, not changed (modelling-judgement review):** items 3-7 -- notably
+  `vTotalHydDCost` with no defining constraint (item 3); the rest are low severity.
+- Re-run the strict docs build (`sphinx -W`) after any docstring change (the
+  `.githooks/pre-push` hook does this).

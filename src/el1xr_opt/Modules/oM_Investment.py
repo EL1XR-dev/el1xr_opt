@@ -121,9 +121,10 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vHydTotalOutput[p, sc, n, hgc] <= model.Par['pHydMaxPower'][hgc][p, sc, n] * optmodel.vHydGenInvest[hgc]
     optmodel.__setattr__('eHydInvestMaxOutput', Constraint(psnhgc, rule=eHydInvestMaxOutput, doc='candidate hydrogen output limited by build decision'))
 
-    # Hydrogen candidate storage: stored energy.
+    # Hydrogen candidate storage: stored energy. factor1 converts the storage-energy
+    # units, matching eEleInvestMaxInventory and the hydrogen inventory variable bound.
     def eHydInvestMaxInventory(optmodel, p, sc, n, hgsc):
-        return optmodel.vHydInventory[p, sc, n, hgsc] <= model.Par['pHydMaxStorage'][hgsc][p, sc, n] * optmodel.vHydGenInvest[hgsc]
+        return optmodel.vHydInventory[p, sc, n, hgsc] <= model.Par['pHydMaxStorage'][hgsc][p, sc, n] * model.factor1 * optmodel.vHydGenInvest[hgsc]
     optmodel.__setattr__('eHydInvestMaxInventory', Constraint(psnhgsc, rule=eHydInvestMaxInventory, doc='candidate hydrogen storage energy limited by build decision'))
 
     # Candidate electrolyser electricity input. An electrolyser (e2h) converts
