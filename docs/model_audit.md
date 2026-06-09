@@ -182,12 +182,20 @@ cosmetic / fragility.
      oM_InputData.py:199) that are scaled at build, so there is no missing constraint-level
      `factor1`. Confirm the retailer ratio/påslag scaling if `factor1` is ever set != 1.
 
-2. **[M] Hydrogen storage charge/discharge roles look swapped. FLAGGED for review.**
-   `eHydMaxESSOutput2ndBlock` bounds discharge by `vHydStorCharge` (951);
-   `eHydMaxESSCharge2ndBlock` bounds charge by `vHydStorDischarge` (1004);
-   `eHydDischargingDecision` divides output by `pHydMaxCharge` and `eHydChargingDecision`
-   divides charge by `pHydMaxPower` (1044-1056) -- mirror-image of the electricity
-   formulation. Needs a modelling-judgement call (could be intentional), so not changed.
+2. **[M] Hydrogen storage charge/discharge roles were swapped. FIXED 2026-06-09.**
+   Confirmed a genuine bug against the electricity formulation and the conf.py macro
+   meanings (`vHydStorCharge` = charging binary, `vHydStorDischarge` = discharging
+   binary, `pHydMaxCharge` = charge capacity, `pHydMaxPower` = output capacity). Four
+   places were wrong: `eHydMaxESSOutput2ndBlock` gated output by the **charge** binary
+   (now discharge); `eHydMaxESSCharge2ndBlock` gated charge by the **discharge** binary
+   (now charge) -- combined with the mutual-exclusion `eHydStorageMode` these two forced
+   the storage 2nd block to zero whenever it actually charged/discharged;
+   `eHydChargingDecision` normalized charge by **pHydMaxPower** (now pHydMaxCharge) and
+   `eHydDischargingDecision` normalized output by **pHydMaxCharge** (now pHydMaxPower).
+   Fixed to mirror the electricity ESS exactly. Golden impact: the shipped validation
+   cases have no active base-year hydrogen storage (`hgs` empty), so the headline
+   goldens are unchanged; the fix corrects the H2 variant cases (H2Tank / Electrolyser,
+   currently xfail).
 
 3. **[M] `vTotalHydDCost` is registered (psd) with no defining constraint.** Every other
    registered term has an `e...Cost` constraint; this one relies on the variable being
