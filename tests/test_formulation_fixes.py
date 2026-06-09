@@ -16,6 +16,10 @@
 5. The heat operating cost was not weighted by the load-level duration, unlike the
    electricity and hydrogen operating costs, so it was mis-scaled on representative
    load levels that stand in for several hours.
+6. The hydrogen ESS charge/discharge roles were swapped relative to the electricity
+   ESS: the 2nd-block limits gated output by the charge binary and charge by the
+   discharge binary, and the charge/discharge decisions normalized by the wrong
+   capacity (charge by output power, output by charge capacity).
 
 Bugs 1 and 2 are checked behaviourally on the ``H2Tank`` variant case, the only
 shipped case that brings the hydrogen generation/storage units into the base year
@@ -84,6 +88,62 @@ def test_hydrogen_om_cost_is_added(h2_model):
     # give |Linear - O&M| (zero here, since Linear == O&M).
     assert abs(coef) == pytest.approx(lin + om, rel=1e-9), \
         f"coefficient {coef} should reflect Linear+O&M={lin + om} (O&M added)"
+
+
+def test_hydrogen_storage_charge_discharge_not_swapped(h2_model):
+    """Bug 6: the hydrogen ESS must gate output by the DISCHARGE binary and charge by the
+    CHARGE binary, and normalize output by the output power and charge by the charge
+    capacity -- mirroring the electricity ESS. They were swapped."""
+    m = h2_model
+    assert len(m.hgs) > 0, "test case has no hydrogen storage unit"
+    p, sc = list(m.ps)[0]
+    hgs = list(m.hgs)[0]
+
+    def _find(cname):
+        c = getattr(m, cname)
+        for n in m.n:
+            if (p, sc, n, hgs) in c:
+                return c[p, sc, n, hgs], n
+        return None, None
+
+    def _vnames(constr):
+        return {v.name for v in generate_standard_repn(constr.body).linear_vars}
+
+    def _coef(constr, var):
+        repn = generate_standard_repn(constr.body)
+        return next((cf for v, cf in zip(repn.linear_vars, repn.linear_coefs) if v is var), None)
+
+    # the decisions must be built for a real storage unit (it charges and discharges)
+    cdec, ncd = _find('eHydChargingDecision')
+    ddec, ndd = _find('eHydDischargingDecision')
+    assert cdec is not None and ddec is not None, \
+        "hydrogen charge/discharge decisions not built for the storage unit"
+
+    # decision binaries + capacity normalisation
+    assert any('vHydStorCharge' in nm for nm in _vnames(cdec)), \
+        "charging decision must use the charge binary"
+    assert _coef(cdec, m.vHydTotalCharge[p, sc, ncd, hgs]) == \
+        pytest.approx(1.0 / float(m.Par['pHydMaxCharge'][hgs][p, sc, ncd])), \
+        "charging decision must normalize by the charge capacity (not the output power)"
+    assert any('vHydStorDischarge' in nm for nm in _vnames(ddec)), \
+        "discharging decision must use the discharge binary"
+    assert _coef(ddec, m.vHydTotalOutput[p, sc, ndd, hgs]) == \
+        pytest.approx(1.0 / float(m.Par['pHydMaxPower'][hgs][p, sc, ndd])), \
+        "discharging decision must normalize by the output power (not the charge capacity)"
+
+    # 2nd-block limits: output gated by discharge, charge gated by charge
+    out2, _ = _find('eHydMaxESSOutput2ndBlock')
+    if out2 is not None:
+        names = _vnames(out2)
+        assert any('vHydStorDischarge' in nm for nm in names) and \
+            not any('vHydStorCharge' in nm for nm in names), \
+            "output 2nd block must be gated by the discharge binary, not the charge binary"
+    cha2, _ = _find('eMaxHydESSCharge2ndBlock')   # note: attr name differs from the rule
+    if cha2 is not None:
+        names = _vnames(cha2)
+        assert any('vHydStorCharge' in nm for nm in names) and \
+            not any('vHydStorDischarge' in nm for nm in names), \
+            "charge 2nd block must be gated by the charge binary, not the discharge binary"
 
 
 def test_ele_rampdown_uses_correct_param_name():

@@ -955,7 +955,9 @@ def create_constraints(model, optmodel, indlog):
 
     def eHydMaxESSOutput2ndBlock(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n]:
-            return optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] <= optmodel.vHydStorCharge[p,sc,n,hgs]
+            # output (discharge) is gated by the DISCHARGE binary, matching the
+            # electricity ESS (eEleMaxESSOutput2ndBlock). See docs/model_audit.md.
+            return optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] <= optmodel.vHydStorDischarge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxESSOutput2ndBlock', Constraint(optmodel.psnhgs, rule=eHydMaxESSOutput2ndBlock, doc='max output of the second block of an ESS [p.u.]'))
@@ -1008,7 +1010,9 @@ def create_constraints(model, optmodel, indlog):
 
     def eHydMaxESSCharge2ndBlock(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n]:
-            return optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n] <= optmodel.vHydStorDischarge[p,sc,n,hgs]
+            # charge is gated by the CHARGE binary, matching the electricity ESS
+            # (eEleMaxESSCharge2ndBlock). See docs/model_audit.md.
+            return optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs] / model.Par['pHydMaxCharge2ndBlock'][hgs][p,sc,n] <= optmodel.vHydStorCharge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eMaxHydESSCharge2ndBlock', Constraint(optmodel.psnhgs, rule=eHydMaxESSCharge2ndBlock, doc='max charge of an ESS [p.u.]'))
@@ -1049,15 +1053,19 @@ def create_constraints(model, optmodel, indlog):
 
     # Incompatibility between charge and discharge of an H2 ESS [p.u.]
     def eHydChargingDecision(optmodel, p,sc,n,hgs):
-        if model.Par['pHydMaxPower'][hgs][p,sc,n] :
-            return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMaxPower'][hgs][p,sc,n]  <= optmodel.vHydStorCharge[p,sc,n,hgs]
+        # charge is normalized by the CHARGE capacity (not the output power), matching
+        # the electricity ESS (eEleChargingDecision). See docs/model_audit.md.
+        if model.Par['pHydMaxCharge'][hgs][p,sc,n] :
+            return optmodel.vHydTotalCharge[p,sc,n,hgs] / model.Par['pHydMaxCharge'][hgs][p,sc,n]  <= optmodel.vHydStorCharge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydChargingDecision', Constraint(optmodel.psnhgs, rule=eHydChargingDecision, doc='charging decision [p.u.]'))
 
     def eHydDischargingDecision(optmodel, p,sc,n,hgs):
-        if model.Par['pHydMaxCharge'][hgs][p,sc,n] :
-            return optmodel.vHydTotalOutput[p,sc,n,hgs] / model.Par['pHydMaxCharge'][hgs][p,sc,n]  <= optmodel.vHydStorDischarge[p,sc,n,hgs]
+        # output (discharge) is normalized by the OUTPUT power (not the charge
+        # capacity), matching the electricity ESS (eEleDischargingDecision).
+        if model.Par['pHydMaxPower'][hgs][p,sc,n] :
+            return optmodel.vHydTotalOutput[p,sc,n,hgs] / model.Par['pHydMaxPower'][hgs][p,sc,n]  <= optmodel.vHydStorDischarge[p,sc,n,hgs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydDischargingDecision', Constraint(optmodel.psnhgs, rule=eHydDischargingDecision, doc='discharging decision [p.u.]'))
