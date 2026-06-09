@@ -49,6 +49,32 @@ Add a test with each new feature or bug fix. Mark a test ``@pytest.mark.solve`` 
 builds and solves a model; leave it unmarked if it does not need a solver, so it runs in
 the fast tier. New tests can go in an existing file or a new ``tests/test_*.py``.
 
+Checking the docs locally
+-------------------------
+
+The documentation build treats warnings as errors (``-W``), and the API pages are
+generated from the source docstrings, so a malformed docstring -- an indented block
+that is not a literal block, a bad cross-reference -- fails the build. Build it the
+same way CI does to catch that before you push::
+
+   python -m sphinx -b html -W --keep-going docs/rst /tmp/el1xr-docs
+
+A tip when writing docstrings: an indented "name -- description" block needs to be a
+reStructuredText literal block (end the line before it with ``::``) or a proper list,
+otherwise docutils reports "Unexpected indentation" and the build fails.
+
+Pre-push hook
+-------------
+
+A hook under ``.githooks/`` runs the fast CI gate -- the flake8 syntax check and the
+strict docs build -- before each push, so a syntax error or a broken docstring is
+caught locally instead of in CI. Enable it once per clone::
+
+   git config core.hooksPath .githooks
+
+It uses the project virtualenv (``.venv``) if present. Skip it for a single push with
+``git push --no-verify``.
+
 Continuous integration
 ----------------------
 
