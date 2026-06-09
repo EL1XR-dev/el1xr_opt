@@ -56,6 +56,8 @@ FCRN_PRODUCTS = ["FCRN_Up", "FCRN_Down"]
 #   h2:      (unit, fixed_investment_cost) or None
 #   fcrd/fcrn: whether storage may bid that frequency product
 #   power_peaks: NumberPowerPeaks value, or None to keep the base value
+#   h2_demand: kgH2/h at the electrolyser node (defaults to H2_DEMAND)
+#   e2h_fcr: whether the electrolyser may bid FCR by modulating its consumption
 CASES = {
     "HomeBatt":         dict(battery=("BESS_01", 0.2, None),  fcrd=True,  fcrn=True),
     "HoodBatt":         dict(battery=("BESS_01", 0.2, dict(MaximumPower=50, MaximumCharge=50.0, MaximumStorage=100.0)), fcrd=True, fcrn=True),
@@ -69,6 +71,12 @@ CASES = {
     # so the case is feasible. With surplus existing hydrogen capacity the
     # electrolyser is not built (see README) - it is a feasibility/regression case.
     "Electrolyser":     dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10)),
+    # Electrolyser FCR validation: a small (feasible) hydrogen demand keeps the
+    # electrolyser running, so it has consumption to modulate. The NoFCR case is the
+    # baseline; the FCR case lets the electrolyser bid FCR. The FCR case should cost
+    # less, by the FCR revenue the electrolyser earns.
+    "ElectrolyserNoFCR": dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=False),
+    "ElectrolyserFCR":   dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=True),
 }
 
 
@@ -130,12 +138,23 @@ def _edit_hyd(df, spec):
         if "InitialPeriod" in df.columns:
             df["InitialPeriod"] = 2020
         _set_candidate(df, h2[0], h2[1])
+        if spec.get("e2h_fcr"):
+            # The hydrogen-generation data has no FCR columns by default. Add them
+            # (every unit off) and opt the electrolyser in, with a 60-minute
+            # endurance for the FCR-down hydrogen-headroom check.
+            df["NoFCRD"] = "Yes"
+            df["NoFCRN"] = "Yes"
+            df["EnduranceFCRD"] = 0.0
+            df["EnduranceFCRN"] = 0.0
+            for col, val in (("NoFCRD", "No"), ("NoFCRN", "No"),
+                             ("EnduranceFCRD", 60.0), ("EnduranceFCRN", 60.0)):
+                df.loc[h2[0], col] = val
     return df
 
 
-def _set_h2_demand(df):
+def _set_h2_demand(df, demand=H2_DEMAND):
     if "HydD1" in df.columns:
-        df["HydD1"] = H2_DEMAND
+        df["HydD1"] = demand
     return df
 
 
@@ -205,7 +224,7 @@ def build_case(case, spec):
         elif stem == "HydrogenDemand" and spec.get("h2"):
             df = _move_h2_demand_node(df)
         elif stem in ("VarMaxDemand", "VarMinDemand") and spec.get("h2"):
-            df = _set_h2_demand(df)
+            df = _set_h2_demand(df, spec.get("h2_demand", H2_DEMAND))
         df.to_csv(os.path.join(out, f"oM_Data_{stem}_{case}.csv"))
     return out
 
