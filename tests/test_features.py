@@ -68,6 +68,51 @@ def test_cost_registry_seed_and_extend():
         F.register_cost(m, "vBad", "bogus_kind")
 
 
+def _horizon_stub(npeaks=2, tariff_type="Hourly"):
+    """A structure-only model stub for seed_horizon_coupling: one retailer, one month,
+    a fixed fee and (optionally) a peak power tariff."""
+    import types
+    return types.SimpleNamespace(
+        factor1=1.0, er=["EleR_01"], moy=[1],
+        Par={"pEleRetFastavgift": {"EleR_01": 10.0},
+             "pEleRetMoms": {"EleR_01": 0.25},
+             "pParNumberPowerPeaks": npeaks,
+             "pEleRetPowerTariff": {"EleR_01": 65.0},
+             "pEleRetTariffType": {"EleR_01": tariff_type},
+             "pEleRetNode": {"EleR_01": "Node1"}})
+
+
+def test_horizon_coupling_seed_constant_and_threshold():
+    m = _horizon_stub(npeaks=2, tariff_type="Hourly")
+    F.seed_horizon_coupling(m)
+    kinds = {d["kind"] for d in m._horizon_coupling}
+    assert kinds == {"constant", "threshold"}
+    const = next(d for d in m._horizon_coupling if d["kind"] == "constant")
+    assert const["cost_var"] == "vTotalEleNetUseFixCost"
+    assert const["amount"] == 10.0 * 1.0 * 1 * 1.25          # fee * factor1 * months * (1+VAT)
+    thr = next(d for d in m._horizon_coupling if d["kind"] == "threshold")
+    assert thr["cost_var"] == "vTotalElePeakCost"
+    assert thr["quantity_var"] == "vEleImport" and thr["count"] == 2
+    assert thr["items"] == ["EleR_01"] and thr["node_of"]["EleR_01"] == "Node1"
+    assert thr["coeff_of"]["EleR_01"] == 65.0 * 1.0 * 1.25 / 2   # tariff * factor1 * (1+VAT) / N
+    assert thr["subgroups"] == [1] and thr["level_subgroup"] == "n2m"
+
+
+def test_horizon_coupling_seed_no_peak_is_constant_only():
+    m = _horizon_stub(npeaks=0)
+    F.seed_horizon_coupling(m)
+    assert [d["kind"] for d in m._horizon_coupling] == ["constant"]
+
+
+def test_horizon_coupling_seed_marks_daily_unsupported():
+    m = _horizon_stub(npeaks=2, tariff_type="Daily")
+    F.seed_horizon_coupling(m)
+    kinds = [d["kind"] for d in m._horizon_coupling]
+    assert "unsupported" in kinds and "threshold" not in kinds
+    reason = next(d for d in m._horizon_coupling if d["kind"] == "unsupported")["reason"]
+    assert "Daily" in reason
+
+
 def test_balance_mode_default_and_validation():
     # apply_flag_defaults seeds the balance mode for cases that predate the flag
     params = {}

@@ -268,3 +268,192 @@ def test_el1xr_temporal_benders_peak_matches_monolithic(n_blocks):
     assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
     assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \
         f"temporal benders {res['objective']:.6f} vs binary monolith {mono:.6f}"
+
+
+# --- endogenous import: the peak charge feeds back into the import decision -------
+# The two tests above pin the grid import to a fixed profile, isolating the peak from
+# the rest of the operating decision. Here the import is a free decision: the only
+# supply is the grid, delivered through a battery that starts empty, so the model must
+# import to meet demand and can charge the battery off-peak and discharge it into the
+# demand spike -- shaving the top-N import (the peak charge) across the whole horizon.
+# This couples the time windows two ways at once -- the storage inventory carried over
+# each boundary and the peak threshold -- with the import chosen by the optimiser, so
+# it exercises the genuine "import case" that the pinned tests cannot.
+
+
+def _make_import_storage_case(work, npeaks=2, binary_peak=False):
+    """A single-node case where the grid import is the only supply and a battery that
+    starts empty can shift it in time. All demand sits at Node1 (the retailer node);
+    every generator is removed except the battery BESS_01 -- kept alive as the node
+    anchor and the peak-shaving store -- and every unit's initial storage is zero, so
+    the import must serve the demand and the battery can only charge from it. With the
+    demand spike (one hour far above the rest) the battery pre-charges off-peak and
+    discharges into the spike, shaving the peak import. ``binary_peak`` turns on the
+    binary top-N peak selection (and the other operating binaries) for the true MILP;
+    left off it is the LP relaxation the Benders subproblems use."""
+    gen.build(work, n_scenarios=1, trunc=8)
+    d = os.path.join(work, "Home1")
+
+    def path(s):
+        return os.path.join(d, f"oM_Data_{s}_Home1.csv")
+
+    par = pd.read_csv(path("Parameter")); par["NumberPowerPeaks"] = npeaks
+    par.to_csv(path("Parameter"), index=False)
+    dem = pd.read_csv(path("ElectricityDemand")); dem["Node"] = "Node1"
+    dem.to_csv(path("ElectricityDemand"), index=False)
+    gN = pd.read_csv(path("ElectricityGeneration")); gN["Node"] = "Node1"
+    name = gN.columns[0]
+    gN.loc[gN[name] != "BESS_01", "MaximumPower"] = 0.0      # battery is the only unit
+    gN["InitialStorage"] = 0.0                               # empty start -> must import
+    gN.to_csv(path("ElectricityGeneration"), index=False)
+    pd.read_csv(path("ElectricityNetwork")).iloc[0:0].to_csv(path("ElectricityNetwork"), index=False)
+    if binary_peak:
+        op = pd.read_csv(path("Option")); op["IndBinGenOperat"] = 1
+        op.to_csv(path("Option"), index=False)
+    return work
+
+
+@pytest.mark.solve
+@pytest.mark.parametrize("n_blocks", [2, 3, 4])
+def test_el1xr_temporal_benders_endogenous_import_matches_monolithic(n_blocks):
+    """Temporal Benders with the threshold-LP peak reproduces the binary monolith on a
+    case where the grid import is endogenous (not pinned): the battery shaves the import
+    peak across the window boundaries, so the storage-boundary coupling and the peak
+    threshold are both active and interacting, with the import chosen by the optimiser."""
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+
+    # binary monolith (true top-N peak), import chosen freely
+    wm = tempfile.mkdtemp(prefix="tendm_")
+    _make_import_storage_case(wm, binary_peak=True)
+    mono_m = build_model(wm, "Home1", date)
+    p, sc = list(mono_m.ps)[0]
+    SolverFactory(_SOLVER).solve(mono_m)
+    mono = float(value(mono_m.eTotalSCost))
+    assert float(value(mono_m.vTotalElePeakCost[(p, sc)])) > 1.0          # peak is active
+    nd0 = mono_m.Par['pEleRetNode']['EleR_01']
+    imp = [float(value(mono_m.vEleImport[p, sc, n, nd0])) for n in mono_m.n]
+    dem = [float(mono_m.Par['pVarMaxDemand']['EleD_01'][p, sc, n]) for n in mono_m.n]
+    assert max(imp) < max(dem) - 1e-3        # the battery shaved the spike out of the import
+
+    # temporal Benders (LP threshold peak), import free in each window
+    wb = tempfile.mkdtemp(prefix="tendb_")
+    _make_import_storage_case(wb, binary_peak=False)
+    res = el1xr_temporal_benders(
+        wb, "Home1", date, n_time_blocks=n_blocks, solver=_SOLVER,
+        config=BendersConfig(max_iterations=200, relative_gap=1e-6))
+    assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
+    assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \
+        f"temporal benders {res['objective']:.6f} vs binary monolith {mono:.6f}"
+
+
+# --- transversality: sector coupling -----------------------------------------------
+# The split couples the time windows only through storage inventory and the registered
+# aggregate costs, which keeps it largely carrier-independent. The heat operating cost
+# (heat-not-served + generator running cost) is a duration-weighted, period-discounted
+# sum over the window's load levels, so it decomposes per window and is added to the
+# recourse. A heat thermal store couples the windows like a battery, so its boundary
+# inventory is a master linking variable too (the St analogue of Se / Sh). Both are
+# validated against the monolith below.
+
+
+def _make_heat_case(work, with_store=False, trunc=6):
+    """Add a behind-the-meter heat sector to the Home1 case: a small heat pump and a
+    boiler at the electricity node, with a heat demand the heat pump cannot fully meet
+    so the (costed) boiler runs -- giving a non-zero heat operating cost that the split
+    must reproduce. ``with_store`` adds a thermal store."""
+    gen.build(work, n_scenarios=1, trunc=trunc)
+    cd = os.path.join(work, "Home1")
+
+    def hpath(stem):
+        return os.path.join(cd, f"oM_Data_{stem}_Home1.csv")
+
+    rows = {"Node": ["Node1", "Node1"], "Type": ["HeatPump", "Boiler"],
+            "MaximumPower": [2.0, 1000.0], "Cost": [0.0, 9.0], "COP": [3.0, 0.0],
+            "Efficiency": [0.0, 0.0], "MaxStorage": [0.0, 0.0], "StoEff": [0.0, 0.0],
+            "InitialStorage": [0.0, 0.0]}
+    idxn = ["HP1", "BOIL1"]
+    if with_store:
+        store = {"Node": "Node1", "Type": "Storage", "MaximumPower": 100.0, "Cost": 0.0,
+                 "COP": 0.0, "Efficiency": 0.0, "MaxStorage": 50.0, "StoEff": 0.95,
+                 "InitialStorage": 0.0}
+        for k in rows:
+            rows[k].append(store[k])
+        idxn.append("HSTO1")
+    pd.DataFrame(rows, index=idxn).to_csv(hpath("HeatGeneration"))
+    pd.DataFrame({"Node": ["Node1"]}, index=["HD1"]).to_csv(hpath("HeatDemand"))
+    lv = [f"t{i + 1:04d}" for i in range(trunc)]
+    mi = pd.MultiIndex.from_tuples([("period1", "sc01", t) for t in lv])
+    pd.DataFrame({"HD1": [5.0 + 2.0 * (i % 3) for i in range(trunc)]}, index=mi).to_csv(
+        hpath("VarMaxHeatDemand"))
+    return work
+
+
+@pytest.mark.solve
+@pytest.mark.parametrize("n_blocks", [2, 3])
+def test_el1xr_temporal_benders_heat_operating_cost_matches_monolithic(n_blocks):
+    """With a heat sector whose boiler must run (a non-zero heat operating cost), the
+    temporal Benders reproduces the monolith -- the heat operating cost decomposes per
+    window and is folded into the recourse alongside the heat-pump electricity draw."""
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    m = build_model(_make_heat_case(tempfile.mkdtemp(prefix="theatm_")), "Home1", date)
+    SolverFactory(_SOLVER).solve(m)
+    mono = float(value(m.eTotalSCost))
+    assert float(value(m.HeatOperatingCost)) > 1.0           # the boiler actually runs
+    res = el1xr_temporal_benders(
+        _make_heat_case(tempfile.mkdtemp(prefix="theatb_")), "Home1", date,
+        n_time_blocks=n_blocks, solver=_SOLVER,
+        config=BendersConfig(max_iterations=200, relative_gap=1e-7))
+    assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
+    assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \
+        f"temporal benders {res['objective']:.6f} vs monolith {mono:.6f}"
+
+
+def _make_heat_storage_case(work, trunc=6):
+    """A heat sector where the thermal store must cycle across the window boundaries.
+    A heat pump capped below the demand spike, a boiler (the bounded-cost backstop that
+    keeps every window feasible, so the elastic-penalty duals stay small and the master
+    is well conditioned), and a thermal store. The demand is flat then spikes above the
+    pump capacity, so the store pre-charges off the pump and discharges into the spike,
+    carrying heat inventory across the boundaries."""
+    gen.build(work, n_scenarios=1, trunc=trunc)
+    cd = os.path.join(work, "Home1")
+
+    def hpath(stem):
+        return os.path.join(cd, f"oM_Data_{stem}_Home1.csv")
+
+    pd.DataFrame(
+        {"Node": ["Node1"] * 3, "Type": ["HeatPump", "Boiler", "Storage"],
+         "MaximumPower": [5.0, 1000.0, 0.0], "Cost": [0.0, 9.0, 0.0],
+         "COP": [3.0, 0.0, 0.0], "Efficiency": [0.0, 0.0, 0.0],
+         "MaxStorage": [0.0, 0.0, 50.0], "StoEff": [0.0, 0.0, 1.0],
+         "InitialStorage": [0.0, 0.0, 0.0]},
+        index=["HP1", "BOIL1", "HSTO1"]).to_csv(hpath("HeatGeneration"))
+    pd.DataFrame({"Node": ["Node1"]}, index=["HD1"]).to_csv(hpath("HeatDemand"))
+    lv = [f"t{i + 1:04d}" for i in range(trunc)]
+    mi = pd.MultiIndex.from_tuples([("period1", "sc01", t) for t in lv])
+    demand = [3.0, 3.0, 3.0, 3.0, 3.0, 15.0][:trunc]
+    pd.DataFrame({"HD1": demand}, index=mi).to_csv(hpath("VarMaxHeatDemand"))
+    return work
+
+
+@pytest.mark.solve
+@pytest.mark.parametrize("n_blocks", [2, 3, 4])
+def test_el1xr_temporal_benders_heat_storage_matches_monolithic(n_blocks):
+    """Temporal Benders with a heat thermal store that cycles across the window
+    boundaries reproduces the monolith: the heat inventory is carried over each boundary
+    by the St master linking variable, the heat analogue of the electricity/hydrogen
+    Se/Sh boundary inventories."""
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    m = build_model(_make_heat_storage_case(tempfile.mkdtemp(prefix="thstom_")), "Home1", date)
+    SolverFactory(_SOLVER).solve(m)
+    mono = float(value(m.eTotalSCost))
+    p, sc = list(m.ps)[0]
+    inv = [float(value(m.vHeatInventory[p, sc, n, "HSTO1"])) for n in m.n]
+    assert max(inv) > 1.0          # the store genuinely cycles -> the boundary is exercised
+    res = el1xr_temporal_benders(
+        _make_heat_storage_case(tempfile.mkdtemp(prefix="thstob_")), "Home1", date,
+        n_time_blocks=n_blocks, solver=_SOLVER,
+        config=BendersConfig(max_iterations=300, relative_gap=1e-6))
+    assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
+    assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \
+        f"temporal benders {res['objective']:.6f} vs monolith {mono:.6f}"
