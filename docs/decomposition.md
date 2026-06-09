@@ -419,6 +419,66 @@ threshold `t` added to the master linking variables. On a single-node case where
 costed grid import is the only supply (so the peak is active), the temporal Benders
 reproduces the binary monolith exactly for 2, 3 and 4 time blocks.
 
+**The import case -- peak and storage coupling together.** The first peak tests pin
+the grid import to a fixed profile, which isolates the threshold LP but leaves the
+import out of the decision. The genuine case lets the optimiser choose it: a
+single-node case whose only supply is the grid, delivered through a battery that
+starts empty, so the model must import to meet demand and can charge the battery
+off-peak and discharge it into the demand spike -- shaving the top-N import. Now the
+storage-boundary coupling and the peak threshold are both active and interacting,
+with the import chosen freely. The temporal Benders still reproduces the **binary**
+monolith exactly (2, 3 and 4 time blocks;
+`tests/test_benders_temporal_el1xr.py::...endogenous_import...`). One caveat the case
+makes explicit: the model's own peak machinery, when LP-relaxed, *underprices* the
+top-N peak by half, so the right yardstick is always the binary monolith -- which the
+threshold LP recovers as a pure LP.
+
+**Transversality.** The split couples the windows only through storage inventory and
+the registered aggregate costs, which makes most of it carrier- and
+network-independent:
+
+* **Network representation** -- transversal. The network mode (single-node / DC /
+  linear three-phase) only changes a window's own operating constraints; it adds no
+  coupling across windows, and there is no network-investment variable to put in the
+  master today. The peak reads the grid import at the retailer node whatever the mode.
+* **Hydrogen** -- transversal. It has no horizon-coupling aggregate cost; its market
+  costs are per-load-level and split by window, its storage uses the same boundary
+  linking as electricity.
+* **Heat** -- transversal. The heat operating cost (heat-not-served plus generator
+  running cost) is a duration-weighted, period-discounted sum over the window's load
+  levels, so it decomposes per window and is added to the recourse. A heat thermal
+  store couples the windows like a battery, so its boundary inventory is a master
+  linking variable too -- the `St` variable, the heat analogue of `Se` / `Sh` for
+  electricity / hydrogen storage (incoming boundary replaces the window's first-level
+  store balance, outgoing boundary ties the last level to the master copy). A heat
+  case with a thermal store reproduces the monolith exactly for 2, 3 and 4 time
+  blocks. (One numerical note: the boiler in the test case is a bounded-cost backstop
+  that keeps every window feasible, so the elastic-penalty duals -- hence the cut
+  coefficients -- stay small and the master is well conditioned; a near-infeasible
+  case can give HiGHS a poorly scaled master.)
+* **A new sector aggregate charge** -- *registry-driven*. A per-`(period, scenario)`
+  cost that is not a plain sum over load levels (a peak/threshold charge or a constant
+  fee) does not split by window on its own, so it is described by a **horizon-coupling
+  registry** rather than hard-coded in the decomposition. `oM_Features` defines two
+  descriptor shapes and a seeder:
+
+  * `register_horizon_constant(cost_var, amount)` -- a charge constant over the
+    horizon: counted once in the master, removed from every window's recourse.
+  * `register_horizon_threshold(...)` -- a "sum of the N largest `quantity` per
+    `subgroup`" peak charge: the threshold-LP, with the per-`(subgroup, item)`
+    threshold as a master linking variable.
+  * `seed_horizon_coupling(model)` reads the structure model and declares the built-in
+    electricity charges (the fixed network fee as a constant, the peak demand charge as
+    a threshold; a Daily-tariff peak is marked unsupported so the split raises rather
+    than mis-handles it). `el1xr_temporal_benders` consumes these descriptors
+    generically -- it carries no electricity parameter or variable names.
+
+  A new sector with such a charge adds its descriptor in `seed_horizon_coupling` (it
+  has the parameters and sets it needs from the structure model). A safety net stays:
+  the split checks the registered `"ps"` cost/revenue composites against
+  `TEMPORAL_HANDLED_PS_COST` / `_REV` and refuses an unrecognised one, so a charge that
+  is added to the objective but not described is caught rather than silently dropped.
+
 **A numerical note on the elastic penalty.** Each block carries a large penalty on
 its feasibility slack variables. At a loose solver feasibility tolerance the solver
 nudges those slacks just below their zero lower bound and harvests a spurious

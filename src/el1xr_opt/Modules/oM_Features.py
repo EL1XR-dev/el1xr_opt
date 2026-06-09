@@ -316,6 +316,119 @@ def aggregate_terms(model, optmodel, p, sc, terms):
     return expr
 
 
+# --------------------------------------------------------------------------- #
+# 4b. Horizon-coupling aggregate-cost descriptors (temporal decomposition).
+#    Most cost terms split by time window on their own: the "psn"/"psd" kinds, and the
+#    "ps" terms that are plain sums over the load levels (the net-use-variable charge,
+#    the energy tax, the incentive revenue -- each a sum of the grid import/export over
+#    n). A few per-(period, scenario) "ps" charges do NOT split by window:
+#      * a charge that is CONSTANT over the horizon (the fixed network fee), and
+#      * a "sum of the N largest <quantity> per <subgroup>" peak charge.
+#    The temporal Benders (oM_Decomposition.el1xr_temporal_benders) handles those two
+#    shapes generically; the sector that builds such a charge declares it here as a
+#    descriptor, so no sector-specific name is baked into the decomposition. Today only
+#    the electricity sector has them; a new sector adds its own to seed_horizon_coupling
+#    (which reads the structure model, so the descriptor is available before the
+#    operating variables are built).
+# --------------------------------------------------------------------------- #
+def register_horizon_constant(model, cost_var, amount):
+    """Declare a per-(period, scenario) cost that is CONSTANT over the horizon.
+    ``cost_var`` is the cost-component Var name (removed from every window's recourse)
+    and ``amount`` is the once-counted full-horizon scalar (added to the master)."""
+    model._horizon_coupling = getattr(model, "_horizon_coupling", [])
+    model._horizon_coupling.append(
+        {"kind": "constant", "cost_var": cost_var, "amount": float(amount)})
+
+
+def register_horizon_threshold(model, cost_var, native_constraints, quantity_var,
+                               count, items, node_of, coeff_of, subgroups,
+                               level_subgroup):
+    """Declare a 'sum of the N largest <quantity> per <subgroup>' peak charge for the
+    threshold-LP reformulation. Fields (see ``el1xr_temporal_benders`` for the use):
+
+      cost_var           native peak-cost Var name (pinned to 0; the LP replaces it)
+      native_constraints native peak constraint names to deactivate
+      quantity_var       metered quantity Var name, indexed (period, scenario, n, node)
+      count              N, the number of peaks
+      items              the charge-bearing keys (e.g. the retailers)
+      node_of            item -> node, to index the quantity Var
+      coeff_of           item -> cost per unit threshold (already divided by N)
+      subgroups          the per-period subgroups the top-N is taken within (months)
+      level_subgroup     attr name of the (load level, subgroup) membership pairs on the
+                         built model (e.g. ``n2m``)
+    """
+    model._horizon_coupling = getattr(model, "_horizon_coupling", [])
+    model._horizon_coupling.append(
+        {"kind": "threshold", "cost_var": cost_var,
+         "native_constraints": tuple(native_constraints), "quantity_var": quantity_var,
+         "count": int(count), "items": list(items), "node_of": dict(node_of),
+         "coeff_of": dict(coeff_of), "subgroups": list(subgroups),
+         "level_subgroup": level_subgroup})
+
+
+def register_horizon_unsupported(model, reason):
+    """Mark a horizon-coupling charge the temporal split cannot decompose yet, so the
+    decomposition raises a clear error instead of returning a wrong objective."""
+    model._horizon_coupling = getattr(model, "_horizon_coupling", [])
+    model._horizon_coupling.append({"kind": "unsupported", "reason": reason})
+
+
+# The "ps" composite cost/revenue terms the temporal split knows how to decompose. A
+# new per-(period, scenario) composite outside these is refused by the split's guard;
+# to handle it, register its non-separable parts above and extend these sets.
+TEMPORAL_HANDLED_PS_COST = {"vTotalEleNCost", "vTotalEleXCost"}
+TEMPORAL_HANDLED_PS_REV = {"vTotalEleXRev"}
+
+
+def seed_horizon_coupling(model):
+    """Seed the built-in (electricity) horizon-coupling descriptors on ``model``.
+
+    Reads ``model.Par`` and the sets only, so it runs on a structure-only model
+    (``oM_Sequence.build_structure``). The electricity fixed network charge is a
+    constant; the peak demand charge is the sum of the N largest grid imports per month
+    per retailer (a threshold). A Daily-tariff peak charge is not yet supported by the
+    reformulation, so it is marked unsupported rather than mis-handled. A new sector
+    with such a charge appends its own descriptor here."""
+    model._horizon_coupling = []
+    Par = model.Par
+    factor1 = float(model.factor1)
+    er = list(getattr(model, "er", []))
+    months = list(getattr(model, "moy", []))
+
+    def _moms(e):
+        return float(Par['pEleRetMoms'][e])
+
+    # fixed network charge: a per-retailer, per-month constant (fastavgift)
+    netfix = sum(float(Par['pEleRetFastavgift'][e]) * factor1 * len(months) * (1 + _moms(e))
+                 for e in er)
+    register_horizon_constant(model, "vTotalEleNetUseFixCost", netfix)
+
+    # peak demand charge: the sum of the N largest grid imports per month per retailer
+    n_peaks = int(Par['pParNumberPowerPeaks'])
+
+    def _tariff(e):
+        return float(Par['pEleRetPowerTariff'][e])
+
+    def _tariff_type(e):
+        return str(Par['pEleRetTariffType'][e])
+
+    peak_er = [e for e in er
+               if n_peaks > 0 and _tariff(e) != 0 and _tariff_type(e) == 'Hourly']
+    if n_peaks > 0 and any(_tariff(e) != 0 and _tariff_type(e) == 'Daily' for e in er):
+        register_horizon_unsupported(model, "a Daily power-tariff peak charge")
+    if peak_er:
+        register_horizon_threshold(
+            model, cost_var="vTotalElePeakCost",
+            native_constraints=("eTotalElePeakCost", "eElePeakHourValue",
+                                "eElePeakHourInd_C1", "eElePeakHourInd_C2",
+                                "eElePeakNumberMonths"),
+            quantity_var="vEleImport", count=n_peaks, items=peak_er,
+            node_of={e: Par['pEleRetNode'][e] for e in peak_er},
+            coeff_of={e: _tariff(e) * factor1 * (1 + _moms(e)) / n_peaks for e in peak_er},
+            subgroups=months, level_subgroup="n2m")
+    return model
+
+
 def solvers_for(problem_class):
     return sorted(s for s, cap in SOLVER_CAPABILITIES.items() if problem_class in cap)
 
