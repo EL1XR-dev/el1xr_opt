@@ -13,17 +13,32 @@ Total system cost («``eTotalSCost``»)
 .. math::
    \min \alpha
 
-And the total cost is the sum of all operational costs, discounted to present value («``eTotalTCost``»):
+The total cost adds the annualized investment cost and the heat-sector operating cost
+to the discounted net operating cost over every period and scenario («``eTotalTCost``»):
 
 .. math::
    :label: eq:TotalTCost
 
-   \alpha = \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex} \sum_{\scenarioindex \in \nS} (C_{\periodindex,\scenarioindex} - R_{\periodindex,\scenarioindex})
+   \alpha = \investmentcost + C^{O\&M,h} + \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex} \sum_{\scenarioindex \in \nS} (C_{\periodindex,\scenarioindex} - R_{\periodindex,\scenarioindex})
 
-where:
+where :math:`\pdiscountrate_{\periodindex}` is the per-period discount **factor** (not a rate), and:
 
+* :math:`\investmentcost` is the annualized capacity-investment cost («``vTotalICost``», :eq:`eq:TotalICost`); it is zero when the case has no candidate assets.
+* :math:`C^{O\&M,h}` is the heat-sector operating cost («``HeatOperatingCost``»), already period-discounted; it is zero when the case has no heat sector (see :doc:`heat-sector`).
 * :math:`C_{\periodindex,\scenarioindex}` is the total cost component for a given period and scenario, defined by «``eTotalCComponent``» (see :eq:`eq:TotalCComponent`).
 * :math:`R_{\periodindex,\scenarioindex}` is the total revenue component for a given period and scenario, defined by «``eTotalRComponent``» (see :eq:`eq:TotalRComponent`).
+
+The investment cost is the build decisions priced at their annualized investment cost,
+put on the same period-weighted footing as the operating terms («``eTotalICost``»):
+
+.. math::
+   :label: eq:TotalICost
+
+   \investmentcost = \left( \sum_{\periodindex \in \nP} \pdiscountrate_{\periodindex} \right) \pfactorone \left( \sum_{\genindex \in \nGE} \pinvestmentcost_{\genindex} x^{e}_{\genindex} + \sum_{\genindex \in \nGH} \pinvestmentcost_{\genindex} x^{h}_{\genindex} \right)
+
+where :math:`x^{e}_{\genindex}` («``vEleGenInvest``») and :math:`x^{h}_{\genindex}`
+(«``vHydGenInvest``») are the build fractions of the candidate electricity and hydrogen
+assets (continuous in :math:`[0,1]`, or binary when all-or-nothing investment is on).
 
 .. math::
    :label: eq:TotalCComponent
@@ -67,13 +82,15 @@ The formulation is defined by «``eTotalElePeakCost``».
 
 Variable Network Usage Cost
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This cost subcomponent captures the expenses associated with using the electricity distribution or transmission network. It is typically based on the amount of energy consumed or injected into the grid over a billing period.
+This cost subcomponent captures the expenses associated with using the electricity distribution or transmission network. It is the per-kWh transfer fee on the energy **imported** at the retailer's node over the billing period.
 The formulation is defined by «``eTotalEleNetUseVarCost``».
 
 .. math::
    :label: eq:TotalEleNetUseVarCost
 
-   \elenetvarusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketvarnetfee_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
+   \elenetvarusecost_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketvarnetfee_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \veleimport_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
+
+where :math:`\veleimport_{\periodindex,\scenarioindex,\timeindex,\traderindex}` is the grid import at the retailer's node (the metered network use), not the market-buy volume.
 
 Fixed Network Usage Cost
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,7 +223,7 @@ The total electricity tax cost is the energy tax («``eEleTaxCost``»), whose va
 .. math::
    :label: eq:EleTaxCost
 
-   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \pelemarketenergytax_{\traderindex} F1 (1 + \pelemarketmoms_{\traderindex}) \sum_{\timeindex \in \mathcal{T}} mb^{e}_{p,s,n,r} \right)
+   C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \pelemarketenergytax_{\traderindex} \pfactorone (1 + \pelemarketmoms_{\traderindex}) \sum_{\timeindex \in \mathcal{T}} \veleimport_{p,s,n,r} \right)
 
 Incentives and Certificate Revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,6 +321,12 @@ Reliability
 This is a penalty cost applied to any energy demand that cannot be met. It is calculated by multiplying the amount of unserved energy by a very high "value of lost load" (:math:`\ploadsheddingcost_{\demandindex}`), ensuring the model prioritizes meeting demand.
 *   Associated variables: :math:`\veleloadshed` (Electricity Not Served), :math:`\vhydloadshed` (Hydrogen Not Served).
 
+.. note::
+   Like the other per-load-level operating sub-costs, the reliability cost is a power
+   per load level; the duration weighting :math:`\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}`
+   is applied once by the operating-cost aggregation in :eq:`eq:TotalCComponent`, so it
+   does not appear again here.
+
 Electricity Energy-not-served Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalEleRCost``».
@@ -311,7 +334,7 @@ The formulation is defined by «``eTotalEleRCost``».
 .. math::
    :label: eq:TotalEleRCost
 
-   \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDE} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \ploadsheddingcost_{\demandindex} \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+   \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDE} \ploadsheddingcost_{\demandindex} \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
 
 Hydrogen Energy-not-served Costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -320,7 +343,7 @@ The formulation is defined by «``eTotalHydRCost``».
 .. math::
    :label: eq:TotalHydRCost
 
-   \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDH} \ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \ploadsheddingcost_{\demandindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+   \hydunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDH} \ploadsheddingcost_{\demandindex} \vhydloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
 
 Degradation
 -----------

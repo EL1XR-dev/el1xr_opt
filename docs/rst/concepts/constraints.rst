@@ -274,27 +274,44 @@ Hourly Tariff Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 For retailers with 'Hourly' tariffs, the following constraints identify the peak consumption hours within each month.
 
+The peak is measured on the **grid import** at the retailer's node
+(:math:`\veleimport`), not the raw market-buy volume, and it is adjusted by a night/day
+buy factor (plus, for a retailer that carries no demand, a fixed addend that keeps an
+idle retailer registering a baseline):
+
+.. math::
+
+   b^{adj}_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} =
+   \beta_{\eltraderindex,\timeindex}\, \veleimport_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
+   \;\;\big(+\, \alpha_{\eltraderindex,\timeindex}\ \text{when retailer } \eltraderindex \text{ has no demand}\big)
+
+where :math:`\beta` is the buy factor (retailer columns ``PeakNightBuyFactor`` /
+``PeakDayBuyFactor``) and :math:`\alpha` the addend (``PeakNightAddend`` /
+``PeakDayAddend``), each chosen by whether the hour falls in the retailer's night window
+(``StartNightTime``–``EndNightTime``). When the columns are absent the defaults depend on
+the tariff type: Hourly :math:`\beta=1,\ \alpha=1` (no discount); Daily
+:math:`\beta = 0.5/1` and :math:`\alpha = 2/5` (night/day). So a night-time peak discount
+**is** applied whenever the data provides these factors.
+
 The peak demand value is determined by («``eElePeakHourValue``»):
 
 .. math::
    \vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \ge
-   \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
+   b^{adj}_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
    \pmaxsell_{\eltraderindex} \sum_{\peakindex' \le \peakindex} \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex'}
    \quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex
-
-(Note: Although a night discount between 22:00 and 06:00 is described in the documentation, it is not currently applied in the peak calculation equations below.)
 
 Indicator constraints («``eElePeakHourInd_C1``», «``eElePeakHourInd_C2``») link the peak demand variables to binary indicators:
 
 .. math::
    \vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \ge
-   \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
+   b^{adj}_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} -
    \pmaxsell_{\eltraderindex} (1 - \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex})
    \quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex
 
 .. math::
    \vglobalpeak_{\periodindex,\scenarioindex,\monthindex,\eltraderindex,\peakindex} \le
-   \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} +
+   b^{adj}_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} +
    \pmaxsell_{\eltraderindex} (1 - \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex})
    \quad \forall \periodindex,\scenarioindex,\monthindex,\timeindex,\eltraderindex,\peakindex
 
@@ -312,7 +329,7 @@ The daily peak demand is determined by («``eEleDailyPeakValue``»):
 
 .. math::
    \vdailypeak_{\periodindex,\scenarioindex,\text{doy},\eltraderindex} \ge
-   \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
+   b^{adj}_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\timeindex,\eltraderindex
 
 Indicator constraints («``eEleDailyPeakInd_C1``», «``eEleDailyPeakInd_C2``») and the daily peak selection constraint («``eEleDailyPeakNumber``») work together to identify the single peak hour for each day.
@@ -327,7 +344,7 @@ The global peak is then selected from the daily peaks («``eEleGlobalPeakValue``
 
 Finally, the number of daily peaks selected per month is constrained by («``eElePeakNumberDays``»), and the peaks are ordered from highest to lowest by («``eEleMonthPeakOrder``»).
 
-3. Energy Balance and Conversion
+2. Energy Balance and Conversion
 --------------------------------
 These are the most fundamental constraints, ensuring that at every node (:math:`\busindexa`) and at every timestep (:math:`\timeindex`), energy supply equals energy demand.
 
@@ -397,7 +414,7 @@ From hydrogen to electricity («``eAllEnergy2Ele``»):
 From electricity to hydrogen («``eAllEnergy2Hyd``»):
 :math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydprodfunction_{\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
 
-2. Asset Operational Constraints
+3. Asset Operational Constraints
 --------------------------------
 These constraints model the physical limitations of generation and storage assets.
 
@@ -635,7 +652,7 @@ Maximum and minimum hydrogen output of the second block for a hydrogen ESS («``
    discharging-mode binary. The charge/discharge binaries appear swapped relative
    to the electricity formulation — verify this is intended.
 
-3. Energy Storage Dynamics
+4. Energy Storage Dynamics
 --------------------------
 These constraints specifically model the behavior of energy storage systems.
 
@@ -760,17 +777,22 @@ Upper bounds for each DoD segment are defined by («``eEleInventoryDoDS1Upper``�
    \pdodsb_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
+The third segment is capped by the day's total depth of discharge rather than a fixed
+fraction («``eEleInventoryDoDS3Upper``»):
+
 .. math::
    \veleinvdodscday_{\periodindex,\scenarioindex,\text{doy},\storageindex} \le
-   \pdodsc_{\storageindex} \pmaxstorage_{\storageindex}
+   \veleinvdoday_{\periodindex,\scenarioindex,\text{doy},\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
 .. note::
-   The per-segment DoD bounds (``eEleInventoryDoDS1Upper``/``S2Upper``/``S3Upper``
-   and the matching lower bounds) are currently disabled in the model (commented
-   out in ``oM_ModelFormulation.py``). The daily DoD (``eEleInventoryDoD``) and the
-   segment split (``eEleInventoryDoDSegments``) are active. The bounds above
-   document the intended segment limits.
+   The segment-1 and segment-2 upper bounds use the static nameplate storage
+   ``pEleGenMaximumStorage`` (the :math:`\pmaxstorage` symbol above). These three
+   segment upper bounds (``eEleInventoryDoDS1Upper`` / ``S2Upper`` / ``S3Upper``),
+   together with the daily DoD (``eEleInventoryDoD``) and the segment split
+   (``eEleInventoryDoDSegments``), are **active**. An older variant of the per-segment
+   bounds (with the matching lower bounds) remains commented out in
+   ``oM_ModelFormulation.py``.
 
 Energy Inflows and Outflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -916,7 +938,7 @@ Maximum and minimum charge of the second block for a hydrogen ESS («``eMaxHydES
    \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
-Reserve provision from an ESS is constrained by charging and discharging status («``eEleFreqDisUpChargeBound``», «``eEleFreqDisUpDischargeBound``», etc.):
+Reserve provision from an ESS is constrained by its charging and discharging status through the charge/discharge availability bounds (the «``eEleFreqUpChargeBound``», «``eEleFreqUpDischargeBound``», «``eEleFreqDownChargeBound``», «``eEleFreqDownDischargeBound``» family):
 
 .. math::
    \frac{\velefcrdupactch_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\pelemaxconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
@@ -928,7 +950,7 @@ Reserve provision from an ESS is constrained by charging and discharging status 
    \le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
-4. Network Constraints
+5. Network Constraints
 ----------------------
 These constraints model the physics and limits of the energy transmission and distribution networks.
 
@@ -998,8 +1020,13 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
 *   **Minimum Starting Charge**: The ``eEleMinEnergyStartUp`` constraint enforces a realistic user behavior: an EV must have a minimum state of charge *before* it can be considered "available" to leave its charging station (i.e., before its availability for grid services can change). This ensures the model doesn't fully drain the battery for grid purposes if the user needs it for a trip.
 
     .. math::
-       \veleinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \ge 0.8 \cdot \pelemaxstorage_{\storageindex}
-       \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
+       \veleinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex} \ge SoC^{dep}_{\storageindex}\, \pfactorone
+       \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEVE
+
+    where :math:`SoC^{dep}_{\storageindex}` is the minimum departure state of charge
+    (the data parameter ``pEleGenMinSoCDepart``), applied only to EVs that have an
+    availability profile set. The :math:`0.8` figure used previously was illustrative;
+    the real bound is this per-unit data parameter.
 
 *   **Driving Consumption**: The energy used for driving is modeled as an outflow from the battery. This can be configured in two ways, offering modeling flexibility:
 

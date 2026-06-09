@@ -3,7 +3,9 @@
 Parameters
 ==========
 
-Parameters are the fixed input values that define the characteristics of the energy system being modeled. They are defined in ``oM_ModelFormulation.py`` and are typically derived from the input data files. In the mathematical notation, they are written in **uppercase** letters.
+Parameters are the fixed input values that define the characteristics of the energy system being modeled. They are read from the input data files and built in ``oM_InputData.py``, where they are stored as plain dictionary entries under ``model.Par`` (keyed by the parameter name). They are **not** Pyomo ``Param`` components and are **not** defined in ``oM_ModelFormulation.py``; the formulation only reads them. Many keys are built dynamically by prefixing a data-file column name with its sector tag (``pEleGen``, ``pHydGen``, ``pEleDem``, ``pEleRet``, ...), so almost every key carries an ``Ele`` or ``Hyd`` sector prefix. In the mathematical notation, parameters are written in **uppercase** letters.
+
+The "Key" column below gives the exact ``model.Par`` dictionary key.
 
 .. note::
 
@@ -25,7 +27,7 @@ These parameters define the temporal structure and general constants for the mod
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`\ptimestepduration_{\periodindex,\scenarioindex,\timeindex}`
      - Duration of each time step
      - h
@@ -39,9 +41,9 @@ These parameters define the temporal structure and general constants for the mod
      - -
      - ``factor2``
    * - :math:`\pdiscountrate_{\periodindex}`
-     - Annual discount rate for NPV calculations
+     - Annual discount rate read from the parameter file; the derived per-period discount factor is ``pDiscountFactor``
      - %
-     - ``pParDiscountRate``
+     - ``pParAnnualDiscountRate``
 
 Market & Costs
 --------------
@@ -55,7 +57,7 @@ These parameters define the economic environment, including energy prices, tarif
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
      - Cost of electricity purchased from a trader
      - €/MWh
@@ -65,13 +67,13 @@ These parameters define the economic environment, including energy prices, tarif
      - €/MWh
      - ``pVarEnergyPrice``
    * - :math:`\phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
-     - Cost of hydrogen purchased from a trader
+     - Cost of hydrogen purchased from a trader (hydrogen uses the same shared key as electricity, indexed over both sectors' retailers)
      - €/kgH2
-     - ``pHydrogenCost``
+     - ``pVarEnergyCost``
    * - :math:`\phydsellprice_{\periodindex,\scenarioindex,\timeindex,\eletraderindex}`
-     - Price of hydrogen sold to a trader
+     - Price of hydrogen sold to a trader (shared key, see above)
      - €/kgH2
-     - ``pHydrogenPrice``
+     - ``pVarEnergyPrice``
    * - :math:`\pelemarketbuyingratio_{\eletraderindex}`
      - Ratio for electricity purchases
      - -
@@ -81,49 +83,53 @@ These parameters define the economic environment, including energy prices, tarif
      - -
      - ``pEleRetSellingRatio``
    * - :math:`\pelemarketcertrevenue_{\eletraderindex}`
-     - Revenue from electricity certificates
+     - Export incentive paid per exported kWh (the per-kWh revenue term)
      - €/kWh
-     - ``pEleRetelcertifikat``
+     - ``pEleRetIncentive``
    * - :math:`\pelemarketpassthrough_{\eletraderindex}`
-     - Pass-through fee for electricity
+     - Pass-through fee added to the buy price (påslag)
      - €/kWh
-     - ``pEleRetpaslag``
+     - ``pEleRetPaslag``
    * - :math:`\pelemarketmoms_{\eletraderindex}`
-     - Value-added tax (moms) for electricity
+     - Value-added tax (moms) multiplier for electricity
      - -
-     - ``pEleRetmoms``
+     - ``pEleRetMoms``
    * - :math:`\pelemarketnetfee_{\eletraderindex}`
-     - Network usage fee for electricity
+     - Per-kWh network transfer fee (överföringsavgift)
      - €/kWh
-     - ``pEleRetnetavgift``
+     - ``pEleRetOverforingsavgift``
+   * - :math:`\pelemarketnetfee_{\eletraderindex}`
+     - Fixed monthly network connection fee (fast avgift)
+     - €/month
+     - ``pEleRetFastavgift``
+   * - :math:`\pelemarketnetfee_{\eletraderindex}`
+     - Per-kWh electricity energy tax
+     - €/kWh
+     - ``pEleRetEnergyTax``
    * - :math:`\pelemarkettariff_{\eletraderindex}`
-     - Capacity-based tariff
+     - Capacity-based power tariff (demand charge)
      - €/kW
-     - ``pEleRetTariff``
+     - ``pEleRetPowerTariff``
    * - :math:`\pelemaxmarketbuy_{\traderindex}`
-     - Maximum electricity purchase from a trader
+     - Maximum electricity purchase from a retailer
      - kWh
-     - ``pEleMaxMarketBuy``
+     - ``pEleRetMaximumEnergyBuy``
    * - :math:`\pelemaxmarketsell_{\traderindex}`
-     - Maximum electricity sale to a trader
+     - Maximum electricity sale to a retailer
      - kWh
-     - ``pEleMaxMarketSell``
+     - ``pEleRetMaximumEnergySell``
    * - :math:`\pfactortwo`
      - A large number for big-M constraints
      - -
      - ``factor2``
    * - :math:`CF_g, CV_g`
-     - Fixed and variable costs of a generator
+     - Fixed and variable operating cost of an electricity generator (hydrogen uses ``pHydGen...``)
      - €/h, €/kWh
-     - ``pGenConstantVarCost``, ``pGenLinearVarCost``
+     - ``pEleGenConstantVarCost``, ``pEleGenLinearVarCost``
    * - :math:`CSU_g, CSD_g`
-     - Startup and shutdown cost of a unit
+     - Startup and shutdown cost of an electricity unit (hydrogen uses ``pHydGen...``)
      - €
-     - ``pGenStartUpCost``, ``pGenShutDownCost``
-   * - :math:`CRU_h, CRD_h`
-     - Ramping cost for a hydrogen unit
-     - €/kWh
-     - ``pGenRampUpCost``, ``pGenRampDownCost``
+     - ``pEleGenStartUpCost``, ``pEleGenShutDownCost``
 
 .. note::
 
@@ -154,35 +160,19 @@ These parameters define the operational characteristics, capacities, and limitat
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
-   * - :math:`\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Maximum available electricity production
-     - kWh
-     - ``pMaxEleProduction``
-   * - :math:`\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Minimum stable electricity production
-     - kWh
-     - ``pMinEleProduction``
-   * - :math:`\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Maximum available hydrogen production
-     - kgH2
-     - ``pMaxHydProduction``
-   * - :math:`\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Minimum stable hydrogen production
-     - kgH2
-     - ``pMinHydProduction``
-   * - :math:`\overline{EP}_{neg}` / :math:`\underline{EP}_{neg}`
+     - **Key**
+   * - :math:`\pelemaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}` / :math:`\peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Max/min electricity generation capacity
      - kWh
-     - ``pMaxPower``, ``pMinPower``
+     - ``pEleMaxPower``, ``pEleMinPower``
+   * - :math:`\phydmaxproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}` / :math:`\phydminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Max/min hydrogen generation capacity
+     - kgH2
+     - ``pHydMaxPower``, ``pHydMinPower``
    * - :math:`\widehat{EP}_{neg}`
      - Last market position update (Elec Gen)
      - kWh
      - ``pVarPositionGeneration``
-   * - :math:`\overline{HP}_{nhg}` / :math:`\underline{HP}_{nhg}`
-     - Max/min hydrogen generation capacity
-     - kgH2
-     - ``pMaxPower``, ``pMinPower``
    * - :math:`\widehat{HP}_{nhg}`
      - Last market position update (Hyd Gen)
      - kWh
@@ -190,19 +180,19 @@ These parameters define the operational characteristics, capacities, and limitat
    * - :math:`\overline{EC}^{comp}_{nhs}`
      - Max elec consumption of a compressor
      - kWh
-     - ``pGenMaxCompressorConsumption``
+     - ``pEleGenMaxCompressorConsumption``
    * - :math:`\overline{EC}^{standby}_{nhz}`
      - Max elec consumption of an electrolyzer at standby
      - kWh
-     - ``pGenStandByPower``
+     - ``pEleGenStandByPower``
    * - :math:`PF_{he}`
      - Production function (Elec from H2)
      - kWh/kgH2
-     - ``pGenProductionFunction``
-   * - :math:`PF1_{ehk}` / :math:`PF2_{ehk}`
-     - Piecewise production function (H2 from Elec)
+     - ``pHydGenProductionFunction``
+   * - :math:`PF_{ehk}`
+     - Production function (H2 from Elec)
      - kgH2/kWh
-     - ``pGenProductionFunction``, ``pGenProductionFunctionSlope``
+     - ``pEleGenProductionFunction``
 
 **Ramping and Commitment**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,35 +204,19 @@ These parameters define the operational characteristics, capacities, and limitat
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`RU_t, RD_t`
-     - Max ramp-up/down rate of an electric unit
+     - Max ramp-up/down rate of an electricity unit
      - kW/h
-     - ``pGenRampUp``, ``pGenRampDown``
-   * - :math:`\prampuprate`
-     - Ramp-up rate for assets
-     - p.u./h
-     - ``pGenRampUpRate``
-   * - :math:`\prampdwrate`
-     - Ramp-down rate for assets
-     - p.u./h
-     - ``pGenRampDownRate``
+     - ``pEleGenRampUp``, ``pEleGenRampDown``
    * - :math:`RC^{+}_{hz}, RC^{-}_{hz}`
      - Max ramp-up/down rate of a hydrogen unit
      - kgH2/h
-     - ``pGenRampUp``, ``pGenRampDown``
-   * - :math:`\puptime`
-     - Minimum up-time for a unit
-     - h
-     - ``pGenMinUpTime``
-   * - :math:`\pdwtime`
-     - Minimum down-time for a unit
-     - h
-     - ``pGenMinDownTime``
+     - ``pHydGenRampUp``, ``pHydGenRampDown``
    * - :math:`TU_t, TD_t`
-     - Minimum up-time and down-time
+     - Minimum up-time and down-time of an electricity unit
      - h
-     - ``pGenUpTime``, ``pGenDownTime``
+     - ``pEleGenUpTime``, ``pEleGenDownTime``
 
 **Storage**
 ~~~~~~~~~~~
@@ -254,11 +228,11 @@ These parameters define the operational characteristics, capacities, and limitat
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`\overline{EC}_{neg}` / :math:`\underline{EC}_{neg}`
      - Max/min electricity charging rate
      - kWh
-     - ``pMaxCharge``, ``pMinCharge``
+     - ``pEleMaxCharge``, ``pEleMinCharge``
    * - :math:`\widehat{EC}_{neg}`
      - Last market position update (Elec Consumption)
      - kWh
@@ -266,7 +240,7 @@ These parameters define the operational characteristics, capacities, and limitat
    * - :math:`\overline{HC}_{nhg}` / :math:`\underline{HC}_{nhg}`
      - Max/min hydrogen charging rate
      - kgH2
-     - ``pMaxCharge``, ``pMinCharge``
+     - ``pHydMaxCharge``, ``pHydMinCharge``
    * - :math:`\widehat{HC}_{nhg}`
      - Last market position update (Hyd Consumption)
      - kgH2
@@ -274,51 +248,51 @@ These parameters define the operational characteristics, capacities, and limitat
    * - :math:`\overline{EI}_{neg}` / :math:`\underline{EI}_{neg}`
      - Max/min electricity state-of-charge
      - kWh
-     - ``pMaxStorage``, ``pMinStorage``
+     - ``pEleMaxStorage``, ``pEleMinStorage``
    * - :math:`\overline{HI}_{nhg}` / :math:`\underline{HI}_{nhg}`
      - Max/min hydrogen state-of-charge
      - kgH2
-     - ``pMaxStorage``, ``pMinStorage``
+     - ``pHydMaxStorage``, ``pHydMinStorage``
    * - :math:`\overline{EEO}_{neg}` / :math:`\underline{EEO}_{neg}`
      - Max/min electricity outflow
      - kW
-     - ``pMaxOutflows``, ``pMinOutflows``
+     - ``pEleMaxOutflows``, ``pEleMinOutflows``
    * - :math:`\overline{HEO}_{nhg}` / :math:`\underline{HEO}_{nhg}`
      - Max/min hydrogen outflow
      - kgH2
-     - ``pMaxOutflows``, ``pMinOutflows``
+     - ``pHydMaxOutflows``, ``pHydMinOutflows``
    * - :math:`\overline{EEI}_{neg}` / :math:`\underline{EEI}_{neg}`
      - Max/min electricity inflow
      - kW
-     - ``pMaxInflows``, ``pMinInflows``
+     - ``pEleMaxInflows``, ``pEleMinInflows``
    * - :math:`\overline{HEI}_{nhg}` / :math:`\underline{HEI}_{nhg}`
      - Max/min hydrogen inflow
      - kgH2
-     - ``pMaxInflows``, ``pMinInflows``
+     - ``pHydMaxInflows``, ``pHydMinInflows``
    * - :math:`EF_e` / :math:`EF_h`
      - Round-trip efficiency (Elec/H2)
      - p.u.
-     - ``pGenEfficiency``
+     - ``pEleGenEfficiency`` / ``pHydGenEfficiency``
    * - :math:`\pelestoragecycle`
-     - Storage cycle time for electricity
+     - Storage cycle length (time steps) for electricity
      - h
-     - ``pEleStorageCycle``
+     - ``pEleCycleTimeStep``
    * - :math:`\phydstoragecycle`
-     - Storage cycle time for hydrogen
+     - Storage cycle length (time steps) for hydrogen
      - h
-     - ``pHydStorageCycle``
+     - ``pHydCycleTimeStep``
    * - :math:`\pelestorageoutflowcycle`
-     - Outflow cycle time for electricity storage
+     - Outflow cycle length (time steps) for electricity storage
      - h
-     - ``pEleStorageOutflowCycle``
+     - ``pEleOutflowsTimeStep``
    * - :math:`\phydstorageoutflowcycle`
-     - Outflow cycle time for hydrogen storage
+     - Outflow cycle length (time steps) for hydrogen storage
      - h
-     - ``pHydStorageOutflowCycle``
+     - ``pHydOutflowsTimeStep``
    * - :math:`\peleconscompress`
-     - Electricity consumption of a compressor
+     - Electricity consumption of a compressor (see ``pEleGenMaxCompressorConsumption`` in the Generation table)
      - kWh
-     - ``pEleConsCompress``
+     - ``pEleGenMaxCompressorConsumption``
 
 Ancillary Services
 ~~~~~~~~~~~~~~~~~~
@@ -332,15 +306,23 @@ Parameters related to grid support services.
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
-   * - :math:`URA^{SR}_{n}, DRA^{SR}_{n}`
-     - Up/down activation of Synchronous Reserve
+     - **Key**
+   * - :math:`URA^{FCRD}_{n}, DRA^{FCRD}_{n}`
+     - Up/down activation of FCR-D (disturbance reserve)
      - p.u.
-     - ``pOperatingReserveActivation_Up_SR``, ``pOperatingReserveActivation_Down_SR``
-   * - :math:`URA^{TR}_{n}, DRA^{TR}_{n}`
-     - Up/down activation of Tertiary Reserve
+     - ``pOperatingReserveActivation_FCRD_Up``, ``pOperatingReserveActivation_FCRD_Down``
+   * - :math:`URA^{FCRN}_{n}, DRA^{FCRN}_{n}`
+     - Up/down activation of FCR-N (normal reserve)
      - p.u.
-     - ``pOperatingReserveActivation_Up_TR``, ``pOperatingReserveActivation_Down_TR``
+     - ``pOperatingReserveActivation_FCRN_Up``, ``pOperatingReserveActivation_FCRN_Down``
+   * - :math:`\pi^{FCRD}_{n}, \pi^{FCRN}_{n}`
+     - Reserve clearing price per product
+     - €/kW
+     - ``pOperatingReservePrice_FCRD_Up`` / ``..._FCRD_Down`` / ``..._FCRN_Up`` / ``..._FCRN_Down``
+   * - :math:`R^{FCRD}_{n}, R^{FCRN}_{n}`
+     - Reserve requirement per product
+     - kW
+     - ``pOperatingReserveRequire_FCRD_Up`` / ``..._FCRD_Down`` / ``..._FCRN_Up`` / ``..._FCRN_Down``
 
 Network
 ~~~~~~~
@@ -354,7 +336,7 @@ Parameters related to network infrastructure.
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`\pelemaxrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}` / :math:`\peleminrealpower_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}`
      - Max/min electricity network flow
      - kWh
@@ -380,13 +362,17 @@ Parameters related to energy demand.
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`\peledemflexible`
      - Flag for flexible electricity demand
      - -
      - ``pEleDemFlexible``
+   * - :math:`\alpha^{e,flex}`
+     - Flexible fraction of the demand (sets the shift band as a share of peak demand)
+     - -
+     - ``pEleDemFlexPercent``
    * - :math:`\peledemshiftedsteps`
-     - Number of steps for demand shifting
+     - Number of time steps over which demand may be shifted
      - -
      - ``pEleDemShiftedSteps``
 
@@ -402,19 +388,15 @@ Parameters specific to Electric Vehicle (EV) modeling.
    * - **Symbol**
      - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - :math:`\pvarfixedavailability`
-     - Availability of EV for grid services
+     - Time-varying availability of the EV for grid services (0 while driving)
      - -
      - ``pVarFixedAvailability``
    * - :math:`\peleminstoragestart`
-     - Minimum EV battery state-of-charge at trip start
-     - kWh
-     - ``pEleMinStorageStart``
-   * - :math:`\peleminstorageend`
-     - Minimum EV battery state-of-charge at trip end
-     - kWh
-     - ``pEleMinStorageEnd``
+     - Minimum battery state-of-charge required at departure
+     - p.u.
+     - ``pEleGenMinSoCDepart``
 
 Heat sector
 -----------
@@ -425,7 +407,7 @@ Heat sector
 
    * - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - Heat generator maximum power
      - kW
      - ``pHeatGenMaxPower``
@@ -454,7 +436,7 @@ Investment and options
 
    * - **Description**
      - **Unit**
-     - **Pyomo Component**
+     - **Key**
    * - Annualised investment cost of a candidate (electricity / hydrogen)
      - €
      - ``pEleGenInvestCost`` / ``pHydGenInvestCost``

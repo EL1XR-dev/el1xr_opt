@@ -107,22 +107,31 @@ This category includes improvements that add new features, constraints, or more 
 
         *   Add this new constraint to `create_constraints` in `oM_ModelFormulation.py`, linking the existing binary variables for market participation.
 
-6.  **Grid Fees and COMA Costs**:
+6.  **Grid Fees and COMA Costs** (partially implemented):
 
-    *   **Challenge**: The model's cost structure for grid usage and operations is not yet fully defined.
-    *   **To-Do**: Define and implement a realistic cost structure for grid usage fees (MWh imported/exported) and COMA (Operating, Maintenance, Administration) costs, whether as fixed annual costs or usage-based.
-    *   **Prototype Equations**: These costs would be added to the objective function:
+    *   **Done**: The Swedish grid-fee structure is in the objective today. The fixed
+        network charge (*fastavgift*) is a per-retailer, per-month constant registered
+        through ``oM_Features.seed_horizon_coupling`` as ``vTotalEleNetUseFixCost``. The
+        usage-based net charge (*överföringsavgift*) is ``vTotalEleNetUseVarCost``
+        (``eTotalEleNetUseVarCost`` in ``oM_ModelFormulation.py``, a sum over grid
+        imports). The energy tax is ``vTotalEleEnergyTaxCost`` (``eEleTaxEnergyCost``).
+        The peak power tariff is the sum of the N largest grid imports per month per
+        retailer (``vTotalElePeakCost``), registered as a horizon-coupling threshold in
+        ``seed_horizon_coupling`` for the Hourly tariff type.
+    *   **Still future**: A Daily-tariff peak charge is not yet supported (it is flagged
+        via ``register_horizon_unsupported``), per-MWh export grid fees are not modelled,
+        and a general COMA (Operating, Maintenance, Administration) cost beyond the
+        existing fixed O&M term is not yet defined.
+    *   **Prototype Equation** (export fee, the missing half):
 
         .. math::
-           C_{grid,t} = c_{grid,import} \cdot P_{import,t} + c_{grid,export} \cdot P_{export,t}
-        .. math::
-           C_{COMA} = C_{fixed\_O\&M}
+           C_{grid,t} = c_{grid,export} \cdot P_{export,t}
 
     *   **Potential Integration**:
 
-        *   Update the objective function in `oM_ModelFormulation.py`.
-        *   Add new parameters for the grid fee rates (:math:`pGridFee_{import}`) and fixed O&M costs (:math:`pCOMA_{cost}`).
-        *   The grid cost would use the existing variables for grid import/export (:math:`vElecImport_t`, :math:`vElecExport_t`).
+        *   Add new parameters for the export grid fee rate (:math:`pGridFee_{export}`).
+        *   The export grid cost would use the existing grid-export variable
+            (:math:`vElecExport_t`).
 
 7.  **Vehicle-to-Grid (V2G) Integration**:
 
@@ -149,10 +158,10 @@ This category includes improvements that add new features, constraints, or more 
         *   Introduce a new cost term for degradation to the objective function in `oM_ModelFormulation.py`.
         *   Add new variables or constraints if necessary to distinguish between AC and DC charging power, potentially allowing simultaneous connection to both if the model scope requires it.
 
-8.  **Degradation Modeling for Energy Storage**:
+8.  **Degradation Modeling for Energy Storage** (BESS depth-of-discharge partially implemented):
 
     *   **Challenge**: To capture the long-term economic impact of operational decisions, the model must account for the physical degradation of storage assets. This is complex because different technologies degrade in different ways.
-    *   **To-Do**: Implement distinct degradation cost models for electrochemical batteries (BESS) and hydrogen systems (electrolyzers, fuel cells).
+    *   **To-Do**: Finish the BESS cycle-aging model and add distinct degradation cost models for hydrogen systems (electrolyzers, fuel cells).
     *   **BESS Degradation (Electrical Storage)**: Battery degradation is primarily driven by two factors:
 
         *   **Cycle Aging**: Caused by the throughput of energy (charging and discharging).
@@ -162,7 +171,7 @@ This category includes improvements that add new features, constraints, or more 
         .. math::
            C_{BESS\_deg,t} = c_{cycle} \cdot (P_{chg,t} + P_{dis,t}) + c_{calendar}
 
-    *   **Advanced Model**: *Depth of Discharge (DoD) Penalization* - A more accurate approach recognizes that deeper discharge cycles cause more stress than shallow ones. This non-linear cost can be approximated in a linear model using a piecewise function.
+    *   **Advanced Model (depth-of-discharge scaffolding -- done)**: *Depth of Discharge (DoD) Penalization* recognizes that deeper discharge cycles cause more stress than shallow ones. The piecewise scaffolding for this is in the code today: the daily DoD is computed by ``eEleInventoryDoD``, split across segments by ``eEleInventoryDoDSegments``, bounded per segment by ``eEleInventoryDoDS1Upper`` / ``eEleInventoryDoDS2Upper`` / ``eEleInventoryDoDS3Upper`` (all in ``oM_ModelFormulation.py``), and priced into the objective through ``vTotalEleDCost`` (``eTotalEleDCost``).
 
         *   **Prototype Equation**: The total degradation cost is the sum of costs incurred in different SOC segments, each with a different penalty.
 
@@ -171,9 +180,9 @@ This category includes improvements that add new features, constraints, or more 
 
             where :math:`S` is the set of DoD segments (e.g., 100-80%, 80-60%), :math:`c_{segment,s}` is the increasing cost for each segment, and :math:`E_{discharged,s,t}` is the energy discharged within that segment.
 
-        *   **Potential Integration**: This requires a more complex formulation, typically using Special Ordered Sets of Type 2 (SOS2) constraints or binary variables to model the piecewise cost function. New parameters would be needed in `oM_InputData.py` to define the segment breakpoints and costs.
+        *   **Still future**: the per-segment lower-bound constraints are present but commented out, and calendar aging is not yet modelled.
 
-    *   **Hydrogen System Degradation**: Degradation in hydrogen systems primarily affects the conversion components, not the hydrogen storage tank itself. Key drivers include:
+    *   **Hydrogen System Degradation** (future): Degradation in hydrogen systems primarily affects the conversion components, not the hydrogen storage tank itself. Key drivers include:
 
         *   **Operational Stress**: Total operating hours for electrolyzers and fuel cells.
         *   **Start/Stop Cycles**: Thermal and mechanical stress from starting up and shutting down.
@@ -192,6 +201,24 @@ Computational and Structural Enhancements
 -----------------------------------------
 
 This category focuses on improvements to the underlying code structure and mathematical formulation to enhance computational efficiency, scalability, and maintainability.
+
+.. note::
+
+   **Already implemented** (no longer future):
+
+   *   **Registry-driven cost architecture**: features register their objective terms by
+       name and aggregation kind through ``register_cost`` / ``register_revenue`` in
+       ``oM_Features.py``; ``aggregate_terms`` sums whatever is registered, so adding a
+       cost no longer means editing the objective rule. The built-in terms are seeded by
+       ``seed_objective_registry``.
+   *   **Horizon-coupling registry**: ``seed_horizon_coupling`` declares the cost terms
+       that do not split cleanly per time window (the fixed network charge as a constant
+       and the peak power tariff as a "sum of the N largest" threshold), so the temporal
+       Benders decomposition can handle them without hard-coding.
+   *   **Heat thermal store in the temporal Benders**: the heat thermal store is coupled
+       across time windows by a boundary inventory master variable (``St`` in
+       ``oM_Decomposition.py``), the analogue of the electricity (``Se``) and hydrogen
+       (``Sh``) storage coupling.
 
 1.  **Code Restructuring with Python Classes**:
 
