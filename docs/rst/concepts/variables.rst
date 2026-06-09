@@ -88,13 +88,13 @@ These high-level variables are used to structure the objective function, represe
      - €
      - ``vTotalElePeakCost``
    * - :math:`\elenetusecost_{\periodindex,\scenarioindex}`
-     - Total electricity network usage cost
+     - Total electricity network usage cost (per-kWh överföringsavgift)
      - €
-     - ``vTotalEleNetUseCost``
+     - ``vTotalEleNetUseVarCost``
    * - :math:`\elecaptariffcost_{\periodindex,\scenarioindex}`
-     - Total electricity capacity tariff cost
+     - Total electricity fixed grid charge (fastavgift)
      - €
-     - ``vTotalEleCapTariffCost``
+     - ``vTotalEleNetUseFixCost``
    * - :math:`\elemarketcostDA_{\periodindex,\scenarioindex,\timeindex}`
      - Total electricity day-ahead market cost
      - €
@@ -115,6 +115,18 @@ These high-level variables are used to structure the objective function, represe
      - Total electricity frequency market revenue
      - €
      - ``vTotalEleMrkFrqRev``
+   * - :math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
+     - Total FCR-D upward market revenue
+     - €
+     - ``vTotalEleFCRDUpRev``
+   * - :math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
+     - Total FCR-D downward market revenue
+     - €
+     - ``vTotalEleFCRDDwRev``
+   * - :math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`
+     - Total FCR-N market revenue
+     - €
+     - ``vTotalEleFCRNRev``
    * - :math:`\hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex}`
      - Total hydrogen PPA market cost
      - €
@@ -123,10 +135,10 @@ These high-level variables are used to structure the objective function, represe
      - Total hydrogen PPA market revenue
      - €
      - ``vTotalHydMrkPPARev``
-   * - :math:`\elemarketcostVAT_{\periodindex,\scenarioindex}`
-     - Total electricity VAT cost
+   * - :math:`\elemarketcosttax_{\periodindex,\scenarioindex}`
+     - Total electricity energy-tax cost (Swedish energy tax; VAT is the multiplier ``pEleRetMoms``)
      - €
-     - ``vTotalEleVATCost``
+     - ``vTotalEleEnergyTaxCost``
    * - :math:`\elemarketrevenueincentive_{\periodindex,\scenarioindex}`
      - Total electricity incentives revenue
      - €
@@ -189,22 +201,38 @@ These variables represent the interactions with external energy markets.
      - Hydrogen sold to the market
      - kgH2
      - ``vHydSell``
-   * - :math:`\velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
-     - Electricity peak demand for tariff calculation
+   * - :math:`\veleimport_{\periodindex,\scenarioindex,\timeindex,\busindex}`
+     - Electricity import at a node
      - kW
-     - ``vEleDemPeak``
-   * - :math:`\vhydpeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
-     - Hydrogen peak demand for tariff calculation
+     - ``vEleImport``
+   * - :math:`\veleexport_{\periodindex,\scenarioindex,\timeindex,\busindex}`
+     - Electricity export at a node
+     - kW
+     - ``vEleExport``
+   * - :math:`\vhydimport_{\periodindex,\scenarioindex,\timeindex,\busindex}`
+     - Hydrogen import at a node
      - kgH2
-     - ``vHydDemPeak``
-   * - :math:`\velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
-     - Binary indicator for electricity peak demand
-     - '{0,1}'
-     - ``vElePeakHourInd``
-   * - :math:`\vhydpeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
-     - Binary indicator for hydrogen peak demand
-     - '{0,1}'
-     - ``vHydPeakHourInd``
+     - ``vHydImport``
+   * - :math:`\vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex}`
+     - Hydrogen export at a node
+     - kgH2
+     - ``vHydExport``
+   * - :math:`\velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
+     - Electricity global/monthly peak demand (Hourly tariff, ``Peaks`` tiers)
+     - kW
+     - ``vEleDemPeakGlobal``
+   * - :math:`\velepeakdemand_{\periodindex,\scenarioindex,\dayindex,\traderindex}`
+     - Electricity daily peak demand (Daily tariff)
+     - kW
+     - ``vEleDemPeakDay``
+   * - :math:`\vhydpeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
+     - Hydrogen global/monthly peak demand (Hourly tariff, ``Peaks`` tiers)
+     - kgH2
+     - ``vHydDemPeakGlobal``
+   * - :math:`\vhydpeakdemand_{\periodindex,\scenarioindex,\dayindex,\traderindex}`
+     - Hydrogen daily peak demand (Daily tariff)
+     - kgH2
+     - ``vHydDemPeakDay``
 
 Asset Operations (Generation, Storage, and Demand)
 --------------------------------------------------
@@ -283,7 +311,7 @@ These variables control the physical operation of all assets in the system.
      - kgH2
      - ``vHNS``
    * - :math:`\veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}`
-     - Flexible electricity demand
+     - Flexible electricity demand (created only when some demand is flexible, i.e. ``pEleDemFlexible`` > 0)
      - kW
      - ``vEleDemFlex``
 
@@ -326,6 +354,30 @@ These variables control the physical operation of all assets in the system.
      - Spilled energy from an electricity ESS
      - kWh
      - ``vEleSpillage``
+   * - :math:`\veleinventory_{\periodindex,\scenarioindex,\dayindex,\storageindex}`
+     - Minimum elec. ESS inventory over the day (DoD degradation)
+     - kWh
+     - ``vEleInventoryMinDay``
+   * - :math:`\veleinventory_{\periodindex,\scenarioindex,\dayindex,\storageindex}`
+     - Maximum elec. ESS inventory over the day (DoD degradation)
+     - kWh
+     - ``vEleInventoryMaxDay``
+   * - :math:`\veleinventory_{\periodindex,\scenarioindex,\dayindex,\storageindex}`
+     - Daily depth of discharge (max minus min inventory)
+     - kWh
+     - ``vEleInventoryDoDDay``
+   * - :math:`\veleinventory_{\periodindex,\scenarioindex,\dayindex,\storageindex}`
+     - Daily depth of discharge, segment 1 (degradation cost curve)
+     - kWh
+     - ``vEleInventoryDoDS1Day``
+   * - :math:`\veleinventory_{\periodindex,\scenarioindex,\dayindex,\storageindex}`
+     - Daily depth of discharge, segment 2 (degradation cost curve)
+     - kWh
+     - ``vEleInventoryDoDS2Day``
+   * - :math:`\veleinventory_{\periodindex,\scenarioindex,\dayindex,\storageindex}`
+     - Daily depth of discharge, segment 3 (degradation cost curve)
+     - kWh
+     - ``vEleInventoryDoDS3Day``
    * - :math:`\vhydspillage_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Spilled energy from a hydrogen ESS
      - kgH2
@@ -391,10 +443,27 @@ Network
      - rad
      - ``vEleNetTheta``
 
-Binary & Logical
-----------------
+Commitment, Storage-Operation and Peak Indicators
+-------------------------------------------------
 
-These binary (0 or 1) variables model on/off decisions, operational states, and logical constraints.
+These variables model on/off decisions, operational states, and peak-selection
+logic.
+
+.. important::
+
+   Their domain depends on a feature flag, **not** on the variable itself. By
+   default every ``pOptIndBin*`` flag is ``0``, so all of these variables are
+   created as ``UnitInterval`` (continuous on :math:`[0,1]`). The shipped default
+   model is therefore a **linear program (LP)**, not a MILP. A variable becomes a
+   true ``Binary`` :math:`\{0,1\}` only when its corresponding flag is set to ``1``:
+
+   * commitment / start-up / shut-down: ``pOptIndBinGenOperat``
+   * storage charge / discharge / operation: ``pOptIndBinGenOperat``
+   * peak indicators: ``pOptIndBinGenOperat``
+   * network commitment (``vEleNetCommit`` / ``vHydNetCommit``): ``pOptIndBinNetOperat``
+
+   The "Unit" column below shows :math:`[0,1]` to reflect this default; read it as
+   :math:`\{0,1\}` when the matching flag is enabled.
 
 .. list-table::
    :widths: 30 50 10 30
@@ -406,36 +475,72 @@ These binary (0 or 1) variables model on/off decisions, operational states, and 
      - **Pyomo Component**
    * - :math:`\velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Commitment of an elec. unit
-     - '{0,1}'
+     - [0,1]
      - ``vEleGenCommitment``
    * - :math:`\velestartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Startup of an elec. unit
-     - '{0,1}'
+     - [0,1]
      - ``vEleGenStartUp``
    * - :math:`\veleshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Shutdown of an elec. unit
-     - '{0,1}'
+     - [0,1]
      - ``vEleGenShutDown``
    * - :math:`\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Commitment of a hydrogen unit
-     - '{0,1}'
+     - [0,1]
      - ``vHydGenCommitment``
    * - :math:`\vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Startup of a hydrogen unit
-     - '{0,1}'
+     - [0,1]
      - ``vHydGenStartUp``
    * - :math:`\vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
      - Shutdown of a hydrogen unit
-     - '{0,1}'
+     - [0,1]
      - ``vHydGenShutDown``
    * - :math:`\velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Operating state of an elec. ESS (charge/discharge)
-     - '{0,1}'
-     - ``vEleStorOperat``
+     - Elec. ESS charge decision
+     - [0,1]
+     - ``vEleStorCharge``
+   * - :math:`\velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Elec. ESS discharge decision
+     - [0,1]
+     - ``vEleStorDischarge``
    * - :math:`\vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Operating state of a hyd. ESS (charge/discharge)
-     - '{0,1}'
+     - [0,1]
      - ``vHydStorOperat``
+   * - :math:`\vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Hyd. ESS charge decision
+     - [0,1]
+     - ``vHydStorCharge``
+   * - :math:`\vhydstoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
+     - Hyd. ESS discharge decision
+     - [0,1]
+     - ``vHydStorDischarge``
+   * - :math:`\velepeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
+     - Elec. global peak-hour indicator (Hourly tariff)
+     - [0,1]
+     - ``vElePeakGlobalInd``
+   * - :math:`\velepeakdemandindbin_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
+     - Elec. monthly peak-hour indicator (Hourly tariff)
+     - [0,1]
+     - ``vElePeakMonthInd``
+   * - :math:`\velepeakdemandindbin_{\periodindex,\scenarioindex,\dayindex,\traderindex}`
+     - Elec. daily peak-hour indicator (Daily tariff)
+     - [0,1]
+     - ``vElePeakDayInd``
+   * - :math:`\vhydpeakdemandindbin_{\periodindex,\scenarioindex,\timeindex,\traderindex,\peakindex}`
+     - Hyd. global peak-hour indicator (Hourly tariff)
+     - [0,1]
+     - ``vHydPeakGlobalInd``
+   * - :math:`\vhydpeakdemandindbin_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex}`
+     - Hyd. monthly peak-hour indicator (Hourly tariff)
+     - [0,1]
+     - ``vHydPeakMonthInd``
+   * - :math:`\vhydpeakdemandindbin_{\periodindex,\scenarioindex,\dayindex,\traderindex}`
+     - Hyd. daily peak-hour indicator (Daily tariff)
+     - [0,1]
+     - ``vHydPeakDayInd``
 
 Heat, investment and community
 ------------------------------

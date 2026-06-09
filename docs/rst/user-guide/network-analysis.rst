@@ -11,14 +11,20 @@ AC optimal power flow
 ``oM_ACOPF.py`` runs a single-phase AC OPF on a network snapshot (the case's branches
 plus nodal injections). Two formulations:
 
-- the **second-order-cone** (branch-flow / DistFlow) relaxation, which reports the
-  relaxation gap, and
-- the exact **polar NLP**, warm-started from the SOC solution.
+- the **second-order-cone** (branch-flow / DistFlow) relaxation, whose objective is the
+  total active loss and which reports a per-branch relaxation gap (``solve_acopf_socp``), and
+- the exact **polar NLP** (``solve_acopf_nlp``), warm-started from the SOC voltages.
 
-It is validated against the IEEE 33-bus feeder (Baran & Wu): both reproduce the
-published base-case loss (~202.7 kW) and minimum voltage (~0.913 pu). A multi-snapshot
-sweep (``run_acopf_sweep``) runs one AC OPF per snapshot and summarises voltage and loss
-violations across a horizon. Results can be written to DuckDB.
+The module is checked against the IEEE 33-bus feeder (Baran & Wu) in
+``tests/test_acopf.py``, using the network and published values in ``tests/_ieee33.py``.
+The SOC path is asserted to reproduce the published base-case loss (~202.7 kW) and
+minimum voltage (~0.913 pu) with a tight relaxation gap, and the polar NLP is asserted to
+agree with that SOC solution. These checks need a cone solver (Gurobi for SOC) and Ipopt
+(for the NLP); they skip when the solver is not installed, so the numbers are validated
+only when a suitable solver is present.
+
+A multi-snapshot sweep (``run_acopf_sweep``) runs one AC OPF per snapshot and summarises
+voltage and loss violations across a horizon. Results can be written to DuckDB.
 
 LinDist3Flow
 ------------

@@ -134,6 +134,51 @@ Sets
      - Zone or region in the network
      - :code:`model.zn`
 
+The electricity and hydrogen line sets split further into switchable, candidate and
+existing arcs.
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Definition**
+     - **Pyomo Component**
+   * - Switchable electricity lines
+     - lines in ``ela`` flagged as switchable
+     - :code:`model.els`
+   * - Candidate electricity lines (positive investment cost)
+     - lines in ``ela`` with a fixed investment cost
+     - :code:`model.elc`
+   * - Existing electricity lines
+     - ``ela`` minus ``elc``
+     - :code:`model.ele`
+   * - Hydrogen pipelines actually modelled
+     - the subset of ``hpn`` that passes the transfer-capacity / period filters
+     - :code:`model.hpa`
+   * - Candidate hydrogen pipelines (positive investment cost)
+     - pipelines in ``hpa`` with a fixed investment cost
+     - :code:`model.hpc`
+   * - Existing hydrogen pipelines
+     - ``hpa`` minus ``hpc``
+     - :code:`model.hpe`
+
+The reference (slack) nodes for the two networks are their own one-element sets.
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Notes**
+     - **Pyomo Component**
+   * - Electricity reference node
+     - voltage-angle / slack reference for the electricity network
+     - :code:`model.endrf`
+   * - Hydrogen reference node
+     - pressure reference for the hydrogen network
+     - :code:`model.hndrf`
+
 Indices
 ~~~~~~~
 
@@ -199,6 +244,9 @@ General Technology Subsets
    * - :math:`\nGH`
      - All hydrogen production units
      - :code:`model.hg`
+   * - :math:`\nHGT`
+     - Scheduled / thermal hydrogen units (positive variable cost, subset of :math:`\nGH`)
+     - :code:`model.hgt`
    * - :math:`\nGHE`
      - Units converting electricity to hydrogen, i.e. electrolysers (``e2h``)
      - :code:`model.e2h`
@@ -208,6 +256,64 @@ General Technology Subsets
    * - :math:`\nEH`
      - Hydrogen energy storage systems (subset of :math:`\nGH`)
      - :code:`model.hgs`
+
+.. note::
+
+   ``model.hgr`` (the hydrogen analogue of ``egr``, "hydrogen RES units") is a
+   deliberately empty placeholder. There is no hydrogen RES input column, so the set is
+   always empty; it exists only so the initial-output loop can reference it the same way
+   the electricity loop references ``egr``.
+
+Cross-sector and storage/conversion unions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These derived sets are built by set algebra (union ``|`` / difference ``-``) from the base
+technology sets and are used to write balance and capacity constraints compactly.
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Definition**
+     - **Pyomo Component**
+   * - Non-RES electricity generators (committable, can carry reserves)
+     - ``eg`` minus ``egr``
+     - :code:`model.egnr`
+   * - Electricity consumption units (storage charging plus electrolysers)
+     - ``egs`` union ``e2h``
+     - :code:`model.eh`
+   * - Hydrogen consumption units (hydrogen storage charging plus fuel cells)
+     - ``hgs`` union ``h2e``
+     - :code:`model.he`
+   * - Electricity and hydrogen storage combined
+     - ``egs`` union ``hgs``
+     - :code:`model.ehs`
+   * - Candidate electricity and hydrogen units combined
+     - ``egc`` union ``hgc``
+     - :code:`model.esc`
+
+Technology subsets
+~~~~~~~~~~~~~~~~~~
+
+Technology labels (the ``gt`` set) grouped by what the units mapped to them are.
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Notes**
+     - **Pyomo Component**
+   * - Electricity storage technologies
+     - technologies that have at least one ``egs`` unit
+     - :code:`model.et`
+   * - Hydrogen storage technologies
+     - technologies that have at least one ``hgs`` unit
+     - :code:`model.ht`
+   * - RES technologies
+     - technologies that have at least one ``egr`` unit
+     - :code:`model.rt`
 
 Heat sector
 ~~~~~~~~~~~
@@ -277,11 +383,13 @@ Indices
      - Generation units
      - :code:`g`
    * - :math:`\storageindex`
-     - Energy storage systems
-     - :code:`e`
+     - Index letter for a storage unit. The storage **sets** are ``egs`` (electricity),
+       ``hgs`` (hydrogen) and their union ``ehs``; there is no bare ``e`` set in the code.
+     - :code:`egs` / :code:`hgs` / :code:`ehs`
    * - :math:`\traderindex`
-     - Retailers
-     - :code:`r`
+     - Index letter for a retailer. The retailer **sets** are ``er`` (electricity)
+       and ``hr`` (hydrogen); there is no bare ``r`` set in the code.
+     - :code:`er` / :code:`hr`
 
 Demand and Retail
 ~~~~~~~~~~~~~~~~~
@@ -320,19 +428,113 @@ Indices
      - **Description**
      - **Pyomo Component**
    * - :math:`\demandindex`
-     - Consumer
+     - Consumer (demand index letter; sets are ``ed`` / ``hd``)
      - :code:`d`
    * - :math:`\traderindex`
-     - Retailer
+     - Retailer (retailer index letter; sets are ``er`` / ``hr``)
      - :code:`r`
 
-Node-to-Technology Mappings
----------------------------
+Inverse-Index Mapping Sets
+--------------------------
 
-The model uses mapping sets to link specific assets to their locations in the network. For example:
+The model uses mapping sets to link specific assets to their location, zone, technology
+and retailer. These are "inverse index" sets: each entry pairs a key (node, zone,
+technology or retailer) with an asset, so a constraint can loop over all assets sitting at
+a given node or zone.
 
-*   ``model.n2eg``: Maps which electricity generators exist at which nodes.
-*   ``model.n2hg``: Maps which hydrogen producers exist at which nodes.
-*   ``model.n2ed``: Maps electricity demands to nodes.
+There are four families, each with an electricity (``e``) and a hydrogen (``h``) variant,
+applied to generators (``g``), demands (``d``) and retailers (``r``):
 
-These sets are fundamental for building the energy balance constraints at each node. By combining temporal, spatial, and technological sets, the model can create highly specific variables, such as ``vEleTotalOutput[p,sc,n,eg]``, which represents the electricity output of generator ``eg`` at a specific time ``(p,sc,n)``.
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Family**
+     - **Meaning (key to asset)**
+     - **Pyomo Components**
+   * - ``n2*``
+     - node to asset
+     - :code:`n2eg` / :code:`n2hg`, :code:`n2ed` / :code:`n2hd`, :code:`n2er` / :code:`n2hr`
+   * - ``z2*``
+     - zone to asset (built from ``n2*`` via the node-zone map ``ndzn``)
+     - :code:`z2eg` / :code:`z2hg`, :code:`z2ed` / :code:`z2hd`, :code:`z2er` / :code:`z2hr`
+   * - ``t2*``
+     - technology to generator
+     - :code:`t2eg` / :code:`t2hg`
+   * - ``r2*``
+     - retailer to asset
+     - :code:`r2eg` / :code:`r2hg`, :code:`r2ed` / :code:`r2hd`
+
+These sets are fundamental for building the energy balance constraints at each node. By
+combining temporal, spatial, and technological sets, the model can create highly specific
+variables, such as ``vEleTotalOutput[p,sc,n,eg]``, which represents the electricity output
+of generator ``eg`` at a specific time ``(p,sc,n)``.
+
+Calendar Time Sets
+------------------
+
+On top of the operational time step ``n``, the model derives a calendar from the model
+start date. These sets let monthly and daily quantities (peak charges, daily storage
+cycles) be written cleanly.
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Description**
+     - **Notes**
+     - **Pyomo Component**
+   * - Months of the year present in the horizon
+     - unique month numbers
+     - :code:`model.moy`
+   * - Days of the year present in the horizon
+     - unique day-of-year numbers
+     - :code:`model.doy`
+   * - Hours of the year present in the horizon
+     - unique hour-of-year numbers
+     - :code:`model.hoy`
+   * - Time step to month
+     - pairs ``(n, month)``
+     - :code:`model.n2m`
+   * - Time step to day
+     - pairs ``(n, day)``
+     - :code:`model.n2d`
+   * - Day to month
+     - pairs ``(day, month)``
+     - :code:`model.d2m`
+
+These calendar sets are combined with period and scenario into composite index sets that
+the monthly / daily constraints loop over. The naming follows the same prefix convention
+as the operational index sets (``p`` period, ``s`` scenario, ``m`` month, ``d`` day,
+``n`` time step). The main families are:
+
+.. list-table::
+   :widths: 30 50 30
+   :header-rows: 1
+
+   * - **Pattern**
+     - **Tuple**
+     - **Representative Pyomo Component**
+   * - ``psm``
+     - ``(p, sc, month)``
+     - :code:`model.psm`
+   * - ``psd``
+     - ``(p, sc, day)``
+     - :code:`model.psd`
+   * - ``psdn``
+     - ``(p, sc, day, n)``
+     - :code:`model.psdn`
+   * - ``psmd``
+     - ``(p, sc, month, day)``
+     - :code:`model.psmd`
+   * - ``psmdn``
+     - ``(p, sc, month, day, n)``
+     - :code:`model.psmdn`
+
+.. note::
+
+   Each base pattern is further crossed with an asset set to give the index lists the
+   constraints actually use, for example ``psmer`` / ``psmhr`` / ``psmhd`` (month, by
+   retailer / hydrogen demand), ``psder`` / ``psded`` / ``psdegs`` / ``psdhgs`` (day, by
+   retailer / demand / storage) and the per-time-step variants ``psdner`` / ``psdned`` /
+   ``psdnegs`` / ``psdnhgs``. They all follow the same prefix-plus-asset convention.

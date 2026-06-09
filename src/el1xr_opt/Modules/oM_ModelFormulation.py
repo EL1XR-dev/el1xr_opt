@@ -186,7 +186,12 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Electricity reliability cost [M€]
     def eTotalEleRCost(optmodel, p,sc,n):
-        return (optmodel.vTotalEleRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParENSCost'] * optmodel.vENS[p,sc,n,ed]) for ed in model.ed))
+        # Energy not served is a power per load level, like the other O&M sub-terms
+        # (generation / emission / consumption). The duration weighting is applied once
+        # by the psn objective aggregation of vTotalEleOCost (oM_Features.aggregate_terms),
+        # so it must NOT be applied here too -- doing so weighted ENS by pDuration**2
+        # while its siblings were weighted by pDuration once. See docs/model_audit.md.
+        return (optmodel.vTotalEleRCost[p,sc,n] == sum(model.Par['pParENSCost'] * optmodel.vENS[p,sc,n,ed] for ed in model.ed))
     optmodel.__setattr__('eTotalEleRCost', Constraint(optmodel.psn, rule=eTotalEleRCost, doc='Total reliability cost in electricity consumers [kEUR]'))
 
     #%% Total hydrogen operation and maintenance costs
@@ -210,7 +215,9 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Hydrogen reliability cost [M€]
     def eTotalHydRCost(optmodel, p,sc,n):
-        return (optmodel.vTotalHydRCost[p,sc,n] == sum(model.Par['pDuration'][p,sc,n] * (model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd]) for hd in model.hd))
+        # Hydrogen not served: same fix as the electricity reliability cost above --
+        # the psn aggregation supplies the single duration weight. See docs/model_audit.md.
+        return (optmodel.vTotalHydRCost[p,sc,n] == sum(model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd] for hd in model.hd))
     optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [kEUR]'))
 
     log_time('--- Declaring the ObjFunc components:', StartTime, ind_log=indlog)

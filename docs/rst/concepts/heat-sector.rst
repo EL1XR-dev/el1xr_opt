@@ -40,11 +40,20 @@ draw), ``vHeatCharge`` / ``vHeatDischarge`` / ``vHeatInventory`` (thermal store)
 Constraints
 -----------
 
-- ``eHeatBalance`` -- nodal heat balance: generation + store discharge + heat-pump
-  output meet the heat demand (minus heat-not-served).
+- ``eHeatBalance`` -- nodal heat balance, supply == demand at each node. The supply side
+  is the sum of ``vHeatOutput`` over all heat generators ``htg`` (which already include
+  the heat pumps, so heat-pump output is not a separate term), plus the net store flow
+  ``vHeatDischarge - vHeatCharge`` over thermal stores, plus ``vHeatNotServed`` (a ``+``
+  supply slack). The demand side is the fixed ``pHeatDemand`` plus ``vHeatConsumed``, the
+  heat drawn by the heat-to-power units.
 - ``eHeatPumpCOP`` -- ``vHeatOutput = COP x vHeatPumpElec`` for heat pumps.
 - ``eHeatToEle`` -- ``vHeatToEle = efficiency x vHeatConsumed`` for heat-to-power.
-- ``eHeatInventory`` -- thermal-store inventory dynamics.
+- ``eHeatInventory`` -- thermal-store inventory dynamics: the inventory equals the
+  previous step's inventory plus ``efficiency x vHeatCharge`` minus ``vHeatDischarge``.
+
+A thermal store is now coupled across temporal-Benders windows by a boundary inventory
+variable (``St``, the heat analogue of ``Se`` / ``Sh``); see
+:doc:`../user-guide/decomposition`.
 
 The electricity balance ``eEleBalance`` is coupled to the heat sector: it subtracts the
 heat-pump electricity load and adds the heat-to-power injection at each node.

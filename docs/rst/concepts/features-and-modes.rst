@@ -8,17 +8,22 @@ choosing the solver and (for a future migration) the model-building library.
 Option-flag catalogue
 ---------------------
 
-Each optional feature has an option flag with a safe default. ``apply_flag_defaults``
-seeds the defaults so a case whose ``oM_Data_Option`` file predates a flag still runs
-instead of raising a ``KeyError``. The flags cover unit-commitment binaries, ramps,
-minimum up/down time, single-node operation, network and storage investment, the energy
-community, green-hydrogen matching, and the balance mode.
+The ``FEATURES`` catalogue holds twelve ``IndBin*`` option flags, each with a safe
+default. ``apply_flag_defaults`` seeds those defaults so a case whose ``oM_Data_Option``
+file predates a flag still runs instead of raising a ``KeyError``. The flags cover
+unit-commitment binaries, network commitment, minimum up/down time, ramps, generation
+investment and retirement, electricity- and hydrogen-network investment, line
+commitment, network losses, single-node operation, and the energy community. The same
+helper also seeds the balance mode (``pParBalanceMode``); that mode is not a ``Feature``
+in the catalogue. Green-hydrogen matching is likewise not an ``oM_Features`` flag -- it
+is handled in ``oM_GreenHydrogen.py``.
 
 Problem classes
 ---------------
 
 From the built model, ``detect_problem_class`` reports the mathematical class -- LP,
-MILP, QP, MIQP, SOCP, MISOCP, NLP, MINLP or SDP. The class drives two choices:
+MILP, QP, MIQP, SOCP, MISOCP, NLP or MINLP. (SDP is not detected here; it appears only
+in the solver and builder capability matrices.) The class drives two choices:
 
 - **Solver**: a capability matrix records which solvers handle which class (for
   example HiGHS does LP and MILP but not SOCP). ``check_solver_for_model`` warns when
@@ -35,6 +40,30 @@ aggregation sums the registry, seeded with the built-in terms in their original 
 so existing results are unchanged. Each term has a *kind* -- ``ps`` (per period and
 scenario), ``psn`` (also per load level, duration-weighted) or ``psd`` (per
 representative day) -- that fixes how it is summed.
+
+Horizon-coupling registry
+-------------------------
+
+Most cost terms split cleanly by time window, but a few per-(period, scenario) charges do
+not -- they are aggregates over the whole horizon. ``oM_Features`` records these as
+descriptors so the temporal Benders decomposition is driven by the descriptors rather than
+by hard-coded variable names. Two shapes are supported:
+
+- ``register_horizon_constant`` -- a charge that is constant over the horizon, such as the
+  fixed network fee (``fastavgift``). The full-horizon scalar is counted once in the
+  master and removed from every window's recourse.
+- ``register_horizon_threshold`` -- a "sum of the N largest quantity per subgroup" peak
+  charge, written as a threshold LP. Today this is the electricity peak demand charge: the
+  N largest grid imports per month per retailer.
+
+A charge the split cannot yet decompose (for example a Daily power tariff) is marked with
+``register_horizon_unsupported`` so the decomposition raises a clear error instead of
+returning a wrong objective.
+
+``seed_horizon_coupling`` seeds the built-in electricity descriptors from a structure-only
+model. The sets ``TEMPORAL_HANDLED_PS_COST`` and ``TEMPORAL_HANDLED_PS_REV`` list the
+per-(period, scenario) composite cost and revenue terms the split knows how to handle; a
+composite outside these is refused by the split's guard. See :doc:`../user-guide/decomposition`.
 
 Balance and network modes
 -------------------------

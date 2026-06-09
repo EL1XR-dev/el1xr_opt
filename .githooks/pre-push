@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Pre-push hook: run the fast checks that gate CI, so a syntax error or a broken
+# docstring / reStructuredText block is caught locally before it reaches the CI
+# lint and docs jobs (the docs build treats warnings as errors, so a malformed
+# docstring fails it).
+#
+# Enable it once per clone with:
+#     git config core.hooksPath .githooks
+#
+# Skip it for a single push (e.g. a work-in-progress branch) with:
+#     git push --no-verify
+set -euo pipefail
+
+# Prefer the project virtualenv, so the docs toolchain (sphinx) is on hand.
+if [ -x ".venv/bin/python" ]; then
+    PY=".venv/bin/python"
+elif [ -x ".venv/Scripts/python.exe" ]; then
+    PY=".venv/Scripts/python.exe"
+else
+    PY="python"
+fi
+
+echo "[pre-push] flake8 (syntax errors only)..."
+"$PY" -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics \
+    --exclude=.venv,.git,build,dist
+
+echo "[pre-push] sphinx docs build (warnings as errors)..."
+BUILD_DIR="$(mktemp -d)"
+LOG="$(mktemp)"
+trap 'rm -rf "$BUILD_DIR" "$LOG" docs/rst/api/generated' EXIT
+if ! "$PY" -m sphinx -b html -W --keep-going docs/rst "$BUILD_DIR" >"$LOG" 2>&1; then
+    echo "[pre-push] docs build FAILED -- the warnings/errors below would fail CI:" >&2
+    grep -E "WARNING|ERROR" "$LOG" >&2 || tail -n 20 "$LOG" >&2
+    echo "[pre-push] re-run locally to debug: python -m sphinx -b html -W --keep-going docs/rst /tmp/docs" >&2
+    exit 1
+fi
+
+echo "[pre-push] OK"
