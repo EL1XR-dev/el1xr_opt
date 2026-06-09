@@ -898,10 +898,40 @@ def create_constraints(model, optmodel, indlog):
     # Energy conversion from energy from electricity to hydrogen and vice versa [p.u.]
     def eAllEnergy2Hyd(optmodel, p,sc,n,e2h):
         if model.Par['pHydMaxPower'][e2h][p,sc,n] and e2h in model.e2h:
-            return optmodel.vHydTotalOutput[p,sc,n,e2h] == optmodel.vEleTotalCharge[p,sc,n,e2h] / model.Par['pHydGenProductionFunction'][e2h]
+            # Only the productive consumption makes hydrogen; the standby draw
+            # (StandByPower while in the standby state) produces none, so it is
+            # subtracted before converting electricity input to hydrogen output.
+            return optmodel.vHydTotalOutput[p,sc,n,e2h] == (optmodel.vEleTotalCharge[p,sc,n,e2h] - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p,sc,n,e2h]) / model.Par['pHydGenProductionFunction'][e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eAllEnergy2Hyd', Constraint(optmodel.psne2h, rule=eAllEnergy2Hyd, doc='energy conversion from different energy type to hydrogen [p.u.]'))
+
+    # Electrolyser three-state model (on / standby / off): on and standby are mutually
+    # exclusive, off is the remainder. Only built where the unit has a standby capability
+    # (pHydGenStandByStatus); otherwise the standby variable is fixed to zero (plain on/off).
+    # Three-state formulation after Qiu et al. (2022), CIEEC -- standby draws StandByPower
+    # to stay warm and produces no hydrogen.
+    def eHydElectrolyserStandBy(optmodel, p,sc,n,e2h):
+        if model.Par['pHydGenStandByStatus'][e2h] == 1:
+            return optmodel.vHydGenCommitment[p,sc,n,e2h] + optmodel.vHydGenStandBy[p,sc,n,e2h] <= 1
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydElectrolyserStandBy', Constraint(optmodel.psne2h, rule=eHydElectrolyserStandBy, doc='electrolyser on/standby mutual exclusivity (off = remainder)'))
+
+    # Cold start: turning the electrolyser ON from OFF triggers the start-up cost
+    # (pHydGenStartUpCost, already summed in the objective over hgt). Starting from
+    # STANDBY is free, since the stack is kept warm -- this is what makes the standby
+    # state worthwhile (sit in standby through a short idle period to dodge a cold start)
+    # and follows the on/off/standby scheduling of Qiu et al. (2022), IEEE CIEEC.
+    def eHydElectrolyserColdStart(optmodel, p,sc,n,e2h):
+        if model.Par['pHydGenStartUpCost'][e2h]:
+            if n == model.n.first():
+                return optmodel.vHydGenStartUp[p,sc,n,e2h] >= optmodel.vHydGenCommitment[p,sc,n,e2h] - model.Par['pHydInitialUC'][p,sc,e2h]
+            else:
+                return optmodel.vHydGenStartUp[p,sc,n,e2h] >= optmodel.vHydGenCommitment[p,sc,n,e2h] - optmodel.vHydGenCommitment[p,sc,model.n.prev(n),e2h] - optmodel.vHydGenStandBy[p,sc,model.n.prev(n),e2h]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydElectrolyserColdStart', Constraint(optmodel.psne2h, rule=eHydElectrolyserColdStart, doc='electrolyser cold start (off->on) incurs the start-up cost; a warm start from standby is free'))
 
     def eAllEnergy2Ele(optmodel, p,sc,n,h2e):
         if model.Par['pEleMaxPower'][h2e][p,sc,n] and h2e in model.h2e:
@@ -1214,9 +1244,9 @@ def create_constraints(model, optmodel, indlog):
         elif egs in model.e2h:
             if model.Par['pHydMaxCharge'][egs][p,sc,n] and model.Par['pHydMaxCharge2ndBlock'][egs][p,sc,n]:
                 if model.Par['pHydMinCharge'][egs][p,sc,n] == 0.0:
-                    return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                           optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
+                    return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                           optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + model.Par['pHydGenStandByPower'][egs] * optmodel.vHydGenStandBy[p,sc,n,egs]
                 else:
-                    return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n] == optmodel.vHydGenCommitment[p,sc,n,egs] + (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n])
+                    return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n] == optmodel.vHydGenCommitment[p,sc,n,egs] + (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) + (model.Par['pHydGenStandByPower'][egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) * optmodel.vHydGenStandBy[p,sc,n,egs]
             else:
                 return Constraint.Skip
         else:

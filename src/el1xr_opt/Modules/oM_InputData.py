@@ -1075,6 +1075,7 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
+        setattr(optmodel, 'vHydGenStandBy',                Var(model.psnhg,              within=UnitInterval, initialize=0, doc='electrolyser standby state            '))
         setattr(optmodel, 'vHydStorOperat',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
@@ -1094,6 +1095,7 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary shut-down            '))
+        setattr(optmodel, 'vHydGenStandBy',                Var(model.psnhg,              within=Binary,       initialize=0, doc='electrolyser standby state            '))
         setattr(optmodel, 'vHydStorOperat',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
@@ -1585,6 +1587,15 @@ def create_variables(model, optmodel, indlog):
     for idx in model.psne2h:
         optmodel.vHydTotalOutput2ndBlock[idx].fix(0.0)
         nFixedVariables += 1
+
+    # Standby is an electrolyser (e2h) state, available only where StandByStatus is set.
+    # Everywhere else the standby variable is fixed to zero, so the three-state model
+    # collapses to plain on/off and existing cases are unchanged.
+    for idx in model.psnhg:
+        hz = idx[-1]
+        if not (hz in model.e2h and model.Par['pHydGenStandByStatus'][hz] == 1):
+            optmodel.vHydGenStandBy[idx].fix(0.0)
+            nFixedVariables += 1
 
     # if there are no energy outflows no variable is needed
     iset = model.psn
