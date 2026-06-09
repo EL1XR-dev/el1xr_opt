@@ -103,23 +103,34 @@ term is already added:
 (`eEleMarketFCRDUpRevenue` / `...FCRDDwRevenue` / `...FCRNRevenue`, which today sum over
 `egnr`), so the electrolyser is paid for the reserve it offers.
 
-## Decisions for the modeller [DECIDE]
+## Decisions for the modeller [DECIDED 2026-06-09]
 
 1. **Participation flag.** Storage gates on `pEleGenNoFCRD` / `pEleGenNoFCRN`. The
    electrolyser is a *hydrogen* unit, so it needs an equivalent flag -- add
    `NoFCRD` / `NoFCRN` columns to the hydrogen-generation data (read as
    `pHydGenNoFCRD` / `pHydGenNoFCRN`) and gate the new constraints on them. Default:
-   not participating, so existing cases are unchanged.
-2. **Products.** FCR-D only, FCR-N only, or both? (The mirror above includes both.)
+   not participating, so existing cases are unchanged. **DECIDED: as scoped.**
+2. **Products.** FCR-D only, FCR-N only, or both? **DECIDED: both (FCR-D + FCR-N).**
+   The full mirror above applies (separate up/down for D, symmetric N).
 3. **Endurance.** Storage has `eEleStorageEndurance{Up,Down}` tying a sustained bid to
    stored energy. A load is different: FCR-up (cutting consumption) needs no stored
    energy, but FCR-down (raising consumption) only makes sense if the extra hydrogen can
-   be absorbed -- by the downstream H2 storage headroom or demand. Options: (a) no
-   endurance constraint for `e2h` (simplest, treats FCR as an instantaneous capability),
-   or (b) tie FCR-down to the H2-store headroom / tank state. **Recommend (a) first**,
-   add (b) only if over-crediting becomes an issue.
-4. **Set wiring.** Extend `egs`->`eh` and `eg`->`eg|e2h` on the existing
-   variables/sums (recommended), vs. a parallel `e2h` variable family.
+   be absorbed. **DECIDED: tie FCR-down to H2-store headroom, node-level (option b2).**
+   The provider (the `e2h` load) and the absorber (the `hgs` store) are different units
+   connected through the hydrogen node balance, so the constraint is written per
+   hydrogen node, not per unit: at each node, the total extra hydrogen the electrolysers
+   would produce over the endurance window is bounded by the total empty headroom of the
+   H2 stores at that node. A node with no H2 store has zero headroom, so FCR-down is
+   forbidden there (correct: nowhere to put the gas). FCR-up needs no endurance
+   constraint. No new mapping data -- uses the existing `n2hg` / `n2g` node maps.
+
+       sum_{c in e2h @ nd} (E_FCRD/60)*bid_DisDown[c]/PF[c] + (E_FCRN/60)*bid_Nor[c]/PF[c]
+         <= sum_{s in hgs @ nd} ( pHydMaxStorage[s] - vHydInventory[s] )
+
+   (evaluated at the previous time step, mirroring the storage endurance's use of
+   `model.n.prev(n,1)`; `PF` = `pHydGenProductionFunction`, kWh-ele per kgH2.)
+4. **Set wiring.** **DECIDED: extend `egs`->`eh` and `eg`->`eg|e2h`** on the existing
+   variables/sums (no parallel `e2h` variable family).
 
 ## Validation plan
 

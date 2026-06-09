@@ -275,6 +275,20 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict['pEleGenNoFCRN'            ] = parameters_dict['pEleGenNoFCRN'            ].map(idxDict)
     parameters_dict['pEleGenMaxCommitment'     ] = parameters_dict['pEleGenMaxCommitment'     ].map(idxDict)
     parameters_dict['pHydGenStandByStatus'     ] = parameters_dict['pHydGenStandByStatus'     ].map(idxDict)
+    # Electrolyser (e2h) FCR participation flags and endurance. When the hydrogen-
+    # generation data omits these columns the flags default to 1 ("not participating")
+    # and the endurance to 0, so existing cases are unaffected. An electrolyser only
+    # offers FCR when its NoFCRD / NoFCRN column is set to "No".
+    for flag_col in ['pHydGenNoFCRD', 'pHydGenNoFCRN']:
+        if flag_col in parameters_dict:
+            parameters_dict[flag_col] = parameters_dict[flag_col].map(idxDict).fillna(1).astype('int')
+        else:
+            parameters_dict[flag_col] = pd.Series(1, index=parameters_dict['pHydGenProductionFunction'].index, dtype='int')
+    for end_col in ['pHydGenEnduranceFCRD', 'pHydGenEnduranceFCRN']:
+        if end_col in parameters_dict:
+            parameters_dict[end_col] = parameters_dict[end_col].fillna(0.0)
+        else:
+            parameters_dict[end_col] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
     parameters_dict['pEleGenRES'               ] = parameters_dict['pEleGenRES'               ].map(idxDict)
     parameters_dict['pEleGenESS'               ] = parameters_dict['pEleGenESS'               ].map(idxDict)
     parameters_dict['pEleGenEV'                ] = parameters_dict['pEleGenEV'                ].map(idxDict)
@@ -347,6 +361,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.he   = model.hgs | model.h2e           # set for the hydrogen consumption
     model.ehs  = model.egs | model.hgs           # set for the electricity and hydrogen ESS
     model.esc  = model.egc | model.hgc           # set for the candidate ESS and hydrogen units
+    model.ege2h = model.eg | model.e2h           # units that can bid FCR (generators/storage plus electrolysers)
 
 
     log_time('--- Defining the sets:', start_time, ind_log=indlog)
@@ -387,6 +402,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.psner    = [(p, sc, n, er        )     for p, sc, n, er             in model.psn   * model.er  ]
     model.psned    = [(p, sc, n, ed        )     for p, sc, n, ed             in model.psn   * model.ed  ]
     model.psneg    = [(p, sc, n, g         )     for p, sc, n, g              in model.psn   * model.eg  ]
+    model.psnege2h = [(p, sc, n, g         )     for p, sc, n, g              in model.psn   * model.ege2h]
     model.psnehg   = [(p, sc, n, gh        )     for p, sc, n, gh             in model.psn   * model.ehg ]
     model.psnegt   = [(p, sc, n, t         )     for p, sc, n, t              in model.psn   * model.egt ]
     model.psnegc   = [(p, sc, n, gc        )     for p, sc, n, gc             in model.psn   * model.egc ]
@@ -830,6 +846,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict['pHydSystemOutput'] = 0.0
         for hg in model.hg:
             n1 = next(iter(model.n))
+            # Electrolysers (e2h) are electricity-driven loads, not dispatchable hydrogen
+            # suppliers, so they are not pre-committed to cover the initial hydrogen demand;
+            # their initial commitment stays 0 (off) and the optimiser decides when to run.
+            if hg in model.e2h:
+                continue
             if parameters_dict['pHydSystemOutput'] < sum(parameters_dict['pVarMaxDemand'][hd][p,sc,n1] for hd in model.hd):
                 if   hg in model.hgr:
                     parameters_dict['pHydInitialOutput'][p,sc,hg] = parameters_dict['pHydMaxPower'][hg][p,sc,n1]
@@ -1017,22 +1038,22 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vHydNetFlow',                       Var(model.psnhpa,  within=           Reals, doc='hydrogen    net flow                                                  [kgH2]'))
     setattr(optmodel, 'vEleNetTheta',                      Var(model.psnnd,   within=           Reals, doc='electricity net theta                                                   [kW]'))
 
-    setattr(optmodel, 'vEleFreqContReserveDisUpwardBid',   Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward bid                   [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownwardBid', Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward bid                 [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveNorBid',         Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency normal       reserve bid                         [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpwardBid',   Var(model.psnege2h, within=NonNegativeReals, doc='electricity frequency containment reserve upward bid                   [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownwardBid', Var(model.psnege2h, within=NonNegativeReals, doc='electricity frequency containment reserve downward bid                 [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveNorBid',         Var(model.psnege2h, within=NonNegativeReals, doc='electricity frequency normal       reserve bid                         [kW]'))
     # setattr(optmodel, 'vEleFreqContReserveDisUpwardAct',   Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve upward fraction activation   [kW]'))
     # setattr(optmodel, 'vEleFreqContReserveDisDownwardAct', Var(model.psneg,   within=NonNegativeReals, doc='electricity frequency containment reserve downward fraction activation [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisUpGen',       Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency containment reserve upward generation            [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisDownGen',     Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency containment reserve downward generation          [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisUpCha',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve upward charge                [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisUpCha',       Var(model.psneh,   within=NonNegativeReals, doc='electricity frequency containment reserve upward charge                [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisUpDis',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve upward discharge             [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveDisDownCha',     Var(model.psneh,   within=NonNegativeReals, doc='electricity frequency containment reserve downward charge              [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisDownDis',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency containment reserve downward discharge           [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpGen',       Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency normal       reserve generation                  [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorDownGen',     Var(model.psnegt,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward generation         [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveNorUpCha',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve charge                      [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveNorUpCha',       Var(model.psneh,   within=NonNegativeReals, doc='electricity frequency normal       reserve charge                      [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorUpDis',       Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve discharge                   [kW]'))
-    setattr(optmodel, 'vEleFreqContReserveNorDownCha',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward charge             [kW]'))
+    setattr(optmodel, 'vEleFreqContReserveNorDownCha',     Var(model.psneh,   within=NonNegativeReals, doc='electricity frequency normal       reserve downward charge             [kW]'))
     setattr(optmodel, 'vEleFreqContReserveNorDownDis',     Var(model.psnegs,  within=NonNegativeReals, doc='electricity frequency normal       reserve downward discharge          [kW]'))
 
     if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
@@ -1054,6 +1075,7 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary shut-down            '))
+        setattr(optmodel, 'vHydGenStandBy',                Var(model.psnhg,              within=UnitInterval, initialize=0, doc='electrolyser standby state            '))
         setattr(optmodel, 'vHydStorOperat',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
@@ -1073,6 +1095,7 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary commitment           '))
         setattr(optmodel, 'vHydGenStartUp',                Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary start-up             '))
         setattr(optmodel, 'vHydGenShutDown',               Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary shut-down            '))
+        setattr(optmodel, 'vHydGenStandBy',                Var(model.psnhg,              within=Binary,       initialize=0, doc='electrolyser standby state            '))
         setattr(optmodel, 'vHydStorOperat',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vHydStorCharge',                Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vHydStorDischarge',             Var(model.psnhgs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
@@ -1542,6 +1565,41 @@ def create_variables(model, optmodel, indlog):
             optmodel.vEleFreqContReserveNorUpDis[idx].fix(0.0)
             optmodel.vEleFreqContReserveNorDownDis[idx].fix(0.0)
             nFixedVariables += 2
+
+    # if the electrolyser does not provide FCR (pHydGenNoFCRD / pHydGenNoFCRN == 1),
+    # fix its frequency reserve bid and charge-side provision variables to zero. The
+    # default flags are 1, so cases without an FCR-providing electrolyser are unchanged.
+    for idx in model.psne2h:
+        if model.Par['pHydGenNoFCRD'][idx[-1]] == 1:
+            optmodel.vEleFreqContReserveDisUpwardBid[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisDownwardBid[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisUpCha[idx].fix(0.0)
+            optmodel.vEleFreqContReserveDisDownCha[idx].fix(0.0)
+            nFixedVariables += 4
+        if model.Par['pHydGenNoFCRN'][idx[-1]] == 1:
+            optmodel.vEleFreqContReserveNorBid[idx].fix(0.0)
+            optmodel.vEleFreqContReserveNorUpCha[idx].fix(0.0)
+            optmodel.vEleFreqContReserveNorDownCha[idx].fix(0.0)
+            nFixedVariables += 3
+
+    # An electrolyser's hydrogen output is set by eAllEnergy2Hyd from its electricity
+    # input, so its H2 second-block output variable is unused; fix it to zero. The
+    # electrolyser's state logic uses commitment (on), standby and start-up (cold start);
+    # it carries no shut-down transition, so its shut-down variable is fixed to zero too
+    # (otherwise it would be a free variable appearing only in the shut-down cost).
+    for idx in model.psne2h:
+        optmodel.vHydTotalOutput2ndBlock[idx].fix(0.0)
+        optmodel.vHydGenShutDown[idx].fix(0.0)
+        nFixedVariables += 2
+
+    # Standby is an electrolyser (e2h) state, available only where StandByStatus is set.
+    # Everywhere else the standby variable is fixed to zero, so the three-state model
+    # collapses to plain on/off and existing cases are unchanged.
+    for idx in model.psnhg:
+        hz = idx[-1]
+        if not (hz in model.e2h and model.Par['pHydGenStandByStatus'][hz] == 1):
+            optmodel.vHydGenStandBy[idx].fix(0.0)
+            nFixedVariables += 1
 
     # if there are no energy outflows no variable is needed
     iset = model.psn
