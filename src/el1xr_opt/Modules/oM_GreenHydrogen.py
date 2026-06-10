@@ -15,7 +15,7 @@
 # PPA cost units, physical vs virtual PPA).
 
 import time
-from   pyomo.environ  import Constraint
+from   pyomo.environ  import Constraint, Var, NonNegativeReals
 from  .utils.oM_Utils import log_time
 
 
@@ -85,21 +85,53 @@ def create_green_hydrogen(model, optmodel, indlog):
         # REVIEW (virtual PPA): vTotalEleMrkPPARev stays at zero (physical PPA).
         # For a virtual PPA contract-for-difference, free and define it here too.
 
-    # %% Hourly temporal matching (RFNBO additionality)
+    # %% Hourly temporal matching (RFNBO additionality), allocation form
     if _option(model, 'pParGreenH2Matching') == 1:
-        if len(model.e2h):
-            # REVIEW (window): per-load-level matching equals the model time
-            # resolution (hourly when load levels are hours). For monthly matching,
-            # sum both sides over the months instead of per load level.
-            # REVIEW (allocation): this aggregate form lets the same renewable MWh
-            # count for both export and electrolyser supply. A strict version adds
-            # a renewable-to-electrolyser allocation variable.
-            def eGreenH2Matching(optmodel, p, sc, n):
-                return (sum(optmodel.vEleTotalCharge[p, sc, n, e2h] for e2h in model.e2h) <=
-                        sum(optmodel.vEleTotalOutput[p, sc, n, egr] for egr in model.egr))
-            optmodel.__setattr__('eGreenH2Matching', Constraint(model.psn, rule=eGreenH2Matching, doc='hourly renewable temporal matching for green hydrogen'))
-        else:
+        if not len(model.e2h):
             print('   green-H2 matching requested but no electrolysers (e2h) in the case; skipped')
+        else:
+            # Additionality pool. RFNBO requires the matched electricity to come from
+            # *additional* renewables, which here are the PPA-contracted units. Use those
+            # when any renewable is flagged; otherwise fall back to all renewables (the unit
+            # is matched, but not strictly additional) with a note.
+            pool = ppa_units if ppa_units else list(model.egr)
+            if not ppa_units:
+                print('   green-H2 matching: no PPA-flagged renewables; matching against all RES (not strictly additional)')
+
+            # Renewable output explicitly allocated to the electrolysers in each load level.
+            # Declared here because it is only meaningful with matching on. This is the
+            # allocation scaffold from Li et al. (2025): the productive electrolyser draw is
+            # supplied by allocated renewable, not merely bounded by the aggregate output.
+            setattr(optmodel, 'vEleResToE2h',
+                    Var(model.psn, pool, within=NonNegativeReals,
+                        doc='renewable output allocated to the electrolyser  [kW]'))
+
+            # (a) a renewable unit can allocate no more than it produces
+            def eGreenH2AllocCap(optmodel, p, sc, n, g):
+                return optmodel.vEleResToE2h[p, sc, n, g] <= optmodel.vEleTotalOutput[p, sc, n, g]
+            optmodel.__setattr__('eGreenH2AllocCap', Constraint(model.psn, pool, rule=eGreenH2AllocCap, doc='renewable allocation to the electrolyser capped by its output'))
+
+            # (b) hourly matching of the PRODUCTIVE electrolyser draw. The standby draw
+            # (pHydGenStandByPower while the unit is in standby) keeps the stack warm and
+            # makes no hydrogen, so it is excluded from the matched quantity -- EU 2023/1184
+            # Art. 6 matches the renewable electricity provided *for hydrogen production*.
+            # The standby auxiliary load is taken to be grid-powered.
+            def eGreenH2Matching(optmodel, p, sc, n):
+                productive = sum(optmodel.vEleTotalCharge[p, sc, n, e2h]
+                                 - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p, sc, n, e2h]
+                                 for e2h in model.e2h)
+                return productive <= sum(optmodel.vEleResToE2h[p, sc, n, g] for g in pool)
+            optmodel.__setattr__('eGreenH2Matching', Constraint(model.psn, rule=eGreenH2Matching, doc='hourly renewable temporal matching of the productive electrolyser draw'))
+
+            # NOTE (no-double-count vs. electricity sales). With (a)+(b) only, an allocation
+            # exists iff the aggregate productive draw fits under the pool output, so the
+            # allocation variable does not yet bind differently from the aggregate form: in
+            # the present model selling renewable carries no separate "green" attribute, so
+            # there is no competing claim on the same MWh. Closing the same-MWh-sold-and-
+            # matched gap needs a Guarantee-of-Origin certificate balance with a value on
+            # green electricity sales (Mansouri & Bruninx, 2026); vEleResToE2h is the scaffold
+            # that layer will build on (add vEleResToGrid and a GO balance). Left for that
+            # follow-up.
 
     log_time('--- Declaring green-hydrogen matching and electricity PPA:', StartTime, ind_log=indlog)
 

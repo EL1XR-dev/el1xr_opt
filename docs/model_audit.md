@@ -551,8 +551,14 @@ survives — as each unit's pre-horizon output; essentially vacuous for small un
    load; FCR activation modulates the e2h charge; start-up cost billed for e2h outside
    `hgt`; C13 documented as a deliberate omission (electrolyser is a fast-ramping load,
    Hashmi 2024 / Mansouri 2026). All e2h-only, so the goldens are unchanged; guarded in
-   `tests/test_formulation_fixes.py`. **C20 (RFNBO strict allocation) is the separate
-   next PR.**
+   `tests/test_formulation_fixes.py`. **C20 DONE (branch `feature/rfnbo-allocation`):**
+   matching now uses a renewable->electrolyser allocation (`vEleResToE2h` + per-unit cap)
+   over the PPA-flagged pool and matches only the productive draw (standby excluded, EU
+   2023/1184 Art. 6). Finding: the allocation cannot bind differently from the aggregate
+   bound until electricity sales carry a Guarantee-of-Origin value (Mansouri 2026) -- that
+   GO/certificate layer (the same-MWh-sold-and-matched fix) is the documented follow-up,
+   pending the Elsevier reference. Matching-on cases are xfail/build-only, so goldens
+   unchanged. **Part C item 3 complete.**
 4. **Hydrogen-case enablement (with the H2Tank/Electrolyser xfail redesign):** C7,
    C19, C23, C26, C41, C43.
 5. The rest with their subsystem.
