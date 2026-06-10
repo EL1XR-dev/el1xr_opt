@@ -614,6 +614,13 @@ dispatchable-generator constraints (output blocks, output ramps, minimum up/down
 times, the start-up/shut-down balance) do not apply to it, and its shut-down binary is
 fixed to zero.
 
+No ramp-rate or minimum up/down-time limit is placed on the electrolyser's electricity
+draw either. An electrolyser is a fast-ramping load (a stack can move across its full
+range in seconds to minutes), so a per-hour ramp limit is non-binding at the model's
+hourly resolution and is commonly omitted [#hashmi2024]_ [#mansouri2026]_; excessive
+cycling is instead deterred by the cold-start cost and the standby state below. A
+charge-side ramp limit would only be added for sub-hourly dispatch.
+
 A unit with standby capability (hydrogen-generation column ``StandByStatus``,
 :math:`\phydgenstandbystatus_{\genindex} = 1`) operates in three states, following the
 on/off/standby scheduling of Qiu et al. (2022) [#qiu2022]_:
@@ -630,6 +637,20 @@ ON and STANDBY are mutually exclusive, and OFF is the remainder
 .. math::
    \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} +
    \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex} \le 1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgenstandbystatus_{\genindex}=1
+
+Standby is only reachable when the stack is already warm: the unit can be in standby at
+:math:`\timeindex` only if it was on or in standby at :math:`\timeindex-\ptimestep`.
+Without this the model could enter standby directly from off, pay one period of the
+standby draw to count as «warm», and then start for free — dodging the cold-start cost.
+At the first load level the previous state is the initial condition
+(:math:`\phydinitialuc`, :math:`\phydinitialstandby`)
+(«``eHydElectrolyserStandByTransition``»):
+
+.. math::
+   \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex} \le
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} +
+   \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgenstandbystatus_{\genindex}=1
 
 Only a cold start (OFF :math:`\rightarrow` ON) incurs the start-up cost; a warm start
@@ -664,6 +685,17 @@ is real electricity demand but produces no hydrogen.
    Approach," *2022 IEEE 5th International Electrical and Energy Conference (CIEEC)*,
    pp. 3344-3349, 2022. `doi:10.1109/CIEEC54735.2022.9846329
    <https://doi.org/10.1109/CIEEC54735.2022.9846329>`_
+
+.. [#hashmi2024] M. U. Hashmi, D. Van Hertem, et al., "Linear energy storage and
+   flexibility model with ramp rate, ramping, deadline and capacity constraints,"
+   *arXiv preprint* arXiv:2409.08084, 2024. Shows the ramp-rate constraint has a
+   negligible (<1%) marginal value for fast-ramp assets.
+
+.. [#mansouri2026] S. A. Mansouri and K. Bruninx, "A Portfolio-Level Optimization
+   Framework for Coordinated Market Participation and Operational Scheduling of
+   Hydrogen-Centric Companies," *arXiv preprint* arXiv:2603.22222, 2026. Models the
+   electrolyser as a flexible load bounded only by its operating range (no ramp or
+   minimum up/down-time limit).
 
 Ramping Limits
 ~~~~~~~~~~~~~~

@@ -545,7 +545,14 @@ survives — as each unit's pre-horizon output; essentially vacuous for small un
    `tests/test_formulation_fixes.py`; latent-only, so the goldens are byte-unchanged
    (solve tier 47 passed / 2 xfail).
 3. **Electrolyser FCR/three-state credibility (before using the feature in a
-   study):** C3, C4, C6, C10, C11, C13, C20.
+   study):** C3, C4, C6, C10, C11, C13, C20. **— C3/C4/C6/C10/C11/C13 DONE (branch
+   `fix/electrolyser-credibility`):** FCR-down headroom state-gated + no-store endurance
+   binds; standby-from-warm transition (`pHydInitialStandBy`); retail buys the full e2h
+   load; FCR activation modulates the e2h charge; start-up cost billed for e2h outside
+   `hgt`; C13 documented as a deliberate omission (electrolyser is a fast-ramping load,
+   Hashmi 2024 / Mansouri 2026). All e2h-only, so the goldens are unchanged; guarded in
+   `tests/test_formulation_fixes.py`. **C20 (RFNBO strict allocation) is the separate
+   next PR.**
 4. **Hydrogen-case enablement (with the H2Tank/Electrolyser xfail redesign):** C7,
    C19, C23, C26, C41, C43.
 5. The rest with their subsystem.

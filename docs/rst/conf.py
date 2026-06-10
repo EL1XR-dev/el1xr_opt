@@ -625,6 +625,7 @@ mathjax3_config = {
             "phydgenstandbypower": r"C^{e,sb}",                 # Electrolyser standby electricity draw
             "phydgenstandbystatus": r"SB^{h}",                  # Electrolyser standby capability flag
             "phydinitialuc": r"uc^{h,0}",                       # Hydrogen unit initial commitment state
+            "phydinitialstandby": r"sb^{h,0}",                  # Electrolyser initial standby state
             "pdodsa": r"DoD^{a}",                                 # Depth of discharge segment 1
             "pdodsb": r"DoD^{b}",                                 # Depth of discharge segment 2
             "pdodsc": r"DoD^{c}",                                 # Depth of discharge segment 3

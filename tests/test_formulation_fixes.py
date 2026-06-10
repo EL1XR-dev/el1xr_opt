@@ -403,6 +403,119 @@ def test_hydrogen_standby_columns_optional():
         "standby draw must default to 0 when the column is absent"
 
 
+# --- Electrolyser credibility batch (model audit Part C: C3, C4, C6, C10, C11, C13) ---
+
+
+@pytest.fixture(scope="module")
+def standby_model():
+    """Build (not solve) the ``ElectrolyserStandby`` variant, where the electrolyser has
+    its three-state standby capability switched on."""
+    if not os.path.isfile(os.path.join(SIZING_DIR, "ElectrolyserStandby.duckdb")):
+        subprocess.run([sys.executable, os.path.join(SIZING_DIR, "make_sizing_cases.py")],
+                       check=True, cwd=REPO)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    return build_model(SIZING_DIR, "ElectrolyserStandby", date)
+
+
+def test_fcr_down_headroom_is_state_gated():
+    """C3: the electrolyser's FCR-down charge headroom must be gated by the commitment and
+    use the 2nd-block capacity, so an off/standby unit (commitment 0) gets zero headroom and
+    cannot sell down-reserve it could not absorb. It used the bare nameplate
+    ``pHydMaxCharge`` with no state gate."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read().splitlines()
+    body = [ln for ln in text if "vEleFreqContReserveDisDownCha[p,sc,n,e2h]" in ln
+            and "<=" in ln and "vEleTotalCharge2ndBlock" in ln]
+    assert body, "could not find the e2h FCR-down headroom rule"
+    for ln in body:
+        assert "pHydMaxCharge2ndBlock'][e2h][p,sc,n] * optmodel.vHydGenCommitment" in ln, \
+            "FCR-down headroom must be pHydMaxCharge2ndBlock * commitment - 2ndBlock"
+
+
+def test_fcr_down_endurance_binds_without_storage():
+    """C3: a node with FCR-flagged electrolysers but no hydrogen store must still build the
+    down-endurance constraint (with an empty, zero right-hand side, forcing the down bids to
+    zero) rather than skipping it."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("def eEleFreqDownEnduranceConv(")
+    end = text.index("rule=eEleFreqDownEnduranceConv", start)
+    body = text[start:end]
+    assert "if not e2h_at_node:" in body, "endurance must skip only when no e2h at the node"
+    assert "not hgs_at_node" not in body, \
+        "endurance must not skip a no-store node (its zero headroom forces the down bid to 0)"
+
+
+def test_standby_only_reachable_when_warm(standby_model):
+    """C4: standby must be reachable only from a warm state. The transition constraint
+    ``sb[t] <= uc[t-1] + sb[t-1]`` must be built with active rows for the standby-capable
+    electrolyser and reference the previous-step commitment and standby variables."""
+    m = standby_model
+    u = "AEL_01"
+    assert m.Par['pHydGenStandByStatus'][u] == 1, "test case electrolyser has no standby"
+    con = m.eHydElectrolyserStandByTransition
+    assert len(con) > 0, "standby transition constraint has no active rows"
+    # pick a non-first load level and check the body ties to the previous step
+    p, sc = list(m.ps)[0]
+    levels = list(m.n)
+    c = con[p, sc, levels[1], u]
+    names = {v.name for v in generate_standard_repn(c.body).linear_vars}
+    assert any("vHydGenStandBy" in nm for nm in names), "transition must use the standby state"
+    assert any("vHydGenCommitment" in nm for nm in names), \
+        "transition must reference the previous-step commitment"
+
+
+def test_retail_settlement_buys_full_electrolyser_load():
+    """C6: the retail settlement must subtract the electrolyser's FULL consumption
+    (minimum load + 2nd block + standby), not only the 2nd block, so the committed-minimum
+    and standby electricity is actually bought -- mirroring the physical eEleBalance."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("def eEleRetNodeBalance(")
+    end = text.index("rule=eEleRetNodeBalance", start)
+    body = text[start:end]
+    assert "vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg" in body, \
+        "retail balance must subtract the full e2h charge"
+    assert "vEleTotalCharge2ndBlock[p,sc,n,e2h]" not in body, \
+        "retail balance must not use only the e2h 2nd block"
+
+
+def test_fcr_activation_modulates_electrolyser_charge():
+    """C10: an activated FCR bid must change the electrolyser's realised consumption. The
+    e2h branch of ``eEleTotalCharge`` must carry the four operating-reserve activation
+    terms, like the storage branch above it (it had none)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("elif egs in model.e2h:")
+    end = text.index("def ", start)
+    body = text[start:end]
+    for act in ["pOperatingReserveActivation_FCRD_Up", "pOperatingReserveActivation_FCRD_Down",
+                "pOperatingReserveActivation_FCRN_Up", "pOperatingReserveActivation_FCRN_Down"]:
+        assert act in body, f"e2h charge branch is missing the {act} activation term"
+
+
+def test_electrolyser_startup_cost_billed_outside_hgt():
+    """C11: the cold-start cost must be billed for an electrolyser even when it is not in
+    ``hgt`` (zero fuel cost). ``eTotalHydGCost`` must add a start-up term over the e2h units
+    not in ``hgt``; the cold-start constraints are gated on the start-up cost alone, so the
+    cost must match."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("def eTotalHydGCost(")
+    end = text.index("rule=eTotalHydGCost", start)
+    body = text[start:end]
+    assert "vHydGenStartUp" in body and "for e2h in model.e2h if e2h not in model.hgt" in body, \
+        "start-up cost must cover e2h units outside hgt"
+
+
+def test_electrolyser_has_no_ramp_or_mintime_constraint():
+    """C13 (documented choice): the electrolyser is a fast-ramping load, so no charge-side
+    ramp or minimum up/down-time constraint is imposed at hourly resolution (cycling is
+    deterred by the start-up cost + standby). Guard that the output-side ramp/min-time rules
+    still exclude e2h and that no e2h-specific ramp rule was added."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    for rule in ["eHydMaxRampUpOutput", "eHydMaxRampDwOutput", "eHydMinUpTime", "eHydMinDownTime"]:
+        start = text.index(f"def {rule}(")
+        end = text.index(f"rule={rule}", start)
+        assert "hgt not in model.e2h" in text[start:end], \
+            f"{rule} must keep excluding the electrolyser (pure-load treatment)"
+
+
 def test_om_variable_cost_counted_once(h2_model):
     """C1: variable O&M must hit output exactly once. It was baked into
     ``pHydGenLinearVarCost`` (``LinearTerm*factor1*FuelCost + OMVariableCost*factor1``)
