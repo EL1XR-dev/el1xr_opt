@@ -615,12 +615,16 @@ mathjax3_config = {
             "pelemaxinventory": r"\overline{SI}^{e}",           # Max electrical inventory
             "pelemininventory": r"\underline{SI}^{e}",          # Min electrical inventory
             "pelemaxstorage": r"\overline{S}^{e}",              # Max electrical storage
+            "phydmaxstorage": r"\overline{S}^{h}",              # Max hydrogen storage
             "pmaxstorage": r"\overline{S}",                     # Max storage (generic)
             "pelemaxcharge": r"\overline{C}^{e}",               # Max electrical charge
             "pelemaxchargesecondblock": r"\overline{C}^{e,2b}", # Max electrical charge 2nd block
             "phydmaxcharge": r"\overline{C}^{h}",               # Max hydrogen charge
             "phydmaxchargesecondblock": r"\overline{C}^{h,2b}", # Max hydrogen charge 2nd block
             "phydminchargesecondblock": r"\underline{C}^{h,2b}", # Min hydrogen charge 2nd block
+            "phydgenstandbypower": r"C^{e,sb}",                 # Electrolyser standby electricity draw
+            "phydgenstandbystatus": r"SB^{h}",                  # Electrolyser standby capability flag
+            "phydinitialuc": r"uc^{h,0}",                       # Hydrogen unit initial commitment state
             "pdodsa": r"DoD^{a}",                                 # Depth of discharge segment 1
             "pdodsb": r"DoD^{b}",                                 # Depth of discharge segment 2
             "pdodsc": r"DoD^{c}",                                 # Depth of discharge segment 3
@@ -655,6 +659,10 @@ mathjax3_config = {
             "pfcrddwreqactivation": r"FCRD^{DW,act}",           # FCR-D downwards reserve activation
             "pelegenendurancefcrd": r"T^{FCRD}",                # FCR-D endurance requirement [minutes]
             "pelegenendurancefcrn": r"T^{FCRN}",                # FCR-N endurance requirement [minutes]
+            "phydgennofcrd": r"NoFCRD^{h}",                     # Electrolyser with no FCR-D capability flag
+            "phydgennofcrn": r"NoFCRN^{h}",                     # Electrolyser with no FCR-N capability flag
+            "phydgenendurancefcrd": r"T^{FCRD,h}",              # Electrolyser FCR-D endurance requirement [minutes]
+            "phydgenendurancefcrn": r"T^{FCRN,h}",              # Electrolyser FCR-N endurance requirement [minutes]
 
             # =======================================================
             #                       VARIABLES
@@ -801,6 +809,7 @@ mathjax3_config = {
             "vcommitbin": r"uc",                                # Unit commitment binary
             "velecommitbin": r"uc^{e}",                         # Electrical unit commitment binary
             "vhydcommitbin": r"uc^{h}",                         # Hydrogen unit commitment binary
+            "vhydgenstandby": r"sb^{h}",                        # Electrolyser standby state binary
             "vstartupbin": r"su",                               # Start-up binary
             "velestartupbin": r"su^{e}",                        # Electrical start-up binary
             "vhydstartupbin": r"su^{h}",                        # Hydrogen start-up binary

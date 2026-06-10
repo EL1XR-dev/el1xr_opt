@@ -407,15 +407,17 @@ Ancillary Services
      - kW
      - ``vEleFreqContReserveDisDownGen``
    * - :math:`\vCupward_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Upwards FCR-D from a consumer (ESS charge)
+     - Upwards FCR-D from a consumer (ESS or electrolyser charge)
      - kW
      - ``vEleFreqContReserveDisUpCha``
    * - :math:`\vCdownward_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
-     - Downwards FCR-D from a consumer (ESS charge)
+     - Downwards FCR-D from a consumer (ESS or electrolyser charge)
      - kW
      - ``vEleFreqContReserveDisDownCha``
    * - :math:`r^{FD}_{neg}`
-     - FCR-D market bid (upwards / downwards)
+     - FCR-D market bid (upwards / downwards); indexed over the electricity units
+       and the electrolysers (``e2h``), whose bids are fixed to zero unless the unit
+       opts in via ``NoFCRD`` / ``NoFCRN``
      - kW
      - ``vEleFreqContReserveDisUpwardBid`` / ``...DisDownwardBid``
 
@@ -494,9 +496,15 @@ logic.
      - [0,1]
      - ``vHydGenStartUp``
    * - :math:`\vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}`
-     - Shutdown of a hydrogen unit
+     - Shutdown of a hydrogen unit (fixed to zero for an electrolyser, which has no
+       shut-down transition in this model)
      - [0,1]
      - ``vHydGenShutDown``
+   * - :math:`\vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}`
+     - Electrolyser standby state (warm, drawing the standby power, producing no
+       hydrogen); fixed to zero unless the unit has ``StandByStatus = 1``
+     - [0,1]
+     - ``vHydGenStandBy``
    * - :math:`\velestoroperatbin_{\periodindex,\scenarioindex,\timeindex,\storageindex}`
      - Elec. ESS charge decision
      - [0,1]

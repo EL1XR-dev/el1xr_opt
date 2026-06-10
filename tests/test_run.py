@@ -126,7 +126,7 @@ SIZING_CASES = [
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
-                     "ElectrolyserStandby"]
+                     "ElectrolyserStandby", "ElectrolyserFCR"]
 SIZING_RTOL = 1e-5
 
 
@@ -173,6 +173,53 @@ def test_electrolyser_standby_selected(sizing_cases_built):
         if standby[n] > 0.5:
             assert model.vHydTotalOutput["period1", "sc01", n, u]() < 1e-4, \
                 f"electrolyser produced hydrogen while in standby at {n}"
+
+
+def test_electrolyser_fcr_structure(sizing_cases_built):
+    """Build (without solving) the ElectrolyserFCR case and check the electrolyser
+    FCR wiring is structurally present: the e2h constraints are built, the
+    electrolyser bid enters the finite FCR requirement caps, and the bus-level
+    FCR-down endurance is tied to the hydrogen storage headroom."""
+    from pyomo.core.expr.visitor import identify_variables
+
+    from el1xr_opt.Modules.oM_Sequence import build_model
+
+    model = build_model(sizing_cases_built, "ElectrolyserFCR",
+                        datetime.datetime.now().replace(second=0, microsecond=0))
+    u = "AEL_01"
+    assert u in model.e2h
+    assert model.Par["pHydGenNoFCRD"][u] == 0 and model.Par["pHydGenNoFCRN"][u] == 0
+
+    # all electrolyser FCR constraint families are built with active rows
+    for name in ["eEleRelationFreqDisUpBid2Conv", "eEleRelationFreqDisDownBid2Conv",
+                 "eEleRelationFreqNorUpBid2Conv", "eEleRelationFreqNorDownBid2Conv",
+                 "eEleSymmFreqNorConv",
+                 "eEleFreqUpChargeHeadroomConv", "eEleFreqDownChargeHeadroomConv",
+                 "eEleFreqUpChargeBoundConv", "eEleFreqDownChargeBoundConv",
+                 "eEleFreqDownEnduranceConv"]:
+        assert len(getattr(model, name)) > 0, f"{name} has no active rows"
+
+    # the electrolyser bid is summed in the FCR-D requirement cap, whose right-hand
+    # side is the finite requirement (no unbounded bids)
+    cap = next(iter(model.eEleFreqContReserveDisUpward.values()))
+    assert cap.upper is not None and float(cap.upper) < float("inf")
+    cap_vars = {v.name for v in identify_variables(cap.body)}
+    assert any("DisUpwardBid" in vn and u in vn for vn in cap_vars), \
+        "electrolyser bid missing from the FCR-D upward requirement cap"
+
+    # the FCR-down endurance couples the previous-step bids to the hydrogen
+    # storage inventory headroom at the same bus
+    end = next(iter(model.eEleFreqDownEnduranceConv.values()))
+    end_vars = {v.name for v in identify_variables(end.body)}
+    assert any(vn.startswith("vHydInventory") for vn in end_vars), \
+        "endurance constraint not tied to the hydrogen storage inventory"
+    assert any("DisDownwardBid" in vn and u in vn for vn in end_vars), \
+        "electrolyser downward bid missing from the endurance constraint"
+
+    # the e2h bid variables are free to move (not fixed to zero) when the unit opts in
+    bid = model.vEleFreqContReserveDisUpwardBid
+    e2h_bids = [bid[idx] for idx in bid if idx[-1] == u]
+    assert e2h_bids and not any(v.fixed for v in e2h_bids)
 
 
 @pytest.mark.solve

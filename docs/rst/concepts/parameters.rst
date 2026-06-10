@@ -181,10 +181,16 @@ These parameters define the operational characteristics, capacities, and limitat
      - Max elec consumption of a compressor
      - kWh
      - ``pEleGenMaxCompressorConsumption``
-   * - :math:`\overline{EC}^{standby}_{nhz}`
-     - Max elec consumption of an electrolyzer at standby
-     - kWh
-     - ``pEleGenStandByPower``
+   * - :math:`\phydgenstandbypower_{\genindex}`
+     - Electricity drawn by an electrolyzer in the standby state (column
+       ``StandByPower`` of the hydrogen-generation data)
+     - kW
+     - ``pHydGenStandByPower``
+   * - :math:`\phydgenstandbystatus_{\genindex}`
+     - Electrolyzer has standby capability (column ``StandByStatus``; enables the
+       three-state on/standby/off model)
+     - p.u.
+     - ``pHydGenStandByStatus``
    * - :math:`PF_{he}`
      - Production function (Elec from H2)
      - kWh/kgH2
@@ -323,6 +329,26 @@ Parameters related to grid support services.
      - Reserve requirement per product
      - kW
      - ``pOperatingReserveRequire_FCRD_Up`` / ``..._FCRD_Down`` / ``..._FCRN_Up`` / ``..._FCRN_Down``
+   * - :math:`\pgennofcrd_{\genindex}, \pgennofcrn_{\genindex}`
+     - Electricity unit not participating in FCR-D / FCR-N (1 = no, the default; 0 =
+       the unit may bid)
+     - p.u.
+     - ``pEleGenNoFCRD``, ``pEleGenNoFCRN``
+   * - :math:`\pelegenendurancefcrd_{\storageindex}, \pelegenendurancefcrn_{\storageindex}`
+     - FCR-D / FCR-N endurance requirement of an electricity storage unit
+     - min
+     - ``pEleGenEnduranceFCRD``, ``pEleGenEnduranceFCRN``
+   * - :math:`\phydgennofcrd_{\genindex}, \phydgennofcrn_{\genindex}`
+     - Electrolyser not participating in FCR-D / FCR-N (read from the
+       hydrogen-generation columns ``NoFCRD`` / ``NoFCRN``; 1 = no, the default, so
+       cases without the columns are unchanged)
+     - p.u.
+     - ``pHydGenNoFCRD``, ``pHydGenNoFCRN``
+   * - :math:`\phydgenendurancefcrd_{\genindex}, \phydgenendurancefcrn_{\genindex}`
+     - FCR-D / FCR-N endurance requirement of an electrolyser (defaults to 0 when the
+       hydrogen-generation columns ``EnduranceFCRD`` / ``EnduranceFCRN`` are absent)
+     - min
+     - ``pHydGenEnduranceFCRD``, ``pHydGenEnduranceFCRN``
 
 Network
 ~~~~~~~
