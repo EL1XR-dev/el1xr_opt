@@ -401,3 +401,45 @@ def test_hydrogen_standby_columns_optional():
         "standby status must default to 0 when the column is absent"
     assert (m.Par['pHydGenStandByPower'] == 0).all(), \
         "standby draw must default to 0 when the column is absent"
+
+
+def test_om_variable_cost_counted_once(h2_model):
+    """C1: variable O&M must hit output exactly once. It was baked into
+    ``pHydGenLinearVarCost`` (``LinearTerm*factor1*FuelCost + OMVariableCost*factor1``)
+    AND added again as an explicit term in ``eTotalHydGCost``, so O&M-bearing output paid
+    twice -- the electrolyser paid 36.4 instead of 18.2 per kg. ``LinearVarCost`` is now
+    the fuel cost only; the explicit term carries O&M (scaled once, which also fixes the
+    secondary factor1-squared scaling, since ``OMVariableCost`` is in
+    ``idx_gen_factoring``). Only the electrolyser cases (currently ``xfail`` or
+    decision-checked, not cost-checked) carry O&M, so no enforced golden moves."""
+    m = h2_model
+    hg = next((g for g in m.hg if m.Par['pHydGenOMVariableCost'][g]), None)
+    assert hg is not None, "test case has no hydrogen generator with an O&M cost"
+    # LinearVarCost is the fuel cost only -- no O&M baked in
+    fuel_only = float(m.Par['pHydGenLinearTerm'][hg]) * float(m.factor1) \
+        * float(m.Par['pHydGenFuelCost'][hg])
+    assert float(m.Par['pHydGenLinearVarCost'][hg]) == pytest.approx(fuel_only, rel=1e-9), \
+        "pHydGenLinearVarCost must be the fuel cost only (O&M removed from it)"
+    # the objective coefficient on hydrogen output is fuel + O&M (once), not fuel + 2*O&M
+    p, sc = list(m.ps)[0]
+    n = list(m.n)[0]
+    om = float(m.Par['pHydGenOMVariableCost'][hg])
+    repn = generate_standard_repn(m.eTotalHydGCost[p, sc, n].body)
+    out = m.vHydTotalOutput[p, sc, n, hg]
+    coef = next((c for v, c in zip(repn.linear_vars, repn.linear_coefs) if v is out), None)
+    assert coef is not None, "output variable absent from the hydrogen generation cost"
+    # generate_standard_repn runs on the constraint body (LHS - RHS), so the cost
+    # coefficient appears negated; compare on magnitude, like test_hydrogen_om_cost_is_added.
+    assert abs(coef) == pytest.approx(fuel_only + om, rel=1e-9), \
+        f"hydrogen output must pay fuel+O&M once ({fuel_only + om}), got {abs(coef)}"
+    # O&M is added in exactly one place per sector in the objective
+    form = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert form.count("pEleGenOMVariableCost'") == 1, \
+        "electricity O&M must appear exactly once in the objective"
+    assert form.count("pHydGenOMVariableCost'") == 1, \
+        "hydrogen O&M must appear exactly once in the objective"
+    # and it is no longer baked into the LinearVarCost construction
+    src = open(INPUT_DATA, encoding="utf-8").read().splitlines()
+    lvc = [ln for ln in src if "GenLinearVarCost'" in ln and "GenLinearTerm" in ln]
+    assert lvc and all("OMVariableCost" not in ln for ln in lvc), \
+        "LinearVarCost must not include O&M (it is added once in the objective)"

@@ -533,7 +533,12 @@ survives — as each unit's pre-horizon output; essentially vacuous for small un
 ### Suggested sequencing
 
 1. **Money now (live in shipped cases):** C1 (O&M double-count) — then re-baseline the
-   goldens deliberately.
+   goldens deliberately. **— DONE (branch `fix/om-double-count`):** `LinearVarCost` is now
+   fuel-only, O&M added once in the objective (also fixes the secondary factor1-squared
+   scaling). No re-baseline was needed after all: the only O&M-bearing active unit is the
+   electrolyser, and every case with a producing electrolyser is `xfail` (H2Tank /
+   Electrolyser) or decision/structure-checked (the demos), so no enforced golden moves
+   (solve tier 47 passed / 2 xfail). Guarded in `tests/test_formulation_fixes.py`.
 2. **Crash-on-first-use:** C2 (n2g), C5 (NorUpDis indexing), C8 (stale `n`), C27
    (standby column default), C33 (zero divide). **— DONE (branch
    `fix/formulation-crash-batch`):** all five fixed and guarded in

@@ -196,7 +196,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     _update_parameters(data_frames, parameters_dict, factor1, HydRetail_ind, idx_retail_factoring, 'dfHydrogenRetail', 'pHydRet')
 
     for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost'] + parameters_dict[f'p{sector[0:3]}GenOMVariableCost'] * model.factor1  # linear   term variable cost             [MEUR/GWh]
+        parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost']  # linear fuel cost; O&M is added once in the objective (eTotal{Ele,Hyd}GCost)  [MEUR/GWh]
         parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * model.factor2 * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                        # constant term variable cost             [MEUR/h]
         parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] * model.factor1 * parameters_dict[ 'pParCO2Cost']                                                                                      # CO2 emission cost                       [MEUR/GWh]
         parameters_dict[f'p{sector[0:3]}GenStartUpCost'       ] = parameters_dict[f'p{sector[0:3]}GenStartUpCost'         ] * model.factor2                                                                                                                        # generation startup cost                 [MEUR]
