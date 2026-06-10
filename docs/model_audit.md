@@ -535,7 +535,10 @@ survives — as each unit's pre-horizon output; essentially vacuous for small un
 1. **Money now (live in shipped cases):** C1 (O&M double-count) — then re-baseline the
    goldens deliberately.
 2. **Crash-on-first-use:** C2 (n2g), C5 (NorUpDis indexing), C8 (stale `n`), C27
-   (standby column default), C33 (zero divide).
+   (standby column default), C33 (zero divide). **— DONE (branch
+   `fix/formulation-crash-batch`):** all five fixed and guarded in
+   `tests/test_formulation_fixes.py`; latent-only, so the goldens are byte-unchanged
+   (solve tier 47 passed / 2 xfail).
 3. **Electrolyser FCR/three-state credibility (before using the feature in a
    study):** C3, C4, C6, C10, C11, C13, C20.
 4. **Hydrogen-case enablement (with the H2Tank/Electrolyser xfail redesign):** C7,

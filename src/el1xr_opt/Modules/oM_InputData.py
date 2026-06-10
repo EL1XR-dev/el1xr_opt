@@ -274,7 +274,15 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict['pEleGenNoFCRD'            ] = parameters_dict['pEleGenNoFCRD'            ].map(idxDict)
     parameters_dict['pEleGenNoFCRN'            ] = parameters_dict['pEleGenNoFCRN'            ].map(idxDict)
     parameters_dict['pEleGenMaxCommitment'     ] = parameters_dict['pEleGenMaxCommitment'     ].map(idxDict)
-    parameters_dict['pHydGenStandByStatus'     ] = parameters_dict['pHydGenStandByStatus'     ].map(idxDict)
+    # Electrolyser (e2h) standby state and draw. When the hydrogen-generation data
+    # omits these columns, standby is disabled (status 0) and the standby draw is 0,
+    # so cases without the three-state feature load unchanged.
+    if 'pHydGenStandByStatus' in parameters_dict:
+        parameters_dict['pHydGenStandByStatus'] = parameters_dict['pHydGenStandByStatus'].map(idxDict).fillna(0).astype('int')
+    else:
+        parameters_dict['pHydGenStandByStatus'] = pd.Series(0, index=parameters_dict['pHydGenProductionFunction'].index, dtype='int')
+    if 'pHydGenStandByPower' not in parameters_dict:
+        parameters_dict['pHydGenStandByPower'] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
     # Electrolyser (e2h) FCR participation flags and endurance. When the hydrogen-
     # generation data omits these columns the flags default to 1 ("not participating")
     # and the endurance to 0, so existing cases are unaffected. An electrolyser only
@@ -1670,10 +1678,10 @@ def create_variables(model, optmodel, indlog):
 
     # fixing the initial committed electricity units based on the UpTimeZero and DownTimeZero
     for idx in model.psnegt:
-        if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenUpTimeZero'  ][idx[-1]] > 0 and model.n.ord(n) <= max(0,min(model.n.ord(n),(model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenUpTime'  ][idx[-1]]-model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenUpTimeZero'  ][idx[-1]]))):
+        if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenUpTimeZero'  ][idx[-1]] > 0 and model.n.ord(idx[-2]) <= max(0,min(model.n.ord(idx[-2]),(model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenUpTime'  ][idx[-1]]-model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenUpTimeZero'  ][idx[-1]]))):
             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}GenCommitment')[idx].fix(1)
             nFixedVariables += 1
-        if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenDownTimeZero'][idx[-1]] > 0 and model.n.ord(n) <= max(0,min(model.n.ord(n),(model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenDownTime'][idx[-1]]-model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenDownTimeZero'][idx[-1]]))):
+        if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenDownTimeZero'][idx[-1]] > 0 and model.n.ord(idx[-2]) <= max(0,min(model.n.ord(idx[-2]),(model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenDownTime'][idx[-1]]-model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenDownTimeZero'][idx[-1]]))):
             optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}GenCommitment')[idx].fix(0)
             nFixedVariables += 1
 
