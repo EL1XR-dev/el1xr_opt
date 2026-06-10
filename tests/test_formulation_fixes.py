@@ -307,3 +307,97 @@ def test_electrolyser_input_capped_by_build_decision():
         "the cap must constrain the electrolyser's electricity input"
     assert any("vHydGenInvest" in nm and g in nm for nm in names), \
         "the cap must scale with the build decision"
+
+
+# --- Crash-on-first-use batch (model audit Part C: C2, C5, C8, C33 latent, C27 behavioural) ---
+# These bugs are latent in the shipped cases (no fuel cell, no committed thermal unit, no
+# discharge-only ESS, no missing-column file), so they are guarded at the source -- except
+# C27, where dropping the columns from a real file exercises the new fallback directly.
+
+
+def test_hyd_balance_uses_defined_node_set_for_fuel_cell():
+    """C2: the fuel-cell (h2e) hydrogen-consumption term in ``eHydBalance`` must filter on
+    a DEFINED node-to-generator set. h2e units are electricity generators (``model.eg``),
+    so their node membership lives in ``model.n2eg``; the code referenced the undefined
+    ``model.n2g``, which raises ``AttributeError`` on the first case with a fuel cell."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "model.n2g)" not in text, \
+        "eHydBalance still references the undefined set model.n2g"
+    h2e_terms = [ln for ln in text.splitlines() if "if (nd,h2e) in" in ln]
+    assert h2e_terms and all("model.n2eg" in ln for ln in h2e_terms), \
+        "the fuel-cell hydrogen-consumption term must filter on model.n2eg"
+
+
+def test_thermal_fcrn_output_uses_generator_reserve_vars():
+    """C5: the non-storage (generator) branches of ``eEleTotalOutput`` must reference the
+    FCR-N GENERATOR reserve variables (``NorUpGen`` / ``NorDownGen``, declared on
+    ``psnegt``), not the storage-only ``NorUpDis`` / ``NorDownDis`` (``psnegs``). The FCR-D
+    legs already used the generator vars; the FCR-N legs wrongly used the discharge vars,
+    raising ``KeyError`` on the first committed thermal unit. The storage branch keeps the
+    discharge vars."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    gen_branches = [ln for ln in text.splitlines()
+                    if "vEleFreqContReserveDisUpGen[p,sc,n,egnr]" in ln]
+    assert gen_branches, "could not find the generator branches of eEleTotalOutput"
+    for ln in gen_branches:
+        assert "NorUpDis[p,sc,n,egnr]" not in ln and "NorDownDis[p,sc,n,egnr]" not in ln, \
+            "generator FCR-N output term must not use the storage-only Dis reserve vars"
+        assert "NorUpGen[p,sc,n,egnr]" in ln and "NorDownGen[p,sc,n,egnr]" in ln, \
+            "generator FCR-N output term must reference NorUpGen/NorDownGen"
+
+
+def test_pre_horizon_commitment_fixing_uses_own_load_level():
+    """C8: the initial-commitment fixing loop over ``model.psnegt`` must test each index's
+    OWN load level (``idx[-2]``) in ``model.n.ord(...)``. It used a stale loop variable
+    ``n`` leaking from an earlier (single-node-only) loop, so in single-node mode the first
+    unit with ``UpTimeZero`` / ``DownTimeZero > 0`` raised ``NameError``."""
+    lines = open(INPUT_DATA, encoding="utf-8").read().splitlines()
+    fixing = [ln for ln in lines
+              if ("GenUpTimeZero" in ln or "GenDownTimeZero" in ln) and "model.n.ord(" in ln]
+    assert fixing, "could not find the pre-horizon commitment fixing lines"
+    for ln in fixing:
+        assert "model.n.ord(idx[-2])" in ln, \
+            "commitment fixing must use the index's own load level idx[-2]"
+        assert "model.n.ord(n)" not in ln, \
+            "commitment fixing must not use the stale loop variable n"
+
+
+def test_storage_charge_fcr_bounds_guard_zero_capacity():
+    """C33: ``eEleFreqUpChargeBound`` / ``eEleFreqDownChargeBound`` divide by
+    ``pEleMaxCharge``, so each rule must guard against a zero charge capacity (a
+    discharge-only ESS) -- like the e2h analogue -- or it raises ``ZeroDivisionError`` at
+    build. Checked at the source: the guard token must appear in each rule body."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    guard = "and model.Par['pEleMaxCharge'][egs][p,sc,n]:"
+    for rule in ("eEleFreqUpChargeBound", "eEleFreqDownChargeBound"):
+        start = text.index(f"def {rule}(")
+        end = text.index(f"rule={rule}", start)
+        assert guard in text[start:end], \
+            f"{rule} must skip when pEleMaxCharge is zero (divide-by-zero guard)"
+
+
+def test_hydrogen_standby_columns_optional():
+    """C27: ``pHydGenStandByStatus`` / ``pHydGenStandByPower`` must have a missing-column
+    default (status 0, power 0), like the FCR columns added in the same feature. A
+    hydrogen-generation file without the StandBy columns must still build (standby
+    disabled), not ``KeyError``."""
+    work = tempfile.mkdtemp(prefix="standby_")
+    dst = os.path.join(work, "Home1")
+    shutil.copytree(os.path.join(REPO, "data", "H2VPP", "Home1"), dst)
+    hpath = os.path.join(dst, "oM_Data_HydrogenGeneration_Home1.csv")
+    hg = pd.read_csv(hpath)
+    drop = [c for c in hg.columns if "StandBy" in c]
+    assert drop, "test assumption: the H2VPP hydrogen generation file has StandBy columns"
+    hg.drop(columns=drop).to_csv(hpath, index=False)
+    # truncate to a few load levels for a quick build
+    dpath = os.path.join(dst, "oM_Data_Duration_Home1.csv")
+    dur = pd.read_csv(dpath)
+    keep = set(dur[dur.columns[2]].unique()[:6])
+    dur.loc[~dur[dur.columns[2]].isin(keep), "Duration"] = float("nan")
+    dur.to_csv(dpath, index=False)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    m = build_model(work, "Home1", date)   # must not raise
+    assert (m.Par['pHydGenStandByStatus'] == 0).all(), \
+        "standby status must default to 0 when the column is absent"
+    assert (m.Par['pHydGenStandByPower'] == 0).all(), \
+        "standby draw must default to 0 when the column is absent"
