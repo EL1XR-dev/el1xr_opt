@@ -850,6 +850,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # determine the initial committed hydrogen units and their output
     parameters_dict['pHydInitialOutput'] = pd.Series([0.0]*(len(model.ps)*len(model.hg)), model.ps * model.hg)
     parameters_dict['pHydInitialUC'    ] = pd.Series([0  ]*(len(model.ps)*len(model.hg)), model.ps * model.hg)
+    # Pre-horizon standby state of the electrolysers (default off). Used by the standby
+    # transition constraint so standby at the first step is only reachable when the unit
+    # was warm (on or in standby) before the horizon.
+    parameters_dict['pHydInitialStandBy'] = pd.Series([0  ]*(len(model.ps)*len(model.hg)), model.ps * model.hg)
     for p,sc in model.ps:
         parameters_dict['pHydSystemOutput'] = 0.0
         for hg in model.hg:

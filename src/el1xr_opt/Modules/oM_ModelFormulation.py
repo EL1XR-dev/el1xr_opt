@@ -204,6 +204,7 @@ def create_objective_function_components(model, optmodel, indlog):
         return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
                                                    sum(model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
                                                    sum(model.Par['pHydGenStartUpCost'    ][hgt] *       optmodel.vHydGenStartUp        [p,sc,n,hgt] for hgt in model.hgt) +
+                                                   sum(model.Par['pHydGenStartUpCost'    ][e2h] *       optmodel.vHydGenStartUp        [p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) +
                                                    sum(model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) +
                                                    sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
     optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
@@ -307,7 +308,7 @@ def create_constraints(model, optmodel, indlog):
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
             share = (optmodel.vEleShareIn[p,sc,n,er] - optmodel.vEleShareOut[p,sc,n,er]) if community_on else 0.0
             return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
-                    - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
+                    - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
                     + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] + share == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
         else:
             return Constraint.Skip
@@ -679,7 +680,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleFreqDownChargeHeadroomConv(optmodel, p,sc,n,e2h):
         if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0):
-            return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h] <= model.Par['pHydMaxCharge'][e2h][p,sc,n] - optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h]
+            return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h] <= model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n] * optmodel.vHydGenCommitment[p,sc,n,e2h] - optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeHeadroomConv', Constraint(optmodel.psne2h, rule=eEleFreqDownChargeHeadroomConv, doc='FCR downward charge headroom for the electrolyser'))
@@ -701,13 +702,15 @@ def create_constraints(model, optmodel, indlog):
     # Node-level FCR-down endurance: the extra hydrogen the electrolysers at a node would
     # produce while sustaining a down-bid over the endurance window must fit in the empty
     # headroom of the hydrogen stores at that node. FCR-up (cutting consumption) needs no
-    # storage, so only the down direction is constrained.
+    # storage, so only the down direction is constrained. A node with FCR-flagged
+    # electrolysers but no hydrogen store has zero headroom (empty right-hand side), so the
+    # constraint forces the endurance-weighted down bids to zero rather than being skipped.
     def eEleFreqDownEnduranceConv(optmodel, p,sc,n,nd):
         if n == model.n.first():
             return Constraint.Skip
         e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
         hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
-        if not e2h_at_node or not hgs_at_node:
+        if not e2h_at_node:
             return Constraint.Skip
         lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),e2h]
                  + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,1),e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
@@ -917,6 +920,21 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydElectrolyserStandBy', Constraint(optmodel.psne2h, rule=eHydElectrolyserStandBy, doc='electrolyser on/standby mutual exclusivity (off = remainder)'))
+
+    # Standby is only reachable when the stack is already warm: the unit can be in standby
+    # at t only if it was on or in standby at t-1. Without this the solver could slip into
+    # standby straight from off, pay one period of StandByPower to be "warm", and then start
+    # for free -- dodging the cold-start cost. The first step uses the pre-horizon state
+    # (pHydInitialUC / pHydInitialStandBy).
+    def eHydElectrolyserStandByTransition(optmodel, p,sc,n,e2h):
+        if model.Par['pHydGenStandByStatus'][e2h] == 1:
+            if n == model.n.first():
+                return optmodel.vHydGenStandBy[p,sc,n,e2h] <= model.Par['pHydInitialUC'][p,sc,e2h] + model.Par['pHydInitialStandBy'][p,sc,e2h]
+            else:
+                return optmodel.vHydGenStandBy[p,sc,n,e2h] <= optmodel.vHydGenCommitment[p,sc,model.n.prev(n),e2h] + optmodel.vHydGenStandBy[p,sc,model.n.prev(n),e2h]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydElectrolyserStandByTransition', Constraint(optmodel.psne2h, rule=eHydElectrolyserStandByTransition, doc='electrolyser standby only reachable when warm (on or standby at t-1)'))
 
     # Cold start: turning the electrolyser ON from OFF triggers the start-up cost
     # (pHydGenStartUpCost, already summed in the objective over hgt). Starting from
@@ -1254,9 +1272,9 @@ def create_constraints(model, optmodel, indlog):
         elif egs in model.e2h:
             if model.Par['pHydMaxCharge'][egs][p,sc,n] and model.Par['pHydMaxCharge2ndBlock'][egs][p,sc,n]:
                 if model.Par['pHydMinCharge'][egs][p,sc,n] == 0.0:
-                    return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                           optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + model.Par['pHydGenStandByPower'][egs] * optmodel.vHydGenStandBy[p,sc,n,egs]
+                    return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                           optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + model.Par['pHydGenStandByPower'][egs] * optmodel.vHydGenStandBy[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] * optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] * optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
                 else:
-                    return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n] == optmodel.vHydGenCommitment[p,sc,n,egs] + (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) + (model.Par['pHydGenStandByPower'][egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) * optmodel.vHydGenStandBy[p,sc,n,egs]
+                    return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n] == optmodel.vHydGenCommitment[p,sc,n,egs] + (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) + (model.Par['pHydGenStandByPower'][egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) * optmodel.vHydGenStandBy[p,sc,n,egs] + (- model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] * optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] * optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pHydMinCharge'][egs][p,sc,n]
             else:
                 return Constraint.Skip
         else:
