@@ -1409,8 +1409,16 @@ Energy community and green hydrogen
      - Per-zone lossless conservation of shared electricity (on with ``IndBinCommunity``);
        the retail balance gains ``+ vEleShareIn - vEleShareOut``. See :doc:`community`.
    * - ``eGreenH2Matching``
-     - RFNBO additionality: electrolyser electricity use is capped by available
-       renewable generation (on with ``pParGreenH2Matching``).
+     - RFNBO additionality (on with ``pParGreenH2Matching``): in each load level the
+       electrolysers' *productive* draw -- the total charge minus the standby draw, which
+       makes no hydrogen -- is matched by renewable electricity allocated to them
+       (``vEleResToE2h``, capped per unit by ``eGreenH2AllocCap``) over the PPA-flagged
+       additionality pool. The standby auxiliary load is excluded from the matched quantity,
+       following EU 2023/1184 Art. 6. The allocation variable is the scaffold for a future
+       Guarantee-of-Origin certificate balance that would also stop a renewable MWh being
+       both sold and matched (Mansouri and Bruninx 2026); in the present model, where
+       electricity sales carry no green attribute, the matching is equivalent to the
+       aggregate bound.
    * - ``eEleMarketPPACost``
      - Electricity PPA settlement for renewable units flagged ``pEleGenPPA``.
 

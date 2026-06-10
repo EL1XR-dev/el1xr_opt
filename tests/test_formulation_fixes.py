@@ -556,3 +556,50 @@ def test_om_variable_cost_counted_once(h2_model):
     lvc = [ln for ln in src if "GenLinearVarCost'" in ln and "GenLinearTerm" in ln]
     assert lvc and all("OMVariableCost" not in ln for ln in lvc), \
         "LinearVarCost must not include O&M (it is added once in the objective)"
+
+
+# --- C20: green-H2 matching additionality + standby exclusion (RFNBO) ---
+
+
+@pytest.fixture(scope="module")
+def green_model():
+    """Build (not solve) the ``ElectrolyserFCR`` variant: green-H2 matching is on, the
+    electrolyser is active, and PPA-flagged renewables exist."""
+    if not os.path.isfile(os.path.join(SIZING_DIR, "ElectrolyserFCR.duckdb")):
+        subprocess.run([sys.executable, os.path.join(SIZING_DIR, "make_sizing_cases.py")],
+                       check=True, cwd=REPO)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    return build_model(SIZING_DIR, "ElectrolyserFCR", date)
+
+
+def test_green_matching_uses_ppa_pool_and_excludes_standby(green_model):
+    """C20: green-H2 matching allocates renewable to the electrolyser over the PPA-flagged
+    pool (additionality) and matches only the PRODUCTIVE draw -- the standby draw, which
+    makes no hydrogen, is excluded (EU 2023/1184 Art. 6)."""
+    m = green_model
+    assert hasattr(m, "eGreenH2Matching") and len(m.eGreenH2Matching) > 0, \
+        "green matching not built (is matching on for this case?)"
+    assert hasattr(m, "vEleResToE2h") and hasattr(m, "eGreenH2AllocCap"), \
+        "renewable->electrolyser allocation variable / cap not built"
+    # the allocation pool is the PPA-flagged renewables (additionality)
+    pool = sorted({idx[-1] for idx in m.vEleResToE2h})
+    assert pool, "allocation variable has no generators"
+    for g in pool:
+        assert int(m.Par["pEleGenPPA"][g]) == 1, \
+            f"allocation pool unit {g} is not PPA-flagged (additionality)"
+    # the matching body matches the productive draw against the allocation, standby excluded
+    p, sc = list(m.ps)[0]
+    n = list(m.n)[0]
+    names = {v.name for v in generate_standard_repn(m.eGreenH2Matching[p, sc, n].body).linear_vars}
+    assert any("vEleResToE2h" in nm for nm in names), "matching must use the allocation variable"
+    assert any("vEleTotalCharge" in nm for nm in names), \
+        "matching must reference the electrolyser consumption"
+    # standby exclusion is checked at the source: in this case the electrolyser has standby
+    # off, so the (fixed-to-zero) standby variable folds out of the constraint body, but the
+    # rule must subtract the standby draw so a standby-capable unit is matched on its
+    # productive draw only.
+    grn = open(os.path.join(MODULES, "oM_GreenHydrogen.py"), encoding="utf-8").read()
+    start = grn.index("def eGreenH2Matching(")
+    end = grn.index("optmodel.__setattr__('eGreenH2Matching'", start)
+    assert "pHydGenStandByPower" in grn[start:end] and "vHydGenStandBy" in grn[start:end], \
+        "matching rule must subtract the standby draw (productive draw only)"
