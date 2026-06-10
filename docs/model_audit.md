@@ -240,6 +240,308 @@ cosmetic / fragility.
 
 ---
 
+## Part C — formulation review round 2 (2026-06-09)
+
+A four-way parallel review of the whole formulation (objective components + FCR;
+storage/commitment/three-state; hydrogen/green/heat/investment; input-data bounds,
+fixing and the cost registry), after the electrolyser-FCR + three-state merge.
+Findings marked **[verified]** were re-checked line by line in the code by the main
+session; the rest were verified by the reviewing agent only. Severity as in Part B.
+
+### HIGH — wrong objective, wrong physics, or latent crash
+
+C1. **[H][verified] Variable O&M cost is double-counted, both sectors.**
+`pEleGenLinearVarCost = LinearTerm*factor1*FuelCost + OMVariableCost*factor1`
+(oM_InputData.py:199) already contains O&M, yet `eTotalEleGCost`
+(oM_ModelFormulation.py:165-169) charges both `LinearVarCost*output` **and**
+`OMVariableCost*output`; same in `eTotalHydGCost` (:204-208). Live in shipped cases:
+the electrolysers carry `OMVariableCost = 18.2`, so hydrogen output pays 36.4 instead
+of 18.2 per kg. Note Part B item "hydrogen O&M sign" added the explicit O&M term on
+the hydrogen side — the sign fix was right but it landed on top of the O&M already
+inside `LinearVarCost`; the clean fix is to drop O&M from one of the two places in
+both sectors. Secondary (latent at factor1=1): `OMVariableCost` is in
+`idx_gen_factoring` so it is factor1-scaled twice.
+
+C2. **[H][verified] `eHydBalance` references the undefined set `model.n2g`.**
+oM_ModelFormulation.py:437 filters the fuel-cell (h2e) hydrogen consumption with
+`(nd,h2e) in model.n2g`; only `n2eg` / `n2hg` exist. Latent because no shipped case
+has an active h2e unit; the first case with a fuel cell raises `AttributeError` (or,
+with the name defined-but-empty, silently drops the fuel-cell hydrogen draw from the
+node balance).
+
+C3. **[H][verified] Electrolyser FCR-D down headroom is not gated by the unit
+state.** `eEleFreqDownChargeHeadroomConv` (oM_ModelFormulation.py:680-685) bounds
+down-provision by `pHydMaxCharge - vEleTotalCharge2ndBlock`. The 2nd block is zero
+when the unit is OFF or in STANDBY, so an off/standby electrolyser can sell its full
+nameplate as FCR-D down although it cannot absorb the activation from cold. When
+committed, the headroom overstates the true room by `MinCharge` (consumption is
+`MinCharge + 2ndBlock`, room to nameplate is `MaxCharge - MinCharge - 2ndBlock`).
+FCR-N is protected by the up-side symmetry; FCR-D down is not. Also, a node with
+FCR-flagged electrolysers but no hydrogen store **skips** `eEleFreqDownEnduranceConv`
+(:710-711) instead of forcing the down bid to zero — the constraint that motivated
+the node-level design ends up absent exactly where it should bind hardest.
+
+C4. **[H][verified] STANDBY is reachable from OFF, so the cold-start cost can be
+dodged.** The only standby constraints are `uc + sb <= 1` (:916) and the cold-start
+bound `su >= uc[t] - uc[t-1] - sb[t-1]` (:931). Nothing requires being warm to enter
+standby: from OFF the solver can pay one period of `StandByPower` (0.52 kW in the
+demo data) and then start "warm" for free, dodging the 2612.5 start-up cost.
+Physically a cold stack cannot be held warm without having started. Missing
+transition constraint: `sb[t] <= uc[t-1] + sb[t-1]` plus an initial-standby state
+(`pHydInitialStandBy`); related, `pHydInitialUC[e2h]` is pinned to 0 by the
+initial-UC skip, so an electrolyser running before the horizon is billed a cold start
+at t1.
+
+C5. **[H][verified] Thermal-generator FCR-N bids have no physical backing.**
+`vEleFreqContReserveNorUpGen` / `NorDownGen` appear only in their declaration, the
+no-FCRN fixing, and the two relations `NorBid <= NorUpGen` / `NorBid <= NorDownGen`
+(oM_ModelFormulation.py:488,495) — both right-hand sides are otherwise free
+variables, so the relations are vacuous and an egt unit can bid the whole FCR-N
+requirement with no headroom reserved. Worse, the non-storage branches of
+`eEleTotalOutput` (:1213-1217) reference `vEleFreqContReserveNorUpDis`/`NorDownDis`,
+which are declared **on storage only** (`psnegs`): the first case with an active
+committed thermal unit raises `KeyError` at build. The intended variables are
+`NorUpGen`/`NorDownGen`; fixing the indexing would also wire the missing FCR-N
+activation for generators.
+
+C6. **[H][verified] The retail settlement misses the electrolyser's committed
+minimum load and standby draw.** `eEleRetNodeBalance` (oM_ModelFormulation.py:309-311)
+subtracts only `vEleTotalCharge2ndBlock[e2h]`, while the unit's real consumption is
+`MinCharge*uc + 2ndBlock + StandByPower*sb` (:1257-1259) and the physical balance
+`eEleBalance` uses the full `vEleTotalCharge`. Thermal generation in the same retail
+balance *does* include its committed minimum, so this is an asymmetry, not a
+convention: the min-load and standby electricity never has to be bought
+(`vEleBuy`), so the day-ahead cost undercounts exactly the consumption block the
+three-state feature introduces — standby looks cheaper than it is.
+
+C7. **[H] `vHydImport` / `vHydExport` are an unpriced, unbounded hydrogen
+source/sink whenever no active hydrogen retailer prices them.** `vHydImport`
+(NonNegativeReals, no upper bound) enters `eHydBalance` with `+`; it is priced only
+through `eHydBuyComposition`, which requires an active retailer (`pHydRetMaxBuy > 0`)
+— none exists in any shipped case — and it is fixed to zero only at non-reference
+nodes in network mode (oM_InputData.py:1619-1628). In single-node mode nothing is
+fixed anywhere: free hydrogen. Latent today because shipped hydrogen demand is
+empty/period-gated; it will silently absorb any future H2 case. (The electricity side
+is closed by `eEleRetNodeBalance`; hydrogen has no retail node balance — same root as
+C2's neighbourhood and the `pHydRetMaxBuy` KeyError fragility below.)
+
+C8. **[H][verified] Stale loop variable in the pre-horizon commitment fixing.**
+oM_InputData.py:1672-1678 loops `for idx in model.psnegt:` but tests
+`model.n.ord(n)`, where `n` leaks from an earlier loop that only runs when
+`pOptIndBinSingleNode == 0`. In single-node mode the first unit with
+`UpTimeZero/DownTimeZero > 0` raises `NameError`; otherwise `n` is stuck at the last
+load level, so the min-up/down carry-over is fixed for all levels or none. Should be
+`model.n.ord(idx[-2])` (the index's own level).
+
+C9. **[H] Initial-UC override marks never-on units as initially committed.**
+oM_InputData.py:837-840/862-865 set `pInitialUC = 1` whenever
+`UpTime - UpTimeZero > 0`, i.e. also when `UpTimeZero == 0` (the unit was never on),
+overriding the merit-order pre-commitment above it. The reference openTEPES logic has
+no such override. Produces a spurious first-step shut-down or masks a start-up.
+Should test `UpTimeZero > 0` (resp. `DownTimeZero > 0`).
+
+### MED — asymmetries and conditional bugs
+
+C10. **e2h FCR activation never changes consumption or hydrogen output.** The egs
+branch of `eEleTotalCharge` (:1251) adjusts realised charge by the four
+`pOperatingReserveActivation_*` terms; the e2h branch (:1257-1259) has none, so an
+activated electrolyser bid delivers no energy and makes no extra hydrogen — while
+`eEleFreqDownEnduranceConv` reserves storage headroom precisely for that hydrogen.
+Revenue with no modelled energy consequence biases the FCR business case upward.
+
+C11. **The e2h start-up cost is charged only if the unit happens to be in `hgt`.**
+The cost term sums over `hgt = {ConstantVarCost > 0}` where
+`ConstantVarCost = ConstantTerm * factor2 * FuelCost` (oM_InputData.py:200,326); the
+cold-start constraints are gated on `pHydGenStartUpCost > 0` alone
+(oM_ModelFormulation.py:927,940). An electrolyser with `FuelCost = 0` (natural for a
+purely electric unit) gets the constraints but never pays — the demo only works
+because AEL_01 has the dummy `FuelCost = 1`. The billing should not ride on the
+fuel-cost product.
+
+C12. **A fixed-consumption electrolyser (`MinCharge == MaxCharge`) silently loses
+the whole charge decomposition.** `pHydMaxCharge2ndBlock = MaxCharge - MinCharge = 0`
+skips `eEleTotalCharge`'s e2h branch (:1255) and both `eE2HMax/MinCharge2ndBlock`;
+the 2nd-block fixing loop runs over `ehs = egs|hgs`, which excludes e2h
+(oM_InputData.py:362,1478-1490). `vEleTotalCharge[e2h]` is then free in
+`[0, MaxCharge]` with no commitment link, and `eAllEnergy2Hyd` still converts it.
+
+C13. **Electrolyser ramps and min-up/down times are now enforced nowhere.** The
+pure-load fix removed the (output-side) hydrogen-generator ramps and min-times for
+e2h, but no charge-side replacement exists: `eEleMaxRampUp/DwCharge` covers `egs`
+only and `eHydMaxRampUp/DwCharge` covers `hgs` only. The shipped AEL `RampUp/Down =
+120` is silently ignored; consumption can swing nameplate in one step and (with C4)
+nothing deters cycling.
+
+C14. **The retail balance ignores network flows.** `eEleRetNodeBalance` counts
+incident lines in its build guard but includes no flow/import/export term, so in any
+multi-node case the retailer must cover the local imbalance as if the network
+delivered nothing (the commented-out `eEleBuyComposition` suggests the buy-import
+link was never finished). Correct only for single-node cases.
+
+C15. **Duration weighting is inconsistent for several money terms.** (a) The
+volumetric grid fee (`eTotalEleNetUseVarCost`, :79), energy tax (:146) and incentive
+revenue (:155) are plain sums over kW imports registered as `'ps'` — no `pDuration`
+anywhere — so with `pParTimeStep > 1` they undercount by the time-step factor
+relative to the `'psn'` energy terms. (b) Conversely the start-up/shut-down costs sit
+inside `'psn'` terms and get multiplied by `pDuration`: a start at a k-hour level
+costs k times the start-up cost. Both are exact only at 1-hour resolution.
+
+C16. **factor1 is applied twice to the FCR prices.** `pOperatingReservePrice_*` is
+factor1-scaled at read (oM_InputData.py:150) and the three revenue constraints
+multiply by `model.factor1` again (:110,114,118). Latent at factor1=1; squares on the
+unit knob otherwise (same family as the C1 secondary and the storage-bound double
+scaling, C24).
+
+C17. **FCR revenue covers `egnr`, but caps and provisions cover only
+egt/egs/e2h.** A non-RES unit that is neither thermal (`ConstantVarCost == 0`) nor
+storage has bid variables (declared over `eg|e2h`), is in no cap and no
+bid-provision relation, but is paid revenue — with the participation flag defaulting
+to 0 ("participates") for blank numeric columns, this is an unbounded objective for
+such a unit. Related fragility: `pEleGenNoFCRD/N` get no `fillna` (oM_InputData.py:
+274-275), so a blank cell in a string-typed column is NaN — neither 0 nor 1 — and the
+unit escapes both the fixing and every FCR constraint while staying in the revenue
+sum. (The e2h flags got `.fillna(1)`; the electricity flags should too.)
+
+C18. **Static `pEleMaxCharge` fallback lets non-dischargeable units sell discharge
+reserve.** With `pEleGenNoDayAhead == 1` (or MaxPower ~ 0), the discharge-headroom
+constraints bound `DisUpDis + NorUpDis <= pEleMaxCharge` — a static charger rating
+with no SoC/commitment link; the compensating fix-to-zero for non-V2G units fires
+only when `NoDayAhead == 0` (oM_InputData.py:1542-1546).
+
+C19. **Demand-only nodes get no balance — demand is silently dropped at zero
+cost.** The build guards of `eEleBalance`/`eHydBalance` (:425,436) count units and
+lines but not demands, so a node carrying only demand is skipped and `vENS/vHNS`
+stay zero. Acknowledged as a workaround in `make_sizing_cases.py` (:192-196);
+should be fixed in the model (include demand in the guard) so it prices HNS or fails
+loudly.
+
+C20. **Green-H2 matching counts the standby draw and ignores the PPA flag.**
+`eGreenH2Matching` caps the full `vEleTotalCharge[e2h]` (standby included) by the sum
+of **all** RES output regardless of `pEleGenPPA` (oM_GreenHydrogen.py:97-100), so
+with matching on and no renewable output at night, standby is forced off — a cold
+stop exactly where standby matters (the demo dodges this with `green=0`). Decide:
+either standby is grid-powered (exclude `StandByPower*sb` from the matched quantity)
+or document that standby must be renewable-backed. The matching pool should also
+respect the PPA flag, and the same renewable MWh can currently both back the
+electrolyser and be sold.
+
+C21. **Investment coupling gaps.** (a) A candidate hydrogen *storage* unit's charge
+is not capped by its build decision (`eHydInvestMaxCharge` covers e2h only;
+electricity storage has all three caps) — an unbuilt store can absorb at nameplate
+and spill for free. (b) FCR-down headroom of candidate units (e2h :682, storage
+:574) uses the full nameplate, so a fractionally built unit can sell down-reserve on
+capacity it does not have.
+
+C22. **`vTotalEleDCost` is fixed to zero if *any* storage unit lacks DoD
+segments.** The fix sits inside `for egs in model.egs:` (oM_InputData.py:1372-1376),
+so one non-degrading unit in a mixed fleet pins the *total* degradation-cost variable
+at zero while `eTotalEleDCost` equates it to the (nonzero) sum — erasing the
+degrading unit's cost or making the case infeasible. Aggregate the condition over all
+units first.
+
+C23. **Hydrogen charge upper bounds are never applied.** The bound loop tests
+`if idx in model.hg:` with `idx` the full `(p,sc,n,unit)` tuple
+(oM_InputData.py:1245-1253) — always False (the electricity loop correctly uses
+`idx[-1]`). `vHydTotalCharge(2ndBlock)` get no ub and are constrained only where the
+2nd-block constraints are built (skipped when `MaxCharge2ndBlock == 0`).
+
+C24. **Mixed single/double factor1 scaling of storage bounds.** `pVarMin/MaxStorage`
+are factor1-scaled at read and the inventory bounds + invest caps multiply by factor1
+again, while the `p*GenMaximumStorage` fallback is scaled once. Coincides only at
+factor1=1 (extends the Part B factor1-convention cleanup).
+
+C25. **Hydrogen peak-indicator variables are declared on electricity-retailer sets
+but fixed over hydrogen-retailer sets.** `vHydPeakGlobalInd/MonthInd/DayInd` are
+`Var(model.psner,...)` etc. but the tariff fixing loops index them with `psnhr`
+tuples (oM_InputData.py:1082-1104 vs 1422-1445) — `KeyError` as soon as a case has an
+active hydrogen retailer; they also appear in no constraint (dead apart from the
+broken fixing).
+
+C26. **Compressor consumption is dead data.** `MaxCompressorConsumption` is read and
+unit-factored (oM_InputData.py:176) but referenced by no variable, constraint or
+cost: hydrogen storage charging draws zero electricity and pays no compression energy
+— a first-order term (1-4 kWh/kg) in any BTM hydrogen business case.
+
+C27. **`pHydGenStandByStatus`/`StandByPower` have no missing-column default.**
+Unlike the FCR columns added in the same feature (explicit fallback at
+oM_InputData.py:282-291), `pHydGenStandByStatus` is mapped unconditionally (:277) and
+`pHydGenStandByPower` is used unguarded in `eAllEnergy2Hyd` — an older
+hydrogen-generation CSV without the columns crashes.
+
+### LOW — fragile, vacuous, or cosmetic
+
+C28. `eE2HMinCharge2ndBlock` (:1128-1133) is vacuous: `2ndBlock/Max >= uc - 1` with a
+NonNegative LHS and a nonpositive RHS can never bind. The state chain rests entirely
+on the Max constraint (which suffices for FCR-up; see C3 for the down side).
+C29. The `>= 0` gates on `pOperatingReserveRequire_*` (27 sites) are always true
+(the parameter is `fillna(0)` and clamped); clearly meant `> 0`. No wrong solutions,
+just dead gating and redundant rows.
+C30. The endurance constraints (storage :620-632 and e2h :705-716) pair the level-n
+inventory with the bid at n-1 and skip `n.first()`, so the **last** level's bid is in
+no endurance constraint — end-of-horizon bids are free of the energy backing.
+C31. The FCR-N volume cap (:466) uses the *average* of the up/down requirements; for
+a symmetric product the deliverable volume is the *minimum*. Exact when the inputs
+are equal (the usual case).
+C32. RES units get FCR bid variables (declared over `eg|e2h`) that are in no cap, no
+relation, no revenue, and are never fixed — dead variables that can carry arbitrary
+values into the output tables.
+C33. `eEleFreqUp/DownChargeBound` (:581,591,598,608) divide by `pEleMaxCharge` with
+no positivity guard (the e2h analogues guard) — `ZeroDivisionError` for a
+discharge-only ESS with default flags.
+C34. With `pParNumberPowerPeaks == 0` the peak cost (:72) charges a power tariff
+with no kW quantity — a dimensionally meaningless constant.
+C35. The per-unit binary relaxation loop (oM_InputData.py:1458-1462) never relaxes
+`vHydGenStandBy` and runs over `hgt` (skipping an e2h with `ConstantVarCost == 0`);
+in the LP default the three-state logic is continuously gameable (the demo correctly
+forces `binary_uc`). Document that standby results need binary UC.
+C36. `vHydGenShutDown[e2h] = 0` by design, but a nonzero `ShutDownCost` in the data
+(AEL_01: 1000) is silently ignored — deserves a load-time warning.
+C37. Hydrogen storage outflow ramps (:1488,1498) reuse the *generation* ramp
+parameter `pHydGenRampUp/Down` where electricity had dedicated outflow-ramp
+parameters (commented out) — different physical limits.
+C38. `eTotalICost` multiplies the lump-sum annualized investment cost by `factor1`
+(oM_Investment.py:162) — dimensionally suspect unless `FixedInvestmentCost` is
+per-unit-capacity (assert the convention); doc says `[MEUR]`, objective says
+`[kEUR]`.
+C39. A future-dated investment candidate (`InitialPeriod > base year`) is silently
+dropped from the model with no warning (the sizing generator works around it by
+rewriting `InitialPeriod`).
+C40. Heat sector (oM_HeatSector.py): no `COP x heat-to-power efficiency < 1` data
+guard (a free power-heat-power loop is representable); the thermal store has no
+cyclic/terminal condition (initial stock is free energy, horizon ends empty); store
+charge/discharge bounds use the *energy* capacity as a power rating with no mutual
+exclusivity; a store-only node is missing from the heat-balance node list
+(`n2hts` not in the union); `vHeatNotServed` is uncapped.
+C41. Flexible hydrogen demand has no recovery constraint (unlike
+`eEleDemandShiftBalance`) and `vHNS <= pVarMaxDemand` regardless of the flexed
+demand — `vHydDemand - vHNS` can go negative (a paid sink).
+C42. `eEleInflows2Commitment` / `Outflows2Commitment` families (:730-756, 954-980)
+contain no commitment variable despite name and doc — parameter-bound duplicates.
+C43. `pHydRetMaxBuy/Sell` exist only if the optional CSV columns do — the first case
+that activates a hydrogen retailer on a column-less file gets `KeyError` (no schema
+default, unlike the electricity peak factors).
+C44. The hydrogen day-ahead buy cost is stored in `vTotalHydMrkPPACost` under rule
+name `eHydMarketDayAheadCost` registered as `eTotalHydTradeCost` — misattributed in
+any report that greps by name.
+C45. Tautological `(NoDayAhead==1 or NoDayAhead==0)` conjuncts (:1057,1070,1100,
+1111) make the binary-gated 2nd-block branch unreachable for FCR-capable storage —
+dead logic; mutual exclusion still holds via the charge/discharge decisions.
+C46. First-step electricity ramp (:1340,1350) uses `pEleSystemOutput` — a *system*
+aggregate, and a scalar overwritten across (p,sc) so only the last scenario's value
+survives — as each unit's pre-horizon output; essentially vacuous for small units.
+
+### Suggested sequencing
+
+1. **Money now (live in shipped cases):** C1 (O&M double-count) — then re-baseline the
+   goldens deliberately.
+2. **Crash-on-first-use:** C2 (n2g), C5 (NorUpDis indexing), C8 (stale `n`), C27
+   (standby column default), C33 (zero divide).
+3. **Electrolyser FCR/three-state credibility (before using the feature in a
+   study):** C3, C4, C6, C10, C11, C13, C20.
+4. **Hydrogen-case enablement (with the H2Tank/Electrolyser xfail redesign):** C7,
+   C19, C23, C26, C41, C43.
+5. The rest with their subsystem.
+
 ## Status / sequencing
 
 - **Done (merged or in flight):** Part A concept-page rewrite; ENS/HNS double-count

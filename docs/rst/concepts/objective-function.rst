@@ -191,7 +191,11 @@ by «``eEleMarketFCRDUpRevenue``» and «``eEleMarketFCRDDwRevenue``», and thei
 .. math::
     :label: eq:EleMarketFCRDRevenue
 
-    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \left( \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
+    \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE \cup \nGHE} \left( \pelefcrdupprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pelefcrddwprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
+
+The sum runs over the electricity units and the electrolysers (:math:`\nGHE`), since
+an eligible electrolyser earns the same FCR revenues by modulating its consumption
+(see the FCR provision from an electrolyser section in :doc:`constraints`).
 
 Frequency Containment Reserve for Normal operation (FCR-N)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,7 +206,7 @@ product, so the price is the average of the upward and downward FCR-N prices:
 .. math::
     :label: eq:EleMarketFCRNRevenue
 
-    \freqcontnormalrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE} \pelefcrnprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
+    \freqcontnormalrevenue_{\periodindex,\scenarioindex,\timeindex} = \sum_{\genindex \in \nGE \cup \nGHE} \pelefcrnprice_{\periodindex,\scenarioindex,\timeindex} \pfactorone \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
 
 where :math:`\pelefcrnprice` is the average of the upward and downward FCR-N prices.
 

@@ -94,11 +94,12 @@ Reserve Electricity Market Participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Frequency containment reserves in normal operation (FCR-N)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FCR-N is a symmetric product. The total FCR-N bid from eligible generators and storage units is limited by the FCR-N requirement, taken as the average of the upward and downward requirements («``eEleFreqContReserveNor``»):
+FCR-N is a symmetric product. The total FCR-N bid from eligible generators, storage units and electrolysers is limited by the FCR-N requirement, taken as the average of the upward and downward requirements («``eEleFreqContReserveNor``»):
 
 .. math::
    \sum_{\genindex \in \nGET, \pgennofcrn_{\genindex}=0} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-   \sum_{\storageindex \in \nEES, \pgennofcrn_{\storageindex}=0} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \sum_{\storageindex \in \nEES, \pgennofcrn_{\storageindex}=0} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\storageindex} +
+   \sum_{\genindex \in \nGHE, \phydgennofcrn_{\genindex}=0} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \le \frac{1}{2}\left(\pfcrnrequirement^{up}_{\periodindex,\scenarioindex,\timeindex} + \pfcrnrequirement^{dn}_{\periodindex,\scenarioindex,\timeindex}\right)
    \quad \forall \periodindex,\scenarioindex,\timeindex
 
@@ -138,17 +139,19 @@ Frequency containment reserves in disturbed operation (FCR-D)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FCR-D is modeled through the upward and downward reserve constraints, which ensure that the provision of reserves does not exceed the available capacity of generators and storage units.
 
-The bids for upward and downward reserves are constrained by («``eEleFreqContReserveDisUpward``», «``eEleFreqContReserveDisDownward``»):
+The bids for upward and downward reserves from eligible generators, storage units and electrolysers are constrained by («``eEleFreqContReserveDisUpward``», «``eEleFreqContReserveDisDownward``»):
 
 .. math::
    \sum_{\genindex \in \nGET, \pgennofcrd_{\genindex}=0} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-   \sum_{\genindex \in \nEES, \pgennofcrd_{\genindex}=0} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \sum_{\genindex \in \nEES, \pgennofcrd_{\genindex}=0} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+   \sum_{\genindex \in \nGHE, \phydgennofcrd_{\genindex}=0} \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \le \pfcrduprequirement_{\periodindex,\scenarioindex,\timeindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex
 
 .. math::
    \sum_{\genindex \in \nGET, \pgennofcrd_{\genindex}=0} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
-   \sum_{\genindex \in \nEES, \pgennofcrd_{\genindex}=0} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \sum_{\genindex \in \nEES, \pgennofcrd_{\genindex}=0} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+   \sum_{\genindex \in \nGHE, \phydgennofcrd_{\genindex}=0} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \le \pfcrddwrequirement_{\periodindex,\scenarioindex,\timeindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex
 
@@ -265,6 +268,96 @@ The upward and downward endurance are defined by («``eEleStorageEnduranceUp``»
    in the current code. The constraints above match the implemented
    ``eEleFreq...Headroom`` family, which bound the combined FCR-D and FCR-N
    provision. Please review the formulation against ``oM_ModelFormulation.py``.
+
+FCR provision from an electrolyser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+An electrolyser is a controllable load, so it provides FCR by modulating its
+electricity consumption: upward reserve by reducing consumption, downward reserve by
+increasing it. Its provision is the charge-side mirror of the storage formulation --
+there is no discharge side. Participation is opt-in per unit through the
+hydrogen-generation columns ``NoFCRD`` / ``NoFCRN`` (:math:`\phydgennofcrd`,
+:math:`\phydgennofcrn`; the default is 1, not participating, so cases without the
+columns are unchanged).
+
+In each product and direction the market bid equals the charge-side provision
+(«``eEleRelationFreqDisUpBid2Conv``», «``eEleRelationFreqDisDownBid2Conv``»,
+«``eEleRelationFreqNorUpBid2Conv``», «``eEleRelationFreqNorDownBid2Conv``»):
+
+.. math::
+   \velefcrdupbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrdupcha_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgennofcrd_{\genindex}=0
+
+.. math::
+   \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrddwcha_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgennofcrd_{\genindex}=0
+
+.. math::
+   \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgennofcrn_{\genindex}=0
+
+.. math::
+   \velefcrnbid_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgennofcrn_{\genindex}=0
+
+Because FCR-N is symmetric, the upward and downward provision are equal
+(«``eEleSymmFreqNorConv``»):
+
+.. math::
+   \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\genindex} = \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgennofcrn_{\genindex}=0
+
+The combined FCR-D and FCR-N provision is limited by the consumption headroom: upward
+provision by how much the unit is consuming above its committed minimum (the second
+block), downward provision by how much further the consumption can rise
+(«``eEleFreqUpChargeHeadroomConv``», «``eEleFreqDownChargeHeadroomConv``»):
+
+.. math::
+   \velefcrdupcha_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\genindex} \le
+   \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+.. math::
+   \velefcrddwcha_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\genindex} \le
+   \phydmaxcharge_{\periodindex,\scenarioindex,\timeindex,\genindex} - \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+and, as a fraction of the charge capacity, by the time-varying availability
+(«``eEleFreqUpChargeBoundConv``», «``eEleFreqDownChargeBoundConv``»):
+
+.. math::
+   \frac{\velefcrdupcha_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velefcrnupcha_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxcharge_{\periodindex,\scenarioindex,\timeindex,\genindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+.. math::
+   \frac{\velefcrddwcha_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velefcrndowncha_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydmaxcharge_{\periodindex,\scenarioindex,\timeindex,\genindex}} \le \pvarfixedavailability_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+Sustaining a downward bid raises the electrolyser's consumption, and the extra
+hydrogen it produces over the endurance window has to go somewhere: it must fit in the
+free headroom of the hydrogen storage units at the same bus. The electrolyser
+(provider) and the storage (absorber) are different units coupled through the hydrogen
+bus balance, so the endurance constraint is written per bus, summing the eligible
+electrolysers' bids of the previous time step -- converted to hydrogen through the
+production function -- against the total free storage headroom at that bus
+(«``eEleFreqDownEnduranceConv``»). A bus with no hydrogen storage has zero headroom,
+which correctly forbids downward provision there. Upward provision cuts consumption
+and needs no storage backing, so only the downward direction is constrained. The
+endurance requirements :math:`\phydgenendurancefcrd` and :math:`\phydgenendurancefcrn`
+are given in minutes:
+
+.. math::
+   \sum_{\genindex \in \nGHE, (\busindex,\genindex) \in \nBH}
+   \frac{1}{\phydprodfunction_{\genindex}} \left(
+   \frac{\phydgenendurancefcrd_{\genindex}}{60} \velefcrddwbid_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} +
+   \frac{\phydgenendurancefcrn_{\genindex}}{60} \velefcrnbid_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} \right)
+   \le
+   \sum_{\storageindex \in \nHGS, (\busindex,\storageindex) \in \nBH}
+   \left( \phydmaxstorage_{\periodindex,\scenarioindex,\timeindex,\storageindex} - \vhydinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} \right)
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
+
+The eligible electrolysers' bids also enter the FCR requirement caps above and earn
+the same FCR-D and FCR-N revenues as the other providers (see the
+:doc:`objective function <objective-function>`).
 
 Peak Power Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -411,8 +504,21 @@ Energy conversion between electricity and hydrogen is modeled by the following c
 From hydrogen to electricity («``eAllEnergy2Ele``»):
 :math:`\veleproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \phydtoelefunction_{\genindex} \vhydconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGEH`
 
-From electricity to hydrogen («``eAllEnergy2Hyd``»):
-:math:`\vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} = \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydprodfunction_{\genindex}} \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex|\genindex \in \nGHE`
+From electricity to hydrogen («``eAllEnergy2Hyd``»). Only the productive consumption
+makes hydrogen: the standby draw (:math:`\phydgenstandbypower` while the unit is in
+the standby state, see the three-state electrolyser model below) is subtracted before
+converting the electricity input to hydrogen output:
+
+.. math::
+   \vhydproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} =
+   \frac{\veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} -
+   \phydgenstandbypower_{\genindex} \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+   {\phydprodfunction_{\genindex}}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+For a unit without standby capability the standby state is fixed to zero and the
+equation reduces to the plain conversion
+:math:`\vhydproduction = \veleconsumption / \phydprodfunction`.
 
 3. Asset Operational Constraints
 --------------------------------
@@ -467,6 +573,23 @@ The total charge of an electricity storage system is defined by («``eEleTotalCh
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
    \end{aligned}
 
+For an electrolyser, the same constraint decomposes the electricity consumption into
+the committed minimum load, the second block above it, and the standby draw
+(«``eEleTotalCharge``», electrolyser branch):
+
+.. math::
+   \frac{\veletotalcharge_{\periodindex,\scenarioindex,\timeindex,\genindex}}{\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}} =
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+   \frac{\velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+   \phydgenstandbypower_{\genindex} \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+   {\phydminconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+When the minimum charge is zero the committed term drops and the consumption is simply
+the second block plus the standby draw. So an electrolyser that is ON consumes between
+its minimum and maximum charge, one in STANDBY consumes exactly
+:math:`\phydgenstandbypower`, and one that is OFF consumes nothing.
+
 The total charge of a hydrogen unit is defined by («``eHydTotalCharge``»):
 
 .. math::
@@ -482,6 +605,65 @@ The maximum and minimum charge of the second block for an electrolyzer is constr
    \geq \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \geq \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \cdot \phydminchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+Electrolyser three-state operation (on / standby / off)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+An electrolyser is modeled as a pure load: its hydrogen output follows from its
+electricity consumption through the conversion identity («``eAllEnergy2Hyd``»), so the
+dispatchable-generator constraints (output blocks, output ramps, minimum up/down
+times, the start-up/shut-down balance) do not apply to it, and its shut-down binary is
+fixed to zero.
+
+A unit with standby capability (hydrogen-generation column ``StandByStatus``,
+:math:`\phydgenstandbystatus_{\genindex} = 1`) operates in three states, following the
+on/off/standby scheduling of Qiu et al. (2022) [#qiu2022]_:
+
+* **ON** (:math:`\vhydcommitbin = 1`): consumes between its minimum and maximum
+  charge and produces hydrogen.
+* **STANDBY** (:math:`\vhydgenstandby = 1`): keeps the stack warm at the fixed
+  standby draw :math:`\phydgenstandbypower` and produces no hydrogen.
+* **OFF**: consumes nothing; restarting from off is a cold start.
+
+ON and STANDBY are mutually exclusive, and OFF is the remainder
+(«``eHydElectrolyserStandBy``»):
+
+.. math::
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} +
+   \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex} \le 1
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE, \phydgenstandbystatus_{\genindex}=1
+
+Only a cold start (OFF :math:`\rightarrow` ON) incurs the start-up cost; a warm start
+from STANDBY is free, since the stack is already warm. This is what makes standby
+worth choosing through a short idle period — paying the small standby draw to dodge
+the cold-start cost («``eHydElectrolyserColdStart``»):
+
+.. math::
+   \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \ge
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} -
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} -
+   \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+At the first load level the previous commitment is the initial condition
+:math:`\phydinitialuc`. A start-up only happens when the unit ends up on, so the
+start-up binary is also bounded by the commitment, which pins it to exactly the
+off-to-on transitions («``eHydElectrolyserStartUpBound``»):
+
+.. math::
+   \vhydstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \le
+   \vhydcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nGHE
+
+Both constraints are built only for units with a start-up cost. The standby state
+interacts with the consumption decomposition («``eEleTotalCharge``», electrolyser
+branch) and the conversion identity («``eAllEnergy2Hyd``») above: standby consumption
+is real electricity demand but produces no hydrogen.
+
+.. [#qiu2022] H. Qiu, Y. Zhou, T. Zang, B. Zhou, L. Qi, and J. Lin, "Extended Load
+   Flexibility of Industrial P2H Plants: A Process Constraint-Aware Scheduling
+   Approach," *2022 IEEE 5th International Electrical and Energy Conference (CIEEC)*,
+   pp. 3344-3349, 2022. `doi:10.1109/CIEEC54735.2022.9846329
+   <https://doi.org/10.1109/CIEEC54735.2022.9846329>`_
 
 Ramping Limits
 ~~~~~~~~~~~~~~
