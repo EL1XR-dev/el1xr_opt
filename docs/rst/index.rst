@@ -58,6 +58,7 @@ Index
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
    :caption: Concepts
 
    concepts/sets
@@ -65,6 +66,7 @@ Index
    concepts/variables
    concepts/objective-function
    concepts/constraints
+   concepts/investment
    concepts/heat-sector
    concepts/community
    concepts/features-and-modes

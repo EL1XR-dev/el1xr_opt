@@ -16,12 +16,21 @@ How it works
   shared into and out of a member.
 - A per-zone pool-conservation constraint (``eEleCommunityPool``) requires that, within
   a zone, what is shared in equals what is shared out -- sharing is internal and
-  lossless, it neither creates nor destroys energy. This pool balance applies only
-  within a zone that has at least two community members; zones with fewer than two
-  members are skipped, because a single member has no one to share with.
-- The retail balance ``eEleRetNodeBalance`` gains ``+ vEleShareIn - vEleShareOut`` when
-  the layer is on, so a member can meet demand from a neighbour's surplus instead of
-  buying from the grid.
+  lossless, it neither creates nor destroys energy:
+
+  .. math::
+     \sum_{\eltraderindex \in \zoneindex} \veleshareout_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
+     = \sum_{\eltraderindex \in \zoneindex} \velesharein_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
+     \quad \forall \periodindex,\scenarioindex,\timeindex,\zoneindex
+
+  This pool balance applies only within a zone that has at least two community members;
+  zones with fewer than two members are skipped, because a single member has no one to
+  share with.
+- The retail balance ``eEleRetNodeBalance`` (see :doc:`constraints`) gains
+  :math:`+ \velesharein_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}
+  - \veleshareout_{\periodindex,\scenarioindex,\timeindex,\eltraderindex}` on its supply
+  side when the layer is on, so a member can meet demand from a neighbour's surplus
+  instead of buying from the grid.
 
 Because the sharing terms net to zero across the zone and only re-route energy that is
 already produced, the community optimum is never worse than the members acting alone,

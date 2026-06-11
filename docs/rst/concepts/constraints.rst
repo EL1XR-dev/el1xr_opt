@@ -7,12 +7,13 @@ The optimization model is governed by a series of constraints that ensure the so
    This page covers the core electricity/hydrogen constraints. The heat balance and
    conversions (``eHeatBalance``, ``eHeatPumpCOP``, ``eHeatToEle``, ``eHeatInventory``),
    the investment caps (``e*InvestMax*``, ``eTotalICost``) and the community pool
-   (``eEleCommunityPool``) are documented on the :doc:`heat-sector`,
-   :doc:`features-and-modes` and :doc:`community` pages. Note that the electricity
-   balance ``eEleBalance`` also carries the heat-pump load and heat-to-power injection
-   when a heat case is active, and the retail balance carries the community share terms.
+   (``eEleCommunityPool``) are documented, with their equations, on the
+   :doc:`heat-sector`, :doc:`investment` and :doc:`community` pages. Note that the
+   electricity balance ``eEleBalance`` also carries the heat-pump load and heat-to-power
+   injection when a heat case is active, and the retail balance carries the community
+   share terms.
 
-1. Market and Commercial Constraints
+Market and Commercial Constraints
 ------------------------------------
 These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
 
@@ -437,7 +438,7 @@ The global peak is then selected from the daily peaks («``eEleGlobalPeakValue``
 
 Finally, the number of daily peaks selected per month is constrained by («``eElePeakNumberDays``»), and the peaks are ordered from highest to lowest by («``eEleMonthPeakOrder``»).
 
-2. Energy Balance and Conversion
+Energy Balance and Conversion
 --------------------------------
 These are the most fundamental constraints, ensuring that at every node (:math:`\busindexa`) and at every timestep (:math:`\timeindex`), energy supply equals energy demand.
 
@@ -520,7 +521,39 @@ For a unit without standby capability the standby state is fixed to zero and the
 equation reduces to the plain conversion
 :math:`\vhydproduction = \veleconsumption / \phydprodfunction`.
 
-3. Asset Operational Constraints
+Green-Hydrogen Matching (RFNBO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+On with ``pParGreenH2Matching``. In each load level the electrolysers' *productive*
+draw -- the total charge minus the standby draw, which makes no hydrogen -- must be
+matched by renewable electricity allocated to them («``eGreenH2Matching``»). The
+standby auxiliary load is excluded from the matched quantity, following EU 2023/1184
+Art. 6 (it is taken to be grid-powered):
+
+.. math::
+   \sum_{\genindex \in \nGHE}
+   \left( \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   - \phydgenstandbypower_{\genindex} \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
+   \leq \sum_{\genindex \in \mathcal{G}^{PPA}} \veleresalloc_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex
+
+The matching pool :math:`\mathcal{G}^{PPA}` is the PPA-flagged renewables
+(``pEleGenPPA``), so the matching carries an additionality meaning; if no unit is
+flagged, the pool is all renewables. Each unit's allocation is capped by its actual
+output («``eGreenH2AllocCap``»):
+
+.. math::
+   \veleresalloc_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq
+   \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \mathcal{G}^{PPA}
+
+The allocation variable is the scaffold for a future Guarantee-of-Origin certificate
+balance that would also stop a renewable MWh being both sold and matched (Mansouri and
+Bruninx 2026); in the present model, where electricity sales carry no green attribute,
+the matching is equivalent to the aggregate bound. The PPA settlement itself
+(``eEleMarketPPACost``) is a cost term, documented on the
+:doc:`objective-function` page.
+
+Asset Operational Constraints
 --------------------------------
 These constraints model the physical limitations of generation and storage assets.
 
@@ -866,7 +899,7 @@ Maximum and minimum hydrogen output of the second block for a hydrogen ESS («``
    discharging-mode binary. The charge/discharge binaries appear swapped relative
    to the electricity formulation — verify this is intended.
 
-4. Energy Storage Dynamics
+Energy Storage Dynamics
 --------------------------
 These constraints specifically model the behavior of energy storage systems.
 
@@ -1164,7 +1197,7 @@ Reserve provision from an ESS is constrained by its charging and discharging sta
    \le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
-5. Network Constraints
+Network Constraints
 ----------------------
 These constraints model the physics and limits of the energy transmission and distribution networks.
 
@@ -1177,7 +1210,7 @@ For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model,
    \frac{(\vtheta_{\periodindex,\scenarioindex,\timeindex,\busindexa} - \vtheta_{\periodindex,\scenarioindex,\timeindex,\busindexb})}{\pnetreactance_{\busindexa,\busindexb,\circuitindex} \cdot \pnettc_{\busindexa,\busindexb,\circuitindex}} \cdot 0.1 = 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,(\busindexa,\busindexb,\circuitindex) \in \nELA
 
-6. Demand-Side and Reliability Constraints
+Demand-Side and Reliability Constraints
 ------------------------------------------
 *   **Ramping Limits**: Constraints such as ``eHydMaxRampUpDemand`` and ``eHydMaxRampDwDemand`` limit the rate of change in hydrogen demand, preventing abrupt fluctuations that could destabilize the system.
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
@@ -1217,7 +1250,7 @@ If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedstep
    \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex
 
-7. Electric Vehicle (EV) Modeling
+Electric Vehicle (EV) Modeling
 ---------------------------------
 Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). They are subject to standard storage dynamics but with unique constraints that reflect their dual role as both a transportation tool and a potential grid asset.
 
@@ -1257,7 +1290,7 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
     Since EV charging (``vEleTotalCharge``) increases the total load at a node, the model will naturally schedule it during hours when the combination of volumetric and potential capacity costs is lowest. This interaction between the nodal balance, the cost components, and the objective function creates an economically rational "smart charging" behavior.
 
 
-8. Bounds on Variables
+Bounds on Variables
 -----------------------
 To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
 
@@ -1349,77 +1382,4 @@ To ensure numerical stability and solver efficiency, bounds are placed on key de
 .. math::
    -\phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex} \leq  \vhydflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}  \leq \phydmaxflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex|(\busindexa,\busindexb,\circuitindex) \in \nLH
-
-Heat sector
------------
-
-Built by ``oM_HeatSector.create_heat_sector`` only when a case carries heat data; see
-:doc:`heat-sector`.
-
-.. list-table::
-   :widths: 30 70
-   :header-rows: 1
-
-   * - **Constraint**
-     - **Meaning**
-   * - ``eHeatBalance``
-     - Nodal heat balance: generation + store discharge + heat-pump output meet the
-       heat demand (minus heat-not-served).
-   * - ``eHeatPumpCOP``
-     - Heat-pump output = COP x electricity draw.
-   * - ``eHeatToEle``
-     - Heat-to-power electricity = efficiency x heat consumed.
-   * - ``eHeatInventory``
-     - Thermal-store inventory dynamics.
-
-The electricity balance ``eEleBalance`` additionally subtracts the heat-pump electricity
-load and adds the heat-to-power injection at each node.
-
-Investment / capacity sizing
-----------------------------
-
-Built by the investment layer for candidate units; see :doc:`features-and-modes`.
-
-.. list-table::
-   :widths: 30 70
-   :header-rows: 1
-
-   * - **Constraint**
-     - **Meaning**
-   * - ``eEleInvestMaxOutput`` / ``eHydInvestMaxOutput``
-     - Candidate output limited by ``MaximumPower`` x build fraction.
-   * - ``eEleInvestMaxCharge`` / ``eHydInvestMaxCharge``
-     - Candidate electricity input limited by ``MaximumCharge`` x build fraction (for
-       storage charging and for the electrolyser's electricity input).
-   * - ``eEleInvestMaxInventory`` / ``eHydInvestMaxInventory``
-     - Candidate stored energy limited by ``MaximumStorage`` x build fraction.
-   * - ``eTotalICost``
-     - Total annualised investment cost (period-weighted, ``factor1``-scaled).
-
-Energy community and green hydrogen
------------------------------------
-
-.. list-table::
-   :widths: 30 70
-   :header-rows: 1
-
-   * - **Constraint**
-     - **Meaning**
-   * - ``eEleCommunityPool``
-     - Per-zone lossless conservation of shared electricity (on with ``IndBinCommunity``);
-       the retail balance gains ``+ vEleShareIn - vEleShareOut``. See :doc:`community`.
-   * - ``eGreenH2Matching``
-     - RFNBO additionality (on with ``pParGreenH2Matching``): in each load level the
-       electrolysers' *productive* draw -- the total charge minus the standby draw, which
-       makes no hydrogen -- is matched by renewable electricity allocated to them
-       (``vEleResToE2h``, capped per unit by ``eGreenH2AllocCap``) over the PPA-flagged
-       additionality pool. The standby auxiliary load is excluded from the matched quantity,
-       following EU 2023/1184 Art. 6. The allocation variable is the scaffold for a future
-       Guarantee-of-Origin certificate balance that would also stop a renewable MWh being
-       both sold and matched (Mansouri and Bruninx 2026); in the present model, where
-       electricity sales carry no green attribute, the matching is equivalent to the
-       aggregate bound.
-   * - ``eEleMarketPPACost``
-     - Electricity PPA settlement for renewable units flagged ``pEleGenPPA``.
-
 

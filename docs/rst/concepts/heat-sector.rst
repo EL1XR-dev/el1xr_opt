@@ -40,16 +40,51 @@ draw), ``vHeatCharge`` / ``vHeatDischarge`` / ``vHeatInventory`` (thermal store)
 Constraints
 -----------
 
-- ``eHeatBalance`` -- nodal heat balance, supply == demand at each node. The supply side
-  is the sum of ``vHeatOutput`` over all heat generators ``htg`` (which already include
-  the heat pumps, so heat-pump output is not a separate term), plus the net store flow
-  ``vHeatDischarge - vHeatCharge`` over thermal stores, plus ``vHeatNotServed`` (a ``+``
-  supply slack). The demand side is the fixed ``pHeatDemand`` plus ``vHeatConsumed``, the
-  heat drawn by the heat-to-power units.
-- ``eHeatPumpCOP`` -- ``vHeatOutput = COP x vHeatPumpElec`` for heat pumps.
-- ``eHeatToEle`` -- ``vHeatToEle = efficiency x vHeatConsumed`` for heat-to-power.
-- ``eHeatInventory`` -- thermal-store inventory dynamics: the inventory equals the
-  previous step's inventory plus ``efficiency x vHeatCharge`` minus ``vHeatDischarge``.
+``eHeatBalance`` -- nodal heat balance, supply == demand at each node. The supply side
+is the sum of ``vHeatOutput`` over all heat generators ``htg`` (which already include
+the heat pumps, so heat-pump output is not a separate term), plus the net store flow
+``vHeatDischarge - vHeatCharge`` over thermal stores, plus ``vHeatNotServed`` (a ``+``
+supply slack). The demand side is the fixed ``pHeatDemand`` plus ``vHeatConsumed``, the
+heat drawn by the heat-to-power units:
+
+.. math::
+   \sum_{\genindex \in htg_{\busindex}} \vheatoutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   + \sum_{\storageindex \in hts_{\busindex}} \left( \vheatdischarge_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \vheatcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex} \right)
+   + \sum_{\demandindex \in htd_{\busindex}} \vheatnotserved_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+   = \sum_{\demandindex \in htd_{\busindex}} \pheatdemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}
+   + \sum_{\genindex \in htw_{\busindex}} \vheatconsumed_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
+
+``eHeatPumpCOP`` -- heat-pump coupling, heat out = COP x electricity in (the
+electricity draw is what couples the heat sector to the electricity balance):
+
+.. math::
+   \vheatoutput_{\periodindex,\scenarioindex,\timeindex,\genindex} =
+   \pheatpumpcop_{\genindex} \, \vheatpumpelec_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in htp
+
+``eHeatToEle`` -- heat-to-power, electricity out = efficiency x heat in:
+
+.. math::
+   \vheattoele_{\periodindex,\scenarioindex,\timeindex,\genindex} =
+   \pheattoeleeff_{\genindex} \, \vheatconsumed_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in htw
+
+``eHeatInventory`` -- thermal-store inventory dynamics. The charge and discharge are
+powers, so they are weighted by the load-level duration to accumulate energy, matching
+the electricity and hydrogen inventory balances (the heat balance above stays a power
+balance, with no duration, like ``eEleBalance``):
+
+.. math::
+   \vheatinventory_{\periodindex,\scenarioindex,\timeindex,\storageindex} =
+   \vheatinventory_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\storageindex}
+   + \ptimestepduration_{\periodindex,\scenarioindex,\timeindex}
+   \left( \pheatstoeff_{\storageindex} \, \vheatcharge_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \vheatdischarge_{\periodindex,\scenarioindex,\timeindex,\storageindex} \right)
+   \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in hts
+
+with the first load level starting from the initial inventory ``pHeatStoInitial``.
 
 A thermal store is now coupled across temporal-Benders windows by a boundary inventory
 variable (``St``, the heat analogue of ``Se`` / ``Sh``); see

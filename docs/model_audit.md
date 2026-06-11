@@ -529,6 +529,20 @@ dead logic; mutual exclusion still holds via the charge/discharge decisions.
 C46. First-step electricity ramp (:1340,1350) uses `pEleSystemOutput` — a *system*
 aggregate, and a scalar overwritten across (p,sc) so only the last scenario's value
 survives — as each unit's pre-horizon output; essentially vacuous for small units.
+C47. `pHydRetTariffType` is read by the peak-variable fixing loops but never created —
+the hydrogen retail file carries no `TariffType` column, so the first case that
+activates a hydrogen retailer crashes with `KeyError` (same family as C43). **— FIXED
+(hydrogen sizing-case redesign):** optional-column default `''` (no peak tariff) for
+both carriers, next to the C43 MaxBuy/MaxSell default; guarded in
+`tests/test_formulation_fixes.py`.
+C48. The hydrogen peak-hour indicators (`vHydPeakGlobalInd` / `vHydPeakMonthInd` /
+`vHydPeakDayInd`) were declared over the *electricity* retail sets
+(`psner`/`psder`/`psdner`, both domain branches), and the no-peak fixing block also
+iterated the electricity sets — `KeyError` as soon as the hydrogen and electricity
+retailer sets differ. **— FIXED (hydrogen sizing-case redesign):** declared and fixed
+over `psnhr`/`psdhr`/`psdnhr`; guarded in `tests/test_formulation_fixes.py`. Note these
+indicators appear in no constraint (dead variables) — the hydrogen peak-tariff cost
+layer itself is still unbuilt.
 
 ### Suggested sequencing
 
@@ -578,9 +592,20 @@ survives — as each unit's pre-horizon output; essentially vacuous for small un
    headline goldens and `ElectrolyserStandby`/`FCR` (which push the store out of the
    base year, or test build/decision not cost) are unaffected. `factor1` is 1.0 so the
    rate is applied as stored; the 0.0012 magnitude (~1.2 kWh/kgH2 if MWh/kgH2) is a
-   data-units note for the case author. The **H2Tank/Electrolyser xfail redesign** (finite tank cap + priced
-   converter-node import so the 5 kgH2/h demand is served) is the capstone, also
-   pending.
+   data-units note for the case author. **The H2Tank/Electrolyser xfail redesign is
+   DONE (branch `feature/h2-sizing-redesign`):** the hydrogen retailer moves to the
+   converter node with a buy allowance and a day/night import price (night below the
+   electrolyser's ~53/kg production cost, day above it), and the tank gets finite
+   ratings with an empty start (its 12 kg inventory floor and 15 kg initial fill do
+   not scale with the build fraction, so a candidate tank was forced to build itself).
+   Both cases now solve with the 5 kgH2/h demand fully served and make real sizing
+   decisions — the tank builds in full on night-to-day arbitrage, the electrolyser
+   builds a small fraction — so the two `xfail` marks are gone and the goldens are
+   enforced; the build decisions are asserted separately
+   (`test_h2_sizing_decisions`). Enabling the first active hydrogen retailer
+   surfaced two more latent crashes, fixed on the same branch: C47 (missing
+   `pHydRetTariffType` default) and C48 (hydrogen peak indicators declared over the
+   electricity retail sets). **Part C item 4 complete.**
 5. The rest with their subsystem.
 
 ## Status / sequencing

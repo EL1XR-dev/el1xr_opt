@@ -116,6 +116,14 @@ master_doc = 'index'
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# Automatic numbering. Section numbers come from the ``:numbered:`` option on the
+# Concepts toctree (index.rst) -- no heading carries a manual number. Equations
+# labelled with ``:label:`` get section-prefixed numbers, and figures/tables are
+# numbered too, so cross-references can use :eq:, :numref: etc.
+numfig = True
+math_numfig = True
+math_eqref_format = "Eq. {number}"
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
@@ -162,10 +170,6 @@ if not (pathlib.Path(__file__).parent / "_static").exists():
     (pathlib.Path(__file__).parent / "_static").mkdir(parents=True)
 
 html_static_path = ['_static']
-
-html_js_files = [
-    '../custom.js',
-]
 
 mathjax3_config = {
     "tex": {
@@ -645,6 +649,12 @@ mathjax3_config = {
             "peleminstorageend": r"S^{e,end}",                  # End electrical storage inventory
             "phydminstorageend": r"S^{h,end}",                  # End hydrogen storage inventory
 
+            # --- Heat Sector Parameters ---
+            "pheatdemand": r"D^{q}",                            # Heat demand
+            "pheatpumpcop": r"COP",                             # Heat-pump coefficient of performance
+            "pheattoeleeff": r"\eta^{q2e}",                     # Heat-to-power conversion efficiency
+            "pheatstoeff": r"\eta^{q,sto}",                     # Thermal-store charging efficiency
+
             # --- Frequency Containment Parameters ---
             "pfcrnrequirement": r"FCRN",                        # Frequency containment reserve
             "pfcrduprequirement": r"FCRD^{UP}",                 # Frequency containment reserve - upwards
@@ -698,6 +708,24 @@ mathjax3_config = {
             "veletotalcharge": r"c^{e,tot}",                    # Electrical total charge
             "veleconsumptionstandby": r"c^{e,standby}",         # Electrical consumption (standby)
             "veleconsumptioncompress": r"c^{e,compress}",       # Electrical consumption (compression)
+
+            # --- Heat Sector Variables ---
+            "vheatoutput": r"p^{q}",                            # Heat generation (incl. heat pumps)
+            "vheatpumpelec": r"c^{e,hp}",                       # Heat-pump electricity draw
+            "vheatcharge": r"c^{q}",                            # Thermal-store charge
+            "vheatdischarge": r"p^{q,dis}",                     # Thermal-store discharge
+            "vheatinventory": r"i^{q}",                         # Thermal-store inventory
+            "vheatnotserved": r"ls^{q}",                        # Heat not served
+            "vheatconsumed": r"c^{q,2e}",                       # Heat drawn by heat-to-power units
+            "vheattoele": r"p^{e,q2e}",                         # Heat-to-power electricity output
+
+            # --- Community and Green-Hydrogen Variables ---
+            "velesharein": r"sh^{in}",                          # Community electricity shared in
+            "veleshareout": r"sh^{out}",                        # Community electricity shared out
+            "veleresalloc": r"a^{res}",                         # Renewable allocation to electrolysers
+
+            # --- Investment Variables ---
+            "vgeninvest": r"x^{inv}",                           # Candidate build fraction [0,1]
             "vhydconsumption": r"c^{h}",                        # Hydrogen consumption
             "vhydtotalcharge": r"c^{h,tot}",                    # Hydrogen total charge
             "veleconsumptionact": r"c^{a,e}",                   # Electrical activated consumption

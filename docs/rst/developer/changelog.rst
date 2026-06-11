@@ -11,7 +11,8 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 Unreleased
 ----------
 
-### Fixed
+Fixed
+~~~~~
 
 - Formulation bugs found in the model audit (``tests/test_formulation_fixes.py`` guards each):
 
@@ -45,9 +46,14 @@ Unreleased
   - **Compressor consumption was dead data.** ``MaxCompressorConsumption`` (the electricity needed to compress hydrogen into a store, per unit charged) was read and unit-factored but referenced by no variable, constraint or cost, so charging a hydrogen store drew no electricity -- a first-order term in any behind-the-meter hydrogen case. Charging a store now draws ``MaxCompressorConsumption * charge`` electricity as a load on the store's node (``eEleBalance``), and the node's balance is built where a store with a compressor sits even if it has no other electricity asset. The rate defaults to zero for a store without the column (or with a blank value), so a case without compression builds an identical balance. The four headline validation cases keep the hydrogen units out of the base year, so their goldens are unchanged; only the hydrogen sizing cases (``H2Tank`` / ``Electrolyser``, already ``xfail``) carry a compressor-bearing store in the base year. The rate is applied in the data's own units (``factor1`` is 1.0 by default, so no conversion); the shipped value (0.0012) reads as about 1.2 kWh/kgH2 if taken as MWh/kgH2, which is in the usual compression range, but the absolute units are the case author's to confirm.
 
 - **Energy-not-served / hydrogen-not-served cost double-weighted by duration.** ``eTotalEleRCost`` / ``eTotalHydRCost`` multiplied the unserved-energy penalty by ``pDuration`` internally, then the term was aggregated again with the ``psn`` duration weight (its O&M siblings carry no internal duration), so unserved energy was priced at ``pDuration**2``. The internal duration is removed; the objective aggregation supplies the single weight. The validation cases serve all load (ENS = HNS = 0 at the optimum), so the goldens are unchanged; the fix only changes load-shed cases.
+- **Hydrogen retail peak-tariff type had no missing-column default.** The peak-variable fixing loops read ``pHydRetTariffType``, but the hydrogen retail file carries no ``TariffType`` column, so the first case that activates a hydrogen retailer crashed with ``KeyError`` (the same optional-column family as the MaxBuy/MaxSell fix above). ``TariffType`` now defaults to ``''`` -- no peak tariff, so every peak variable of that retailer is fixed to zero -- for both carriers. Guarded in ``tests/test_formulation_fixes.py``.
+- **Hydrogen peak indicators declared over the electricity retail sets.** ``vHydPeakGlobalInd`` / ``vHydPeakMonthInd`` / ``vHydPeakDayInd`` were declared over ``psner`` / ``psder`` / ``psdner`` (the *electricity* retailer sets) in both domain branches, and the no-peak fixing block iterated those sets too, so the hydrogen fixing loops raised ``KeyError`` as soon as the hydrogen and electricity retailer sets differed. They are now declared and fixed over ``psnhr`` / ``psdhr`` / ``psdnhr``. These indicators appear in no constraint yet (the hydrogen peak-tariff cost layer is unbuilt), so the change is structural only and the goldens are unchanged. Guarded in ``tests/test_formulation_fixes.py``.
+- **Hydrogen sizing cases redesigned; their ``xfail`` marks removed.** The ``H2Tank`` / ``Electrolyser`` cases asked a ~0.9 kgH2/h electrolyser to serve 5 kgH2/h with no other source, so they were infeasible and ``xfail`` (this supersedes the "stay xfail for now" notes in the bullets above). ``make_sizing_cases.py`` now (1) moves the hydrogen retailer to the converter node with a buy allowance, so hydrogen can be imported there at a price -- cheap at night (40 per kg), expensive in the day (80 per kg), with the electrolyser's own cost (about 53 per kg) in between; (2) gives the tank finite ratings (10 kgH2/h, the base data has 900+) and an empty start with no minimum-inventory floor, because the floor and the initial fill do not scale with the build fraction, which forced a candidate tank to build itself; (3) turns green-hydrogen matching off in these two cases (the base case's ~0.2 kW rooftop solar cannot supply an electrolyser drawing kilowatts). Both cases now serve the demand in full and make real sizing decisions -- the tank builds fully on night-to-day arbitrage, the electrolyser builds a small fraction for the hours where producing beats importing -- and their goldens are enforced. The build decisions are asserted separately (``test_h2_sizing_decisions``), since the investment-cost share of the total cost is below the golden tolerance.
 
-### Changed
+Changed
+~~~~~~~
 
+- Documentation reorganised for consistent numbering and equation placement. Section numbers now come from Sphinx (``:numbered:`` on the Concepts toctree, with ``numfig`` / ``math_numfig`` so labelled equations get section-prefixed numbers); the manual "1., 2., ..." numbers in the constraints page are removed. Each layer's equations now live on its own page: a new :doc:`/concepts/investment` page carries the build-fraction variable and the investment capacity caps, the heat-sector and community pages carry their balance/coupling equations, and the green-hydrogen matching equations join the energy-conversion section of the constraints page -- replacing the summary tables that duplicated those pages at the bottom of the constraints page. The changelog's literal ``###`` lines are proper subsection headings now. ``conf.py`` gains the heat, community, green-hydrogen and investment math macros, and drops a reference to a ``custom.js`` file that does not exist.
 - Storage unit labels in docstrings made consistent with the data and the variables, for both carriers. Labels only -- no change to the model or the goldens.
 
   - **Electricity** quantities are power ``kW`` and energy ``kWh`` (e.g. a 5 kW / 10 kWh home battery). ``vEleEnergyInflows`` / ``vEleEnergyOutflows`` were labelled ``[kWh]`` though they are rates summed with the ``[kW]`` flows in the inventory balance (now ``[kW]``); the inventory / outflow / output / charge constraint docstrings used ``[GWh]`` / ``[GW]`` while the variables and data are ``kWh`` / ``kW`` (now ``[kWh]`` / ``[kW]``).
@@ -56,7 +62,8 @@ Unreleased
 - Per-block scenario subsetting in the Benders block build. Each block solves a single-scenario subproblem, but ``_build_block`` used to keep every scenario in the scenario dimension dict, so ``data_processing`` built every parameter over the full N-scenario set product -- for each of the N blocks, roughly quadratic in the scenario count. It now produces a genuine single-scenario case (the kept scenario is the only one in the dict, and the other scenarios' rows are dropped from the data files; the scenario column is detected by content, not position, so node-indexed files such as the networks are left untouched). The kept scenario's data, including its unnormalised probability, is unchanged, so the subproblem and the optimum are identical. End-to-end sequential Benders is about 2.4x faster at 8 scenarios, 3.7x at 16 and 5.1x at 24 (same optimum throughout); the new build scales about linearly with the blocks where the old one grew quadratically, so the gain widens with the scenario count, and it stacks with the process-parallel solve. See ``docs/decomposition.md``.
 - ``el1xr_benders`` now reads the problem structure (candidate sets, costs, the block list) with a new lightweight ``oM_Sequence.build_structure`` (``data_processing`` only, no variables/constraints/objective) instead of a full operating-model build it would throw away. Correctness is unchanged. The end-to-end saving is small, which is itself the useful finding: the build cost is dominated by ``data_processing`` (reading the multi-scenario data), not by model construction (about 2.9 s vs 3.3 s for the full build at eight scenarios). The real remaining floor is that each block build re-reads the whole multi-scenario dataset to build a single-scenario subproblem; subsetting each block to its own scenario's data is the next optimization (see ``docs/decomposition.md``).
 
-### Added
+Added
+~~~~~
 
 - Electrolyser FCR provision. An electrolyser is a controllable load, so it can sell frequency reserves by modulating its consumption: upward reserve (FCR-D up, and the upward leg of the symmetric FCR-N) by reducing it, downward reserve by increasing it. The formulation is the charge-side mirror of the storage one -- bid-equals-provision links, FCR-N symmetry, headroom against the second block and the maximum charge, and availability bounds -- plus one genuinely new piece: a bus-level endurance constraint for the downward direction. Sustaining a downward bid makes extra hydrogen, so the bids of the electrolysers at a bus (converted to hydrogen through the production function) must fit in the free headroom of the hydrogen storage units at that bus; a bus with no storage gets no downward provision, and upward provision needs no storage at all. Participation is opt-in per unit via the new hydrogen-generation columns ``NoFCRD`` / ``NoFCRN`` (with ``EnduranceFCRD`` / ``EnduranceFCRN`` in minutes); the columns default to "not participating", so existing cases and the goldens are unchanged. On the generated ``ElectrolyserFCR`` sizing case the objective drops by exactly the FCR revenue the electrolyser earns versus the same case with FCR off.
 - Electrolyser three-state operation (on / standby / off) with cold starts, after Qiu et al. (2022, IEEE CIEEC). A unit with ``StandByStatus = 1`` can sit in a standby state that draws a small fixed power (``StandByPower``) to keep the stack warm and makes no hydrogen -- the conversion identity subtracts the standby draw before turning electricity into hydrogen. Turning on from off pays the start-up cost; turning on from standby is free, which is what makes standby worth paying for through a short idle period. The state logic is three constraints: on and standby are mutually exclusive (off is the remainder), a cold-start lower bound on the start-up binary, and a start-up-implies-on upper bound that pins the start-up to exactly the off-to-on transitions (this also gave the previously dangling electrolyser shut-down binary a definition: it is fixed to zero, since an electrolyser has no shut-down transition in this model). Standby is off by default, so the goldens are unchanged. A new ``ElectrolyserStandby`` sizing case demonstrates the choice on a demand burst with an idle hour in the middle: the optimum holds the unit in standby through the gap instead of paying a second cold start, and ``test_electrolyser_standby_selected`` guards it.
@@ -92,12 +99,14 @@ Unreleased
 - Architecture diagram (``docs/img/el1xr_opt_architecture.svg``) and a new Architecture section in the README, plus a note on computational efficiency in ``docs/computational_efficiency.md``.
 - Small variant validation cases generated from the H2VPP base by ``data/sizing/make_sizing_cases.py``: home and neighbourhood battery sizing, a power-tariff on/off pair, and frequency-market variants (FCR-D only, FCR-N only, both, none). They are short LP cases (reproducible cost), read as ``.duckdb`` input, and rebuilt by the test fixture rather than committed, so only the generator and its README are tracked. Two hydrogen cases (H2 tank, electrolyser) are included as feasibility cases; they do not yet size anything because the base case does not link the electrolyser as an electricity-to-hydrogen converter. See ``data/sizing/README.md``.
 
-### Changed
+Changed
+~~~~~~~
 
 - Continuous integration reworked into two tiers (``.github/workflows/ci.yml``), replacing the single ``conda-build.yml`` job. A fast tier lints and runs the no-solve tests on Linux, macOS and Windows for Python 3.11, 3.12 and 3.13; a solve tier runs the validation cases on the three operating systems for Python 3.12. Validation now covers four cases (Home1, Grid1, EEM26, H2VPP), each solved from both its CSV folder and its ``.duckdb`` file and checked against a golden cost.
 - CI validation cases are solved over one week of operation (168 load levels) instead of a month. One week is enough to exercise the model in tests, and it cuts the full test-suite run from about six minutes to two. Full-year "proper" runs are meant for a larger machine, not CI.
 
-### Fixed
+Fixed
+~~~~~
 
 - Multi-period / multi-scenario models could not be built at all: the initial-output and initial-commitment parameters (``pEleInitialOutput`` / ``pEleInitialUC`` and the hydrogen analogues in ``oM_InputData``) were sized by the number of units instead of (period x scenario x units), which only matched for a single (period, scenario). They are now sized correctly, so cases with more than one period or scenario build. Single-(period, scenario) cases are unaffected (the four validation cases keep their exact costs). This is what unblocks the Benders decomposition over (period, scenario) blocks. Regression: ``tests/test_benders_el1xr.py``.
 - Corrected the ``model.psnesc`` index set in ``oM_InputData.py`` (it used ``model.psc`` instead of ``model.psn``, so it produced 3-tuples that could not be unpacked). The set is built only when investment candidates exist, so the error surfaced the first time a case included a candidate unit.
@@ -110,7 +119,8 @@ Unreleased
 [1.0.13] - 2025-11-13
 ---------------------
 
-### Added
+Added
+~~~~~
 - `.gitignore` file to exclude Sphinx build artifacts.
 - Detailed documentation on Pyomo model and CSV file naming conventions.
 - Reusable helper functions in `oM_OutputData.py` for CSV export and plotting operations:
@@ -120,7 +130,8 @@ Unreleased
   - `create_and_save_duration_curve()` helper function for duration curves.
   - CSV writing functions: `_write_variable_to_csv()`, `_write_parameter_to_csv()`, `_write_constraint_to_csv()`.
 
-### Changed
+Changed
+~~~~~~~
 - Enhanced the developer `contributing.rst` guide with detailed setup and workflow instructions.
 - Expanded the `coding-style.rst` guide with examples for formatting, docstrings, and type hints.
 - Improved the `testing.rst` guide with clearer instructions and information on the CI pipeline.
@@ -130,7 +141,8 @@ Unreleased
   - Replaced repetitive code blocks with reusable function calls.
   - Maintained backward compatibility with existing output files.
 
-### Fixed
+Fixed
+~~~~~
 - Fixed dangerous default mutable argument in `save_chart()` function by changing default from `{}` to `None`.
 
 [1.0.9] - 2024-09-15

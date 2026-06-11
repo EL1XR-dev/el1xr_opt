@@ -635,31 +635,44 @@ def test_hydrogen_charge_upper_bound_is_applied(h2_model):
 
 def test_hydrogen_import_export_closed_without_priced_retailer(h2_model):
     """C7: hydrogen import/export carry no cost and are linked to a buy/sell only by the
-    retail composition constraints (gated by pHydRetMaxBuy/Sell > 0). With no active priced
-    hydrogen retailer -- the shipped single-node case -- vHydImport/Export must be fixed to
-    zero, not left a free unpriced H2 source/sink."""
+    retail composition constraints (gated by pHydRetMaxBuy/Sell > 0). vHydImport/Export
+    must be fixed to zero at every node with no active priced hydrogen retailer, and left
+    free only where the composition constraint prices them (H2Tank has its retailer at
+    Node2, so Node2 imports are priced and every other node stays closed)."""
     m = h2_model
+    buy_nodes = {m.Par['pHydRetNode'][hr] for hr in m.hr if m.Par['pHydRetMaxBuy'][hr] > 0}
+    sell_nodes = {m.Par['pHydRetNode'][hr] for hr in m.hr if m.Par['pHydRetMaxSell'][hr] > 0}
+    assert buy_nodes, "test case has no priced hydrogen retailer (redesigned H2Tank should)"
     assert len(m.vHydImport) > 0, "no hydrogen import variable to check"
+    checked_closed = False
     for idx in m.vHydImport:
-        assert m.vHydImport[idx].fixed and float(m.vHydImport[idx].value or 0.0) == 0.0, \
-            f"vHydImport{idx} must be fixed to zero with no priced hydrogen retailer (C7)"
+        if idx[-1] in buy_nodes:
+            assert not m.vHydImport[idx].fixed, \
+                f"vHydImport{idx} must stay free at a priced retailer node"
+        else:
+            assert m.vHydImport[idx].fixed and float(m.vHydImport[idx].value or 0.0) == 0.0, \
+                f"vHydImport{idx} must be fixed to zero with no priced hydrogen retailer (C7)"
+            checked_closed = True
+    assert checked_closed, "no unpriced node was found to check the import is closed"
     for idx in m.vHydExport:
-        assert m.vHydExport[idx].fixed and float(m.vHydExport[idx].value or 0.0) == 0.0, \
-            f"vHydExport{idx} must be fixed to zero with no priced hydrogen retailer (C7)"
+        if idx[-1] not in sell_nodes:
+            assert m.vHydExport[idx].fixed and float(m.vHydExport[idx].value or 0.0) == 0.0, \
+                f"vHydExport{idx} must be fixed to zero with no priced hydrogen retailer (C7)"
 
 
 def test_retail_max_buy_sell_have_missing_column_default():
-    """C43: the per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
-    retail file omits them, ``pRetMaxBuy/Sell`` must be defaulted to 0.0 ("no cap"),
-    otherwise activating a retailer on the column-less file raises ``KeyError`` in
-    ``eRetMaxBuy/Sell``. Checked by dropping the columns from a copied file and rebuilding."""
+    """C43: the per-step buy/sell caps (MaxBuy/MaxSell) and the peak-tariff type
+    (TariffType) are optional retail columns. When a retail file omits them,
+    ``pRetMaxBuy/Sell`` must default to 0.0 ("no cap") and ``pRetTariffType`` to ''
+    ("no peak tariff"), otherwise activating a retailer on the column-less file raises
+    ``KeyError``. Checked by dropping the columns from a copied file and rebuilding."""
     work = tempfile.mkdtemp(prefix="retailcap_")
     dst = os.path.join(work, "Home1")
     shutil.copytree(os.path.join(REPO, "data", "H2VPP", "Home1"), dst)
     for sector in ("Hydrogen", "Electricity"):
         rpath = os.path.join(dst, f"oM_Data_{sector}Retail_Home1.csv")
         rt = pd.read_csv(rpath)
-        drop = [c for c in rt.columns if c in ("MaxBuy", "MaxSell")]
+        drop = [c for c in rt.columns if c in ("MaxBuy", "MaxSell", "TariffType")]
         if drop:
             rt.drop(columns=drop).to_csv(rpath, index=False)
     # truncate to a few load levels for a quick build
@@ -674,6 +687,10 @@ def test_retail_max_buy_sell_have_missing_column_default():
         assert key in m.Par, f"{key} missing -- no schema default for the optional column (C43)"
         assert (m.Par[key] == 0.0).all(), \
             f"{key} must default to 0.0 when the MaxBuy/MaxSell column is absent"
+    for key in ("pHydRetTariffType", "pEleRetTariffType"):
+        assert key in m.Par, f"{key} missing -- no default for the optional TariffType column"
+        assert (m.Par[key] == "").all(), \
+            f"{key} must default to '' (no peak tariff) when the TariffType column is absent"
 
 
 def test_balance_guards_include_demand():
@@ -739,3 +756,28 @@ def test_compressor_draws_electricity_on_store_charging(h2_model):
             found = True
             break
     assert found, "no active electricity balance at the store's node"
+
+
+# --- Hydrogen-retailer activation bugs (found enabling the H2Tank/Electrolyser cases) ---
+# The first case with an active hydrogen retailer (MaximumEnergyBuy > 0) hit two
+# latent crashes: pHydRetTariffType was never created (the hydrogen retail file has
+# no TariffType column -- covered by the optional-column default test above), and the
+# hydrogen peak-indicator variables were declared over the *electricity* retail sets
+# (psner/psder/psdner), so the hydrogen fixing loops raised KeyError the moment the
+# hydrogen and electricity retailer sets differed.
+
+
+def test_hydrogen_peak_indicators_on_hydrogen_sets(h2_model):
+    """The hydrogen peak-hour indicators must be indexed by the hydrogen retailers
+    (psnhr/psdhr/psdnhr), not the electricity ones. On H2Tank the two retailer sets
+    differ (EleR_01 vs HydR_01), so a wrong-set declaration cannot hide."""
+    m = h2_model
+    hr = set(m.hr)
+    er = set(m.er)
+    assert hr and hr != er, "fixture must have distinct electricity/hydrogen retailers"
+    for vname in ("vHydPeakGlobalInd", "vHydPeakMonthInd", "vHydPeakDayInd"):
+        var = getattr(m, vname)
+        rets = {idx[-1] if vname == "vHydPeakDayInd" else idx[-2] for idx in var}
+        assert rets <= hr, \
+            f"{vname} is indexed by {sorted(rets - hr)} -- not hydrogen retailers"
+        assert not (rets & (er - hr)), f"{vname} carries electricity retailers"
