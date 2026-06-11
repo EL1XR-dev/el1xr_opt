@@ -560,7 +560,27 @@ survives — as each unit's pre-horizon output; essentially vacuous for small un
    pending the Elsevier reference. Matching-on cases are xfail/build-only, so goldens
    unchanged. **Part C item 3 complete.**
 4. **Hydrogen-case enablement (with the H2Tank/Electrolyser xfail redesign):** C7,
-   C19, C23, C26, C41, C43.
+   C19, C23, C26, C41, C43. **— C7/C19/C23/C41/C43 DONE (branch
+   `feature/hydrogen-case-enablement`):** hydrogen charge cap actually applied
+   (`idx[-1]` membership test); free unpriced `vHydImport`/`vHydExport` closed wherever
+   no priced hydrogen retailer composes them (single-node included); demand counted in
+   the `eEleBalance`/`eHydBalance` build guards so a demand-only node is not dropped;
+   `pHydRetMaxBuy/Sell` get a missing-column default (0.0 = no cap) for both carriers;
+   `eHydNotServedCap` caps `vHNS <= vHydDemand` for flexible hydrogen demand (no
+   paid sink). All latent in the shipped non-hydrogen cases, so the goldens are
+   unchanged; guarded in `tests/test_formulation_fixes.py`. **C26 DONE (branch
+   `feature/compressor-consumption`, stacked on the above):** charging a hydrogen store
+   now draws `MaxCompressorConsumption * charge` electricity as a load on the store's
+   node (`eEleBalance`), and the balance is built where a compressor-bearing store sits
+   even with no other electricity asset. The rate sits on `PEMEL_01` (a
+   `StorageType=Hourly` store), which is in the base year only for the hydrogen sizing
+   cases `H2Tank`/`Electrolyser` (both `xfail`), so no enforced golden moves; the four
+   headline goldens and `ElectrolyserStandby`/`FCR` (which push the store out of the
+   base year, or test build/decision not cost) are unaffected. `factor1` is 1.0 so the
+   rate is applied as stored; the 0.0012 magnitude (~1.2 kWh/kgH2 if MWh/kgH2) is a
+   data-units note for the case author. The **H2Tank/Electrolyser xfail redesign** (finite tank cap + priced
+   converter-node import so the 5 kgH2/h demand is served) is the capstone, also
+   pending.
 5. The rest with their subsystem.
 
 ## Status / sequencing
