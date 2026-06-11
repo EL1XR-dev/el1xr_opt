@@ -296,6 +296,16 @@ def create_constraints(model, optmodel, indlog):
     for nd,hgs in model.nd*model.hgs:
         if (nd,hgs) in model.n2hg:
             hgs2n[nd].append(hgs)
+    # Demand-to-node maps: a node that carries only demand (no unit or line) must
+    # still get a balance, otherwise its demand is silently dropped at zero cost.
+    ed2n = defaultdict(list)
+    for nd,ed in model.nd*model.ed:
+        if (nd,ed) in model.n2ed:
+            ed2n[nd].append(ed)
+    hd2n = defaultdict(list)
+    for nd,hd in model.nd*model.hd:
+        if (nd,hd) in model.n2hd:
+            hd2n[nd].append(hd)
 
     #%% Constraints
     # Energy-community sharing terms enter the retail balance like buy/sell but
@@ -397,6 +407,19 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleDemandShiftBalance', Constraint(optmodel.psned, rule=eEleDemandShiftBalance, doc='Electricity demand shift balance'))
 
+    # Hydrogen not served cannot exceed the hydrogen demand actually scheduled.
+    # Flexible hydrogen demand is a curtailable range [min, max] (the hydrogen demand
+    # file carries no shift parameter, so there is no electricity-style recovery
+    # balance); without this cap vHydDemand - vHNS can go negative and the demand node
+    # becomes a paid hydrogen sink. For fixed demand vHydDemand == max, so the cap is
+    # implied by the vHNS <= max bound and adds nothing.
+    def eHydNotServedCap(optmodel, p,sc,n,hd):
+        if model.Par['pHydDemFlexible'][hd] == 1.0:
+            return optmodel.vHNS[p,sc,n,hd] <= optmodel.vHydDemand[p,sc,n,hd]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydNotServedCap', Constraint(optmodel.psnhd, rule=eHydNotServedCap, doc='Hydrogen not served capped by scheduled demand [kgH2]'))
+
     # electricity demand after shifting
     def eEleDemandShifted(optmodel, p,sc,n,ed):
         if model.Par['pEleDemFlexible'][ed] == 1.0 and model.Par['pEleDemShiftedSteps'][ed]:
@@ -421,12 +444,23 @@ def create_constraints(model, optmodel, indlog):
     _htw_at = defaultdict(list)
     for (_nd, _w) in getattr(model, "n2htw", []):
         _htw_at[_nd].append(_w)
+    # Compressor coupling at the node: charging a hydrogen store draws electricity to
+    # compress the gas (MaxCompressorConsumption, electricity per unit of hydrogen
+    # charged). The draw is a load on the store's electricity node. Stores without the
+    # column have a zero rate and are skipped, so a case without compression builds an
+    # identical balance.
+    _comp_at = defaultdict(list)
+    for nd in model.nd:
+        for hgs in hgs2n[nd]:
+            if model.Par['pHydGenMaxCompressorConsumption'][hgs] > 0:
+                _comp_at[nd].append(hgs)
 
     def eEleBalance(optmodel, p,sc,n,nd):
-        if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
+        if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]) + sum(1 for ed in ed2n[nd]) + sum(1 for hgs in _comp_at[nd]):
             return (sum(optmodel.vEleTotalOutput[p,sc,n,eg] for eg in model.eg  if (nd,eg) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (nd,egs) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (nd,e2h) in model.n2hg)
                   - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + optmodel.vEleImport[p,sc,n,nd] - optmodel.vEleExport[p,sc,n,nd]
                   + heat_to_power_output(optmodel, _htw_at[nd], p, sc, n) - heat_electricity_load(optmodel, _htp_at[nd], p, sc, n)
+                  - sum(model.Par['pHydGenMaxCompressorConsumption'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in _comp_at[nd])
                   == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
         else:
             return Constraint.Skip
@@ -434,7 +468,7 @@ def create_constraints(model, optmodel, indlog):
 
     # hydrogen energy conservation or balance
     def eHydBalance(optmodel, p,sc,n,nd):
-        if sum(1 for hg in hg2n[nd]) + sum(1 for hgs in hgs2n[nd]) + sum(1 for nf, cc in hout[nd]) + sum(1 for ni, cc in hin[nd]):
+        if sum(1 for hg in hg2n[nd]) + sum(1 for hgs in hgs2n[nd]) + sum(1 for nf, cc in hout[nd]) + sum(1 for ni, cc in hin[nd]) + sum(1 for hd in hd2n[nd]):
             return (sum(optmodel.vHydTotalOutput[p,sc,n,hg] for hg in model.hg if (nd,hg) in model.n2hg) - sum(optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs if (nd,hgs) in model.n2hg) - sum(optmodel.vHydTotalCharge[p,sc,n,h2e] for h2e in model.h2e if (nd,h2e) in model.n2eg)
                   - sum(optmodel.vHydNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in hout[nd]) + sum(optmodel.vHydNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in hin[nd]) + optmodel.vHydImport[p,sc,n,nd] - optmodel.vHydExport[p,sc,n,nd] == sum(optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd))
         else:

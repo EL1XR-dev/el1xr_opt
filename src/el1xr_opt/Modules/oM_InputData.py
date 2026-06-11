@@ -195,6 +195,17 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     _update_parameters(data_frames, parameters_dict, factor1, HydDemand_ind, idx_dem_factoring, 'dfHydrogenDemand', 'pHydDem')
     _update_parameters(data_frames, parameters_dict, factor1, HydRetail_ind, idx_retail_factoring, 'dfHydrogenRetail', 'pHydRet')
 
+    # Per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
+    # retail file omits them, default the cap to 0.0, read as "no cap" by the
+    # eRetMaxBuy/Sell constraints (they skip a zero cap). The hydrogen retail file
+    # has no MaxBuy/MaxSell columns, so activating a hydrogen retailer would
+    # otherwise KeyError here; the electricity file already carries them.
+    for sector, df_key in [('Ele', 'dfElectricityRetail'), ('Hyd', 'dfHydrogenRetail')]:
+        for cap in ['MaxBuy', 'MaxSell']:
+            key = f'p{sector}Ret{cap}'
+            if key not in parameters_dict:
+                parameters_dict[key] = pd.Series(0.0, index=data_frames[df_key].index)
+
     for sector in ['Ele', 'Hyd']:
         parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost']  # linear fuel cost; O&M is added once in the objective (eTotal{Ele,Hyd}GCost)  [MEUR/GWh]
         parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * model.factor2 * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                        # constant term variable cost             [MEUR/h]
@@ -283,6 +294,14 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict['pHydGenStandByStatus'] = pd.Series(0, index=parameters_dict['pHydGenProductionFunction'].index, dtype='int')
     if 'pHydGenStandByPower' not in parameters_dict:
         parameters_dict['pHydGenStandByPower'] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
+    # Compressor consumption: electricity drawn to compress hydrogen into a store, per
+    # unit of hydrogen charged. When the hydrogen-generation data omits the column, or
+    # leaves it blank for a unit, the draw defaults to 0, so units and cases without it
+    # build unchanged.
+    if 'pHydGenMaxCompressorConsumption' in parameters_dict:
+        parameters_dict['pHydGenMaxCompressorConsumption'] = parameters_dict['pHydGenMaxCompressorConsumption'].fillna(0.0)
+    else:
+        parameters_dict['pHydGenMaxCompressorConsumption'] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
     # Electrolyser (e2h) FCR participation flags and endurance. When the hydrogen-
     # generation data omits these columns the flags default to 1 ("not participating")
     # and the endurance to 0, so existing cases are unaffected. An electrolyser only
@@ -1257,10 +1276,10 @@ def create_variables(model, optmodel, indlog):
     for idx in model.psnhe:
         optmodel.vHydTotalCharge[idx].setlb(0.0)
         optmodel.vHydTotalCharge2ndBlock[idx].setlb(0.0)
-        if idx in model.hg:
+        if idx[-1] in model.hg:
             optmodel.vHydTotalCharge[idx].setub(model.Par['pHydMaxCharge'][idx[-1]][idx[:3]])
             optmodel.vHydTotalCharge2ndBlock[idx].setub(model.Par['pHydMaxCharge2ndBlock'][idx[-1]][idx[:3]])
-        elif idx in model.eg:
+        elif idx[-1] in model.eg:
             optmodel.vHydTotalCharge[idx].setub(model.Par['pEleMaxCharge'][idx[-1]][idx[:3]])
             optmodel.vHydTotalCharge2ndBlock[idx].setub(model.Par['pEleMaxCharge2ndBlock'][idx[-1]][idx[:3]])
 
@@ -1627,17 +1646,31 @@ def create_variables(model, optmodel, indlog):
             optmodel.__getattribute__('vEleNetTheta')[p,sc,n,model.endrf.first()].fix(0.0)
             nFixedVariables += 1
 
-    # fixing the electricity and hydrogen imports/exports in nodes that are not reference nodes
+    # fixing the electricity imports/exports in nodes that are not reference nodes.
+    # Electricity import at the reference node is priced (grid transfer fee + energy
+    # tax in the objective) and closed by the retail balance, so it stays free there.
     if model.Par['pOptIndBinSingleNode'] == 0:
         for idx in model.psnnd:
             if idx[-1] not in model.endrf:
                 optmodel.__getattribute__('vEleImport')[idx].fix(0.0)
                 optmodel.__getattribute__('vEleExport')[idx].fix(0.0)
                 nFixedVariables += 2
-            if idx[-1] not in model.hndrf:
-                optmodel.__getattribute__('vHydImport')[idx].fix(0.0)
-                optmodel.__getattribute__('vHydExport')[idx].fix(0.0)
-                nFixedVariables += 2
+
+    # Hydrogen import/export carries no cost and is linked to a buy/sell only by the
+    # retail composition constraints (eHydBuyComposition / eHydSellComposition, gated
+    # by pHydRetMaxBuy/Sell > 0). Anywhere a node has no active, priced hydrogen
+    # retailer -- which is every node in single-node mode, where the network fixing
+    # above does not run -- vHydImport/Export would be a free, unpriced H2 source/sink,
+    # so fix them to zero. (Unlike electricity, hydrogen has no retail node balance.)
+    hyd_buy_nodes  = {model.Par['pHydRetNode'][hr] for hr in model.hr if model.Par['pHydRetMaxBuy' ][hr] > 0}
+    hyd_sell_nodes = {model.Par['pHydRetNode'][hr] for hr in model.hr if model.Par['pHydRetMaxSell'][hr] > 0}
+    for idx in model.psnnd:
+        if idx[-1] not in hyd_buy_nodes and not optmodel.vHydImport[idx].fixed:
+            optmodel.vHydImport[idx].fix(0.0)
+            nFixedVariables += 1
+        if idx[-1] not in hyd_sell_nodes and not optmodel.vHydExport[idx].fixed:
+            optmodel.vHydExport[idx].fix(0.0)
+            nFixedVariables += 1
 
     # fixing the ENS in nodes with no electricity and hydrogen demand in market
     for idx in model.psned:

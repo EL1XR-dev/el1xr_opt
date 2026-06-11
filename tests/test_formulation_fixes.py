@@ -603,3 +603,139 @@ def test_green_matching_uses_ppa_pool_and_excludes_standby(green_model):
     end = grn.index("optmodel.__setattr__('eGreenH2Matching'", start)
     assert "pHydGenStandByPower" in grn[start:end] and "vHydGenStandBy" in grn[start:end], \
         "matching rule must subtract the standby draw (productive draw only)"
+
+
+# --- Hydrogen-case enablement batch (model audit Part C: C7, C19, C23, C41, C43) ---
+# These harden the hydrogen path so a real hydrogen case builds and prices
+# correctly. They are latent in the shipped non-hydrogen cases (no hydrogen storage,
+# no active hydrogen retailer, no flexible hydrogen demand), so the enforced goldens
+# are unchanged; they are guarded on the H2Tank build or at the source.
+
+
+def test_hydrogen_charge_upper_bound_is_applied(h2_model):
+    """C23: the hydrogen-charge bound loop tested ``idx in model.hg`` with ``idx`` the full
+    ``(p,sc,n,unit)`` tuple -- always False -- so ``vHydTotalCharge`` got no upper bound. It
+    must test ``idx[-1]`` (the unit), like the electricity loop, so a storage unit's charge
+    is capped by ``pHydMaxCharge``."""
+    m = h2_model
+    assert len(m.hgs) > 0, "test case has no hydrogen storage unit"
+    p, sc = list(m.ps)[0]
+    hgs = list(m.hgs)[0]
+    capped = False
+    for n in m.n:
+        idx = (p, sc, n, hgs)
+        if idx in m.vHydTotalCharge:
+            ub = m.vHydTotalCharge[idx].ub
+            assert ub is not None, "hydrogen storage charge has no upper bound (C23)"
+            assert ub == pytest.approx(float(m.Par['pHydMaxCharge'][hgs][p, sc, n])), \
+                "hydrogen storage charge ub must equal pHydMaxCharge"
+            capped = True
+    assert capped, "no hydrogen storage charge variable was found to check"
+
+
+def test_hydrogen_import_export_closed_without_priced_retailer(h2_model):
+    """C7: hydrogen import/export carry no cost and are linked to a buy/sell only by the
+    retail composition constraints (gated by pHydRetMaxBuy/Sell > 0). With no active priced
+    hydrogen retailer -- the shipped single-node case -- vHydImport/Export must be fixed to
+    zero, not left a free unpriced H2 source/sink."""
+    m = h2_model
+    assert len(m.vHydImport) > 0, "no hydrogen import variable to check"
+    for idx in m.vHydImport:
+        assert m.vHydImport[idx].fixed and float(m.vHydImport[idx].value or 0.0) == 0.0, \
+            f"vHydImport{idx} must be fixed to zero with no priced hydrogen retailer (C7)"
+    for idx in m.vHydExport:
+        assert m.vHydExport[idx].fixed and float(m.vHydExport[idx].value or 0.0) == 0.0, \
+            f"vHydExport{idx} must be fixed to zero with no priced hydrogen retailer (C7)"
+
+
+def test_retail_max_buy_sell_have_missing_column_default():
+    """C43: the per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
+    retail file omits them, ``pRetMaxBuy/Sell`` must be defaulted to 0.0 ("no cap"),
+    otherwise activating a retailer on the column-less file raises ``KeyError`` in
+    ``eRetMaxBuy/Sell``. Checked by dropping the columns from a copied file and rebuilding."""
+    work = tempfile.mkdtemp(prefix="retailcap_")
+    dst = os.path.join(work, "Home1")
+    shutil.copytree(os.path.join(REPO, "data", "H2VPP", "Home1"), dst)
+    for sector in ("Hydrogen", "Electricity"):
+        rpath = os.path.join(dst, f"oM_Data_{sector}Retail_Home1.csv")
+        rt = pd.read_csv(rpath)
+        drop = [c for c in rt.columns if c in ("MaxBuy", "MaxSell")]
+        if drop:
+            rt.drop(columns=drop).to_csv(rpath, index=False)
+    # truncate to a few load levels for a quick build
+    dpath = os.path.join(dst, "oM_Data_Duration_Home1.csv")
+    dur = pd.read_csv(dpath)
+    keep = set(dur[dur.columns[2]].unique()[:6])
+    dur.loc[~dur[dur.columns[2]].isin(keep), "Duration"] = float("nan")
+    dur.to_csv(dpath, index=False)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    m = build_model(work, "Home1", date)   # must not raise
+    for key in ("pHydRetMaxBuy", "pHydRetMaxSell", "pEleRetMaxBuy", "pEleRetMaxSell"):
+        assert key in m.Par, f"{key} missing -- no schema default for the optional column (C43)"
+        assert (m.Par[key] == 0.0).all(), \
+            f"{key} must default to 0.0 when the MaxBuy/MaxSell column is absent"
+
+
+def test_balance_guards_include_demand():
+    """C19: the build guards of ``eEleBalance`` / ``eHydBalance`` counted units and lines but
+    not demands, so a node carrying only demand was skipped and its demand silently dropped
+    at zero cost. The guards must count demand (``ed2n`` / ``hd2n``)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    ele_start = text.index("def eEleBalance(")
+    ele_guard = text[ele_start:text.index("return", ele_start)]
+    assert "ed2n[nd]" in ele_guard, "eEleBalance guard must count electricity demand (ed2n)"
+    hyd_start = text.index("def eHydBalance(")
+    hyd_guard = text[hyd_start:text.index("return", hyd_start)]
+    assert "hd2n[nd]" in hyd_guard, "eHydBalance guard must count hydrogen demand (hd2n)"
+
+
+def test_hydrogen_not_served_capped_by_demand():
+    """C41: hydrogen-not-served must not exceed the scheduled hydrogen demand, otherwise
+    ``vHydDemand - vHNS`` goes negative and a flexible demand node becomes a paid hydrogen
+    sink. A constraint must cap ``vHNS <= vHydDemand`` for flexible hydrogen demand."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "def eHydNotServedCap(" in text, "the hydrogen-not-served cap rule is missing (C41)"
+    start = text.index("def eHydNotServedCap(")
+    end = text.index("rule=eHydNotServedCap", start)
+    body = text[start:end]
+    assert "pHydDemFlexible" in body, "the cap must gate on flexible hydrogen demand"
+    assert "vHNS[p,sc,n,hd] <= optmodel.vHydDemand[p,sc,n,hd]" in body, \
+        "the cap must constrain vHNS <= vHydDemand"
+
+
+# --- C26: compressor consumption draws electricity on hydrogen-store charging ---
+
+
+def test_compressor_draws_electricity_on_store_charging(h2_model):
+    """C26: ``MaxCompressorConsumption`` was read but referenced nowhere, so charging a
+    hydrogen store cost no compression energy. The store's charge must now enter its node's
+    ``eEleBalance`` as a load: the coefficient on ``vHydTotalCharge`` is the negative
+    compressor rate (electricity per unit of hydrogen charged)."""
+    m = h2_model
+    stores = [g for g in m.hgs if float(m.Par['pHydGenMaxCompressorConsumption'][g]) > 0]
+    assert stores, "test case has no hydrogen store with a compressor rate"
+    g = stores[0]
+    rate = float(m.Par['pHydGenMaxCompressorConsumption'][g])
+    nd = next(node for (node, u) in m.n2hg if u == g)
+    p, sc = list(m.ps)[0]
+    found = False
+    for n in m.n:
+        if (p, sc, n, nd) in m.eEleBalance:
+            repn = generate_standard_repn(m.eEleBalance[p, sc, n, nd].body)
+            pairs = list(zip(repn.linear_vars, repn.linear_coefs))
+            ch = m.vHydTotalCharge[p, sc, n, g]
+            comp = next((c for v, c in pairs if v is ch), None)
+            assert comp is not None, \
+                "store charge absent from the electricity balance (compressor not wired)"
+            assert abs(comp) == pytest.approx(rate), \
+                f"compressor coefficient magnitude must be the rate {rate}, got {abs(comp)}"
+            # confirm it acts as a LOAD: same sign as the electrolyser's electricity draw
+            # (another load) at this node, whichever way Pyomo normalised the body.
+            e2h_load = next((c for v, c in pairs
+                             if "vEleTotalCharge" in v.name and "AEL" in v.name), None)
+            if e2h_load is not None:
+                assert (comp > 0) == (e2h_load > 0), \
+                    "compressor term must enter the balance as a load, like the electrolyser draw"
+            found = True
+            break
+    assert found, "no active electricity balance at the store's node"
