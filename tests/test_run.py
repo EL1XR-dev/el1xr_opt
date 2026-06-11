@@ -103,17 +103,14 @@ def test_cost_from_duckdb(label, d, case, expected, rtol, tmp_path):
 # data/sizing/make_sizing_cases.py and read as .duckdb input files. The fixture
 # regenerates them so nothing has to be committed. Costs are reproducible (LP).
 SIZING_DIR = os.path.join(REPO, "data", "sizing")
-# The H2Tank / Electrolyser cases add a 5 kgH2/h demand, but the hydrogen-production
-# path does not fully serve it: the electrolyser produces some hydrogen yet not enough
-# to meet the demand, so the cost is dominated by the hydrogen-not-served penalty.
-# (These cases used to "solve" cheaply only because the hydrogen storage inventory
-# balance was skipped by a bug, letting the storage discharge hydrogen it never stored;
-# that is now fixed.) Marked xfail until the hydrogen sizing path is built out -- see
-# the user's plan for electrolyser-technology / tank / daily-quota / closed-loop cases.
-# The stored golden below is the old (bug-dependent) value, kept for record.
-_XFAIL_H2_SIZING = pytest.mark.xfail(
-    reason="H2 demand not fully served: hydrogen production path under development; "
-           "see data/sizing/make_sizing_cases.py", strict=False)
+# The H2Tank / Electrolyser cases serve a 5 kgH2/h demand from three sources: a
+# priced hydrogen import at the converter node (cheap at night, expensive in the
+# day), the electrolyser (cheaper than the day import), and the tank (buys cheap
+# night hydrogen and discharges it through the day). H2Tank sizes the tank and
+# builds it fully; Electrolyser sizes the electrolyser and builds a small
+# fraction. The build decisions themselves are asserted in
+# test_h2_sizing_decisions, because the investment-cost share of the total cost
+# is below the cost tolerance.
 SIZING_CASES = [
     pytest.param("HomeBatt",          44.27112550985886, id="HomeBatt"),
     pytest.param("HoodBatt",         -22.04979393397224, id="HoodBatt"),
@@ -121,8 +118,8 @@ SIZING_CASES = [
     pytest.param("HomeBattNoFCR",    122.8894702739726,  id="HomeBattNoFCR"),
     pytest.param("HomeBattFCRDonly",  67.89854138599155, id="HomeBattFCRDonly"),
     pytest.param("HomeBattFCRNonly",  56.97418403620797, id="HomeBattFCRNonly"),
-    pytest.param("H2Tank",            45.2627371208163,  id="H2Tank", marks=_XFAIL_H2_SIZING),
-    pytest.param("Electrolyser",      45.26055530263449, id="Electrolyser", marks=_XFAIL_H2_SIZING),
+    pytest.param("H2Tank",            6774.093295025795, id="H2Tank"),
+    pytest.param("Electrolyser",      6774.089825257397, id="Electrolyser"),
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
@@ -154,6 +151,33 @@ def test_sizing_case_from_duckdb(case, expected, sizing_cases_built):
                     rawresults="False", plots="False", indlog="False", duckdbresults="False")
     assert model is not None
     _assert_cost(float(pyo.value(model.eTotalSCost)), expected, SIZING_RTOL)
+
+
+@pytest.mark.solve
+@pytest.mark.parametrize("case,unit,full_build", [
+    ("H2Tank", "PEMEL_01", True),
+    ("Electrolyser", "AEL_01", False),
+], ids=["H2Tank", "Electrolyser"])
+def test_h2_sizing_decisions(case, unit, full_build, sizing_cases_built):
+    """The hydrogen sizing cases make real investment decisions: the tank is worth
+    building in full (its day/night arbitrage gain dwarfs its investment cost),
+    the electrolyser is built at a small fraction (only the hours where producing
+    beats the day import price), the demand is fully served, and the tank cycles.
+    The cost goldens alone cannot see this: the investment-cost share of the
+    total is below the cost tolerance."""
+    model = routine(dir=sizing_cases_built, case=case, solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    frac = model.vHydGenInvest[unit]()
+    if full_build:
+        assert frac > 0.99, f"tank build fraction {frac:.4f}, expected full build"
+    else:
+        assert 0.01 < frac < 0.5, f"electrolyser build fraction {frac:.4f}, expected a small partial build"
+    hns = sum(model.vHNS[idx]() for idx in model.vHNS)
+    assert hns < 1e-6, f"hydrogen demand not fully served (HNS={hns:.4f} kgH2)"
+    discharge = sum(model.vHydTotalOutput["period1", "sc01", n, "PEMEL_01"]() for n in model.n)
+    assert discharge > 1.0, f"tank never discharged (total {discharge:.4f} kgH2)"
 
 
 @pytest.mark.solve
