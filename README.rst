@@ -19,7 +19,7 @@ el1xr_opt
    :target: https://github.com/EL1XR-dev/el1xr_opt/actions/workflows/ci.yml
    :alt: GitHub Actions Workflow Status
 
-.. image:: https://img.shields.io/readthedocs/el1xr_opt
+.. image:: https://app.readthedocs.org/projects/el1xr-opt/badge/?version=latest
    :target: https://el1xr-opt.readthedocs.io/en/latest/
    :alt: Read the Docs
 
