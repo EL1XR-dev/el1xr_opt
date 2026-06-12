@@ -383,6 +383,45 @@ def test_initial_uc_carryover_guarded_by_uptime_zero():
                     f"{carrier} {token} carry-over must be guarded by {token}Zero > 0 first"
 
 
+def test_volumetric_grid_charges_are_duration_weighted():
+    """C15a: the volumetric grid fee, energy tax and incentive revenue are per-kWh
+    charges on the per-level import/export power, aggregated as ``ps`` (no pDuration in
+    the registry). Each must therefore weight its inner sum over n by ``pDuration`` to
+    count energy, or it undercounts by the time-step factor when pParTimeStep > 1."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    for rule in ("eTotalEleNetUseVarCost", "eEleTaxEnergyCost", "eEleTaxISRevenue"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index("optmodel.__setattr__", start)]
+        assert "pDuration'][p,sc,n]" in body or "pDuration'][p, sc, n]" in body, \
+            f"{rule} must weight the per-level import/export by pDuration (C15a)"
+
+
+def test_fcr_revenue_price_not_double_factor1_scaled():
+    """C16: ``pOperatingReservePrice_*`` is factor1-scaled at read (oM_InputData), like
+    the day-ahead energy price, so the FCR revenue constraints must NOT multiply by
+    ``model.factor1`` again -- that squared factor1 on the unit knob."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    for rule in ("eEleMarketFCRDUpRevenue", "eEleMarketFCRDDwRevenue", "eEleMarketFCRNRevenue"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index("optmodel.__setattr__", start)]
+        assert "OperatingReservePrice" in body, f"{rule} body not found as expected"
+        assert "model.factor1" not in body, \
+            f"{rule} must not re-apply model.factor1 (price already scaled at read) (C16)"
+
+
+def test_storage_var_bounds_not_read_factor1_scaled():
+    """C24: ``pVarMinStorage`` / ``pVarMaxStorage`` must be read unscaled, because the
+    single factor1 unit conversion is applied later at the inventory-bound and
+    investment-cap sites (matching the GenMaximumStorage fallback and the initial
+    inventory). Scaling them at read too double-counts factor1 on the VarStorage path."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    start = text.index("for suffix in model.gen_frames_suffixes:")
+    body = text[start:text.index("model.retail_frames_suffixes", start)]
+    assert "'VarMinStorage', 'VarMaxStorage'" in body or \
+           "('VarMinStorage', 'VarMaxStorage')" in body, \
+        "the storage Var suffixes must be excluded from the factor1 read-scaling (C24)"
+
+
 def test_storage_charge_fcr_bounds_guard_zero_capacity():
     """C33: ``eEleFreqUpChargeBound`` / ``eEleFreqDownChargeBound`` divide by
     ``pEleMaxCharge``, so each rule must guard against a zero charge capacity (a
