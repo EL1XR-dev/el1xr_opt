@@ -169,12 +169,22 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Electricity generation operation cost [M€]
     def eTotalEleGCost(optmodel, p,sc,n):
+        # No-load (ConstantVarCost) is a EUR/h cost while committed, so it stays here and
+        # is correctly duration-weighted by the psn aggregation. The per-event start-up /
+        # shut-down costs were moved to eTotalEleSUCost (a ps term) so they are NOT
+        # duration-weighted -- a start at a k-hour level is one start, not k (C15b).
         return optmodel.vTotalEleGCost[p,sc,n] == (sum(model.Par['pEleGenLinearVarCost'  ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ) +
                                                    sum(model.Par['pEleGenConstantVarCost'][egt] *       optmodel.vEleGenCommitment     [p,sc,n,egt] for egt in model.egt) +
-                                                   sum(model.Par['pEleGenStartUpCost'    ][egt] *       optmodel.vEleGenStartUp        [p,sc,n,egt] for egt in model.egt) +
-                                                   sum(model.Par['pEleGenShutDownCost'   ][egt] *       optmodel.vEleGenShutDown       [p,sc,n,egt] for egt in model.egt) +
                                                    sum(model.Par['pEleGenOMVariableCost' ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ))
     optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [kEUR]'))
+
+    # Electricity start-up / shut-down cost [M€] -- per-event, summed over the load
+    # levels WITHOUT pDuration (registered as a 'ps' objective term) so a start at a
+    # k-hour level costs one start-up, not k (C15b).
+    def eTotalEleSUCost(optmodel, p,sc):
+        return optmodel.vTotalEleSUCost[p,sc] == sum(sum(model.Par['pEleGenStartUpCost' ][egt] * optmodel.vEleGenStartUp [p,sc,n,egt] +
+                                                         model.Par['pEleGenShutDownCost'][egt] * optmodel.vEleGenShutDown[p,sc,n,egt] for egt in model.egt) for n in model.n)
+    optmodel.__setattr__('eTotalEleSUCost', Constraint(optmodel.ps, rule=eTotalEleSUCost, doc='Total electricity start-up/shut-down cost [kEUR]'))
 
     # Electricity generation emission cost [M€]
     def eTotalEleECost(optmodel, p,sc,n):
@@ -208,13 +218,21 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Hydrogen generation operation cost [M€]
     def eTotalHydGCost(optmodel, p,sc,n):
+        # As on the electricity side (C15b): no-load stays here (duration-weighted EUR/h);
+        # the per-event start-up / shut-down costs moved to eTotalHydSUCost (a ps term).
         return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
                                                    sum(model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
-                                                   sum(model.Par['pHydGenStartUpCost'    ][hgt] *       optmodel.vHydGenStartUp        [p,sc,n,hgt] for hgt in model.hgt) +
-                                                   sum(model.Par['pHydGenStartUpCost'    ][e2h] *       optmodel.vHydGenStartUp        [p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) +
-                                                   sum(model.Par['pHydGenShutDownCost'   ][hgt] *       optmodel.vHydGenShutDown       [p,sc,n,hgt] for hgt in model.hgt) +
                                                    sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
     optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
+
+    # Hydrogen start-up / shut-down cost [M€] -- per-event, summed over the load levels
+    # WITHOUT pDuration (a 'ps' objective term). The e2h start-up term covers an
+    # electrolyser outside hgt (zero fuel cost), preserving the C11 billing.
+    def eTotalHydSUCost(optmodel, p,sc):
+        return optmodel.vTotalHydSUCost[p,sc] == sum(sum(model.Par['pHydGenStartUpCost' ][hgt] * optmodel.vHydGenStartUp [p,sc,n,hgt] for hgt in model.hgt) +
+                                                     sum(model.Par['pHydGenStartUpCost' ][e2h] * optmodel.vHydGenStartUp [p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) +
+                                                     sum(model.Par['pHydGenShutDownCost'][hgt] * optmodel.vHydGenShutDown[p,sc,n,hgt] for hgt in model.hgt) for n in model.n)
+    optmodel.__setattr__('eTotalHydSUCost', Constraint(optmodel.ps, rule=eTotalHydSUCost, doc='Total hydrogen start-up/shut-down cost [kEUR]'))
 
     # Hydrogen consumption operation cost [M€]
     def eTotalHydCCost(optmodel, p,sc,n):

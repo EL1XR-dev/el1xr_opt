@@ -1030,6 +1030,11 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalEleGCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity prod      cost                            [EUR]'))
     setattr(optmodel, 'vTotalHydGCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    prod      cost                            [EUR]'))
 
+    # electricity and hydrogen start-up / shut-down costs (per-event, ps-indexed so the
+    # objective does not duration-weight them; see eTotalEleSUCost / eTotalHydSUCost)
+    setattr(optmodel, 'vTotalEleSUCost',                   Var(model.ps ,     within=             Reals, doc='total electricity start-up/shut-down cost                            [EUR]'))
+    setattr(optmodel, 'vTotalHydSUCost',                   Var(model.ps ,     within=             Reals, doc='total hydrogen    start-up/shut-down cost                            [EUR]'))
+
     # electricity and hydrogen emission costs
     setattr(optmodel, 'vTotalEleECost',                    Var(model.psn,     within=             Reals, doc='total electricity   emission         cost                            [EUR]'))
 

@@ -291,7 +291,7 @@ def seed_objective_registry(model):
     Features may register additional terms after this."""
     model._cost_terms = []
     model._revenue_terms = []
-    for name in ("vTotalEleNCost", "vTotalEleXCost"):
+    for name in ("vTotalEleNCost", "vTotalEleXCost", "vTotalEleSUCost", "vTotalHydSUCost"):
         register_cost(model, name, "ps")
     for name in ("vTotalEleMCost", "vTotalHydMCost", "vTotalEleOCost", "vTotalHydOCost"):
         register_cost(model, name, "psn")
@@ -376,7 +376,10 @@ def register_horizon_unsupported(model, reason):
 # The "ps" composite cost/revenue terms the temporal split knows how to decompose. A
 # new per-(period, scenario) composite outside these is refused by the split's guard;
 # to handle it, register its non-separable parts above and extend these sets.
-TEMPORAL_HANDLED_PS_COST = {"vTotalEleNCost", "vTotalEleXCost"}
+# vTotalEleSUCost / vTotalHydSUCost are plain sums of per-event start-up/shut-down costs
+# over the load levels, so each window sums its own start-ups -- they split additively
+# across windows like the net-use/tax sums, with no master coordination.
+TEMPORAL_HANDLED_PS_COST = {"vTotalEleNCost", "vTotalEleXCost", "vTotalEleSUCost", "vTotalHydSUCost"}
 TEMPORAL_HANDLED_PS_REV = {"vTotalEleXRev"}
 
 

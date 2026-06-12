@@ -395,12 +395,20 @@ costs k times the start-up cost. Both are exact only at 1-hour resolution.
 three volumetric terms now weights its inner sum over n by `pDuration[p,sc,n]`, so the
 per-kWh charge counts energy like the `'psn'` market terms. Latent at 1-hour resolution
 (`pDuration = 1`), so the goldens are byte-unchanged; guarded in
-`tests/test_formulation_fixes.py`. **(b) NOT done — own PR:** the per-event start-up /
-shut-down cost has to move out of the `'psn'`-aggregated `vTotalEleGCost` /
-`vTotalHydGCost` into a separate `'ps'` term (dividing by `pDuration` is unsafe — it can
-be 0 on a `psn` index when `pParTimeStep > 1`). That changes the cost-component
-breakdown, so it needs a deliberate golden re-baseline (like C1) and belongs in its own
-focused PR.
+`tests/test_formulation_fixes.py`. **(b) DONE (Part C item 5, branch
+`fix/c15b-startup-event-cost`):** the per-event start-up / shut-down cost is moved out of
+the `'psn'`-aggregated `vTotalEleGCost` / `vTotalHydGCost` into new `'ps'` terms
+`eTotalEleSUCost` / `eTotalHydSUCost` that sum over n without `pDuration` (dividing by
+`pDuration` would be unsafe — it can be 0 on a `psn` index when `pParTimeStep > 1`). The
+no-load `ConstantVarCost` stays in `GCost` (a EUR/h cost, correctly duration-weighted).
+The new terms are registered `'ps'` in the objective registry and added to the temporal
+Benders `TEMPORAL_HANDLED_PS_COST` allowlist (they are plain per-level sums, so each
+window sums its own start-ups). No re-baseline was needed after all: the goldens check
+only the total `eTotalSCost`, not the cost-component breakdown, and at 1-hour resolution
+(`pDuration = 1`) regrouping `'psn'`→`'ps'` leaves the total objective and the whole
+primal solution identical (solve tier byte-unchanged, temporal Benders == monolith).
+Guarded in `tests/test_formulation_fixes.py`; the C11 e2h-outside-`hgt` start-up test now
+checks `eTotalHydSUCost`.
 
 C16. **factor1 is applied twice to the FCR prices.** `pOperatingReservePrice_*` is
 factor1-scaled at read (oM_InputData.py:150) and the three revenue constraints

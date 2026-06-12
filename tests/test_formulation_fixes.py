@@ -552,15 +552,48 @@ def test_fcr_activation_modulates_electrolyser_charge():
 
 def test_electrolyser_startup_cost_billed_outside_hgt():
     """C11: the cold-start cost must be billed for an electrolyser even when it is not in
-    ``hgt`` (zero fuel cost). ``eTotalHydGCost`` must add a start-up term over the e2h units
-    not in ``hgt``; the cold-start constraints are gated on the start-up cost alone, so the
-    cost must match."""
+    ``hgt`` (zero fuel cost). The start-up term over the e2h units not in ``hgt`` now lives
+    in ``eTotalHydSUCost`` (moved out of GCost by C15b); the cold-start constraints are
+    gated on the start-up cost alone, so the cost must match."""
     text = open(MODEL_FORMULATION, encoding="utf-8").read()
-    start = text.index("def eTotalHydGCost(")
-    end = text.index("rule=eTotalHydGCost", start)
+    start = text.index("def eTotalHydSUCost(")
+    end = text.index("rule=eTotalHydSUCost", start)
     body = text[start:end]
     assert "vHydGenStartUp" in body and "for e2h in model.e2h if e2h not in model.hgt" in body, \
         "start-up cost must cover e2h units outside hgt"
+
+
+def test_startup_cost_is_not_duration_weighted():
+    """C15b: per-event start-up / shut-down costs must NOT be duration-weighted. They are
+    moved out of the psn-aggregated GCost into a separate ps term (eTotal{Ele,Hyd}SUCost)
+    that sums over n without pDuration, and the SU terms are registered as 'ps' so the
+    objective does not multiply them by pDuration."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    # start-up / shut-down are gone from the duration-weighted generation cost
+    for rule in ("eTotalEleGCost", "eTotalHydGCost"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index(f"rule={rule}", start)]
+        assert "StartUp" not in body and "ShutDown" not in body, \
+            f"{rule} must not carry the per-event start-up/shut-down cost (C15b)"
+    # the new ps terms carry them and apply no pDuration
+    for rule in ("eTotalEleSUCost", "eTotalHydSUCost"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index(f"rule={rule}", start)]
+        assert "StartUp" in body and "ShutDown" in body, \
+            f"{rule} must sum the start-up and shut-down costs"
+        assert "pDuration" not in body, \
+            f"{rule} is a per-event cost and must not be weighted by pDuration (C15b)"
+    # both are registered as 'ps' (not duration-weighted) in the objective registry
+    feat = open(os.path.join(MODULES, "oM_Features.py"), encoding="utf-8").read()
+    seed = feat[feat.index("def seed_objective_registry("):feat.index("def aggregate_terms(")]
+    for name in ("vTotalEleSUCost", "vTotalHydSUCost"):
+        pos = seed.find(name)
+        assert pos != -1, f"{name} is not registered in seed_objective_registry (C15b)"
+        # the name sits in a `for name in (...): register_cost(model, name, "ps")` block;
+        # the register_cost call follows within the same block
+        window = seed[pos:pos + 200]
+        assert 'register_cost(model, name, "ps")' in window, \
+            f"{name} must be registered as a 'ps' cost term (C15b)"
 
 
 def test_electrolyser_has_no_ramp_or_mintime_constraint():
