@@ -362,6 +362,27 @@ def test_pre_horizon_commitment_fixing_uses_own_load_level():
             "commitment fixing must not use the stale loop variable n"
 
 
+def test_initial_uc_carryover_guarded_by_uptime_zero():
+    """C9: the pre-horizon min-up/min-down carry-over must only fire for a unit that was
+    actually on (``UpTimeZero > 0``) resp. off (``DownTimeZero > 0``) before the horizon.
+    ``UpTime - UpTimeZero > 0`` alone is true for a never-on unit (``UpTimeZero == 0``),
+    which would force ``pInitialUC = 1`` and override the merit-order pre-commitment. Both
+    carriers must carry the ``...TimeZero > 0`` guard."""
+    lines = open(INPUT_DATA, encoding="utf-8").read().splitlines()
+    for token in ("UpTime", "DownTime"):
+        for carrier in ("Ele", "Hyd"):
+            # the carry-over `if` condition references both the requirement and the
+            # pre-horizon counter for the carrier/state
+            cond = [ln for ln in lines
+                    if ln.lstrip().startswith("if ")
+                    and f"p{carrier}Gen{token}'][" in ln
+                    and f"p{carrier}Gen{token}Zero'][" in ln]
+            assert cond, f"missing {carrier} {token} carry-over condition"
+            for ln in cond:
+                assert f"p{carrier}Gen{token}Zero'][" in ln.split(" and ")[0], \
+                    f"{carrier} {token} carry-over must be guarded by {token}Zero > 0 first"
+
+
 def test_storage_charge_fcr_bounds_guard_zero_capacity():
     """C33: ``eEleFreqUpChargeBound`` / ``eEleFreqDownChargeBound`` divide by
     ``pEleMaxCharge``, so each rule must guard against a zero charge capacity (a
