@@ -1364,6 +1364,13 @@ def create_constraints(model, optmodel, indlog):
                     return optmodel.vEleTotalCharge[p,sc,n,egs]                                           ==                                           optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + model.Par['pHydGenStandByPower'][egs] * optmodel.vHydGenStandBy[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] * optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] * optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
                 else:
                     return optmodel.vEleTotalCharge[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n] == optmodel.vHydGenCommitment[p,sc,n,egs] + (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) + (model.Par['pHydGenStandByPower'][egs] / model.Par['pHydMinCharge'][egs][p,sc,n]) * optmodel.vHydGenStandBy[p,sc,n,egs] + (- model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] - model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] * optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] + model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] * optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pHydMinCharge'][egs][p,sc,n]
+            elif model.Par['pHydMaxCharge'][egs][p,sc,n]:
+                # Fixed consumption: MinCharge == MaxCharge so the 2nd block is empty. The
+                # charge is then not free -- it is MinCharge when committed plus the standby
+                # draw (a fixed-consumption unit cannot modulate, so no 2nd block and no FCR).
+                # Without this branch the constraint was skipped and vEleTotalCharge[e2h] was
+                # free in [0, MaxCharge] with no commitment link (C12).
+                return optmodel.vEleTotalCharge[p,sc,n,egs] == model.Par['pHydMinCharge'][egs][p,sc,n] * optmodel.vHydGenCommitment[p,sc,n,egs] + model.Par['pHydGenStandByPower'][egs] * optmodel.vHydGenStandBy[p,sc,n,egs]
             else:
                 return Constraint.Skip
         else:

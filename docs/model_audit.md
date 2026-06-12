@@ -370,6 +370,13 @@ skips `eEleTotalCharge`'s e2h branch (:1255) and both `eE2HMax/MinCharge2ndBlock
 the 2nd-block fixing loop runs over `ehs = egs|hgs`, which excludes e2h
 (oM_InputData.py:362,1478-1490). `vEleTotalCharge[e2h]` is then free in
 `[0, MaxCharge]` with no commitment link, and `eAllEnergy2Hyd` still converts it.
+**— DONE (Part C item 5, branch `fix/storage-electrolyser-coupling`):** `eEleTotalCharge`
+gets a fixed-consumption e2h branch (`elif pHydMaxCharge`) that defines the charge as
+`MinCharge * commitment + StandByPower * standby` -- committed draws MinCharge, standby
+draws the standby power, off draws zero -- so the consumption is no longer free. The
+now-unused 2nd-block charge of such a unit is pinned to zero in the fixing block. Latent
+in shipped cases (every shipped electrolyser has a real 2nd block, MinCharge < MaxCharge),
+goldens byte-unchanged; guarded in `tests/test_formulation_fixes.py`.
 
 C13. **Electrolyser ramps and min-up/down times are now enforced nowhere.** The
 pure-load fix removed the (output-side) hydrogen-generator ramps and min-times for
@@ -495,7 +502,12 @@ segments.** The fix sits inside `for egs in model.egs:` (oM_InputData.py:1372-13
 so one non-degrading unit in a mixed fleet pins the *total* degradation-cost variable
 at zero while `eTotalEleDCost` equates it to the (nonzero) sum — erasing the
 degrading unit's cost or making the case infeasible. Aggregate the condition over all
-units first.
+units first. **— DONE (Part C item 5, branch `fix/storage-electrolyser-coupling`):** the
+total-cost fix is now gated by `all(DoDS1+DoDS2+DoDS3 == 0 for egs in model.egs)` and
+moved out of the per-unit loop, so the total is fixed to zero only when no storage unit
+degrades; the per-unit DoD-variable fixing stays inside the loop. Latent in shipped cases
+(no shipped case mixes a degrading and a non-degrading storage unit), goldens
+byte-unchanged; guarded in `tests/test_formulation_fixes.py`.
 
 C23. **Hydrogen charge upper bounds are never applied.** The bound loop tests
 `if idx in model.hg:` with `idx` the full `(p,sc,n,unit)` tuple
@@ -520,7 +532,11 @@ but fixed over hydrogen-retailer sets.** `vHydPeakGlobalInd/MonthInd/DayInd` are
 `Var(model.psner,...)` etc. but the tariff fixing loops index them with `psnhr`
 tuples (oM_InputData.py:1082-1104 vs 1422-1445) — `KeyError` as soon as a case has an
 active hydrogen retailer; they also appear in no constraint (dead apart from the
-broken fixing).
+broken fixing). **— ALREADY FIXED by C48 (same bug):** the indicators are now declared
+*and* fixed over the hydrogen retail sets `psnhr` / `psdhr` / `psdnhr`, guarded by
+`test_hydrogen_peak_indicators_on_hydrogen_sets`. They are still dead variables (no
+constraint references them) — the hydrogen peak-tariff cost layer itself is unbuilt, as
+noted under C48. Nothing further to do here.
 
 C26. **Compressor consumption is dead data.** `MaxCompressorConsumption` is read and
 unit-factored (oM_InputData.py:176) but referenced by no variable, constraint or
