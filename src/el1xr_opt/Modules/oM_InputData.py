@@ -137,7 +137,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     for suffix in model.gen_frames_suffixes:
         # print(suffix)
         # parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'][model.ehg] * factor1
-        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehg, fill_value=0.0) * factor1
+        # Storage energy bounds carry the factor1 unit conversion once, applied later at
+        # the inventory-bound / investment-cap sites (and the initial inventory). Read
+        # them unscaled here so the VarStorage path is not scaled twice relative to the
+        # GenMaximumStorage fallback, which is only scaled at those sites (C24).
+        scale = 1.0 if suffix in ('VarMinStorage', 'VarMaxStorage') else factor1
+        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehg, fill_value=0.0) * scale
 
     # Merging sets gg and hh
     model.ehr = model.err | model.hrr

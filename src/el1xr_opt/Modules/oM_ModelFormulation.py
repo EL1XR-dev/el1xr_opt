@@ -76,7 +76,11 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Total electricity net usage costs
     def eTotalEleNetUseVarCost(optmodel, p,sc):
-        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        # volumetric grid fee per imported kWh: weight the per-level import power by
+        # pDuration so it counts energy, matching the duration-weighted "psn" market
+        # terms. Without it the charge undercounts by the time-step factor when
+        # pParTimeStep > 1 (C15a).
+        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
@@ -107,15 +111,18 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [kEUR]'))
 
     def eEleMarketFCRDUpRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr]) for egnr in model.egnr) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h)
+        # the FCR price is already factor1-scaled at read (oM_InputData), like the
+        # day-ahead energy price, so it must NOT be multiplied by factor1 again here
+        # (that squared it on the unit knob; latent at factor1=1) -- C16.
+        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr]) for egnr in model.egnr) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h)
     optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [kEUR]'))
 
     def eEleMarketFCRDDwRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) for egnr in model.egnr) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * model.factor1 * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h)
+        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) for egnr in model.egnr) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h)
     optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [kEUR]'))
 
     def eEleMarketFCRNRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * model.factor1 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egnr]) for egnr in model.egnr) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * model.factor1 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h)
+        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egnr]) for egnr in model.egnr) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h)
     optmodel.__setattr__('eEleMarketFCRNRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRNRevenue, doc='Total electricity market FCR-N revenues [kEUR]'))
 
     #%% Total hydrogen market costs
@@ -143,7 +150,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # VAT on electricity taxes costs
     def eEleTaxEnergyCost(optmodel, p,sc):
-        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] * model.factor1 * sum(optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] * model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eEleTaxEnergyCost', Constraint(optmodel.ps, rule=eEleTaxEnergyCost, doc='Total electricity taxes costs [kEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
@@ -152,7 +159,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Incentives on electricity taxes revenues
     def eEleTaxISRevenue(optmodel, p,sc):
-        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] * model.factor1 * sum(optmodel.vEleExport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] * model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleExport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) for er in model.er))
     optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [kEUR]'))
 
     #%% Total electricity operation and maintenance costs

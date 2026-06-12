@@ -391,12 +391,26 @@ anywhere — so with `pParTimeStep > 1` they undercount by the time-step factor
 relative to the `'psn'` energy terms. (b) Conversely the start-up/shut-down costs sit
 inside `'psn'` terms and get multiplied by `pDuration`: a start at a k-hour level
 costs k times the start-up cost. Both are exact only at 1-hour resolution.
+**— (a) DONE (Part C item 5, branch `fix/duration-factor1-money-terms`):** each of the
+three volumetric terms now weights its inner sum over n by `pDuration[p,sc,n]`, so the
+per-kWh charge counts energy like the `'psn'` market terms. Latent at 1-hour resolution
+(`pDuration = 1`), so the goldens are byte-unchanged; guarded in
+`tests/test_formulation_fixes.py`. **(b) NOT done — own PR:** the per-event start-up /
+shut-down cost has to move out of the `'psn'`-aggregated `vTotalEleGCost` /
+`vTotalHydGCost` into a separate `'ps'` term (dividing by `pDuration` is unsafe — it can
+be 0 on a `psn` index when `pParTimeStep > 1`). That changes the cost-component
+breakdown, so it needs a deliberate golden re-baseline (like C1) and belongs in its own
+focused PR.
 
 C16. **factor1 is applied twice to the FCR prices.** `pOperatingReservePrice_*` is
 factor1-scaled at read (oM_InputData.py:150) and the three revenue constraints
 multiply by `model.factor1` again (:110,114,118). Latent at factor1=1; squares on the
 unit knob otherwise (same family as the C1 secondary and the storage-bound double
-scaling, C24).
+scaling, C24). **— DONE (Part C item 5, branch `fix/duration-factor1-money-terms`):**
+the redundant in-constraint `model.factor1` is removed from all three FCR revenue terms
+(`eEleMarketFCRDUpRevenue`/`FCRDDwRevenue`/`FCRNRevenue`), matching the day-ahead energy
+price convention (scaled once at read, raw in the constraint). Latent at factor1=1, so
+the goldens are byte-unchanged; guarded in `tests/test_formulation_fixes.py`.
 
 C17. **FCR revenue covers `egnr`, but caps and provisions cover only
 egt/egs/e2h.** A non-RES unit that is neither thermal (`ConstantVarCost == 0`) nor
@@ -454,7 +468,14 @@ C23. **Hydrogen charge upper bounds are never applied.** The bound loop tests
 C24. **Mixed single/double factor1 scaling of storage bounds.** `pVarMin/MaxStorage`
 are factor1-scaled at read and the inventory bounds + invest caps multiply by factor1
 again, while the `p*GenMaximumStorage` fallback is scaled once. Coincides only at
-factor1=1 (extends the Part B factor1-convention cleanup).
+factor1=1 (extends the Part B factor1-convention cleanup). **— DONE (Part C item 5,
+branch `fix/duration-factor1-money-terms`):** `VarMinStorage` / `VarMaxStorage` are now
+read unscaled (excluded from the `gen_frames_suffixes` factor1 loop), so the single
+factor1 is applied once at the inventory-bound / investment-cap sites — the same place
+the `GenMaximumStorage` fallback gets it, and consistent with the initial inventory
+(`pGenInitialStorage * factor1`, scaled once at read). Their only consumer is the
+`pVar*.replace(0, pGen*)` merge. Latent at factor1=1, so the goldens are byte-unchanged;
+guarded in `tests/test_formulation_fixes.py`.
 
 C25. **Hydrogen peak-indicator variables are declared on electricity-retailer sets
 but fixed over hydrogen-retailer sets.** `vHydPeakGlobalInd/MonthInd/DayInd` are
