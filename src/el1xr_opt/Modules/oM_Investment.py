@@ -138,6 +138,14 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vEleTotalCharge[p, sc, n, e2hc] <= model.Par['pHydMaxCharge'][e2hc][p, sc, n] * optmodel.vHydGenInvest[e2hc]
     optmodel.__setattr__('eHydInvestMaxCharge', Constraint(psne2hc, rule=eHydInvestMaxCharge, doc='candidate electrolyser electricity input limited by build decision'))
 
+    # Candidate hydrogen storage: hydrogen charge (inflow into the store). Like the
+    # electricity storage charge cap (eEleInvestMaxCharge), an unbuilt candidate store
+    # must not be able to absorb hydrogen at nameplate (and spill it for free); cap the
+    # charge by the build decision too (C21a).
+    def eHydInvestMaxStorageCharge(optmodel, p, sc, n, hgsc):
+        return optmodel.vHydTotalCharge[p, sc, n, hgsc] <= model.Par['pHydMaxCharge'][hgsc][p, sc, n] * optmodel.vHydGenInvest[hgsc]
+    optmodel.__setattr__('eHydInvestMaxStorageCharge', Constraint(psnhgsc, rule=eHydInvestMaxStorageCharge, doc='candidate hydrogen storage charge limited by build decision'))
+
     # %% Total investment cost
     # Unit scaling: model.factor1 is the conversion factor that lets the model work
     # at either utility (MWh) or local/home (kWh) scale. It is applied to the

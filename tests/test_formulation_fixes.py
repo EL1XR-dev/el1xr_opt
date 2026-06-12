@@ -409,6 +409,83 @@ def test_fcr_revenue_price_not_double_factor1_scaled():
             f"{rule} must not re-apply model.factor1 (price already scaled at read) (C16)"
 
 
+def test_fcr_revenue_paid_only_over_backed_providers():
+    """C17: the FCR revenue must be paid over the backed providers (egt / egs / e2h) --
+    the same sets the caps and provisions cover -- not over all of egnr. A non-RES unit
+    that is neither thermal nor storage has a free bid, no cap and no provision, so paying
+    it (via egnr) makes the objective unbounded."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    for rule in ("eEleMarketFCRDUpRevenue", "eEleMarketFCRDDwRevenue", "eEleMarketFCRNRevenue"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index("optmodel.__setattr__", start)]
+        assert "for egnr in model.egnr" not in body, \
+            f"{rule} must not pay revenue over all of egnr (unbounded objective) (C17)"
+        for s in ("for egt in model.egt", "for egs in model.egs", "for e2h in model.e2h"):
+            assert s in body, f"{rule} must pay revenue over the backed set ({s}) (C17)"
+
+
+def test_ele_fcr_flags_default_to_not_participating():
+    """C17: ``pEleGenNoFCRD`` / ``pEleGenNoFCRN`` must get ``.fillna(1)`` (like the e2h
+    flags), so a blank cell defaults to 'not participating' instead of NaN -- a NaN flag
+    is neither 0 nor 1, letting the unit escape the bid fixing and every FCR constraint
+    while still being paid revenue."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    for flag in ("pEleGenNoFCRD", "pEleGenNoFCRN"):
+        line = next((ln for ln in text.splitlines()
+                     if f"parameters_dict['{flag}'" in ln and ".map(idxDict)" in ln), "")
+        assert ".fillna(1)" in line, \
+            f"{flag} must default a blank cell to 1 (not participating) via fillna(1) (C17)"
+
+
+def test_discharge_reserve_bounded_by_discharge_rating():
+    """C18: the discharge-headroom fallback (for a NoDayAhead or zero-MaxPower unit) must
+    bound the discharge reserve by the DISCHARGE rating (pEleMaxPower), not the charge
+    rating (pEleMaxCharge) -- otherwise a non-dischargeable unit sells phantom discharge
+    reserve on its charger rating."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    for rule in ("eEleFreqUpDischargeHeadroom", "eEleFreqDownDischargeHeadroom"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index("optmodel.__setattr__", start)]
+        # the Dis...Dis + Nor...Dis fallback must not bound by the charge rating
+        fallback = [ln for ln in body.splitlines()
+                    if "ReserveDis" in ln and "Dis[p,sc,n,egs]" in ln and "<=" in ln
+                    and "pEleMaxCharge" in ln]
+        assert not fallback, \
+            f"{rule} must not bound the discharge reserve by pEleMaxCharge (C18)"
+
+
+def test_candidate_hydrogen_storage_charge_capped_by_build():
+    """C21a: a candidate hydrogen storage unit's charge must be capped by its build
+    decision (like electricity storage), so an unbuilt store cannot absorb at nameplate."""
+    text = open(INVESTMENT, encoding="utf-8").read()
+    assert "def eHydInvestMaxStorageCharge(" in text, \
+        "missing the candidate hydrogen-storage charge cap (C21a)"
+    start = text.index("def eHydInvestMaxStorageCharge(")
+    body = text[start:text.index("optmodel.__setattr__", start)]
+    assert "vHydTotalCharge[p, sc, n, hgsc]" in body and "vHydGenInvest[hgsc]" in body, \
+        "the cap must bound vHydTotalCharge by pHydMaxCharge * build fraction (C21a)"
+
+
+def test_candidate_fcr_down_headroom_limited_by_build():
+    """C21b: the FCR-down charge headroom of a candidate unit must be limited by the build
+    fraction, not the full nameplate. Storage scales the nameplate by vEleGenInvest in
+    place; the electrolyser gets a separate build-cap constraint (the in-place version
+    would be bilinear with the commitment)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    # storage: the candidate branch scales pEleMaxCharge by the build fraction
+    start = text.index("def eEleFreqDownChargeHeadroom(")
+    body = text[start:text.index("optmodel.__setattr__", start)]
+    assert "model.egsc" in body and "pEleMaxCharge'][egs][p,sc,n] * optmodel.vEleGenInvest[egs]" in body, \
+        "candidate storage down-charge headroom must scale by vEleGenInvest (C21b)"
+    # electrolyser: a separate build-cap constraint bounds the reserve by the build fraction
+    assert "def eEleFreqDownChargeHeadroomConvInvest(" in text, \
+        "missing the candidate electrolyser FCR-down build cap (C21b)"
+    start = text.index("def eEleFreqDownChargeHeadroomConvInvest(")
+    body = text[start:text.index("optmodel.__setattr__", start)]
+    assert "vHydGenInvest[e2h]" in body and "e2h in model.hgc" in body, \
+        "candidate electrolyser FCR-down build cap must bound by vHydGenInvest (C21b)"
+
+
 def test_storage_var_bounds_not_read_factor1_scaled():
     """C24: ``pVarMinStorage`` / ``pVarMaxStorage`` must be read unscaled, because the
     single factor1 unit conversion is applied later at the inventory-bound and
@@ -483,8 +560,11 @@ def test_fcr_down_headroom_is_state_gated():
     cannot sell down-reserve it could not absorb. It used the bare nameplate
     ``pHydMaxCharge`` with no state gate."""
     text = open(MODEL_FORMULATION, encoding="utf-8").read().splitlines()
+    # the commitment-gated headroom (exclude the separate C21b build-cap line, which
+    # bounds the same reserve by the build fraction rather than the commitment)
     body = [ln for ln in text if "vEleFreqContReserveDisDownCha[p,sc,n,e2h]" in ln
-            and "<=" in ln and "vEleTotalCharge2ndBlock" in ln]
+            and "<=" in ln and "vEleTotalCharge2ndBlock" in ln
+            and "vHydGenInvest" not in ln]
     assert body, "could not find the e2h FCR-down headroom rule"
     for ln in body:
         assert "pHydMaxCharge2ndBlock'][e2h][p,sc,n] * optmodel.vHydGenCommitment" in ln, \

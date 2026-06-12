@@ -293,8 +293,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict['pHydNetBinaryInvestment'  ] = parameters_dict['pHydNetBinaryInvestment'  ].map(idxDict)
     parameters_dict['pEleGenV2G'               ] = parameters_dict['pEleGenV2G'               ].map(idxDict)
     parameters_dict['pEleGenNoDayAhead'        ] = parameters_dict['pEleGenNoDayAhead'        ].map(idxDict)
-    parameters_dict['pEleGenNoFCRD'            ] = parameters_dict['pEleGenNoFCRD'            ].map(idxDict)
-    parameters_dict['pEleGenNoFCRN'            ] = parameters_dict['pEleGenNoFCRN'            ].map(idxDict)
+    # default 1 ("not participating") for a blank cell, like the e2h flags below; without
+    # the fillna a blank maps to NaN -- neither 0 nor 1 -- so the unit escapes both the
+    # bid fixing and every FCR constraint while still being paid revenue (C17).
+    parameters_dict['pEleGenNoFCRD'            ] = parameters_dict['pEleGenNoFCRD'            ].map(idxDict).fillna(1).astype('int')
+    parameters_dict['pEleGenNoFCRN'            ] = parameters_dict['pEleGenNoFCRN'            ].map(idxDict).fillna(1).astype('int')
     parameters_dict['pEleGenMaxCommitment'     ] = parameters_dict['pEleGenMaxCommitment'     ].map(idxDict)
     # Electrolyser (e2h) standby state and draw. When the hydrogen-generation data
     # omits these columns, standby is disabled (status 0) and the standby draw is 0,

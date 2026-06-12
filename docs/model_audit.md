@@ -429,12 +429,29 @@ such a unit. Related fragility: `pEleGenNoFCRD/N` get no `fillna` (oM_InputData.
 274-275), so a blank cell in a string-typed column is NaN — neither 0 nor 1 — and the
 unit escapes both the fixing and every FCR constraint while staying in the revenue
 sum. (The e2h flags got `.fillna(1)`; the electricity flags should too.)
+**— DONE (Part C item 5, branch `fix/fcr-bound-gaps`):** the three FCR revenue terms now
+pay over the backed providers (`egt` / `egs` / `e2h`) -- the same sets the caps and
+provisions cover -- instead of all of `egnr`, so a non-RES unit that is neither thermal
+nor storage is no longer paid for a free, unbounded bid. And `pEleGenNoFCRD` /
+`pEleGenNoFCRN` now get `.map(idxDict).fillna(1).astype('int')` like the e2h flags, so a
+blank cell defaults to "not participating" instead of NaN. Latent in shipped cases (an
+unbacked paid unit would already make the solve unbounded), so the goldens are
+byte-unchanged; guarded in `tests/test_formulation_fixes.py`.
 
 C18. **Static `pEleMaxCharge` fallback lets non-dischargeable units sell discharge
 reserve.** With `pEleGenNoDayAhead == 1` (or MaxPower ~ 0), the discharge-headroom
 constraints bound `DisUpDis + NorUpDis <= pEleMaxCharge` — a static charger rating
 with no SoC/commitment link; the compensating fix-to-zero for non-V2G units fires
 only when `NoDayAhead == 0` (oM_InputData.py:1542-1546).
+**— DONE (Part C item 5, branch `fix/fcr-bound-gaps`):** the discharge-headroom fallback
+branches (`eEleFreqUpDischargeHeadroom` / `eEleFreqDownDischargeHeadroom`) now bound the
+discharge reserve by the DISCHARGE rating `pEleMaxPower`, not the charge rating. A
+non-dischargeable unit (MaxPower ~ 0) then gets zero discharge headroom regardless of its
+`NoDayAhead` flag; a `NoDayAhead` unit with real MaxPower is bounded by MaxPower (its
+`output2ndBlock` is fixed to 0, so this matches the day-ahead branch). The compensating
+fix-to-zero is now redundant but harmless. Latent in shipped cases (no FCR storage unit
+has a zero discharge rating), goldens byte-unchanged; guarded in
+`tests/test_formulation_fixes.py`.
 
 C19. **Demand-only nodes get no balance — demand is silently dropped at zero
 cost.** The build guards of `eEleBalance`/`eHydBalance` (:425,436) count units and
@@ -459,6 +476,19 @@ electricity storage has all three caps) — an unbuilt store can absorb at namep
 and spill for free. (b) FCR-down headroom of candidate units (e2h :682, storage
 :574) uses the full nameplate, so a fractionally built unit can sell down-reserve on
 capacity it does not have.
+**— DONE (Part C item 5, branch `fix/fcr-bound-gaps`):** (a) new `eHydInvestMaxStorageCharge`
+caps `vHydTotalCharge` of a candidate hydrogen store by `pHydMaxCharge * build fraction`,
+mirroring the electricity storage charge cap. (b) the candidate branch of
+`eEleFreqDownChargeHeadroom` scales the storage nameplate by `vEleGenInvest` in place
+(linear, no commitment var there); the candidate electrolyser gets a separate build-cap
+constraint `eEleFreqDownChargeHeadroomConvInvest` bounding the reserve plus charge by
+`pHydMaxCharge2ndBlock * vHydGenInvest` (a separate constraint because the existing
+commitment-gated headroom already multiplies the nameplate by the commitment, and scaling
+by the build fraction too would be bilinear). Part (a) and the rest of the group are
+golden-neutral, but part (b) is real money: the FCR-providing battery *sizing* cases are
+candidates, so limiting their down-reserve to the built capacity raised their cost a
+little (~0.01%, net revenue down) -- their 5 goldens were deliberately re-baselined
+(HomeBattNoFCR, with no FCR, is unchanged). Guarded in `tests/test_formulation_fixes.py`.
 
 C22. **`vTotalEleDCost` is fixed to zero if *any* storage unit lacks DoD
 segments.** The fix sits inside `for egs in model.egs:` (oM_InputData.py:1372-1376),
