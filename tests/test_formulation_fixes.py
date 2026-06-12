@@ -383,6 +383,42 @@ def test_initial_uc_carryover_guarded_by_uptime_zero():
                     f"{carrier} {token} carry-over must be guarded by {token}Zero > 0 first"
 
 
+def test_fixed_consumption_electrolyser_charge_is_defined():
+    """C12: a fixed-consumption electrolyser (MinCharge == MaxCharge, so the 2nd block is
+    empty) must still have its total charge defined by commitment (MinCharge * uc + standby),
+    not left free. eEleTotalCharge needs a fixed-consumption branch, and the unused 2nd-block
+    charge must be pinned to zero."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("def eEleTotalCharge(")
+    body = text[start:text.index("optmodel.__setattr__('eEleTotalCharge'", start)]
+    assert "elif model.Par['pHydMaxCharge'][egs][p,sc,n]:" in body, \
+        "eEleTotalCharge needs a fixed-consumption (empty 2nd block) e2h branch (C12)"
+    assert "pHydMinCharge'][egs][p,sc,n] * optmodel.vHydGenCommitment[p,sc,n,egs]" in body, \
+        "the fixed-consumption charge must be MinCharge * commitment (+ standby) (C12)"
+    data = open(INPUT_DATA, encoding="utf-8").read()
+    assert "pHydMaxCharge2ndBlock'][idx[-1]][idx[:3]] == 0" in data \
+        and "vEleTotalCharge2ndBlock[idx].fix(0.0)" in data, \
+        "the unused 2nd-block charge of a fixed-consumption electrolyser must be pinned to 0 (C12)"
+
+
+def test_total_degradation_cost_fixed_only_if_no_unit_degrades():
+    """C22: the total electricity degradation cost may be fixed to zero only when NO storage
+    unit has DoD segments. Fixing it whenever ANY single unit lacks DoD (inside the per-unit
+    loop) erased a degrading unit's cost or made a mixed fleet infeasible -- it must be gated
+    by an aggregate ``all(...)`` over the units."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    i = text.index("fixing storage variables related to depth of discharge")
+    block = text[i:i + 1200]
+    assert "all((model.Par['pEleGenDoDS1'][egs]" in block, \
+        "the vTotalEleDCost fix must be gated by all(... for egs in model.egs) (C22)"
+    # the total-cost fix must sit before the per-unit loop, not inside it
+    all_pos = block.index("all((model.Par['pEleGenDoDS1']")
+    loop_pos = block.index("for egs in model.egs:")
+    fix_pos = block.index("vTotalEleDCost')[idx].fix(0.0)")
+    assert all_pos < loop_pos and fix_pos < loop_pos, \
+        "the vTotalEleDCost fix must be aggregated before the per-unit loop, not inside it (C22)"
+
+
 def test_volumetric_grid_charges_are_duration_weighted():
     """C15a: the volumetric grid fee, energy tax and incentive revenue are per-kWh
     charges on the per-level import/export power, aggregated as ``ps`` (no pDuration in

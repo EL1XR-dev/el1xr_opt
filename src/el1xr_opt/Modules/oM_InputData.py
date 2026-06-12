@@ -1427,10 +1427,14 @@ def create_variables(model, optmodel, indlog):
 
     # fixing storage variables related to depth of discharge scenarios
     for idx in model.psd:
+        # The TOTAL degradation cost is zero only when NO storage unit degrades. Fixing it
+        # whenever ANY single unit lacks DoD segments (the old per-unit test) pinned the
+        # total to zero in a mixed fleet while eTotalEleDCost equates it to the nonzero sum
+        # -- erasing the degrading unit's cost or making the case infeasible (C22).
+        if all((model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0 for egs in model.egs):
+            optmodel.__getattribute__(f'vTotalEleDCost')[idx].fix(0.0)
+            nFixedVariables += 1.0
         for egs in model.egs:
-            if (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0:
-                optmodel.__getattribute__(f'vTotalEleDCost')[idx].fix(0.0)
-                nFixedVariables += 1.0
             if (idx, egs) in model.psdegs and (model.Par['pEleGenDoDS1'][egs] + model.Par['pEleGenDoDS2'][egs] + model.Par['pEleGenDoDS3'][egs]) == 0:
                 optmodel.__getattribute__(f'vEleInventoryMinDay')[idx+(egs,)].fix(0.0)
                 nFixedVariables += 1.0
@@ -1656,6 +1660,15 @@ def create_variables(model, optmodel, indlog):
         hz = idx[-1]
         if not (hz in model.e2h and model.Par['pHydGenStandByStatus'][hz] == 1):
             optmodel.vHydGenStandBy[idx].fix(0.0)
+            nFixedVariables += 1
+
+    # A fixed-consumption electrolyser (MinCharge == MaxCharge, so MaxCharge2ndBlock == 0)
+    # has no charge decomposition: its total charge is set directly by the fixed-consumption
+    # branch of eEleTotalCharge, leaving the 2nd-block charge unused. Pin it to zero so it
+    # does not float (C12).
+    for idx in model.psne2h:
+        if model.Par['pHydMaxCharge2ndBlock'][idx[-1]][idx[:3]] == 0:
+            optmodel.vEleTotalCharge2ndBlock[idx].fix(0.0)
             nFixedVariables += 1
 
     # if there are no energy outflows no variable is needed
