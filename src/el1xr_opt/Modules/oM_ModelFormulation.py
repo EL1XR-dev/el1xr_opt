@@ -114,15 +114,22 @@ def create_objective_function_components(model, optmodel, indlog):
         # the FCR price is already factor1-scaled at read (oM_InputData), like the
         # day-ahead energy price, so it must NOT be multiplied by factor1 again here
         # (that squared it on the unit knob; latent at factor1=1) -- C16.
-        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egnr]) for egnr in model.egnr) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h)
+        # Pay revenue only over the backed FCR providers (egt / egs / e2h), the same sets
+        # the caps and bid-provision relations cover. Summing over all of egnr would also
+        # pay a non-RES unit that is neither thermal nor storage -- it has a bid variable
+        # but no cap, no provision and is never fixed, so its bid would be free and the
+        # paid revenue would make the objective unbounded (C17).
+        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h)
     optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [kEUR]'))
 
     def eEleMarketFCRDDwRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egnr]) for egnr in model.egnr) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h)
+        # backed providers only (egt / egs / e2h), as in eEleMarketFCRDUpRevenue (C17)
+        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h)
     optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [kEUR]'))
 
     def eEleMarketFCRNRevenue(optmodel, p,sc,n):
-        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egnr]) for egnr in model.egnr) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h)
+        # backed providers only (egt / egs / e2h), as in eEleMarketFCRDUpRevenue (C17)
+        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egt]) for egt in model.egt) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]) for egs in model.egs) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h)
     optmodel.__setattr__('eEleMarketFCRNRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRNRevenue, doc='Total electricity market FCR-N revenues [kEUR]'))
 
     #%% Total hydrogen market costs
@@ -607,7 +614,11 @@ def create_constraints(model, optmodel, indlog):
             if  model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
                 return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] - optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
             else:
-                return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxCharge'][egs][p,sc,n]
+                # Discharge reserve must be bounded by the DISCHARGE rating, not the charge
+                # rating: a non-dischargeable unit (MaxPower ~ 0) then has zero discharge
+                # headroom, and a NoDayAhead unit (output2ndBlock fixed to 0) is bounded by
+                # its MaxPower -- the same quantity as the branch above (C18).
+                return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqUpDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqUpDischargeHeadroom, doc='FCR-D and FCR-N upward discharge headroom'))
@@ -624,13 +635,20 @@ def create_constraints(model, optmodel, indlog):
             if model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
                 return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] <= optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
             else:
-                return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] <= model.Par['pEleMaxCharge'][egs][p,sc,n]
+                # bound the down-discharge reserve by the DISCHARGE rating, not the charge
+                # rating, so a non-dischargeable unit cannot sell it (C18)
+                return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDownDischargeHeadroom, doc='FCR-D downward discharge headroom'))
 
     def eEleFreqDownChargeHeadroom(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+            # For a candidate storage unit cap the down-charge reserve by the BUILT charge
+            # capacity (nameplate * build fraction), so a fractionally built unit cannot
+            # sell down-reserve on capacity it has not built (C21b).
+            if egs in model.egsc:
+                return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs] <= model.Par['pEleMaxCharge'][egs][p,sc,n] * optmodel.vEleGenInvest[egs] - optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
             return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs] <= model.Par['pEleMaxCharge'][egs][p,sc,n] - optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
         else:
             return Constraint.Skip
@@ -743,6 +761,18 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeHeadroomConv', Constraint(optmodel.psne2h, rule=eEleFreqDownChargeHeadroomConv, doc='FCR downward charge headroom for the electrolyser'))
+
+    # For a candidate electrolyser, also cap the down-charge reserve (plus the charge) by
+    # the BUILT input capacity (nameplate * build fraction), so a fractionally built unit
+    # cannot sell down-reserve on capacity it has not built. This is a separate constraint
+    # because the headroom above already multiplies the nameplate by the commitment, and
+    # multiplying by the build fraction too would be bilinear (C21b).
+    def eEleFreqDownChargeHeadroomConvInvest(optmodel, p,sc,n,e2h):
+        if e2h in model.hgc and ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)):
+            return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] <= model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n] * optmodel.vHydGenInvest[e2h]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDownChargeHeadroomConvInvest', Constraint(optmodel.psne2h, rule=eEleFreqDownChargeHeadroomConvInvest, doc='FCR downward charge headroom for a candidate electrolyser (build-limited)'))
 
     def eEleFreqUpChargeBoundConv(optmodel, p,sc,n,e2h):
         if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)) and model.Par['pHydMaxCharge'][e2h][p,sc,n]:

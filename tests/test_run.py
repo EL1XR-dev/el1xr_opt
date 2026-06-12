@@ -112,12 +112,15 @@ SIZING_DIR = os.path.join(REPO, "data", "sizing")
 # test_h2_sizing_decisions, because the investment-cost share of the total cost
 # is below the cost tolerance.
 SIZING_CASES = [
-    pytest.param("HomeBatt",          44.27112550985886, id="HomeBatt"),
-    pytest.param("HoodBatt",         -22.04979393397224, id="HoodBatt"),
-    pytest.param("HomeBattNoTariff", 125.5211255098589,  id="HomeBattNoTariff"),
+    # FCR-active battery goldens re-baselined for C21b/C18: a candidate battery can no
+    # longer sell FCR-down reserve on unbuilt capacity, so it earns slightly less reserve
+    # revenue and the net cost rises a little. HomeBattNoFCR is unchanged (no FCR).
+    pytest.param("HomeBatt",          44.27655530263448, id="HomeBatt"),
+    pytest.param("HoodBatt",         -22.04188316124317, id="HoodBatt"),
+    pytest.param("HomeBattNoTariff", 125.5265553026345,  id="HomeBattNoTariff"),
     pytest.param("HomeBattNoFCR",    122.8894702739726,  id="HomeBattNoFCR"),
-    pytest.param("HomeBattFCRDonly",  67.89854138599155, id="HomeBattFCRDonly"),
-    pytest.param("HomeBattFCRNonly",  56.97418403620797, id="HomeBattFCRNonly"),
+    pytest.param("HomeBattFCRDonly",  67.90928111201895, id="HomeBattFCRDonly"),
+    pytest.param("HomeBattFCRNonly",  56.98016352651909, id="HomeBattFCRNonly"),
     pytest.param("H2Tank",            6774.093295025795, id="H2Tank"),
     pytest.param("Electrolyser",      6774.089825257397, id="Electrolyser"),
 ]
