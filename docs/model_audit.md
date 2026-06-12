@@ -338,7 +338,13 @@ oM_InputData.py:837-840/862-865 set `pInitialUC = 1` whenever
 `UpTime - UpTimeZero > 0`, i.e. also when `UpTimeZero == 0` (the unit was never on),
 overriding the merit-order pre-commitment above it. The reference openTEPES logic has
 no such override. Produces a spurious first-step shut-down or masks a start-up.
-Should test `UpTimeZero > 0` (resp. `DownTimeZero > 0`).
+Should test `UpTimeZero > 0` (resp. `DownTimeZero > 0`). **— DONE (Part C item 5):**
+both carry-over conditions now require `UpTimeZero > 0` (resp. `DownTimeZero > 0`)
+before they fire, on both carriers (`pEleInitialUC` lines and the identical
+`pHydInitialUC` block). Latent in shipped cases (no shipped unit has a positive
+min-up/down requirement with a zero pre-horizon counter), so the goldens are
+unchanged; guarded in `tests/test_formulation_fixes.py`
+(`test_initial_uc_carryover_guarded_by_uptime_zero`).
 
 ### MED — asymmetries and conditional bugs
 

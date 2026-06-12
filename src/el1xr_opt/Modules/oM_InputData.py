@@ -867,9 +867,13 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
                 parameters_dict['pEleInitialUC'    ][p,sc,go] = 1
                 parameters_dict['pEleSystemOutput' ]     += parameters_dict['pEleInitialOutput'][p,sc,go]
             # calculating if the unit was committed before of the time periods or not
-            if parameters_dict['pEleGenUpTime'][go] - parameters_dict['pEleGenUpTimeZero'][go] > 0:
+            # The carry-over only applies to a unit that was actually on (UpTimeZero > 0)
+            # but has not yet served its minimum up time; without the UpTimeZero guard a
+            # never-on unit (UpTimeZero == 0) would be force-committed, overriding the
+            # merit-order pre-commitment above. Symmetric for the down state.
+            if parameters_dict['pEleGenUpTimeZero'][go] > 0 and parameters_dict['pEleGenUpTime'][go] - parameters_dict['pEleGenUpTimeZero'][go] > 0:
                 parameters_dict['pEleInitialUC'][p,sc,go] = 1
-            if parameters_dict['pEleGenDownTime'][go] - parameters_dict['pEleGenDownTimeZero'][go] > 0:
+            if parameters_dict['pEleGenDownTimeZero'][go] > 0 and parameters_dict['pEleGenDownTime'][go] - parameters_dict['pEleGenDownTimeZero'][go] > 0:
                 parameters_dict['pEleInitialUC'][p,sc,go] = 0
 
     # determine the initial committed hydrogen units and their output
@@ -896,9 +900,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
                 parameters_dict['pHydInitialUC'    ][p,sc,hg] = 1
                 parameters_dict['pHydSystemOutput' ]     += parameters_dict['pHydInitialOutput'][p,sc,hg]
             # calculating if the unit was committed before of the time periods or not
-            if parameters_dict['pHydGenUpTime'][hg] - parameters_dict['pHydGenUpTimeZero'][hg] > 0:
+            # Same UpTimeZero/DownTimeZero guard as the electricity side: only a unit that
+            # was actually on (resp. off) before the horizon carries a remaining min-up
+            # (resp. min-down) obligation; a never-on unit must not be force-committed.
+            if parameters_dict['pHydGenUpTimeZero'][hg] > 0 and parameters_dict['pHydGenUpTime'][hg] - parameters_dict['pHydGenUpTimeZero'][hg] > 0:
                 parameters_dict['pHydInitialUC'][p,sc,hg] = 1
-            if parameters_dict['pHydGenDownTime'][hg] - parameters_dict['pHydGenDownTimeZero'][hg] > 0:
+            if parameters_dict['pHydGenDownTimeZero'][hg] > 0 and parameters_dict['pHydGenDownTime'][hg] - parameters_dict['pHydGenDownTimeZero'][hg] > 0:
                 parameters_dict['pHydInitialUC'][p,sc,hg] = 0
 
     # load levels multiple of cycles for each ESS/generator
