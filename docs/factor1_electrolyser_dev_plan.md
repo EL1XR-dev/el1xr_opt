@@ -61,6 +61,26 @@ ShutDownCost to realistic canonical-currency values (see B2). Re-baseline e2h go
 B1. Piecewise-linear part-load efficiency (replace the constant ProductionFunction = 56.82
 kWh/kgH2). FLAG-GATED: default = constant (legacy/non-e2h cases byte-unchanged); PWL when a flag
 (e.g. dfOption IndPWLEfficiency, or a per-unit segmented-curve column) is set.
+
+B1 STATUS — DONE (branch feature/phase-b-pwl-efficiency).
+- Flag: dfOption IndBinElectrolyserPWL (catalogue feature electrolyser_pwl_efficiency in
+  oM_Features; default 0 -> constant ProductionFunction, all existing goldens byte-unchanged).
+- Curve: built in oM_InputData.create_variables (model.pwl_curve / model.hpwl). 4 breakpoints per
+  flagged e2h unit spanning [MinCharge, MaxCharge] (productive electricity x, hydrogen y). Specific
+  energy = full-load ProductionFunction x a canonical alkaline multiplier m(f) (Brauns & Turek
+  shape, anchors f=[0.10,0.20,0.50,0.85,1.00] -> m=[1.35,1.25,1.08,0.97,1.00]); at full load m=1 so
+  the PWL reproduces the legacy linear conversion exactly. No new data files (derived from existing
+  params); B2/later can swap in per-unit measured curves.
+- Formulation (oM_ModelFormulation): SOS2 convex combination. appsi/HiGHS has NO native SOS2
+  (verified: "Highs interface does not support SOS constraints"), so SOS2 is encoded with segment
+  binaries (adjacency). Rows: ePWLConvexity (sum weights == commitment), ePWLSegmentSum (one active
+  segment == commitment), ePWLAdjacency (weight_k <= adjacent segments), ePWLPower (productive
+  electricity = sum weight_k x_k), ePWLHydrogen (H2 = sum weight_k y_k). eAllEnergy2Hyd skips PWL
+  units. Off/standby (commitment 0) -> all weights 0 -> no power, no H2. Segment domain follows the
+  commitment (Binary, or relaxed under pOptIndBinGenOperat==0 = convex-hull relaxation).
+- Test: test_electrolyser_pwl_efficiency (patches ElectrolyserStandby duckdb Option to flag on;
+  asserts PWL active, linear skipped, curve reproduces PF at full load + varies, SOS2 holds in the
+  solution). Default-off byte-unchanged confirmed (full solve + fast tiers pass).
 - Anchors (Brauns & Turek 2020, alkaline): best efficiency ~80-90% load; specific energy
   ~50-56 kWh/kgH2 at full load rising to ~62-73 kWh/kgH2 at 20% load; min stable load ~10-20%
   (already represented by MinimumCharge). PEM: worse at part load, min load ~5%.

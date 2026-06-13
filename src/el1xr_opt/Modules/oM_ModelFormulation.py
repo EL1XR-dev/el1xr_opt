@@ -1068,8 +1068,11 @@ def create_constraints(model, optmodel, indlog):
         StartTime = time.time() # to compute elapsed time
 
     # Energy conversion from energy from electricity to hydrogen and vice versa [p.u.]
+    # A PWL-flagged electrolyser (e2h in model.hpwl) uses the piecewise-linear part-load
+    # curve below instead of this constant-efficiency conversion, so it is skipped here.
+    _hpwl = getattr(model, 'hpwl', [])
     def eAllEnergy2Hyd(optmodel, p,sc,n,e2h):
-        if model.Par['pHydMaxPower'][e2h][p,sc,n] and e2h in model.e2h:
+        if model.Par['pHydMaxPower'][e2h][p,sc,n] and e2h in model.e2h and e2h not in _hpwl:
             # Only the productive consumption makes hydrogen; the standby draw
             # (StandByPower while in the standby state) produces none, so it is
             # subtracted before converting electricity input to hydrogen output.
@@ -1077,6 +1080,42 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eAllEnergy2Hyd', Constraint(optmodel.psne2h, rule=eAllEnergy2Hyd, doc='energy conversion from different energy type to hydrogen [p.u.]'))
+
+    # Piecewise-linear electrolyser part-load efficiency (audit Phase B / B1). Replaces the
+    # constant-efficiency conversion above for the flagged electrolysers (model.hpwl) with a
+    # SOS2 convex combination over the (productive electricity, hydrogen) breakpoints in
+    # model.pwl_curve. appsi/HiGHS has no native SOS2, so the SOS2 condition is encoded with
+    # segment binaries (adjacency): the weights may be nonzero only on the two breakpoints of a
+    # single active segment, giving an exact piecewise-linear conversion. The convexity and
+    # segment-sum rows equal the commitment, so an off or standby unit (commitment = 0) has all
+    # weights zero -> zero productive power and zero hydrogen, while an on unit sits on the curve
+    # between MinCharge and MaxCharge. The productive electricity excludes the standby draw,
+    # matching the constant-efficiency form.
+    if _hpwl:
+        psn_hpwl = [(p, sc, n, g) for (p, sc, n) in model.psn for g in _hpwl]
+
+        def ePWLConvexity(optmodel, p,sc,n,g):
+            return sum(optmodel.vHydGenPWLWeight[p,sc,n,g,k] for k in model.pwlbp) == optmodel.vHydGenCommitment[p,sc,n,g]
+        optmodel.__setattr__('ePWLConvexity', Constraint(psn_hpwl, rule=ePWLConvexity, doc='electrolyser PWL weights sum to the on-state'))
+
+        def ePWLSegmentSum(optmodel, p,sc,n,g):
+            return sum(optmodel.vHydGenPWLSegment[p,sc,n,g,s] for s in model.pwlseg) == optmodel.vHydGenCommitment[p,sc,n,g]
+        optmodel.__setattr__('ePWLSegmentSum', Constraint(psn_hpwl, rule=ePWLSegmentSum, doc='electrolyser PWL exactly one active segment when on'))
+
+        psn_hpwl_bp = [(p, sc, n, g, k) for (p, sc, n) in model.psn for g in _hpwl for k in model.pwlbp]
+        def ePWLAdjacency(optmodel, p,sc,n,g,k):
+            # weight on breakpoint k is allowed only if an adjacent segment (k-1 or k) is active
+            segs = [s for s in (k - 1, k) if s in model.pwlseg]
+            return optmodel.vHydGenPWLWeight[p,sc,n,g,k] <= sum(optmodel.vHydGenPWLSegment[p,sc,n,g,s] for s in segs)
+        optmodel.__setattr__('ePWLAdjacency', Constraint(psn_hpwl_bp, rule=ePWLAdjacency, doc='electrolyser PWL SOS2 adjacency (weights only on the active segment)'))
+
+        def ePWLPower(optmodel, p,sc,n,g):
+            return optmodel.vEleTotalCharge[p,sc,n,g] - model.Par['pHydGenStandByPower'][g] * optmodel.vHydGenStandBy[p,sc,n,g] == sum(optmodel.vHydGenPWLWeight[p,sc,n,g,k] * model.pwl_curve[g][k][0] for k in model.pwlbp)
+        optmodel.__setattr__('ePWLPower', Constraint(psn_hpwl, rule=ePWLPower, doc='electrolyser PWL productive electricity from breakpoint weights'))
+
+        def ePWLHydrogen(optmodel, p,sc,n,g):
+            return optmodel.vHydTotalOutput[p,sc,n,g] == sum(optmodel.vHydGenPWLWeight[p,sc,n,g,k] * model.pwl_curve[g][k][1] for k in model.pwlbp)
+        optmodel.__setattr__('ePWLHydrogen', Constraint(psn_hpwl, rule=ePWLHydrogen, doc='electrolyser PWL hydrogen output from breakpoint weights'))
 
     # Electrolyser three-state model (on / standby / off): on and standby are mutually
     # exclusive, off is the remainder. Only built where the unit has a standby capability

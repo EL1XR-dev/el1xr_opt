@@ -1031,6 +1031,37 @@ def create_variables(model, optmodel, indlog):
     #%% start time
     StartTime = time.time()
 
+    # %% Electrolyser piecewise-linear part-load efficiency curve (audit Phase B / B1)
+    # Replaces the constant ProductionFunction (kWh/kgH2) with a part-load curve. FLAG-GATED
+    # by pOptIndBinElectrolyserPWL (default 0 -> constant ProductionFunction, byte-unchanged).
+    # Canonical alkaline shape (Brauns & Turek 2020, Processes 8(2):248): specific energy is
+    # lowest near ~85% load and rises toward both low load and full load. The multipliers are
+    # RELATIVE to the unit's full-load ProductionFunction, so at full load the PWL reproduces
+    # the legacy linear conversion exactly. Each curve is 4 breakpoints (x_k = productive
+    # electricity in kW, y_k = hydrogen out in kgH2/h) spanning the unit's [MinCharge, MaxCharge]
+    # productive range; the SOS2 (segment-binary) convex combination in oM_ModelFormulation
+    # picks the active segment.
+    model.pwl_curve = {}
+    model.hpwl      = []
+    model.pwlbp     = list(range(4))   # breakpoint indices 0..3
+    model.pwlseg    = list(range(3))   # segment indices 0..2 (between adjacent breakpoints)
+    if int(model.Par.get('pOptIndBinElectrolyserPWL', 0)) == 1:
+        _anchor_f    = [0.10, 0.20, 0.50, 0.85, 1.00]   # load fraction
+        _anchor_mult = [1.35, 1.25, 1.08, 0.97, 1.00]   # specific energy / full-load value
+        for g in model.e2h:
+            pf   = float(model.Par['pHydGenProductionFunction'][g])
+            pmax = max(float(model.Par['pHydMaxCharge'][g][idx]) for idx in model.psn)
+            try:
+                pmin = max(float(model.Par['pHydMinCharge'][g][idx]) for idx in model.psn)
+            except (KeyError, ValueError):
+                pmin = 0.0
+            if pf <= 0.0 or pmax <= 0.0:
+                continue
+            fmin  = max(min(pmin / pmax, 1.0), 0.0)
+            fracs = [fmin + (1.0 - fmin) * t for t in (0.0, 0.4, 0.75, 1.0)]
+            model.pwl_curve[g] = [(f * pmax, (f * pmax) / (pf * float(np.interp(f, _anchor_f, _anchor_mult)))) for f in fracs]
+            model.hpwl.append(g)
+
     # model.Peaks   = Set(initialize=[ i for i in range(1,4,1)]) # number of selected peaks hours
     if model.Par['pParNumberPowerPeaks'] == 0:
         model.Peaks   = RangeSet(1)
@@ -1223,6 +1254,18 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydPeakGlobalInd',             Var(model.psnhr, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
         setattr(optmodel, 'vHydPeakMonthInd',              Var(model.psdhr, model.Peaks, within=Binary,       initialize=0, doc='monthly peak hour indicator           '))
         setattr(optmodel, 'vHydPeakDayInd',                Var(model.psdnhr,             within=Binary,       initialize=0, doc='daily peak hour indicator             '))
+
+    # Electrolyser PWL part-load efficiency (audit Phase B / B1): breakpoint weights (lambda)
+    # and the active-segment indicator for the SOS2 convex combination. Built only for the
+    # flagged electrolysers (model.hpwl), so default-off cases declare nothing (byte-unchanged).
+    # The segment indicator follows the commitment's domain (binary, or relaxed under the LP
+    # operation mode); the weights are always continuous in [0,1] (bounded by the convexity row).
+    if model.hpwl:
+        _pwl_seg_domain = UnitInterval if model.Par['pOptIndBinGenOperat'] == 0 else Binary
+        _pwl_bp_idx  = [(p, sc, n, g, k) for (p, sc, n) in model.psn for g in model.hpwl for k in model.pwlbp]
+        _pwl_seg_idx = [(p, sc, n, g, s) for (p, sc, n) in model.psn for g in model.hpwl for s in model.pwlseg]
+        setattr(optmodel, 'vHydGenPWLWeight',  Var(_pwl_bp_idx,  within=NonNegativeReals, initialize=0, doc='electrolyser PWL breakpoint weight (lambda)'))
+        setattr(optmodel, 'vHydGenPWLSegment', Var(_pwl_seg_idx, within=_pwl_seg_domain,  initialize=0, doc='electrolyser PWL active-segment indicator'))
 
     if model.Par['pOptIndBinNetOperat'] == 0:
         setattr(optmodel, 'vEleNetCommit',                 Var(model.psnela,  within=UnitInterval, initialize=0, doc='network binary operation              '))

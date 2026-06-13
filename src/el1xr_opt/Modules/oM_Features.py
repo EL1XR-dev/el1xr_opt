@@ -64,6 +64,8 @@ FEATURES = [
     Feature("energy_community",       "IndBinCommunity",     0, makes_integer=False,
             module="oM_Community",
             doc="energy-community / virtual sharing among members in a zone"),
+    Feature("electrolyser_pwl_efficiency", "IndBinElectrolyserPWL", 0, makes_integer=True,
+            doc="piecewise-linear electrolyser part-load efficiency (else constant ProductionFunction)"),
 ]
 
 FLAG_DEFAULTS = {f.flag: f.default for f in FEATURES}
