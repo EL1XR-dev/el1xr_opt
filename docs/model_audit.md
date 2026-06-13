@@ -390,6 +390,25 @@ incident lines in its build guard but includes no flow/import/export term, so in
 multi-node case the retailer must cover the local imbalance as if the network
 delivered nothing (the commented-out `eEleBuyComposition` suggests the buy-import
 link was never finished). Correct only for single-node cases.
+**— ANALYSED, NOT CHANGED (batch 6): needs a modelling decision, flagged for the user.**
+The model carries two parallel balances: the PHYSICAL nodal balance `eEleBalance` (KCL with
+`vEleNetFlow` and grid `vEleImport`/`vEleExport`; grid fees/taxes/incentives are charged on
+`vEleImport`/`vEleExport`), and this COMMERCIAL per-retailer balance (the retailer's assigned
+generation/demand/charge closed by `vEleBuy`/`vEleSell`; the energy/day-ahead cost is charged
+on `vEleBuy`). Verified that EVERY shipped/sizing case has exactly ONE retailer (`EleR_01`)
+owning the entire portfolio (no unassigned generation or demand), so this balance sums the
+whole system and the network flows are internal to that single portfolio -- it is **correct
+as-is** for all goldens, which is why they pass. C14 only bites with **two or more retailers
+split across nodes** (no shipped case has this). The genuine missing piece is then NOT a flow
+term here (the flows are already in `eEleBalance`; adding them here would double-count) but the
+unfinished `vEleBuy` <-> `vEleImport` coupling that ties each retailer's commercial purchase to
+the physical grid import at its node. Designing that multi-retailer commercial/physical
+coupling is a real modelling task whose only effect is on multi-retailer multi-node cases, and
+it would re-baseline goldens on a chosen semantics. Rather than guess that semantics and risk
+baking an incorrect balance into the validated multi-node goldens, the code is left unchanged
+with a clarifying comment at the constraint; the design is flagged for the user. **Decision
+needed:** is the retail balance intended as a commercial portfolio balance (current behaviour,
+keep) or a true nodal balance, and how should `vEleBuy` couple to `vEleImport` per retailer?
 
 C15. **Duration weighting is inconsistent for several money terms.** (a) The
 volumetric grid fee (`eTotalEleNetUseVarCost`, :79), energy tax (:146) and incentive
@@ -554,62 +573,150 @@ hydrogen-generation CSV without the columns crashes.
 C28. `eE2HMinCharge2ndBlock` (:1128-1133) is vacuous: `2ndBlock/Max >= uc - 1` with a
 NonNegative LHS and a nonpositive RHS can never bind. The state chain rests entirely
 on the Max constraint (which suffices for FCR-up; see C3 for the down side).
+**— DONE (documented, batch 1): this is a standard openTEPES min-2nd-block symmetry
+row (like `eHydMinESSOutput2ndBlock` / `eHydMinOutput2ndBlock`), non-binding by design,
+not a bug. A comment at the constraint records this; no logic change.**
 C29. The `>= 0` gates on `pOperatingReserveRequire_*` (27 sites) are always true
 (the parameter is `fillna(0)` and clamped); clearly meant `> 0`. No wrong solutions,
-just dead gating and redundant rows.
+just dead gating and redundant rows. **— DONE (batch 1): all 28 per-unit FCR build
+gates flipped `>= 0` -> `> 0`, so a zero-requirement level skips the dead rows; the
+requirement caps (count-gated, not requirement-gated) still bind the bids to zero, so
+the FCR goldens (HomeBattFCRDonly/FCRNonly, ElectrolyserFCR) are byte-unchanged. Guarded
+by `test_reserve_require_gates_use_strict_positive`.**
 C30. The endurance constraints (storage :620-632 and e2h :705-716) pair the level-n
 inventory with the bid at n-1 and skip `n.first()`, so the **last** level's bid is in
 no endurance constraint — end-of-horizon bids are free of the energy backing.
+**— DONE (batch 3, GOLDENS RE-BASELINED): three additive terminal-level constraints
+(`eEleStorageEnduranceUpEnd` / `DownEnd` for storage, `eEleFreqDownEnduranceConvEnd` for the
+e2h node) back the last load level's FCR bid with the last level's inventory/store headroom
+(the inventory one period ahead does not exist). The interior rolling constraints are
+unchanged. This removes a free end-of-horizon reserve bid, so the four sizing cases that
+exploited it cost a little more: HoodBatt -22.042 -> -19.989, HomeBattFCRNonly 56.980 ->
+57.350, H2Tank 6774.093 -> 6776.720, Electrolyser 6774.090 -> 6776.716 (all UP, the correct
+direction). The other goldens were not bidding at the last level and are unchanged. Guarded by
+`test_terminal_endurance_constraints_exist`.**
 C31. The FCR-N volume cap (:466) uses the *average* of the up/down requirements; for
 a symmetric product the deliverable volume is the *minimum*. Exact when the inputs
-are equal (the usual case).
+are equal (the usual case). **— DONE (batch 3): the volume cap now uses
+`min(Require_FCRN_Up, Require_FCRN_Down)`; the FCR-N revenue price average is a separate,
+legitimate term and is untouched. Byte-unchanged in every shipped/sizing case because the
+FCR-N up and down requirements are equal there (min == avg), so no golden moved. Guarded by
+`test_fcrn_volume_cap_uses_minimum_not_average`.**
 C32. RES units get FCR bid variables (declared over `eg|e2h`) that are in no cap, no
 relation, no revenue, and are never fixed — dead variables that can carry arbitrary
-values into the output tables.
+values into the output tables. **— DONE (batch 1): the existing FCR fixing loops run
+over `psnegnr` (non-RES) and `psne2h`, never touching `egr`; a new loop over `model.psnegr`
+fixes the three RES bid variables to zero. They enter no constraint or objective term, so
+the goldens are byte-unchanged. Guarded by `test_res_fcr_bid_variables_are_fixed`.**
 C33. `eEleFreqUp/DownChargeBound` (:581,591,598,608) divide by `pEleMaxCharge` with
 no positivity guard (the e2h analogues guard) — `ZeroDivisionError` for a
 discharge-only ESS with default flags.
 C34. With `pParNumberPowerPeaks == 0` the peak cost (:72) charges a power tariff
-with no kW quantity — a dimensionally meaningless constant.
+with no kW quantity — a dimensionally meaningless constant. **— DONE (warning, batch 2):
+the constant is a fixed objective offset, so it does not change the optimal solution
+(only the reported total cost). A load-time warning now fires when `pParNumberPowerPeaks
+== 0` and a non-zero `pEleRetPowerTariff` is set. Zeroing the offset would move any
+golden that hits this config, so it is left as an optional follow-up. Byte-unchanged.**
 C35. The per-unit binary relaxation loop (oM_InputData.py:1458-1462) never relaxes
 `vHydGenStandBy` and runs over `hgt` (skipping an e2h with `ConstantVarCost == 0`);
 in the LP default the three-state logic is continuously gameable (the demo correctly
-forces `binary_uc`). Document that standby results need binary UC.
+forces `binary_uc`). Document that standby results need binary UC. **— DONE (warning,
+batch 2): a load-time warning fires when a standby-capable electrolyser is run with
+relaxed commitment (`pOptIndBinGenOperat == 0`), stating the standby schedule needs
+binary UC to be meaningful. Byte-unchanged.**
 C36. `vHydGenShutDown[e2h] = 0` by design, but a nonzero `ShutDownCost` in the data
-(AEL_01: 1000) is silently ignored — deserves a load-time warning.
+(AEL_01: 1000) is silently ignored — deserves a load-time warning. **— DONE (warning,
+batch 2): a per-unit warning fires for any electrolyser with `ShutDownCost > 0`, noting
+the shut-down variable is fixed to zero so the cost is ignored. Byte-unchanged.**
 C37. Hydrogen storage outflow ramps (:1488,1498) reuse the *generation* ramp
 parameter `pHydGenRampUp/Down` where electricity had dedicated outflow-ramp
-parameters (commented out) — different physical limits.
+parameters (commented out) — different physical limits. **— DONE (documented, batch 3):
+a comment at the H2 charge/outflow ramp records that it reuses the generation ramp because
+no dedicated hydrogen outflow-ramp parameter exists in the input schema (the electricity
+side defines `pEleGenOutflowsRampUp/Down` but leaves the matching constraint commented out,
+so electricity storage has no outflow ramp at all). Adding a dedicated `pHydGenOutflowsRamp*`
+parameter with a fallback to the generation ramp (keeping existing cases unchanged) is the
+documented follow-up -- a data-schema decision, not changed here. Guarded by
+`test_h2_storage_ramp_reuse_is_documented`.**
 C38. `eTotalICost` multiplies the lump-sum annualized investment cost by `factor1`
 (oM_Investment.py:162) — dimensionally suspect unless `FixedInvestmentCost` is
 per-unit-capacity (assert the convention); doc says `[MEUR]`, objective says
-`[kEUR]`.
+`[kEUR]`. **— DONE (documented, batch 4): unit labels fixed -- `vTotalICost` is added
+directly to the `[EUR]` operating-cost components in `eTotalSCost` with no conversion, so
+its `[MEUR]` label was wrong; it and the objective doc are now `[EUR]`. The factor1
+multiplication is documented as the asserted convention: it is dimensionally consistent
+only because EVERY objective term is scaled by factor1, so factor1 is a global objective
+scalar that does not change the argmin (build-vs-operate trade-off invariant under the unit
+choice). All shipped cases run at factor1 == 1 (a no-op), so this is latent; a factor1 != 1
+regression test is the documented follow-up. Doc-only, byte-unchanged; guarded by
+`test_investment_cost_unit_label_consistent`.**
 C39. A future-dated investment candidate (`InitialPeriod > base year`) is silently
 dropped from the model with no warning (the sizing generator works around it by
-rewriting `InitialPeriod`).
+rewriting `InitialPeriod`). **— DONE (warning, batch 2): after the generation sets are
+built, a warning lists any electricity or hydrogen unit dropped because its
+`InitialPeriod` is after the economic base year (single-period run). Byte-unchanged.**
 C40. Heat sector (oM_HeatSector.py): no `COP x heat-to-power efficiency < 1` data
 guard (a free power-heat-power loop is representable); the thermal store has no
 cyclic/terminal condition (initial stock is free energy, horizon ends empty); store
 charge/discharge bounds use the *energy* capacity as a power rating with no mutual
 exclusivity; a store-only node is missing from the heat-balance node list
 (`n2hts` not in the union); `vHeatNotServed` is uncapped.
+**— DONE (batch 5). No shipped/sizing golden carries heat tables, so all five are latent for
+the cost goldens; verified against `tests/test_heat_sector.py`. Fixes:**
+- **store-only node now in the balance node union (`n2hts` added), so a store on its own node
+  is constrained instead of free;**
+- **`vHeatNotServed` capped by demand (`eHeatNotServedCap`), so it cannot be a paid sink
+  (mirrors hydrogen C41);**
+- **thermal-store terminal condition added (`eHeatInventoryTerminal`: final inventory >=
+  initial), so the initial stock is not free energy drained over the horizon -- the
+  defensible default, matching the electricity store's cycle-time-step tie; chosen autonomously
+  and flagged (a strict `== initial` cyclic form is the alternative);**
+- **free power-heat-power loop now warned at load time when `COP x efficiency >= 1` (such a
+  loop makes the LP unbounded);**
+- **power-rating / mutual-exclusivity (charge/discharge bounded by the energy capacity, no
+  charge-XOR-discharge binary): DOCUMENTED as a known limitation -- harmless at the optimum
+  under `StoEff < 1`; a dedicated power-rating parameter + mutual-exclusivity binary is a
+  schema/MIP follow-up, not changed here.**
+**Guarded by `test_heat_store_terminal_and_not_served_cap`, `test_heat_store_only_node_enters_balance`,
+`test_power_heat_power_loop_warns`.**
 C41. Flexible hydrogen demand has no recovery constraint (unlike
 `eEleDemandShiftBalance`) and `vHNS <= pVarMaxDemand` regardless of the flexed
 demand — `vHydDemand - vHNS` can go negative (a paid sink).
 C42. `eEleInflows2Commitment` / `Outflows2Commitment` families (:730-756, 954-980)
 contain no commitment variable despite name and doc — parameter-bound duplicates.
+**— DONE (documented, batch 1): the misleading "to commitment" doc strings and the two
+section comments are corrected to state these bound the in/outflow variable by its
+parameter limit (the commitment-coupled form was never wired). The attribute name
+`...2Commitment` is deliberately retained to avoid renaming the constraint in result/.lp
+output — a separate cosmetic refactor. Guarded by `test_inflow_outflow_bound_docs_not_commitment`.**
 C43. `pHydRetMaxBuy/Sell` exist only if the optional CSV columns do — the first case
 that activates a hydrogen retailer on a column-less file gets `KeyError` (no schema
 default, unlike the electricity peak factors).
 C44. The hydrogen day-ahead buy cost is stored in `vTotalHydMrkPPACost` under rule
 name `eHydMarketDayAheadCost` registered as `eTotalHydTradeCost` — misattributed in
-any report that greps by name.
+any report that greps by name. **— DONE (batch 2): the constraint attribute is renamed
+from `eTotalHydTradeCost` to `eHydMarketDayAheadCost`, matching its rule and the
+electricity analogue `eEleMarketDayAheadCost` (the old name was referenced nowhere else).
+The destination variable `vTotalHydMrkPPACost` actually holds the day-ahead trade cost;
+a comment records that the "PPA" in its name is historical, and the variable rename is
+deferred to avoid touching the objective registry and result-table columns. Byte-unchanged;
+guarded by `test_hydrogen_day_ahead_constraint_name_matches_rule`.**
 C45. Tautological `(NoDayAhead==1 or NoDayAhead==0)` conjuncts (:1057,1070,1100,
 1111) make the binary-gated 2nd-block branch unreachable for FCR-capable storage —
 dead logic; mutual exclusion still holds via the charge/discharge decisions.
+**— DONE (batch 1): the always-true conjunct is removed from the four ESS 2nd-block
+output/charge bounds. Behaviour is unchanged (an always-true `and` term drops out), so
+the goldens are byte-unchanged. The binary-gated `else` branch stays reachable only for
+non-FCR storage, as before; making it FCR-reachable would be a separate modelling
+decision. Guarded by `test_no_tautological_nodayahead_conjunct`.**
 C46. First-step electricity ramp (:1340,1350) uses `pEleSystemOutput` — a *system*
 aggregate, and a scalar overwritten across (p,sc) so only the last scenario's value
 survives — as each unit's pre-horizon output; essentially vacuous for small units.
+**— DONE (batch 3): both first-step ramp branches now use the unit's own
+`pEleInitialOutput[p,sc,egt]` (per-unit, indexed over `ps * eg`) instead of the system
+scalar. Latent in every shipped/sizing golden (none has a thermal `egt` unit with an active
+ramp at the first level), so no golden moved. Guarded by
+`test_first_step_ramp_uses_per_unit_initial_output`.**
 C47. `pHydRetTariffType` is read by the peak-variable fixing loops but never created —
 the hydrogen retail file carries no `TariffType` column, so the first case that
 activates a hydrogen retailer crashes with `KeyError` (same family as C43). **— FIXED

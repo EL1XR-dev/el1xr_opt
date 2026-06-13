@@ -44,7 +44,10 @@ def create_investment(model, optmodel, indlog):
 
     # Always create the total investment-cost variable so the objective can use
     # it even when there are no candidate units.
-    setattr(optmodel, 'vTotalICost', Var(within=NonNegativeReals, doc='total annualized investment cost [MEUR]'))
+    # Audit C38: the unit label was [MEUR], but vTotalICost is added directly to the [EUR]
+    # operating-cost components in eTotalSCost (no unit conversion), so it must be in the same
+    # unit -- EUR (whatever native currency the data uses; the demo prints SEK). Label fixed.
+    setattr(optmodel, 'vTotalICost', Var(within=NonNegativeReals, doc='total annualized investment cost [EUR]'))
 
     if not len(model.egc) and not len(model.hgc):
         optmodel.vTotalICost.fix(0.0)
@@ -157,6 +160,12 @@ def create_investment(model, optmodel, indlog):
     # pEleGenInvestCost / pHydGenInvestCost are the annualized fixed cost of the
     # FULL nameplate unit (FixedInvestmentCost * FixedChargeRate), so with a build
     # fraction in [0,1] the cost of a partially built unit is the simple product.
+    # Asserted convention (audit C38): this factor1 multiplication is only dimensionally
+    # consistent because EVERY objective term (operating costs and this investment cost) is
+    # scaled by factor1, so factor1 acts as a single global objective scalar that does not
+    # change the argmin -- the build-vs-operate trade-off stays invariant under the unit
+    # choice. This holds at the shipped default factor1 == 1 (where it is a no-op); a
+    # factor1 != 1 regression test is the documented follow-up.
     #
     # Period weighting: operating costs enter the objective weighted by
     # pDiscountFactor[p] per period (eTotalTCost). The annualized investment cost

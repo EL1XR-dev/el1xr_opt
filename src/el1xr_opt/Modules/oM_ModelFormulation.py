@@ -24,7 +24,7 @@ def create_objective_function(model, optmodel, indlog):
     # defining the objective function
     def eTotalSCost(optmodel):
         return optmodel.vTotalSCost
-    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [kEUR]'))
+    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [EUR]'))
 
     def eTotalTCost(optmodel):
         # vTotalICost is the investment cost from the capacity-sizing layer
@@ -137,9 +137,15 @@ def create_objective_function_components(model, optmodel, indlog):
         return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkPPACost[p,sc,n])
     optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [kEUR]'))
 
+    # Audit C44: this rule defines the hydrogen day-ahead BUY cost. The constraint attribute
+    # is named to match its rule and the electricity analogue eEleMarketDayAheadCost (it was
+    # mis-registered as 'eTotalHydTradeCost'). The destination variable vTotalHydMrkPPACost
+    # holds this day-ahead trade cost -- the "PPA" in its name is historical (a separate
+    # hydrogen PPA term was never split out); the variable rename is deferred to avoid
+    # touching the objective registry and result-table column names.
     def eHydMarketDayAheadCost(optmodel, p,sc,n):
         return optmodel.vTotalHydMrkPPACost[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
-    optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [kEUR]'))
+    optmodel.__setattr__('eHydMarketDayAheadCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [kEUR]'))
 
     #%% Total hydrogen market revenues
     def eHydMarketRevenue(optmodel, p,sc,n):
@@ -345,6 +351,17 @@ def create_constraints(model, optmodel, indlog):
     # on, so existing cases build an identical constraint.
     community_on = bool(model.Par.get('pOptIndBinCommunity', 0))
 
+    # Audit C14 (analysed, NOT changed -- needs a modelling decision): this is the COMMERCIAL
+    # per-retailer balance (the retailer's assigned generation/demand/charge closed by
+    # vEleBuy/vEleSell). The PHYSICAL nodal balance with line flows and grid import/export is
+    # eEleBalance below. With a single retailer that owns the whole portfolio (every shipped
+    # case), this balance sums the entire system and the network flows are internal, so it is
+    # correct -- no flow term is needed and adding one would double-count the network already
+    # in eEleBalance. With two or more retailers split across nodes (no shipped case has this),
+    # the missing piece is the vEleBuy<->vEleImport coupling (the commented eEleBuyComposition
+    # below was the unfinished attempt), not a flow term here. Designing that multi-retailer
+    # commercial<->physical coupling, and any golden re-baseline it implies, is left as a
+    # deliberate decision; see docs/model_audit.md C14.
     def eEleRetNodeBalance(optmodel, p,sc,n,er):
         nd = model.Par['pEleRetNode'][er]
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
@@ -530,35 +547,35 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleFreqContReserveNor(optmodel, p,sc,n):
         if sum(1 for egt in model.egt if model.Par['pEleGenNoFCRN'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRN'][egs] == 0) + sum(1 for e2h in model.e2h if model.Par['pHydGenNoFCRN'][e2h] == 0):
-            return sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRN'][egt] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRN'][egs] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRN'][e2h] == 0) <= (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] + model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n]) / 2
+            return sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRN'][egt] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRN'][egs] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRN'][e2h] == 0) <= min(model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n], model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqContReserveNor', Constraint(optmodel.psn, rule=eEleFreqContReserveNor, doc='Frequency containment reserve - normal'))
 
     # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
     def eEleRelationFreqDisUpBid2Gen(optmodel, p,sc,n,egt):
-        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
             return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] == optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqDisUpBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqDisUpBid2Gen, doc='Relation FCR-D upward bid to generation'))
 
     def eEleRelationFreqDisDownBid2Gen(optmodel, p,sc,n,egt):
-        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
             return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] == optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqDisDownBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqDisDownBid2Gen, doc='Relation FCR-D downward bid to generation'))
 
     def eEleRelationFreqNorUpBid2Gen(optmodel, p,sc,n,egt):
-        if model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egt] == 0:
+        if model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egt] == 0:
             return optmodel.vEleFreqContReserveNorBid[p,sc,n,egt] <= optmodel.vEleFreqContReserveNorUpGen[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqNorUpBid2Gen', Constraint(optmodel.psnegt, rule=eEleRelationFreqNorUpBid2Gen, doc='Relation FCR-N upward bid to generation'))
 
     def eEleRelationFreqNorDownBid2Gen(optmodel, p,sc,n,egt):
-        if model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egt] == 0:
+        if model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egt] == 0:
             return optmodel.vEleFreqContReserveNorBid[p,sc,n,egt] <= optmodel.vEleFreqContReserveNorDownGen[p,sc,n,egt]
         else:
             return Constraint.Skip
@@ -566,28 +583,28 @@ def create_constraints(model, optmodel, indlog):
 
     # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric storage system is defined as follows:
     def eEleRelationFreqDisUpBid2Stor(optmodel, p,sc,n,egs):
-        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
             return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] == optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqDisUpBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqDisUpBid2Stor, doc='Relation FCR-D upward bid to storage'))
 
     def eEleRelationFreqDisDownBid2Stor(optmodel, p,sc,n,egs):
-        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0:
             return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] == optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqDisDownBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqDisDownBid2Stor, doc='Relation FCR-D downward bid to storage'))
 
     def eEleRelationFreqNorUpBid2Stor(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
             return optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] == optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqNorUpBid2Stor', Constraint(optmodel.psnegs, rule=eEleRelationFreqNorUpBid2Stor, doc='Relation FCR-N upward bid to storage'))
 
     def eEleRelationFreqNorDownBid2Stor(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
             return optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] == optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
         else:
             return Constraint.Skip
@@ -595,14 +612,14 @@ def create_constraints(model, optmodel, indlog):
 
     # symmetrical FCR-N provision from an electric ESS
     def eEleSymmFreqNorStor2Ch(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
             return optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] == optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleSymmFreqNorStor2Ch', Constraint(optmodel.psnegs, rule=eEleSymmFreqNorStor2Ch, doc='Symmetrical FCR-N charge provision from storage'))
 
     def eEleSymmFreqNorStor2Dis(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][egs] == 0):
             return optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] == optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]
         else:
             return Constraint.Skip
@@ -610,7 +627,7 @@ def create_constraints(model, optmodel, indlog):
 
     # The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
     def eEleFreqUpDischargeHeadroom(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             if  model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
                 return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] - optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
             else:
@@ -624,14 +641,14 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleFreqUpDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqUpDischargeHeadroom, doc='FCR-D and FCR-N upward discharge headroom'))
 
     def eEleFreqUpChargeHeadroom(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] <= optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqUpChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqUpChargeHeadroom, doc='FCR-D and FCR-N upward charge headroom'))
 
     def eEleFreqDownDischargeHeadroom(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             if model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
                 return optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs] <= optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
             else:
@@ -643,7 +660,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleFreqDownDischargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDownDischargeHeadroom, doc='FCR-D downward discharge headroom'))
 
     def eEleFreqDownChargeHeadroom(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             # For a candidate storage unit cap the down-charge reserve by the BUILT charge
             # capacity (nameplate * build fraction), so a fractionally built unit cannot
             # sell down-reserve on capacity it has not built (C21b).
@@ -655,14 +672,14 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleFreqDownChargeHeadroom', Constraint(optmodel.psnegs, rule=eEleFreqDownChargeHeadroom, doc='FCR-D downward charge headroom'))
 
     def eEleFreqUpChargeBound(optmodel, p,sc,n,egs):
-        if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0)) and model.Par['pEleMaxCharge'][egs][p,sc,n]:
+        if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0)) and model.Par['pEleMaxCharge'][egs][p,sc,n]:
             return (optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqUpChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqUpChargeBound, doc='FCR-D and FCR-N upward charge bound'))
 
     def eEleFreqUpDischargeBound(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             if model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
                 return (optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
             else:
@@ -672,14 +689,14 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eEleFreqUpDischargeBound', Constraint(optmodel.psnegs, rule=eEleFreqUpDischargeBound, doc='FCR-D upward discharge bound'))
 
     def eEleFreqDownChargeBound(optmodel, p,sc,n,egs):
-        if ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0)) and model.Par['pEleMaxCharge'][egs][p,sc,n]:
+        if ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0)) and model.Par['pEleMaxCharge'][egs][p,sc,n]:
             return (optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDownChargeBound, doc='FCR-D downward charge bound'))
 
     def eEleFreqDownDischargeBound(optmodel, p,sc,n,egs):
-        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             if model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
                 return (optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= model.Par['pVarFixedAvailability'][egs][p,sc,n]
             else:
@@ -709,54 +726,72 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D and FCR-N downward'))
 
+    # C30: the two rolling endurance constraints above back the bid at n-1 with the inventory
+    # at n and skip the first level, so the bid at the LAST level has no energy backing. Add a
+    # terminal row that backs the last level's bid with the last level's inventory (the
+    # inventory one period ahead does not exist), so end-of-horizon bids are not free.
+    def eEleStorageEnduranceUpEnd(optmodel, p,sc,n,egs):
+        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n == model.n.last():
+            return optmodel.vEleInventory[p,sc,n,egs] >= (1/model.Par['pEleGenEfficiency_discharge'][egs]) * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorageEnduranceUpEnd', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUpEnd, doc='Storage endurance for the terminal-level FCR-D/N upward bid (C30)'))
+
+    def eEleStorageEnduranceDownEnd(optmodel, p,sc,n,egs):
+        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n == model.n.last():
+            return model.Par['pEleMaxStorage'][egs][p,sc,n] - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorageEnduranceDownEnd', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDownEnd, doc='Storage endurance for the terminal-level FCR-D/N downward bid (C30)'))
+
     # --- Electrolyser (e2h) FCR provision: charge-side mirror of the storage formulation.
     # An electrolyser is a controllable load, so it offers FCR by modulating consumption
     # (FCR-up = reduce, FCR-down = increase). There is no discharge side. Gated on the
     # electrolyser's own participation flags pHydGenNoFCRD / pHydGenNoFCRN (default 1).
     def eEleRelationFreqDisUpBid2Conv(optmodel, p,sc,n,e2h):
-        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0:
             return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h] == optmodel.vEleFreqContReserveDisUpCha[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqDisUpBid2Conv', Constraint(optmodel.psne2h, rule=eEleRelationFreqDisUpBid2Conv, doc='Relation FCR-D upward bid to electrolyser consumption'))
 
     def eEleRelationFreqDisDownBid2Conv(optmodel, p,sc,n,e2h):
-        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0:
+        if model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0:
             return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h] == optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqDisDownBid2Conv', Constraint(optmodel.psne2h, rule=eEleRelationFreqDisDownBid2Conv, doc='Relation FCR-D downward bid to electrolyser consumption'))
 
     def eEleRelationFreqNorUpBid2Conv(optmodel, p,sc,n,e2h):
-        if model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0:
+        if model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0:
             return optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h] == optmodel.vEleFreqContReserveNorUpCha[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqNorUpBid2Conv', Constraint(optmodel.psne2h, rule=eEleRelationFreqNorUpBid2Conv, doc='Relation FCR-N upward bid to electrolyser consumption'))
 
     def eEleRelationFreqNorDownBid2Conv(optmodel, p,sc,n,e2h):
-        if model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0:
+        if model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0:
             return optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h] == optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRelationFreqNorDownBid2Conv', Constraint(optmodel.psne2h, rule=eEleRelationFreqNorDownBid2Conv, doc='Relation FCR-N downward bid to electrolyser consumption'))
 
     def eEleSymmFreqNorConv(optmodel, p,sc,n,e2h):
-        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 or model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0) and model.Par['pHydGenNoFCRN'][e2h] == 0:
+        if (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 or model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0) and model.Par['pHydGenNoFCRN'][e2h] == 0:
             return optmodel.vEleFreqContReserveNorUpCha[p,sc,n,e2h] == optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleSymmFreqNorConv', Constraint(optmodel.psne2h, rule=eEleSymmFreqNorConv, doc='Symmetrical FCR-N provision from the electrolyser'))
 
     def eEleFreqUpChargeHeadroomConv(optmodel, p,sc,n,e2h):
-        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0):
             return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,e2h] <= optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqUpChargeHeadroomConv', Constraint(optmodel.psne2h, rule=eEleFreqUpChargeHeadroomConv, doc='FCR upward charge headroom for the electrolyser'))
 
     def eEleFreqDownChargeHeadroomConv(optmodel, p,sc,n,e2h):
-        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0):
+        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0):
             return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h] <= model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n] * optmodel.vHydGenCommitment[p,sc,n,e2h] - optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h]
         else:
             return Constraint.Skip
@@ -768,21 +803,21 @@ def create_constraints(model, optmodel, indlog):
     # because the headroom above already multiplies the nameplate by the commitment, and
     # multiplying by the build fraction too would be bilinear (C21b).
     def eEleFreqDownChargeHeadroomConvInvest(optmodel, p,sc,n,e2h):
-        if e2h in model.hgc and ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)):
+        if e2h in model.hgc and ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)):
             return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] <= model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n] * optmodel.vHydGenInvest[e2h]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeHeadroomConvInvest', Constraint(optmodel.psne2h, rule=eEleFreqDownChargeHeadroomConvInvest, doc='FCR downward charge headroom for a candidate electrolyser (build-limited)'))
 
     def eEleFreqUpChargeBoundConv(optmodel, p,sc,n,e2h):
-        if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)) and model.Par['pHydMaxCharge'][e2h][p,sc,n]:
+        if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)) and model.Par['pHydMaxCharge'][e2h][p,sc,n]:
             return (optmodel.vEleFreqContReserveDisUpCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,e2h]) / model.Par['pHydMaxCharge'][e2h][p,sc,n] <= model.Par['pVarFixedAvailability'][e2h][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqUpChargeBoundConv', Constraint(optmodel.psne2h, rule=eEleFreqUpChargeBoundConv, doc='FCR upward charge bound for the electrolyser'))
 
     def eEleFreqDownChargeBoundConv(optmodel, p,sc,n,e2h):
-        if ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] >= 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)) and model.Par['pHydMaxCharge'][e2h][p,sc,n]:
+        if ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)) and model.Par['pHydMaxCharge'][e2h][p,sc,n]:
             return (optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,e2h]) / model.Par['pHydMaxCharge'][e2h][p,sc,n] <= model.Par['pVarFixedAvailability'][e2h][p,sc,n]
         else:
             return Constraint.Skip
@@ -807,6 +842,22 @@ def create_constraints(model, optmodel, indlog):
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownEnduranceConv', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConv, doc='Electrolyser FCR-down endurance bounded by node hydrogen-store headroom'))
 
+    # C30: the rolling conv-endurance above backs the bid at n-1 with the store headroom at n
+    # and skips the first level, leaving the last level's bid unbacked. Back it with the
+    # terminal-level store headroom (mirrors eEleStorageEnduranceDownEnd for the e2h node).
+    def eEleFreqDownEnduranceConvEnd(optmodel, p,sc,n,nd):
+        if n != model.n.last():
+            return Constraint.Skip
+        e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
+        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        if not e2h_at_node:
+            return Constraint.Skip
+        lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]
+                 + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,n,e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
+        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        return lhs <= rhs
+    optmodel.__setattr__('eEleFreqDownEnduranceConvEnd', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConvEnd, doc='Electrolyser FCR-down endurance for the terminal load level (C30)'))
+
     # print if the constraints object len is greater than 0
     if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
         len(optmodel.eEleRelationFreqDisUpBid2Gen) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Gen) > 0 or
@@ -818,34 +869,37 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the frequency containment reserve (FCR-D and FCR-N) constraints:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
-    # Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) constrained by the ESS commitment decision times the inflows data [p.u.]
+    # Energy inflows of ESS (only for load levels multiple of 1, 24, 168, 8736 h depending on the ESS storage type) bounded by the inflows data parameter [p.u.].
+    # Note (audit C42): despite the "2Commitment" attribute name, the right-hand side is the
+    # parameter limit, not a commitment variable -- the commitment-coupled form was never wired.
+    # The name is kept to avoid renaming the constraint in result/.lp output; only the doc is corrected.
     def eEleMaxInflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxStorage'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMaxInflows'][egs][p,sc,n] and (n,egs) in model.negs:
             return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMaxInflows'][egs][p,sc,n] <= 1
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleMaxInflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMaxInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
+    optmodel.__setattr__('eEleMaxInflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMaxInflows2Commitment, doc='energy inflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eEleMinInflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMinStorage'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMinInflows'][egs][p,sc,n] and (n,egs) in model.negs:
             return optmodel.vEleEnergyInflows[p,sc,n,egs] / model.Par['pEleMinInflows'][egs][p,sc,n] >= 1
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleMinInflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMinInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
+    optmodel.__setattr__('eEleMinInflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMinInflows2Commitment, doc='energy inflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eHydMaxInflows2Commitment(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxStorage'][hgs][p,sc,n] and model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and model.Par['pHydMaxInflows'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
             return optmodel.vHydEnergyInflows[p,sc,n,hgs] / model.Par['pHydMaxInflows'][hgs][p,sc,n] <= 1
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydMaxInflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMaxInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
+    optmodel.__setattr__('eHydMaxInflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMaxInflows2Commitment, doc='energy inflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eHydMinInflows2Commitment(optmodel, p,sc,n,hgs):
         if model.Par['pHydMinStorage'][hgs][p,sc,n] and model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and model.Par['pHydMinInflows'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
             return optmodel.vHydEnergyInflows[p,sc,n,hgs] / model.Par['pHydMinInflows'][hgs][p,sc,n] >= 1
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydMinInflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMinInflows2Commitment, doc='energy inflows to commitment [p.u.]'))
+    optmodel.__setattr__('eHydMinInflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMinInflows2Commitment, doc='energy inflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMaxInflows2Commitment) > 0 or len(optmodel.eEleMinInflows2Commitment) > 0 or len(optmodel.eHydMaxInflows2Commitment) > 0 or len(optmodel.eHydMinInflows2Commitment) > 0:
@@ -1057,34 +1111,36 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eAllEnergy2Ele', Constraint(optmodel.psnh2e, rule=eAllEnergy2Ele, doc='energy conversion from different energy type to electricity [p.u.]'))
 
-    # ESS outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) must be satisfied [GWh]
+    # ESS outflows (only for load levels multiple of 1, 24, 168, 672, and 8736 h depending on the ESS outflow cycle) bounded by the outflows data parameter [p.u.].
+    # Note (audit C42): the "2Commitment" attribute name is a misnomer -- the right-hand side
+    # is the parameter limit, not a commitment variable. Name kept; only the doc is corrected.
     def eEleMaxOutflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMaxOutflows'][egs][p,sc,n] and (n,egs) in model.negs:
             return optmodel.vEleEnergyOutflows[p,sc,n,egs] / model.Par['pEleMaxOutflows'][egs][p,sc,n] <= 1.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleMaxOutflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMaxOutflows2Commitment, doc='energy outflows to commitment [p.u.]'))
+    optmodel.__setattr__('eEleMaxOutflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMaxOutflows2Commitment, doc='energy outflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eEleMinOutflows2Commitment(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n] and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n] and model.Par['pEleMinOutflows'][egs][p,sc,n] and (n,egs) in model.negs:
             return optmodel.vEleEnergyOutflows[p,sc,n,egs] / model.Par['pEleMinOutflows'][egs][p,sc,n] >= 1.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eEleMinOutflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMinOutflows2Commitment, doc='energy outflows to commitment [p.u.]'))
+    optmodel.__setattr__('eEleMinOutflows2Commitment', Constraint(optmodel.psnegs, rule=eEleMinOutflows2Commitment, doc='energy outflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eHydMaxOutflows2Commitment(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] and model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and model.Par['pHydMaxOutflows'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
             return optmodel.vHydEnergyOutflows[p,sc,n,hgs] / model.Par['pHydMaxOutflows'][hgs][p,sc,n] <= 1.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydMaxOutflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMaxOutflows2Commitment, doc='energy outflows to commitment [p.u.]'))
+    optmodel.__setattr__('eHydMaxOutflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMaxOutflows2Commitment, doc='energy outflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eHydMinOutflows2Commitment(optmodel, p,sc,n,hgs):
         if model.Par['pHydMinCharge'][hgs][p,sc,n] and model.Par['pHydMaxPower2ndBlock'][hgs][p,sc,n] and model.Par['pHydMinOutflows'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
             return optmodel.vHydEnergyOutflows[p,sc,n,hgs] / model.Par['pHydMinOutflows'][hgs][p,sc,n] >= 1.0
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydMinOutflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMinOutflows2Commitment, doc='energy outflows to commitment [p.u.]'))
+    optmodel.__setattr__('eHydMinOutflows2Commitment', Constraint(optmodel.psnhgs, rule=eHydMinOutflows2Commitment, doc='energy outflows bound [p.u.] (parameter limit, not commitment; audit C42)'))
 
     def eEleMaxEnergyOutflows(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n] + model.Par['pEleMaxPower'][egs][p,sc,n] and (n,egs) in model.negso:
@@ -1161,7 +1217,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxESSOutput2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
             # return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= 1.0
-            if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and (model.Par['pEleGenNoDayAhead'][egs] == 1 or model.Par['pEleGenNoDayAhead'][egs] == 0):
+            if model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0:
                 return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= 1.0
             else:
                 return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
@@ -1174,7 +1230,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMinESSOutput2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMinPower'][egs][p,sc,n]:
             # return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pEleMinPower'][egs][p,sc,n] >= 0.0
-            if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and (model.Par['pEleGenNoDayAhead'][egs] == 1 or model.Par['pEleGenNoDayAhead'][egs] == 0):
+            if model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0:
                 return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] - optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]) / model.Par['pEleMinPower'][egs][p,sc,n] >= 0.0
             else:
                 return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs] - optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]) / model.Par['pEleMinPower'][egs][p,sc,n] >= optmodel.vEleStorDischarge[p,sc,n,egs]
@@ -1204,7 +1260,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxESSCharge2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n]:
             # return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
-            if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and (model.Par['pEleGenNoDayAhead'][egs] == 1 or model.Par['pEleGenNoDayAhead'][egs] == 0):
+            if model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0:
                 return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
             else:
                 return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
@@ -1215,7 +1271,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMinESSCharge2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMinCharge'][egs][p,sc,n]:
             # return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pEleMinCharge'][egs][p,sc,n] >= 0.0
-            if  (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and (model.Par['pEleGenNoDayAhead'][egs] == 1 or model.Par['pEleGenNoDayAhead'][egs] == 0):
+            if  model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0:
                 return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] - optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]) / model.Par['pEleMinCharge'][egs][p,sc,n] >= 0.0
             else:
                 return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] - optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs]) / model.Par['pEleMinCharge'][egs][p,sc,n] >= optmodel.vEleStorCharge[p,sc,n,egs]
@@ -1232,6 +1288,11 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eE2HMaxCharge2ndBlock', Constraint(optmodel.psne2h, rule=eE2HMaxCharge2ndBlock, doc='max charge of an ESS [p.u.]'))
 
+    # Standard min-2nd-block symmetry constraint (audit C28): with a NonNegative 2nd
+    # block and a right-hand side of commitment-1 in {-1, 0}, this row is non-binding by
+    # construction, exactly like eHydMinESSOutput2ndBlock / eHydMinOutput2ndBlock. The
+    # state chain is enforced by eE2HMaxCharge2ndBlock; this is kept for structural
+    # symmetry with the electricity ESS, not to bind.
     def eE2HMinCharge2ndBlock(optmodel, p,sc,n,e2h):
         if model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n]:
             return optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] / model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n] >= optmodel.vHydGenCommitment[p,sc,n,e2h] - 1
@@ -1451,7 +1512,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampUpOutput(optmodel, p,sc,n,egt):
         if model.Par['pEleGenRampUp'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampUp'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
-                return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                               + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
+                return (- max(model.Par['pEleInitialOutput'][p,sc,egt] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                               + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
             else:
                 return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisDownGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
         else:
@@ -1461,7 +1522,7 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampDwOutput(optmodel, p,sc,n,egt):
         if model.Par['pEleGenRampDown'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampDown'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
-                return (- max(model.Par['pEleSystemOutput'] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                             + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
+                return (- max(model.Par['pEleInitialOutput'][p,sc,egt] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                             + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
             else:
                 return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisUpGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - optmodel.vEleGenCommitment[p,sc,model.n.prev(n),egt] + optmodel.vEleGenShutDown[p,sc,n,egt]
         else:
@@ -1546,6 +1607,13 @@ def create_constraints(model, optmodel, indlog):
         StartTime = time.time() # to compute elapsed time
 
     # maximum ramp up and ramp down for the charge of an H2 ESS [p.u.]
+    # Audit C37: these charge/outflow ramps reuse the generation ramp parameter
+    # pHydGenRampUp/Down because no dedicated hydrogen outflow-ramp parameter exists in the
+    # input schema (the electricity side defines pEleGenOutflowsRampUp/Down but leaves the
+    # matching constraint commented out, so electricity storage currently has no outflow
+    # ramp at all). The physical charge/outflow ramp of an H2 store can differ from its
+    # generation ramp; adding a dedicated pHydGenOutflowsRamp* parameter (with a fallback to
+    # the generation ramp, keeping existing cases unchanged) is the documented follow-up.
     def eHydMaxRampUpCharge(optmodel, p,sc,n,hgs):
         if model.Par['pHydGenRampUp'][hgs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
             if n == model.n.first():

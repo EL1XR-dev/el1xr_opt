@@ -167,6 +167,19 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
     htw = list(getattr(model, "htw", []) or [])        # heat-to-power units (ORC/CHP)
     hts = list(getattr(model, "hts", []) or [])
     levels = list(model.n)
+
+    # Audit C40: a power -> heat-pump (COP) -> heat -> heat-to-power (efficiency) -> power
+    # loop produces net electricity whenever COP x efficiency >= 1. A heat pump's COP is
+    # normally > 1 (it moves free ambient heat the model does not account for), so the loop
+    # can be a perpetual-motion source that makes the LP unbounded. Warn when the data allows
+    # it (a store in the loop only adds StoEff <= 1, so COP x efficiency is the worst case).
+    if htp and htw:
+        max_cop = max((float(Par["pHeatPumpCOP"][g]) for g in htp), default=0.0)
+        max_eff = max((float(Par["pHeatToEleEff"][w]) for w in htw), default=0.0)
+        if max_cop * max_eff >= 1.0:
+            print(f"WARNING (C40): a power-heat-power loop is representable (max COP {max_cop} x "
+                  f"max heat-to-power efficiency {max_eff} = {max_cop * max_eff:.3f} >= 1); the "
+                  f"model may be unbounded. Ensure COP x efficiency < 1 or that the loop cannot close.")
     # all time-varying quantities are indexed by (period, scenario, load level),
     # like the electricity and hydrogen sectors. psn is the model's (p, sc, n) list.
     psn = list(getattr(model, "psn", None)
@@ -199,6 +212,12 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
     setattr(optmodel, "vHeatOutput", Var(_idx(htg), within=NonNegativeReals,
             bounds=lambda mm, p, sc, n, g: (0, float(Par["pHeatGenMaxPower"][g]))))
     setattr(optmodel, "vHeatPumpElec", Var(_idx(htp), within=NonNegativeReals))
+    # Audit C40 (documented limitation): charge/discharge are bounded by the store's ENERGY
+    # capacity (pHeatStoMax) used as a power rating -- there is no separate charge/discharge
+    # power-rating parameter in the heat schema, and there is no binary mutual-exclusivity
+    # forcing charge XOR discharge. Simultaneous charge+discharge is never beneficial under
+    # StoEff < 1 (it only loses energy), so it does not occur at the optimum; a dedicated
+    # power-rating parameter and a mutual-exclusivity binary are the follow-up (schema/MIP).
     setattr(optmodel, "vHeatCharge", Var(_idx(hts), within=NonNegativeReals,
             bounds=lambda mm, p, sc, n, s: (0, float(Par["pHeatStoMax"][s]))))
     setattr(optmodel, "vHeatDischarge", Var(_idx(hts), within=NonNegativeReals,
@@ -213,9 +232,13 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
             bounds=lambda mm, p, sc, n, w: (0, float(Par["pHeatToEleMaxHeat"][w]))))
     setattr(optmodel, "vHeatToEle", Var(_idx(htw), within=NonNegativeReals))
 
+    # Audit C40: include thermal-store nodes (n2hts) in the balance node list. A node with
+    # only a store (no demand/generation/heat-to-power) was previously omitted, so its store
+    # charge/discharge entered no balance and was free.
     nodes = sorted({nd for (nd, _u) in getattr(model, "n2htd", [])}
                    | {nd for (nd, _u) in getattr(model, "n2htg", [])}
-                   | {nd for (nd, _u) in getattr(model, "n2htw", [])})
+                   | {nd for (nd, _u) in getattr(model, "n2htw", [])}
+                   | {nd for (nd, _u) in getattr(model, "n2hts", [])})
     bal_idx = [(p, sc, n, nd) for (p, sc, n) in psn for nd in nodes]
 
     def _balance(mm, p, sc, n, nd):
@@ -260,6 +283,24 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
                                             - mm.vHeatDischarge[p, sc, n, s]))
     optmodel.eHeatInventory = Constraint(_idx(hts), rule=_inv,
                                          doc="thermal store inventory balance")
+
+    # Audit C40: cap heat-not-served by the demand it stands for, so it cannot exceed the
+    # demand and act as a free paid sink (mirrors the hydrogen eHydNotServedCap, C41).
+    def _ns_cap(mm, p, sc, n, d):
+        return mm.vHeatNotServed[p, sc, n, d] <= float(Par["pHeatDemand"][d].get((p, sc, n), 0.0))
+    optmodel.eHeatNotServedCap = Constraint(_idx(htd), rule=_ns_cap,
+                                            doc="heat not-served bounded by demand (C40)")
+
+    # Audit C40: terminal condition for the thermal store. The rolling balance starts from
+    # pHeatStoInitial and leaves the final inventory free, so the initial stock is a free
+    # energy supply the horizon can drain. Require the final inventory to be at least the
+    # initial stock, so the starting energy is not consumed for free (the electricity store
+    # gets the analogous tie via its cycle-time-step inventory; the heat store had none).
+    def _inv_terminal(mm, p, sc, s):
+        return mm.vHeatInventory[p, sc, model.n.last(), s] >= float(Par["pHeatStoInitial"][s])
+    optmodel.eHeatInventoryTerminal = Constraint(
+        [(p, sc, s) for (p, sc) in getattr(model, "ps", []) for s in hts],
+        rule=_inv_terminal, doc="thermal store terminal condition: final inventory >= initial (C40)")
 
     # heat operating cost (heat-not-served + generator running cost), discounted by
     # period and weighted by the load-level duration like the electricity and hydrogen

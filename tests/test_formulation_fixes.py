@@ -990,3 +990,159 @@ def test_hydrogen_peak_indicators_on_hydrogen_sets(h2_model):
         assert rets <= hr, \
             f"{vname} is indexed by {sorted(rets - hr)} -- not hydrogen retailers"
         assert not (rets & (er - hr)), f"{vname} carries electricity retailers"
+
+
+# --- 2026-06 audit batch 1: dead / vacuous logic cleanup --------------------
+# C28 eE2HMinCharge2ndBlock vacuous (documented, non-binding by design);
+# C29 reserve-require gates flipped >=0 -> >0; C32 RES FCR bid vars fixed to 0;
+# C42 misleading "2Commitment" docs corrected; C45 tautological NoDayAhead conjunct removed.
+
+
+def test_reserve_require_gates_use_strict_positive():
+    """C29: the per-unit FCR build gates tested ``pOperatingReserveRequire_* >= 0``,
+    always true for a fillna(0), clamped parameter, so they built dead rows at zero-
+    requirement levels. They must test ``> 0`` so a zero requirement skips the row (the
+    requirement cap still binds the bids to zero)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    import re
+    bad = re.findall(r"pOperatingReserveRequire_[A-Za-z_]+'\]\[p,sc,n\]\s*>=\s*0", text)
+    assert not bad, f"reserve-require gates still use '>= 0' (C29): {bad[:3]}"
+    good = re.findall(r"pOperatingReserveRequire_[A-Za-z_]+'\]\[p,sc,n\]\s*>\s*0", text)
+    assert len(good) >= 20, f"expected the reserve-require gates to use '> 0' (C29), found {len(good)}"
+
+
+def test_res_fcr_bid_variables_are_fixed(h2_model):
+    """C32: RES generators (egr) carry FCR bid variables (declared over eg) but appear in
+    no cap, relation, or revenue term. They must be fixed to zero so they cannot carry
+    arbitrary values into the result tables."""
+    m = h2_model
+    assert len(m.egr) > 0, "fixture has no RES generator"
+    p, sc = list(m.ps)[0]
+    n = list(m.n)[0]
+    egr = list(m.egr)[0]
+    for vname in ("vEleFreqContReserveDisUpwardBid", "vEleFreqContReserveDisDownwardBid",
+                  "vEleFreqContReserveNorBid"):
+        v = getattr(m, vname)[p, sc, n, egr]
+        assert v.fixed and v.value == 0.0, \
+            f"{vname}[{egr}] must be fixed to 0 for a RES unit (C32)"
+
+
+def test_no_tautological_nodayahead_conjunct():
+    """C45: the ESS 2nd-block bounds gated on
+    ``(pEleGenNoDayAhead == 1 or pEleGenNoDayAhead == 0)`` -- a binary, so always true --
+    making the binary-gated branch unreachable. The dead conjunct is removed (behaviour is
+    unchanged; mutual exclusion still holds via the charge/discharge decisions)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "pEleGenNoDayAhead'][egs] == 1 or model.Par['pEleGenNoDayAhead'][egs] == 0" not in text, \
+        "the always-true NoDayAhead conjunct must be removed (C45)"
+
+
+def test_inflow_outflow_bound_docs_not_commitment():
+    """C42: the eEle/eHyd Max/Min In/Outflows2Commitment constraints bound the in/outflow
+    variable by a parameter limit -- there is no commitment variable. The misleading
+    'to commitment' doc string is corrected (the attribute name is retained on purpose)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "to commitment [p.u.]" not in text, \
+        "the misleading 'to commitment' doc must be corrected (C42)"
+
+
+# --- 2026-06 audit batch 2: load-time warnings & relabels -------------------
+# C34 peak cost is a constant offset at zero peaks; C35 standby needs binary UC;
+# C36 ignored electrolyser shut-down cost; C39 dropped future-dated unit;
+# C44 misattributed hydrogen day-ahead constraint name.
+
+
+def test_batch2_warnings_present():
+    """C34/C35/C36/C39: each is a byte-safe load-time warning (no model change). Guard that
+    the warning and its triggering condition are wired in oM_InputData."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    assert "WARNING (C34)" in text and "pParNumberPowerPeaks'] == 0" in text, "C34 warning missing"
+    assert "WARNING (C35)" in text and "pOptIndBinGenOperat'] == 0" in text, "C35 warning missing"
+    assert "WARNING (C36)" in text and "pHydGenShutDownCost'][e2h] > 0" in text, "C36 warning missing"
+    assert "WARNING (C39)" in text and "InitialPeriod'][_g] > _base_year" in text, "C39 warning missing"
+
+
+def test_hydrogen_day_ahead_constraint_name_matches_rule(h2_model):
+    """C44: the hydrogen day-ahead buy cost constraint was registered as
+    ``eTotalHydTradeCost`` while its rule is ``eHydMarketDayAheadCost`` -- a name-grep
+    mismatch. The attribute is now named after its rule, mirroring the electricity analogue
+    ``eEleMarketDayAheadCost``."""
+    m = h2_model
+    assert hasattr(m, "eHydMarketDayAheadCost"), \
+        "hydrogen day-ahead cost constraint must be named eHydMarketDayAheadCost (C44)"
+    assert not hasattr(m, "eTotalHydTradeCost"), \
+        "the misattributed name eTotalHydTradeCost must be gone (C44)"
+    # the electricity analogue it now mirrors
+    assert hasattr(m, "eEleMarketDayAheadCost")
+
+
+# --- 2026-06 audit batch 3: parameter correctness --------------------------
+# C30 terminal-level endurance backing; C31 FCR-N cap uses min not avg;
+# C37 H2 storage ramp reuse documented; C46 per-unit pre-horizon ramp output.
+
+
+def test_first_step_ramp_uses_per_unit_initial_output():
+    """C46: the first-step thermal ramp used the scalar system aggregate pEleSystemOutput
+    (overwritten across (p,sc), so only the last scenario survived) as every unit's
+    pre-horizon output. It must use the unit's own pEleInitialOutput[p,sc,egt]."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    # within the two first-step ramp branches, the system aggregate must be gone
+    for rule in ("eEleMaxRampUpOutput", "eEleMaxRampDwOutput"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index(f"rule={rule}", start)]
+        assert "pEleSystemOutput" not in body, f"{rule} must not use the system aggregate (C46)"
+        assert "pEleInitialOutput'][p,sc,egt]" in body, \
+            f"{rule} must use the per-unit pre-horizon output (C46)"
+
+
+def test_fcrn_volume_cap_uses_minimum_not_average():
+    """C31: the FCR-N volume cap (a symmetric product) must bound the bids by the MINIMUM of
+    the up/down requirements, not their average. The price average (FCR-N revenue) is a
+    separate, legitimate term and is left untouched."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("def eEleFreqContReserveNor(")
+    body = text[start:text.index("rule=eEleFreqContReserveNor", start)]
+    assert "min(model.Par['pOperatingReserveRequire_FCRN_Up']" in body, \
+        "FCR-N volume cap must use min(up, down) (C31)"
+    assert "Require_FCRN_Down'][p,sc,n]) / 2" not in body, \
+        "FCR-N volume cap must not use the average (C31)"
+
+
+def test_terminal_endurance_constraints_exist(green_model):
+    """C30: the rolling endurance constraints leave the last load level's FCR bid unbacked.
+    Terminal-level endurance constraints must exist so end-of-horizon bids are energy-backed.
+    On ElectrolyserFCR the e2h node-level terminal constraint is built with active rows."""
+    m = green_model
+    for name in ("eEleStorageEnduranceUpEnd", "eEleStorageEnduranceDownEnd",
+                 "eEleFreqDownEnduranceConvEnd"):
+        assert hasattr(m, name), f"terminal endurance constraint {name} missing (C30)"
+    assert len(m.eEleFreqDownEnduranceConvEnd) > 0, \
+        "the e2h terminal endurance has no active rows on ElectrolyserFCR (C30)"
+    # the terminal rows reference the LAST load level
+    last = m.n.last()
+    assert any(idx[2] == last for idx in m.eEleFreqDownEnduranceConvEnd), \
+        "terminal endurance must bind the last load level (C30)"
+
+
+def test_h2_storage_ramp_reuse_is_documented():
+    """C37: the hydrogen storage charge/outflow ramp reuses the generation ramp parameter;
+    this is documented as a known data-schema limitation with a dedicated-parameter follow-up."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "Audit C37" in text and "pHydGenOutflowsRamp" in text, \
+        "the C37 ramp-reuse limitation must be documented at the H2 charge ramp"
+
+
+# --- 2026-06 audit batch 4: investment dimensional convention --------------
+
+
+def test_investment_cost_unit_label_consistent():
+    """C38: vTotalICost is added directly to the [EUR] operating-cost components in
+    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong. The factor1 scaling
+    is documented as a global-objective-scalar convention (valid because every objective term
+    is scaled by factor1)."""
+    inv = open(INVESTMENT, encoding="utf-8").read()
+    assert "investment cost [EUR]" in inv, "vTotalICost must be labelled [EUR] (C38)"
+    assert "investment cost [MEUR]" not in inv, "the wrong [MEUR] label must be gone (C38)"
+    assert "Asserted convention (audit C38)" in inv, "the factor1 convention must be documented (C38)"
+    obj = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "Total system cost [EUR]" in obj, "the objective unit label must be [EUR] to match (C38)"

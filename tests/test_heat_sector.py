@@ -215,3 +215,62 @@ def test_heat_case_runs_through_build_model():
     assert hns < 1e-4 and abs(served - total_demand) < 1e-3
     # the heat pump drew electricity (the cross-sector coupling fired)
     assert sum(value(m.vHeatPumpElec[p, sc, n, "HP1"]) for n in m.n) > 1e-3
+
+
+# --- 2026-06 audit C40: heat sector hardening ------------------------------
+
+
+@pytest.mark.solve
+def test_heat_store_terminal_and_not_served_cap():
+    """C40: the thermal store must keep a terminal condition (final inventory >= initial, so
+    the starting stock is not free energy) and heat-not-served must be capped by demand."""
+    m = _build()
+    assert hasattr(m, "eHeatInventoryTerminal") and len(m.eHeatInventoryTerminal) > 0
+    assert hasattr(m, "eHeatNotServedCap") and len(m.eHeatNotServedCap) > 0
+    SolverFactory("appsi_highs").solve(m)
+    initial = m.Par["pHeatStoInitial"]["TS"]
+    final = value(m.vHeatInventory[P, S, LEVELS[-1], "TS"])
+    assert final >= initial - 1e-6, f"final inventory {final} below initial {initial} (C40)"
+    # not-served never exceeds the demand it stands for
+    for n in LEVELS:
+        assert value(m.vHeatNotServed[P, S, n, "HD"]) <= DEMAND[n] + 1e-6
+
+
+@pytest.mark.solve
+def test_heat_store_only_node_enters_balance():
+    """C40: a node carrying only a thermal store (no demand/generation) must appear in the
+    heat balance, so the store's charge/discharge is constrained instead of free."""
+    m = ConcreteModel()
+    m.n = Set(initialize=LEVELS, ordered=True)
+    m.ps = [(P, S)]
+    m.htd = ["HD"]; m.htg = ["BOIL"]; m.htp = []; m.htw = []; m.hts = ["TS"]
+    m.n2htd = [("H", "HD")]; m.n2htg = [("H", "BOIL")]; m.n2htw = []
+    m.n2hts = [("STO", "TS")]                          # store on its OWN node
+    m.Par = {
+        "pHeatDemand": {"HD": _psn(DEMAND)}, "pHeatGenMaxPower": {"BOIL": 100.0},
+        "pHeatGenCost": {"BOIL": 1.0}, "pHeatPumpCOP": {},
+        "pHeatStoMax": {"TS": 20.0}, "pHeatStoEff": {"TS": 0.95}, "pHeatStoInitial": {"TS": 0.0},
+        "pHeatNSCost": 1000.0, "pDuration": {n: 1.0 for n in LEVELS},
+    }
+    create_heat_sector(m, m)
+    store_node_rows = [idx for idx in m.eHeatBalance if idx[-1] == "STO"]
+    assert store_node_rows, "the store-only node 'STO' is missing from the heat balance (C40)"
+
+
+@pytest.mark.solve
+def test_power_heat_power_loop_warns(capsys):
+    """C40: warn when COP x heat-to-power efficiency >= 1 (a free power loop -> unbounded LP)."""
+    m = ConcreteModel()
+    m.n = Set(initialize=LEVELS, ordered=True)
+    m.ps = [(P, S)]
+    m.htd = ["HD"]; m.htg = ["HP"]; m.htp = ["HP"]; m.htw = ["ORC"]; m.hts = []
+    m.n2htd = [("H", "HD")]; m.n2htg = [("H", "HP")]; m.n2htw = [("H", "ORC")]; m.n2hts = []
+    m.Par = {
+        "pHeatDemand": {"HD": _psn(DEMAND)}, "pHeatGenMaxPower": {"HP": 30.0},
+        "pHeatGenCost": {"HP": 0.0}, "pHeatPumpCOP": {"HP": 3.0},      # COP 3 x eff 0.4 = 1.2 >= 1
+        "pHeatToEleMaxHeat": {"ORC": 80.0}, "pHeatToEleEff": {"ORC": 0.4},
+        "pHeatStoMax": {}, "pHeatStoEff": {}, "pHeatStoInitial": {},
+        "pHeatNSCost": 1000.0, "pDuration": {n: 1.0 for n in LEVELS},
+    }
+    create_heat_sector(m, m)
+    assert "WARNING (C40)" in capsys.readouterr().out, "free power-heat-power loop must warn (C40)"

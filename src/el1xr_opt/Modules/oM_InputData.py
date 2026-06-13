@@ -378,6 +378,20 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.hgsc = Set(doc='hydrogen storage       units ', initialize=[hgsc   for hgsc in           model.hgs if  parameters_dict['pHydGenInvestCost']      [hgsc]  >  0.0])
     model.e2h  = Set(doc='ele2hyd                units ', initialize=[hg     for hg   in           model.hg  if  parameters_dict['pHydGenProductionFunction'][hg]  >  0.0])
     model.h2e  = Set(doc='hyd2ele                units ', initialize=[eg     for eg   in           model.eg  if  parameters_dict['pEleGenProductionFunction'][eg]  >  0.0])
+    # Audit C39: a generation unit whose InitialPeriod is after the economic base year is
+    # dropped from the active sets above (single-period model). That is correct here, but it
+    # used to happen silently; warn so a future-dated candidate is not lost unnoticed.
+    _base_year = parameters_dict['pParEconomicBaseYear']
+    for _g in model.egg:
+        if _g not in model.eg and parameters_dict['pEleGenInitialPeriod'][_g] > _base_year:
+            print(f"WARNING (C39): electricity unit '{_g}' has InitialPeriod "
+                  f"{parameters_dict['pEleGenInitialPeriod'][_g]} > base year {_base_year} and is "
+                  f"dropped from the model (single-period run).")
+    for _g in model.hgg:
+        if _g not in model.hg and parameters_dict['pHydGenInitialPeriod'][_g] > _base_year:
+            print(f"WARNING (C39): hydrogen unit '{_g}' has InitialPeriod "
+                  f"{parameters_dict['pHydGenInitialPeriod'][_g]} > base year {_base_year} and is "
+                  f"dropped from the model (single-period run).")
     # Hydrogen analogue of egr (electricity RES). There is no hydrogen RES column,
     # so this set is empty; it exists because the initial-output loop references it
     # the same way the electricity loop references egr.
@@ -978,6 +992,14 @@ def create_variables(model, optmodel, indlog):
     # model.Peaks   = Set(initialize=[ i for i in range(1,4,1)]) # number of selected peaks hours
     if model.Par['pParNumberPowerPeaks'] == 0:
         model.Peaks   = RangeSet(1)
+        # Audit C34: with no power peaks the peak-cost constraint (eTotalElePeakCost) charges
+        # the power tariff with no kW quantity -- a constant added to the objective. It does
+        # not change the optimal solution (a fixed offset), but it does shift the reported
+        # total cost. Warn if a power tariff is configured so the offset is not mistaken for a
+        # real peak charge; set pEleRetPowerTariff to 0 (or pParNumberPowerPeaks > 0) to avoid it.
+        if sum(model.Par['pEleRetPowerTariff'][er] for er in model.er) > 0:
+            print("WARNING (C34): pParNumberPowerPeaks == 0 but a non-zero pEleRetPowerTariff is "
+                  "set; the peak cost becomes a constant objective offset with no kW quantity.")
     else:
         model.Peaks   = RangeSet(model.Par['pParNumberPowerPeaks']) # number of selected peaks hours
 
@@ -1643,15 +1665,41 @@ def create_variables(model, optmodel, indlog):
             optmodel.vEleFreqContReserveNorDownCha[idx].fix(0.0)
             nFixedVariables += 3
 
+    # RES generators carry FCR bid variables (declared over eg) but appear in no FCR
+    # cap, relation, or revenue term, so they are never otherwise constrained. Fix them
+    # to zero so they cannot carry arbitrary values into the result tables (audit C32).
+    for idx in model.psnegr:
+        optmodel.vEleFreqContReserveDisUpwardBid[idx].fix(0.0)
+        optmodel.vEleFreqContReserveDisDownwardBid[idx].fix(0.0)
+        optmodel.vEleFreqContReserveNorBid[idx].fix(0.0)
+        nFixedVariables += 3
+
     # An electrolyser's hydrogen output is set by eAllEnergy2Hyd from its electricity
     # input, so its H2 second-block output variable is unused; fix it to zero. The
     # electrolyser's state logic uses commitment (on), standby and start-up (cold start);
     # it carries no shut-down transition, so its shut-down variable is fixed to zero too
     # (otherwise it would be a free variable appearing only in the shut-down cost).
+    # Audit C36: because the shut-down variable is fixed to zero, a nonzero ShutDownCost on
+    # an electrolyser is silently ignored. Warn so the data author is not misled.
+    for e2h in model.e2h:
+        if model.Par['pHydGenShutDownCost'][e2h] > 0:
+            print(f"WARNING (C36): electrolyser '{e2h}' has ShutDownCost > 0, but its shut-down "
+                  f"variable is fixed to zero (no shut-down transition is modelled), so the "
+                  f"shut-down cost is ignored.")
     for idx in model.psne2h:
         optmodel.vHydTotalOutput2ndBlock[idx].fix(0.0)
         optmodel.vHydGenShutDown[idx].fix(0.0)
         nFixedVariables += 2
+
+    # Audit C35: the three-state (on / standby / off) electrolyser logic is only meaningful
+    # with binary unit commitment. Under the LP relaxation (pOptIndBinGenOperat == 0) the
+    # commitment and standby variables are continuous, so the standby state is gameable and
+    # the reported standby schedule should not be trusted. Warn when both hold.
+    if model.Par['pOptIndBinGenOperat'] == 0 and \
+            any(e2h in model.e2h and model.Par['pHydGenStandByStatus'][e2h] == 1 for e2h in model.e2h):
+        print("WARNING (C35): a standby-capable electrolyser is run with relaxed (continuous) "
+              "unit commitment (pOptIndBinGenOperat == 0); the three-state standby logic is "
+              "gameable in the LP and standby results need binary UC to be meaningful.")
 
     # Standby is an electrolyser (e2h) state, available only where StandByStatus is set.
     # Everywhere else the standby variable is fixed to zero, so the three-state model
