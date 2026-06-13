@@ -622,7 +622,15 @@ documented follow-up -- a data-schema decision, not changed here. Guarded by
 C38. `eTotalICost` multiplies the lump-sum annualized investment cost by `factor1`
 (oM_Investment.py:162) — dimensionally suspect unless `FixedInvestmentCost` is
 per-unit-capacity (assert the convention); doc says `[MEUR]`, objective says
-`[kEUR]`.
+`[kEUR]`. **— DONE (documented, batch 4): unit labels fixed -- `vTotalICost` is added
+directly to the `[EUR]` operating-cost components in `eTotalSCost` with no conversion, so
+its `[MEUR]` label was wrong; it and the objective doc are now `[EUR]`. The factor1
+multiplication is documented as the asserted convention: it is dimensionally consistent
+only because EVERY objective term is scaled by factor1, so factor1 is a global objective
+scalar that does not change the argmin (build-vs-operate trade-off invariant under the unit
+choice). All shipped cases run at factor1 == 1 (a no-op), so this is latent; a factor1 != 1
+regression test is the documented follow-up. Doc-only, byte-unchanged; guarded by
+`test_investment_cost_unit_label_consistent`.**
 C39. A future-dated investment candidate (`InitialPeriod > base year`) is silently
 dropped from the model with no warning (the sizing generator works around it by
 rewriting `InitialPeriod`). **— DONE (warning, batch 2): after the generation sets are

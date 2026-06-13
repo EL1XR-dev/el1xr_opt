@@ -24,7 +24,7 @@ def create_objective_function(model, optmodel, indlog):
     # defining the objective function
     def eTotalSCost(optmodel):
         return optmodel.vTotalSCost
-    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [kEUR]'))
+    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [EUR]'))
 
     def eTotalTCost(optmodel):
         # vTotalICost is the investment cost from the capacity-sizing layer

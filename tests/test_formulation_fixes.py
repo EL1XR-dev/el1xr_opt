@@ -1130,3 +1130,19 @@ def test_h2_storage_ramp_reuse_is_documented():
     text = open(MODEL_FORMULATION, encoding="utf-8").read()
     assert "Audit C37" in text and "pHydGenOutflowsRamp" in text, \
         "the C37 ramp-reuse limitation must be documented at the H2 charge ramp"
+
+
+# --- 2026-06 audit batch 4: investment dimensional convention --------------
+
+
+def test_investment_cost_unit_label_consistent():
+    """C38: vTotalICost is added directly to the [EUR] operating-cost components in
+    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong. The factor1 scaling
+    is documented as a global-objective-scalar convention (valid because every objective term
+    is scaled by factor1)."""
+    inv = open(INVESTMENT, encoding="utf-8").read()
+    assert "investment cost [EUR]" in inv, "vTotalICost must be labelled [EUR] (C38)"
+    assert "investment cost [MEUR]" not in inv, "the wrong [MEUR] label must be gone (C38)"
+    assert "Asserted convention (audit C38)" in inv, "the factor1 convention must be documented (C38)"
+    obj = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "Total system cost [EUR]" in obj, "the objective unit label must be [EUR] to match (C38)"
