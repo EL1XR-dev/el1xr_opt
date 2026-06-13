@@ -45,14 +45,16 @@ import subprocess
 import sys
 import tempfile
 
+import numpy as np
 import pandas as pd
+import pyomo.environ as pyo
 import pytest
 from pyomo.environ import ConcreteModel, Set
 from pyomo.repn import generate_standard_repn
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(REPO, "src"))
-from el1xr_opt.Modules.oM_Sequence import build_model  # noqa: E402
+from el1xr_opt.Modules.oM_Sequence import build_model, routine  # noqa: E402
 
 SIZING_DIR = os.path.join(REPO, "data", "sizing")
 MODULES = os.path.join(REPO, "src", "el1xr_opt", "Modules")
@@ -528,10 +530,9 @@ def test_storage_var_bounds_not_read_factor1_scaled():
     investment-cap sites (matching the GenMaximumStorage fallback and the initial
     inventory). Scaling them at read too double-counts factor1 on the VarStorage path."""
     text = open(INPUT_DATA, encoding="utf-8").read()
-    start = text.index("for suffix in model.gen_frames_suffixes:")
+    start = text.index("Extract and cast generation parameters")
     body = text[start:text.index("model.retail_frames_suffixes", start)]
-    assert "'VarMinStorage', 'VarMaxStorage'" in body or \
-           "('VarMinStorage', 'VarMaxStorage')" in body, \
+    assert "'VarMinStorage', 'VarMaxStorage'" in body, \
         "the storage Var suffixes must be excluded from the factor1 read-scaling (C24)"
 
 
@@ -1137,12 +1138,58 @@ def test_h2_storage_ramp_reuse_is_documented():
 
 def test_investment_cost_unit_label_consistent():
     """C38: vTotalICost is added directly to the [EUR] operating-cost components in
-    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong. The factor1 scaling
-    is documented as a global-objective-scalar convention (valid because every objective term
-    is scaled by factor1)."""
+    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong."""
     inv = open(INVESTMENT, encoding="utf-8").read()
     assert "investment cost [EUR]" in inv, "vTotalICost must be labelled [EUR] (C38)"
     assert "investment cost [MEUR]" not in inv, "the wrong [MEUR] label must be gone (C38)"
-    assert "Asserted convention (audit C38)" in inv, "the factor1 convention must be documented (C38)"
     obj = open(MODEL_FORMULATION, encoding="utf-8").read()
     assert "Total system cost [EUR]" in obj, "the objective unit label must be [EUR] to match (C38)"
+
+
+def test_factor1_default_is_one(h2_model):
+    """C38: factor1 defaults to 1.0 (so the goldens are byte-unchanged) and is settable via the
+    FACTOR1 module global for the invariance test and a future dfParameter input."""
+    assert float(h2_model.factor1) == 1.0, "factor1 must default to 1.0 (byte-unchanged goldens)"
+    import el1xr_opt.Modules.oM_InputData as _ID
+    assert _ID.FACTOR1 == 1.0, "the FACTOR1 module-global default must be 1.0"
+
+
+@pytest.mark.solve
+def test_factor1_invariant():
+    """C38: factor1 is a TRUE unit conversion -- it scales extensive quantities by factor1 and
+    per-quantity prices by 1/factor1, leaving fixed charges / investment / ratios unscaled, so
+    the optimum (total cost) is INVARIANT. Verified on Home1 with the peak-demand tariff disabled
+    (the discrete peak-tariff MILP does not scale cleanly; that residual is a documented
+    follow-up). Solving at FACTOR1=1 and FACTOR1=2 must give the same total system cost."""
+    import el1xr_opt.Modules.oM_InputData as _ID
+    src = os.path.join(REPO, "src", "el1xr_opt", "Home1")
+    work = tempfile.mkdtemp(prefix="f1inv_")
+    dst = os.path.join(work, "Home1")
+    shutil.copytree(src, dst)
+    # disable the peak-demand tariff (its MILP selection is not factor1-invariant -- separate WIP)
+    par = os.path.join(dst, "oM_Data_Parameter_Home1.csv")
+    pf = pd.read_csv(par)
+    for c in pf.columns:
+        if "NumberPowerPeaks" in c:
+            pf[c] = 0
+    pf.to_csv(par, index=False)
+    # truncate to one week so the solve is fast
+    dur = os.path.join(dst, "oM_Data_Duration_Home1.csv")
+    dd = pd.read_csv(dur, index_col=[0, 1, 2])
+    dd.iloc[168:, dd.columns.get_loc("Duration")] = np.nan
+    dd.to_csv(dur)
+
+    def _cost(f1):
+        _ID.FACTOR1 = f1
+        try:
+            m = routine(dir=work, case="Home1", solver="highs",
+                        date=datetime.datetime.now().replace(second=0, microsecond=0),
+                        rawresults="False", plots="False", indlog="False", duckdbresults="False")
+        finally:
+            _ID.FACTOR1 = 1.0
+        return float(pyo.value(m.eTotalSCost))
+
+    c1 = _cost(1.0)
+    c2 = _cost(2.0)
+    assert abs(c2 - c1) <= 1e-5 * max(1.0, abs(c1)), \
+        f"factor1 must leave the optimum invariant: cost {c1} (f1=1) vs {c2} (f1=2)"

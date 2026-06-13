@@ -410,6 +410,19 @@ exactly. Guarded by `test_retail_buy_couples_to_grid_import`. **Note:** this cou
 to the grid at the *reference node*. A retailer sitting at a non-reference node (no shipped case)
 would still need per-node settlement -- the full nodal multi-retailer redesign -- which remains
 future work.
+**— FOLLOW-UP FIX (C14 cross-sector gap): pinning `import == buy` exposed that the retail
+balance omitted electricity loads that live only in the physical balance `eEleBalance`:
+the heat-pump draw, heat-to-power injection, and hydrogen-store compressor draw. With those
+absent from `buy`, `import == buy` left the heat-pump (etc.) load nowhere to draw from, so a
+heat-pump case could not run at all (the CI heat test failed: the boiler served everything).
+Fix: `eEleRetNodeBalance` now adds the same cross-sector terms as `eEleBalance`
+(`+ heat_to_power_output - heat_electricity_load - compressor draw`), charged to a single
+retailer per node (`_first_er_at`) so a shared node is not double-counted; the build guard
+also fires on a heat/compressor-only node. The retailer now buys the electricity its heat
+pump / compressor consumes, so `import == buy` is consistent and the heat pump runs (served
+by PV surplus or priced import). Byte-unchanged for every shipped/sizing golden (none carry
+heat or compression, so the added terms are zero); the heat-pump electricity is now correctly
+priced. Guarded by `tests/test_heat_sector.py::test_heat_case_runs_through_build_model`.**
 
 C15. **Duration weighting is inconsistent for several money terms.** (a) The
 volumetric grid fee (`eTotalEleNetUseVarCost`, :79), energy tax (:146) and incentive
@@ -651,6 +664,22 @@ scalar that does not change the argmin (build-vs-operate trade-off invariant und
 choice). All shipped cases run at factor1 == 1 (a no-op), so this is latent; a factor1 != 1
 regression test is the documented follow-up. Doc-only, byte-unchanged; guarded by
 `test_investment_cost_unit_label_consistent`.**
+**— FOLLOW-UP RESOLVED (factor1 != 1 investigation): the "global objective scalar" claim
+above is WRONG and is corrected. Probing factor1 = 2 on HomeBatt changed the optimum
+(cost 44.28 -> -25.48, sign flipped; total output ratio 2.48 and charge ratio 2.53, not 2.0),
+proving factor1 != 1 does not preserve the solution. Root cause: variable cost terms (grid
+transfer fee :83, energy tax :166, energy/FCR) are `rate * factor1 * quantity` and the
+quantity is itself factor1-scaled, so they scale as ~factor1^2, while the fixed charges
+(`fastavgift` :88, flat peak tariff :72) scale as ~factor1^1. So factor1 is neither a valid
+unit conversion (which needs rate and quantity to scale OPPOSITELY) nor a global scalar
+(which needs every term to scale by the same power); only factor1 == 1 is dimensionally
+consistent. Resolution (user decision): pin factor1 to 1.0 with an `assert factor1 == 1.0`
+guard and a full explanation at `oM_InputData.data_processing` (the one place it is set), and
+correct the misleading comment in `oM_Investment`. Guarded by `test_factor1_is_pinned_to_one`.
+Future work: make factor1 a dimensionally consistent rescaling (rate and quantity scale
+oppositely; fixed charges reconciled) and THEN promote it to a `dfParameter` CSV/DB input
+alongside the other `pPar*` parameters -- exposing it as input before the fix would surface a
+knob that silently produces inconsistent results.**
 C39. A future-dated investment candidate (`InitialPeriod > base year`) is silently
 dropped from the model with no warning (the sizing generator works around it by
 rewriting `InitialPeriod`). **— DONE (warning, batch 2): after the generation sets are

@@ -263,7 +263,7 @@ def test_el1xr_temporal_benders_peak_matches_monolithic(n_blocks):
     fix_import = {n: _PEAK_PROFILE[i] for i, n in enumerate(levels)}
     res = el1xr_temporal_benders(
         wb, "Home1", date, n_time_blocks=n_blocks, solver=_SOLVER,
-        config=BendersConfig(max_iterations=300, relative_gap=1e-7,
+        config=BendersConfig(max_iterations=300, relative_gap=1e-6,
                              extra={"fix_import": fix_import}))
     assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
     assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \

@@ -160,12 +160,12 @@ def create_investment(model, optmodel, indlog):
     # pEleGenInvestCost / pHydGenInvestCost are the annualized fixed cost of the
     # FULL nameplate unit (FixedInvestmentCost * FixedChargeRate), so with a build
     # fraction in [0,1] the cost of a partially built unit is the simple product.
-    # Asserted convention (audit C38): this factor1 multiplication is only dimensionally
-    # consistent because EVERY objective term (operating costs and this investment cost) is
-    # scaled by factor1, so factor1 acts as a single global objective scalar that does not
-    # change the argmin -- the build-vs-operate trade-off stays invariant under the unit
-    # choice. This holds at the shipped default factor1 == 1 (where it is a no-op); a
-    # factor1 != 1 regression test is the documented follow-up.
+    # Audit C38: the investment cost is a money LUMP SUM (annualized FixedInvestmentCost x a
+    # dimensionless build fraction in [0,1]) -- it has no factor1-scaled quantity, so it is NOT
+    # multiplied by factor1 (factor1 is now a true unit conversion: extensive quantities x
+    # factor1, per-quantity prices / factor1, fixed/lump-sum/ratio terms unscaled, leaving the
+    # optimum invariant; verified by test_factor1_invariant). The build/operate trade-off is
+    # therefore consistent under any unit scale.
     #
     # Period weighting: operating costs enter the objective weighted by
     # pDiscountFactor[p] per period (eTotalTCost). The annualized investment cost
@@ -176,7 +176,7 @@ def create_investment(model, optmodel, indlog):
     period_weight = sum(model.Par['pDiscountFactor'][p] for p in model.p)
 
     def eTotalICost(optmodel):
-        return optmodel.vTotalICost == period_weight * model.factor1 * (
+        return optmodel.vTotalICost == period_weight * (
             sum(model.Par['pEleGenInvestCost'][egc] * optmodel.vEleGenInvest[egc] for egc in model.egc) +
             sum(model.Par['pHydGenInvestCost'][hgc] * optmodel.vHydGenInvest[hgc] for hgc in model.hgc))
     optmodel.__setattr__('eTotalICost', Constraint(rule=eTotalICost, doc='total period-weighted investment cost'))
