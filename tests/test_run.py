@@ -151,8 +151,11 @@ SIZING_CASES = [
     pytest.param("HomeBattNoFCR",    122.8894702739726,  id="HomeBattNoFCR"),
     pytest.param("HomeBattFCRDonly",  67.90928111201895, id="HomeBattFCRDonly"),
     pytest.param("HomeBattFCRNonly",  57.34981288056188, id="HomeBattFCRNonly"),
-    pytest.param("H2Tank",            6776.719863855105, id="H2Tank"),
-    pytest.param("Electrolyser",      6776.716428518055, id="Electrolyser"),
+    # H2Tank / Electrolyser re-baselined for Phase B (B0+B2): factor2 eliminated (commitment costs
+    # now in canonical SEK -- cold start 30, shut-down 5, no-load 0) plus the new per-kWh stack
+    # degradation cost (0.07 SEK/kWh) on the electrolyser. Net +~2.68 SEK vs the pre-Phase-B golden.
+    pytest.param("H2Tank",            6779.395958990599, id="H2Tank"),
+    pytest.param("Electrolyser",      6779.392248118394, id="Electrolyser"),
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
@@ -306,6 +309,36 @@ def test_electrolyser_pwl_efficiency(sizing_cases_built, tmp_path):
         nz = [k for k in model.pwlbp if model.vHydGenPWLWeight["period1", "sc01", n, u, k]() > 1e-6]
         assert len(nz) <= 2 and (len(nz) < 2 or nz[1] == nz[0] + 1), \
             f"SOS2 (adjacency) violated at {n}: nonzero breakpoints {nz}"
+
+
+def test_electrolyser_canonical_costs_and_degradation(sizing_cases_built):
+    """B0+B2: factor2 is eliminated (the model holds no factor2 attribute), so the electrolyser
+    commitment costs are used directly in the canonical currency (cold start 30, shut-down 5,
+    no-load 0), and a per-kWh stack-degradation cost enters the generation cost on the
+    electrolyser's productive electricity. With no-load removed the electrolyser leaves the hgt
+    no-load set, so this also checks its shut-down cost is still billed (the e2h shut-down term)."""
+    from pyomo.core.expr.visitor import identify_variables
+
+    from el1xr_opt.Modules.oM_Sequence import build_model
+
+    model = build_model(sizing_cases_built, "Electrolyser",
+                        datetime.datetime.now().replace(second=0, microsecond=0))
+    u = "AEL_01"
+    assert not hasattr(model, "factor2"), "factor2 should be eliminated (single canonical currency)"
+    assert abs(float(model.Par["pHydGenStartUpCost"][u]) - 30.0) < 1e-9, "cold-start cost not canonical"
+    assert abs(float(model.Par["pHydGenShutDownCost"][u]) - 5.0) < 1e-9, "shut-down cost not canonical"
+    assert float(model.Par["pHydGenConstantVarCost"][u]) == 0.0 and u not in model.hgt, \
+        "no-load cost should be 0 and the electrolyser out of the hgt no-load set"
+    assert abs(float(model.Par["pHydGenDegradationCost"][u]) - 0.07) < 1e-9, "degradation cost not read"
+
+    p, sc = list(model.ps)[0]
+    n = list(model.n)[0]
+    gcost_vars = {v.name for v in identify_variables(model.eTotalHydGCost[p, sc, n].body)}
+    assert any("vEleTotalCharge" in nm and u in nm for nm in gcost_vars), \
+        "degradation must put the electrolyser productive electricity into the generation cost"
+    sucost_vars = {v.name for v in identify_variables(model.eTotalHydSUCost[p, sc].body)}
+    assert any("vHydGenShutDown" in nm and u in nm for nm in sucost_vars), \
+        "the electrolyser shut-down cost must still be billed via the e2h shut-down term"
 
 
 def test_electrolyser_fcr_structure(sizing_cases_built):

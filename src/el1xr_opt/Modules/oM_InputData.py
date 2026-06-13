@@ -111,12 +111,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # (guarded by test_factor1_invariant). FACTOR1 (module global) is the override hook for
     # that test and the future dfParameter input.
     factor1 = FACTOR1
-    factor2 = 1e-3  # commitment-cost unit bridge (audit C38) -- to be ELIMINATED in the
-                    # electrolyser-accuracy phase, together with re-entering ConstantTerm/
-                    # StartUpCost/ShutDownCost in the canonical currency. Untouched here so
-                    # Phase A (factor1 consistency) stays byte-unchanged.
+    # factor2 (the old 1e-3 commitment-cost unit bridge) is ELIMINATED (audit Phase B / B0):
+    # the model now works in a single canonical currency, so ConstantTerm / StartUpCost /
+    # ShutDownCost are entered directly in that currency (no hidden scaling). See the
+    # generation-cost block below and the realistic electrolyser values in the data.
     model.factor1 = factor1
-    model.factor2 = factor2
 
     # Option Indicators
     option_ind = data_frames['dfOption'].columns.to_list()
@@ -256,15 +255,23 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
             parameters_dict[key] = pd.Series('', index=data_frames[df_key].index)
 
     for sector in ['Ele', 'Hyd']:
+        # Degradation cost is an optional generation column (audit Phase B / B2); default it to
+        # zero so units / cases without it are unaffected (the column read only creates present ones).
+        _df_gen_key = 'dfElectricityGeneration' if sector == 'Ele' else 'dfHydrogenGeneration'
+        if f'p{sector[0:3]}GenDegradationCost' not in parameters_dict:
+            parameters_dict[f'p{sector[0:3]}GenDegradationCost'] = pd.Series(0.0, index=data_frames[_df_gen_key].index)
         # factor1 (audit C38): per-quantity PRICES carry 1/factor1 so price x quantity (which
         # scales by factor1) is invariant. LinearVarCost, CO2EmissionCost and OMVariableCost are
         # such prices; the CO2 emission RATE is a dimensionless ratio and is no longer factored.
         parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] / model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost']  # linear fuel cost; O&M is added once in the objective (eTotal{Ele,Hyd}GCost)
         parameters_dict[f'p{sector[0:3]}GenOMVariableCost'    ] = parameters_dict[f'p{sector[0:3]}GenOMVariableCost'      ] / model.factor1                                                                                                                        # O&M variable cost (price)
-        parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * model.factor2 * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                        # constant term variable cost             [MEUR/h]
+        parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                                          # no-load variable cost [canonical currency/h] (factor2 eliminated, B0)
         parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] / model.factor1 * parameters_dict[ 'pParCO2Cost']                                                                                      # CO2 emission cost
-        parameters_dict[f'p{sector[0:3]}GenStartUpCost'       ] = parameters_dict[f'p{sector[0:3]}GenStartUpCost'         ] * model.factor2                                                                                                                        # generation startup cost                 [MEUR]
-        parameters_dict[f'p{sector[0:3]}GenShutDownCost'      ] = parameters_dict[f'p{sector[0:3]}GenShutDownCost'        ] * model.factor2                                                                                                                        # generation shutdown cost                [MEUR]
+        # StartUpCost / ShutDownCost are used directly in the canonical currency (factor2
+        # eliminated, B0); the generation-column read already populated them, so no rescaling.
+        # Degradation cost (audit Phase B / B2): a stack-wear PRICE per kWh of productive
+        # electricity, so it carries 1/factor1 like the other per-quantity prices (default 0).
+        parameters_dict[f'p{sector[0:3]}GenDegradationCost'   ] = parameters_dict[f'p{sector[0:3]}GenDegradationCost'     ] / model.factor1                                                                                                                        # stack degradation cost (price per kWh)
         parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
         parameters_dict[f'p{sector[0:3]}GenRetireCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedRetirementCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed retirement cost        [MEUR]                                                                           # H2 outflows ramp down rate              [tonH2]
 
