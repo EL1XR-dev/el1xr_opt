@@ -390,6 +390,25 @@ incident lines in its build guard but includes no flow/import/export term, so in
 multi-node case the retailer must cover the local imbalance as if the network
 delivered nothing (the commented-out `eEleBuyComposition` suggests the buy-import
 link was never finished). Correct only for single-node cases.
+**— ANALYSED, NOT CHANGED (batch 6): needs a modelling decision, flagged for the user.**
+The model carries two parallel balances: the PHYSICAL nodal balance `eEleBalance` (KCL with
+`vEleNetFlow` and grid `vEleImport`/`vEleExport`; grid fees/taxes/incentives are charged on
+`vEleImport`/`vEleExport`), and this COMMERCIAL per-retailer balance (the retailer's assigned
+generation/demand/charge closed by `vEleBuy`/`vEleSell`; the energy/day-ahead cost is charged
+on `vEleBuy`). Verified that EVERY shipped/sizing case has exactly ONE retailer (`EleR_01`)
+owning the entire portfolio (no unassigned generation or demand), so this balance sums the
+whole system and the network flows are internal to that single portfolio -- it is **correct
+as-is** for all goldens, which is why they pass. C14 only bites with **two or more retailers
+split across nodes** (no shipped case has this). The genuine missing piece is then NOT a flow
+term here (the flows are already in `eEleBalance`; adding them here would double-count) but the
+unfinished `vEleBuy` <-> `vEleImport` coupling that ties each retailer's commercial purchase to
+the physical grid import at its node. Designing that multi-retailer commercial/physical
+coupling is a real modelling task whose only effect is on multi-retailer multi-node cases, and
+it would re-baseline goldens on a chosen semantics. Rather than guess that semantics and risk
+baking an incorrect balance into the validated multi-node goldens, the code is left unchanged
+with a clarifying comment at the constraint; the design is flagged for the user. **Decision
+needed:** is the retail balance intended as a commercial portfolio balance (current behaviour,
+keep) or a true nodal balance, and how should `vEleBuy` couple to `vEleImport` per retailer?
 
 C15. **Duration weighting is inconsistent for several money terms.** (a) The
 volumetric grid fee (`eTotalEleNetUseVarCost`, :79), energy tax (:146) and incentive

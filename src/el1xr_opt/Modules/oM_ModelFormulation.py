@@ -351,6 +351,17 @@ def create_constraints(model, optmodel, indlog):
     # on, so existing cases build an identical constraint.
     community_on = bool(model.Par.get('pOptIndBinCommunity', 0))
 
+    # Audit C14 (analysed, NOT changed -- needs a modelling decision): this is the COMMERCIAL
+    # per-retailer balance (the retailer's assigned generation/demand/charge closed by
+    # vEleBuy/vEleSell). The PHYSICAL nodal balance with line flows and grid import/export is
+    # eEleBalance below. With a single retailer that owns the whole portfolio (every shipped
+    # case), this balance sums the entire system and the network flows are internal, so it is
+    # correct -- no flow term is needed and adding one would double-count the network already
+    # in eEleBalance. With two or more retailers split across nodes (no shipped case has this),
+    # the missing piece is the vEleBuy<->vEleImport coupling (the commented eEleBuyComposition
+    # below was the unfinished attempt), not a flow term here. Designing that multi-retailer
+    # commercial<->physical coupling, and any golden re-baseline it implies, is left as a
+    # deliberate decision; see docs/model_audit.md C14.
     def eEleRetNodeBalance(optmodel, p,sc,n,er):
         nd = model.Par['pEleRetNode'][er]
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
