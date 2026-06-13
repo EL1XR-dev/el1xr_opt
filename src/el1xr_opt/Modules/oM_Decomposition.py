@@ -105,11 +105,10 @@ def _solve_model(opt, mdl):
     presolve/solve internal error, distinct from a real infeasible/unbounded result)
     on an otherwise solvable master MILP. It is platform/version dependent -- seen on
     the CI runner for the heat-storage temporal-Benders master, never locally. When the
-    strict load fails on such a status, retry the solve once with HiGHS presolve off,
-    which takes a different algorithmic path and clears the spurious error without
-    changing the optimum (presolve does not alter the LP/MILP solution or its duals).
-    The retry runs only after a solve has already failed, so it cannot affect the normal
-    path; if it also fails the original error propagates.
+    strict load fails on such a status, retry the solve with fallback option sets that
+    take different algorithmic paths and clear the spurious error without changing the
+    optimum. The retries run only after a solve has already failed, so they cannot
+    affect the normal path; if all retries also fail the last error propagates.
     """
     from pyomo.environ import value  # noqa: F401  (kept local for symmetry)
     try:
@@ -120,21 +119,33 @@ def _solve_model(opt, mdl):
         mdl.solutions.load_from(res)
         return res
     except ValueError:
-        had = "presolve" in opt.options
-        prev = opt.options.get("presolve") if had else None
+        pass
+    # Spurious HiGHS error: retry with progressively different option sets.
+    # Each set takes a different algorithmic path; the first that succeeds wins.
+    # The last entry is tried without a catching except so its error propagates.
+    _FALLBACKS = (
+        {"presolve": "off"},
+        {"presolve": "off", "solver": "simplex"},
+    )
+    for i, extra in enumerate(_FALLBACKS):
+        saved = {k: opt.options[k] for k in extra if k in opt.options}
+        new_keys = [k for k in extra if k not in opt.options]
+        opt.options.update(extra)
+        is_last = i == len(_FALLBACKS) - 1
         try:
-            opt.options["presolve"] = "off"
             res = opt.solve(mdl, load_solutions=False)
             mdl.solutions.load_from(res)
             return res
+        except (ValueError, RuntimeError):
+            if is_last:
+                raise
         finally:
-            if had:
-                opt.options["presolve"] = prev
-            else:
+            for k in new_keys:
                 try:
-                    del opt.options["presolve"]
+                    del opt.options[k]
                 except (KeyError, TypeError):
                     pass
+            opt.options.update(saved)
 
 
 def benders_solve(make_master, make_subproblem, blocks, config=None,
