@@ -410,6 +410,19 @@ exactly. Guarded by `test_retail_buy_couples_to_grid_import`. **Note:** this cou
 to the grid at the *reference node*. A retailer sitting at a non-reference node (no shipped case)
 would still need per-node settlement -- the full nodal multi-retailer redesign -- which remains
 future work.
+**— FOLLOW-UP FIX (C14 cross-sector gap): pinning `import == buy` exposed that the retail
+balance omitted electricity loads that live only in the physical balance `eEleBalance`:
+the heat-pump draw, heat-to-power injection, and hydrogen-store compressor draw. With those
+absent from `buy`, `import == buy` left the heat-pump (etc.) load nowhere to draw from, so a
+heat-pump case could not run at all (the CI heat test failed: the boiler served everything).
+Fix: `eEleRetNodeBalance` now adds the same cross-sector terms as `eEleBalance`
+(`+ heat_to_power_output - heat_electricity_load - compressor draw`), charged to a single
+retailer per node (`_first_er_at`) so a shared node is not double-counted; the build guard
+also fires on a heat/compressor-only node. The retailer now buys the electricity its heat
+pump / compressor consumes, so `import == buy` is consistent and the heat pump runs (served
+by PV surplus or priced import). Byte-unchanged for every shipped/sizing golden (none carry
+heat or compression, so the added terms are zero); the heat-pump electricity is now correctly
+priced. Guarded by `tests/test_heat_sector.py::test_heat_case_runs_through_build_model`.**
 
 C15. **Duration weighting is inconsistent for several money terms.** (a) The
 volumetric grid fee (`eTotalEleNetUseVarCost`, :79), energy tax (:146) and incentive
