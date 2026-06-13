@@ -235,16 +235,23 @@ def create_objective_function_components(model, optmodel, indlog):
         # the per-event start-up / shut-down costs moved to eTotalHydSUCost (a ps term).
         return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
                                                    sum(model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
-                                                   sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ))
+                                                   sum(model.Par['pHydGenOMVariableCost' ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
+                                                   # Degradation (audit Phase B / B2): stack-wear cost per kWh of PRODUCTIVE electricity
+                                                   # (input minus the standby draw, which makes no hydrogen) -- the real cost of flexible
+                                                   # operation, amortising stack replacement over throughput. Zero for non-electrolysers.
+                                                   sum(model.Par['pHydGenDegradationCost'][e2h] * (optmodel.vEleTotalCharge[p,sc,n,e2h] - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p,sc,n,e2h]) for e2h in model.e2h))
     optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
 
     # Hydrogen start-up / shut-down cost [M€] -- per-event, summed over the load levels
-    # WITHOUT pDuration (a 'ps' objective term). The e2h start-up term covers an
-    # electrolyser outside hgt (zero fuel cost), preserving the C11 billing.
+    # WITHOUT pDuration (a 'ps' objective term). The e2h start-up and shut-down terms cover an
+    # electrolyser outside hgt (an electrolyser with ConstantTerm 0 is not in hgt; B2), so its
+    # cold-start and shut-down costs are still billed -- previously only the start-up was, which
+    # under-counted the cost of cycling such a unit.
     def eTotalHydSUCost(optmodel, p,sc):
         return optmodel.vTotalHydSUCost[p,sc] == sum(sum(model.Par['pHydGenStartUpCost' ][hgt] * optmodel.vHydGenStartUp [p,sc,n,hgt] for hgt in model.hgt) +
                                                      sum(model.Par['pHydGenStartUpCost' ][e2h] * optmodel.vHydGenStartUp [p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) +
-                                                     sum(model.Par['pHydGenShutDownCost'][hgt] * optmodel.vHydGenShutDown[p,sc,n,hgt] for hgt in model.hgt) for n in model.n)
+                                                     sum(model.Par['pHydGenShutDownCost'][hgt] * optmodel.vHydGenShutDown[p,sc,n,hgt] for hgt in model.hgt) +
+                                                     sum(model.Par['pHydGenShutDownCost'][e2h] * optmodel.vHydGenShutDown[p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) for n in model.n)
     optmodel.__setattr__('eTotalHydSUCost', Constraint(optmodel.ps, rule=eTotalHydSUCost, doc='Total hydrogen start-up/shut-down cost [kEUR]'))
 
     # Hydrogen consumption operation cost [M€]

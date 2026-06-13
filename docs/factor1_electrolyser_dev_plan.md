@@ -58,6 +58,24 @@ B0. Eliminate factor2 + re-enter commitment costs in the canonical currency (the
 set factor2 -> 1 (remove `* model.factor2` at the 3 sites), and set ConstantTerm / StartUpCost /
 ShutDownCost to realistic canonical-currency values (see B2). Re-baseline e2h goldens once.
 
+B0+B2 STATUS — DONE (branch feature/phase-b-factor2-degradation). factor2 fully removed
+(oM_InputData: no model.factor2; ConstantVarCost = ConstantTerm x FuelCost, StartUp/ShutDown read
+directly in the canonical currency = SEK). Realistic AEL_01 values: StartUpCost 30, ShutDownCost 5,
+ConstantTerm 0 (no-load dropped -- the electrolyser's electricity is already costed via the energy
+balance; removing it also takes AEL out of the hgt no-load set, so the shut-down objective term was
+extended to e2h-outside-hgt to keep billing it). NEW per-kWh stack-degradation cost
+(pHydGenDegradationCost, 0.07 SEK/kWh on AEL's productive electricity; new optional generation
+column, default 0; a per-quantity price so /factor1). Grounding: cold-start 30 SEK = engineering
+estimate (warm-up energy + lost production + per-cycle wear; not a standardised literature value);
+degradation 0.07 SEK/kWh = stack replacement (~45% x ~EUR1000/kW x 52.5 kW) amortised over ~70000 h
+throughput (IEA/IRENA cost ranges; Refaat 2026 degradation-as-cost framing). Re-baselined goldens:
+H2Tank 6776.72 -> 6779.40, Electrolyser 6776.72 -> 6779.39 (delta +2.68 SEK = degradation 1.59 +
+fractional startup 1.08; validated by decomposition). Main + battery goldens unchanged (AEL inactive
+there). Tests: test_electrolyser_canonical_costs_and_degradation (factor2 gone, canonical values,
+degradation wired, e2h shut-down billed). DEFERRED: Currency label option (EUR/SEK/USD) -- dfOption
+is int-cast so a string Currency needs separate string-param plumbing (like pParBalanceMode); small
+follow-up, cosmetic (single canonical unit).
+
 B1. Piecewise-linear part-load efficiency (replace the constant ProductionFunction = 56.82
 kWh/kgH2). FLAG-GATED: default = constant (legacy/non-e2h cases byte-unchanged); PWL when a flag
 (e.g. dfOption IndPWLEfficiency, or a per-unit segmented-curve column) is set.
