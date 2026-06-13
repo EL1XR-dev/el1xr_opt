@@ -129,7 +129,7 @@ def _solve_model(opt, mdl):
     )
     for i, extra in enumerate(_FALLBACKS):
         saved = {k: opt.options[k] for k in extra if k in opt.options}
-        new_keys = [k for k in extra if k not in opt.options]
+        added_keys = [k for k in extra if k not in opt.options]
         opt.options.update(extra)
         is_last = i == len(_FALLBACKS) - 1
         try:
@@ -137,10 +137,12 @@ def _solve_model(opt, mdl):
             mdl.solutions.load_from(res)
             return res
         except (ValueError, RuntimeError):
+            # appsi_highs raises ValueError on bad solver status and RuntimeError
+            # on some internal failures; both indicate the same spurious error.
             if is_last:
                 raise
         finally:
-            for k in new_keys:
+            for k in added_keys:
                 try:
                     del opt.options[k]
                 except (KeyError, TypeError):
