@@ -187,6 +187,33 @@ def test_sizing_case_from_duckdb(case, expected, sizing_cases_built):
 
 
 @pytest.mark.solve
+@pytest.mark.parametrize("case", ["HomeBattFCRDonly", "Electrolyser"])
+def test_sizing_factor1_invariant(case, sizing_cases_built):
+    """C38: factor1 is a true unit conversion, so the optimum is invariant under it. This guards
+    the paths the main invariance test (Home1) does not exercise: FCR-D/FCR-N provision and its
+    storage SoC-endurance backing, the electricity PPA settlement, the electrolyser, and the
+    investment/sizing layer. Solving each case at FACTOR1=1 and FACTOR1=2 must give the same total
+    cost. (Regression guard for the unscaled MaxStorage in the endurance constraints and the
+    unscaled PPA price, both fixed in audit C38.)"""
+    import el1xr_opt.Modules.oM_InputData as _ID
+
+    def _cost(f1):
+        _ID.FACTOR1 = f1
+        try:
+            m = routine(dir=sizing_cases_built, case=case, solver="highs",
+                        date=datetime.datetime.now().replace(second=0, microsecond=0),
+                        rawresults="False", plots="False", indlog="False", duckdbresults="False")
+        finally:
+            _ID.FACTOR1 = 1.0
+        return float(pyo.value(m.eTotalSCost))
+
+    c1 = _cost(1.0)
+    c2 = _cost(2.0)
+    assert abs(c2 - c1) <= 1e-5 * max(1.0, abs(c1)), \
+        f"{case}: factor1 must leave the optimum invariant: cost {c1} (f1=1) vs {c2} (f1=2)"
+
+
+@pytest.mark.solve
 @pytest.mark.parametrize("case,unit,full_build", [
     ("H2Tank", "PEMEL_01", True),
     ("Electrolyser", "AEL_01", False),

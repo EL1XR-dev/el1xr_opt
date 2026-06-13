@@ -77,10 +77,12 @@ def create_green_hydrogen(model, optmodel, indlog):
             # free the zero upper bound so the cost can take a positive value
             optmodel.vTotalEleMrkPPACost[p, sc, n].setlb(0.0)
             optmodel.vTotalEleMrkPPACost[p, sc, n].setub(None)
-            # REVIEW (units): mirrors the day-ahead market cost (price x quantity,
-            # no model.factor1). Confirm against the operating-cost scale.
+            # factor1 (audit C38): PPAPrice is a per-quantity price (EUR/kWh) and the output is a
+            # quantity (x factor1), so the price carries 1/factor1 -- like the day-ahead energy
+            # price (pVarEnergyCost, scaled at read) -- to keep price x quantity invariant under
+            # the unit scale. At factor1=1 this is unchanged (goldens byte-unchanged).
             return optmodel.vTotalEleMrkPPACost[p, sc, n] == sum(
-                model.Par['pEleGenPPAPrice'][egppa] * optmodel.vEleTotalOutput[p, sc, n, egppa] for egppa in ppa_units)
+                model.Par['pEleGenPPAPrice'][egppa] / model.factor1 * optmodel.vEleTotalOutput[p, sc, n, egppa] for egppa in ppa_units)
         optmodel.__setattr__('eEleMarketPPACost', Constraint(model.psn, rule=eEleMarketPPACost, doc='electricity PPA take-as-produced cost'))
         # REVIEW (virtual PPA): vTotalEleMrkPPARev stays at zero (physical PPA).
         # For a virtual PPA contract-for-difference, free and define it here too.
