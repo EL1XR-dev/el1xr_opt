@@ -160,12 +160,13 @@ def create_investment(model, optmodel, indlog):
     # pEleGenInvestCost / pHydGenInvestCost are the annualized fixed cost of the
     # FULL nameplate unit (FixedInvestmentCost * FixedChargeRate), so with a build
     # fraction in [0,1] the cost of a partially built unit is the simple product.
-    # Asserted convention (audit C38): this factor1 multiplication is only dimensionally
-    # consistent because EVERY objective term (operating costs and this investment cost) is
-    # scaled by factor1, so factor1 acts as a single global objective scalar that does not
-    # change the argmin -- the build-vs-operate trade-off stays invariant under the unit
-    # choice. This holds at the shipped default factor1 == 1 (where it is a no-op); a
-    # factor1 != 1 regression test is the documented follow-up.
+    # Audit C38: factor1 multiplies this annualized investment cost too. NOTE: factor1 is
+    # only valid at 1 (it is pinned and guarded in oM_InputData.data_processing). At factor1
+    # != 1 the model is dimensionally inconsistent -- variable cost terms scale as ~factor1^2
+    # and fixed charges as ~factor1^1 -- so factor1 is neither a unit conversion nor a global
+    # objective scalar, and the optimum changes. At the only supported value (factor1 == 1)
+    # this multiplication is a no-op. Making factor1 a consistent, input-driven rescaling is
+    # future work; see docs/model_audit.md C38.
     #
     # Period weighting: operating costs enter the objective weighted by
     # pDiscountFactor[p] per period (eTotalTCost). The annualized investment cost

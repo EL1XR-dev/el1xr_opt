@@ -1137,12 +1137,22 @@ def test_h2_storage_ramp_reuse_is_documented():
 
 def test_investment_cost_unit_label_consistent():
     """C38: vTotalICost is added directly to the [EUR] operating-cost components in
-    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong. The factor1 scaling
-    is documented as a global-objective-scalar convention (valid because every objective term
-    is scaled by factor1)."""
+    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong."""
     inv = open(INVESTMENT, encoding="utf-8").read()
     assert "investment cost [EUR]" in inv, "vTotalICost must be labelled [EUR] (C38)"
     assert "investment cost [MEUR]" not in inv, "the wrong [MEUR] label must be gone (C38)"
-    assert "Asserted convention (audit C38)" in inv, "the factor1 convention must be documented (C38)"
     obj = open(MODEL_FORMULATION, encoding="utf-8").read()
     assert "Total system cost [EUR]" in obj, "the objective unit label must be [EUR] to match (C38)"
+
+
+def test_factor1_is_pinned_to_one(h2_model):
+    """C38 follow-up: factor1 != 1 is dimensionally inconsistent (variable cost terms scale
+    ~factor1^2, fixed charges ~factor1^1), so it changes the optimum and is unsupported. It
+    must be pinned to 1.0 and guarded by an assertion at the one place it is set, and the
+    earlier (wrong) 'global objective scalar' claim must be gone."""
+    assert float(h2_model.factor1) == 1.0, "factor1 must be 1.0 (the only supported value, C38)"
+    src = open(INPUT_DATA, encoding="utf-8").read()
+    assert "assert factor1 == 1.0" in src, "factor1 must be guarded by an assertion (C38)"
+    inv = open(INVESTMENT, encoding="utf-8").read()
+    assert "global objective scalar" not in inv, \
+        "the incorrect 'global objective scalar' claim must be corrected (C38)"

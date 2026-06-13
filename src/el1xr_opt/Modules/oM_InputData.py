@@ -95,6 +95,24 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     # Constants
     factor1 = 1e-0  # Conversion factor
+    # Audit C38: factor1 is meant to be a unit-scale conversion (kWh<->MWh<->GWh), but the
+    # current implementation is dimensionally inconsistent at any value != 1, so the optimum
+    # changes with it. Variable cost terms (grid transfer fee, energy tax, energy/FCR) scale
+    # as ~factor1^2 -- both the per-unit rate and the quantity it multiplies are scaled by
+    # factor1 -- while the fixed charges (fastavgift, flat peak tariff) scale only as
+    # ~factor1^1. The relative weighting of the cost terms therefore shifts with factor1
+    # (e.g. factor1 = 2 flips a home-battery case from net cost to net revenue). A valid unit
+    # conversion needs the rate and the quantity to scale OPPOSITELY (so price x quantity is
+    # invariant); a global objective scalar needs EVERY term to scale by the same power. The
+    # code does neither. Only factor1 == 1 is validated, so it is pinned here and guarded.
+    # Future work: make factor1 dimensionally consistent, THEN promote it to a dfParameter
+    # input (CSV/DB) alongside the other pPar* parameters -- exposing it as input before the
+    # fix would surface a knob that silently produces inconsistent results.
+    assert factor1 == 1.0, (
+        "factor1 != 1 is dimensionally inconsistent and unsupported (audit C38): variable "
+        "costs scale ~factor1^2 while fixed charges scale ~factor1, so the optimum changes. "
+        "Keep factor1 == 1 until the scaling is made consistent."
+    )
     factor2 = 1e-3  # Conversion factor
     model.factor1 = factor1
     model.factor2 = factor2

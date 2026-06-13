@@ -651,6 +651,22 @@ scalar that does not change the argmin (build-vs-operate trade-off invariant und
 choice). All shipped cases run at factor1 == 1 (a no-op), so this is latent; a factor1 != 1
 regression test is the documented follow-up. Doc-only, byte-unchanged; guarded by
 `test_investment_cost_unit_label_consistent`.**
+**— FOLLOW-UP RESOLVED (factor1 != 1 investigation): the "global objective scalar" claim
+above is WRONG and is corrected. Probing factor1 = 2 on HomeBatt changed the optimum
+(cost 44.28 -> -25.48, sign flipped; total output ratio 2.48 and charge ratio 2.53, not 2.0),
+proving factor1 != 1 does not preserve the solution. Root cause: variable cost terms (grid
+transfer fee :83, energy tax :166, energy/FCR) are `rate * factor1 * quantity` and the
+quantity is itself factor1-scaled, so they scale as ~factor1^2, while the fixed charges
+(`fastavgift` :88, flat peak tariff :72) scale as ~factor1^1. So factor1 is neither a valid
+unit conversion (which needs rate and quantity to scale OPPOSITELY) nor a global scalar
+(which needs every term to scale by the same power); only factor1 == 1 is dimensionally
+consistent. Resolution (user decision): pin factor1 to 1.0 with an `assert factor1 == 1.0`
+guard and a full explanation at `oM_InputData.data_processing` (the one place it is set), and
+correct the misleading comment in `oM_Investment`. Guarded by `test_factor1_is_pinned_to_one`.
+Future work: make factor1 a dimensionally consistent rescaling (rate and quantity scale
+oppositely; fixed charges reconciled) and THEN promote it to a `dfParameter` CSV/DB input
+alongside the other `pPar*` parameters -- exposing it as input before the fix would surface a
+knob that silently produces inconsistent results.**
 C39. A future-dated investment candidate (`InitialPeriod > base year`) is silently
 dropped from the model with no warning (the sizing generator works around it by
 rewriting `InitialPeriod`). **— DONE (warning, batch 2): after the generation sets are
