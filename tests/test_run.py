@@ -259,6 +259,55 @@ def test_electrolyser_standby_selected(sizing_cases_built):
                 f"electrolyser produced hydrogen while in standby at {n}"
 
 
+@pytest.mark.solve
+def test_electrolyser_pwl_efficiency(sizing_cases_built, tmp_path):
+    """B1: with the piecewise-linear part-load efficiency flag on, the electrolyser uses the
+    PWL conversion instead of the constant ProductionFunction. Verify the curve is built and
+    correct (full load reproduces the constant PF, the curve genuinely varies away from it),
+    the linear conversion is skipped for the PWL unit, the case solves, and the SOS2 condition
+    holds in the solution (weights nonzero on at most two adjacent breakpoints per hour)."""
+    import shutil
+
+    import duckdb
+
+    src = os.path.join(sizing_cases_built, "ElectrolyserStandby.duckdb")
+    dst = os.path.join(str(tmp_path), "ElectrolyserStandby.duckdb")
+    shutil.copy(src, dst)
+    con = duckdb.connect(dst)
+    cols = [r[0] for r in con.execute(
+        "SELECT column_name FROM information_schema.columns WHERE table_name='data_Option'").fetchall()]
+    if "IndBinElectrolyserPWL" not in cols:
+        con.execute("ALTER TABLE data_Option ADD COLUMN IndBinElectrolyserPWL INTEGER")
+    con.execute("UPDATE data_Option SET IndBinElectrolyserPWL = 1")
+    con.close()
+
+    model = routine(dir=str(tmp_path), case="ElectrolyserStandby", solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    u = "AEL_01"
+
+    # the PWL is active for the electrolyser and its variables are built
+    assert u in model.hpwl, f"PWL not enabled for {u}; hpwl={list(model.hpwl)}"
+    assert hasattr(model, "vHydGenPWLWeight"), "PWL weight variable not built"
+    # the constant-efficiency conversion is skipped for the PWL unit
+    assert not any(idx[-1] == u for idx in model.eAllEnergy2Hyd), \
+        "the linear conversion is still built for the PWL electrolyser"
+
+    # curve correctness: full-load breakpoint reproduces the constant PF; the curve genuinely
+    # varies away from it (real part-load efficiency, not a trivial reproduction)
+    pf = float(model.Par["pHydGenProductionFunction"][u])
+    se = [x / y for (x, y) in model.pwl_curve[u]]   # specific energy [kWh/kgH2] per breakpoint
+    assert abs(se[-1] - pf) < 1e-6, "full-load PWL point must reproduce ProductionFunction"
+    assert max(abs(s - pf) for s in se) > 0.01 * pf, "PWL curve must vary from the constant PF"
+
+    # SOS2 in the solution: at most two adjacent breakpoints carry weight in any hour
+    for n in model.n:
+        nz = [k for k in model.pwlbp if model.vHydGenPWLWeight["period1", "sc01", n, u, k]() > 1e-6]
+        assert len(nz) <= 2 and (len(nz) < 2 or nz[1] == nz[0] + 1), \
+            f"SOS2 (adjacency) violated at {n}: nonzero breakpoints {nz}"
+
+
 def test_electrolyser_fcr_structure(sizing_cases_built):
     """Build (without solving) the ElectrolyserFCR case and check the electrolyser
     FCR wiring is structurally present: the e2h constraints are built, the
