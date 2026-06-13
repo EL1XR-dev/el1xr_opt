@@ -567,9 +567,22 @@ by `test_reserve_require_gates_use_strict_positive`.**
 C30. The endurance constraints (storage :620-632 and e2h :705-716) pair the level-n
 inventory with the bid at n-1 and skip `n.first()`, so the **last** level's bid is in
 no endurance constraint — end-of-horizon bids are free of the energy backing.
+**— DONE (batch 3, GOLDENS RE-BASELINED): three additive terminal-level constraints
+(`eEleStorageEnduranceUpEnd` / `DownEnd` for storage, `eEleFreqDownEnduranceConvEnd` for the
+e2h node) back the last load level's FCR bid with the last level's inventory/store headroom
+(the inventory one period ahead does not exist). The interior rolling constraints are
+unchanged. This removes a free end-of-horizon reserve bid, so the four sizing cases that
+exploited it cost a little more: HoodBatt -22.042 -> -19.989, HomeBattFCRNonly 56.980 ->
+57.350, H2Tank 6774.093 -> 6776.720, Electrolyser 6774.090 -> 6776.716 (all UP, the correct
+direction). The other goldens were not bidding at the last level and are unchanged. Guarded by
+`test_terminal_endurance_constraints_exist`.**
 C31. The FCR-N volume cap (:466) uses the *average* of the up/down requirements; for
 a symmetric product the deliverable volume is the *minimum*. Exact when the inputs
-are equal (the usual case).
+are equal (the usual case). **— DONE (batch 3): the volume cap now uses
+`min(Require_FCRN_Up, Require_FCRN_Down)`; the FCR-N revenue price average is a separate,
+legitimate term and is untouched. Byte-unchanged in every shipped/sizing case because the
+FCR-N up and down requirements are equal there (min == avg), so no golden moved. Guarded by
+`test_fcrn_volume_cap_uses_minimum_not_average`.**
 C32. RES units get FCR bid variables (declared over `eg|e2h`) that are in no cap, no
 relation, no revenue, and are never fixed — dead variables that can carry arbitrary
 values into the output tables. **— DONE (batch 1): the existing FCR fixing loops run
@@ -598,7 +611,14 @@ batch 2): a per-unit warning fires for any electrolyser with `ShutDownCost > 0`,
 the shut-down variable is fixed to zero so the cost is ignored. Byte-unchanged.**
 C37. Hydrogen storage outflow ramps (:1488,1498) reuse the *generation* ramp
 parameter `pHydGenRampUp/Down` where electricity had dedicated outflow-ramp
-parameters (commented out) — different physical limits.
+parameters (commented out) — different physical limits. **— DONE (documented, batch 3):
+a comment at the H2 charge/outflow ramp records that it reuses the generation ramp because
+no dedicated hydrogen outflow-ramp parameter exists in the input schema (the electricity
+side defines `pEleGenOutflowsRampUp/Down` but leaves the matching constraint commented out,
+so electricity storage has no outflow ramp at all). Adding a dedicated `pHydGenOutflowsRamp*`
+parameter with a fallback to the generation ramp (keeping existing cases unchanged) is the
+documented follow-up -- a data-schema decision, not changed here. Guarded by
+`test_h2_storage_ramp_reuse_is_documented`.**
 C38. `eTotalICost` multiplies the lump-sum annualized investment cost by `factor1`
 (oM_Investment.py:162) — dimensionally suspect unless `FixedInvestmentCost` is
 per-unit-capacity (assert the convention); doc says `[MEUR]`, objective says
@@ -647,6 +667,11 @@ decision. Guarded by `test_no_tautological_nodayahead_conjunct`.**
 C46. First-step electricity ramp (:1340,1350) uses `pEleSystemOutput` — a *system*
 aggregate, and a scalar overwritten across (p,sc) so only the last scenario's value
 survives — as each unit's pre-horizon output; essentially vacuous for small units.
+**— DONE (batch 3): both first-step ramp branches now use the unit's own
+`pEleInitialOutput[p,sc,egt]` (per-unit, indexed over `ps * eg`) instead of the system
+scalar. Latent in every shipped/sizing golden (none has a thermal `egt` unit with an active
+ramp at the first level), so no golden moved. Guarded by
+`test_first_step_ramp_uses_per_unit_initial_output`.**
 C47. `pHydRetTariffType` is read by the peak-variable fixing loops but never created —
 the hydrogen retail file carries no `TariffType` column, so the first case that
 activates a hydrogen retailer crashes with `KeyError` (same family as C43). **— FIXED

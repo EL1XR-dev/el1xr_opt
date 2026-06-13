@@ -115,14 +115,21 @@ SIZING_CASES = [
     # FCR-active battery goldens re-baselined for C21b/C18: a candidate battery can no
     # longer sell FCR-down reserve on unbuilt capacity, so it earns slightly less reserve
     # revenue and the net cost rises a little. HomeBattNoFCR is unchanged (no FCR).
+    # Re-baselined again for audit C30: the FCR endurance constraints left the LAST load
+    # level's bid with no energy backing, so a unit could over-bid reserve at end of horizon
+    # for free. Backing the terminal bid removes that spurious revenue, so the four cases that
+    # exploited it (HoodBatt, HomeBattFCRNonly, H2Tank, Electrolyser) cost a little more; the
+    # others were not bidding at the last level and are unchanged. (C31 min-vs-avg and C46
+    # per-unit ramp are latent here: the FCR-N up/down requirements are equal and these cases
+    # have no thermal ramp units.)
     pytest.param("HomeBatt",          44.27655530263448, id="HomeBatt"),
-    pytest.param("HoodBatt",         -22.04188316124317, id="HoodBatt"),
+    pytest.param("HoodBatt",         -19.98879641148733, id="HoodBatt"),
     pytest.param("HomeBattNoTariff", 125.5265553026345,  id="HomeBattNoTariff"),
     pytest.param("HomeBattNoFCR",    122.8894702739726,  id="HomeBattNoFCR"),
     pytest.param("HomeBattFCRDonly",  67.90928111201895, id="HomeBattFCRDonly"),
-    pytest.param("HomeBattFCRNonly",  56.98016352651909, id="HomeBattFCRNonly"),
-    pytest.param("H2Tank",            6774.093295025795, id="H2Tank"),
-    pytest.param("Electrolyser",      6774.089825257397, id="Electrolyser"),
+    pytest.param("HomeBattFCRNonly",  57.34981288056188, id="HomeBattFCRNonly"),
+    pytest.param("H2Tank",            6776.719863855105, id="H2Tank"),
+    pytest.param("Electrolyser",      6776.716428518055, id="Electrolyser"),
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",

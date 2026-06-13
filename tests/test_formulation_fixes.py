@@ -1072,3 +1072,61 @@ def test_hydrogen_day_ahead_constraint_name_matches_rule(h2_model):
         "hydrogen day-ahead cost constraint must be named eHydMarketDayAheadCost (C44)"
     assert not hasattr(m, "eTotalHydTradeCost"), \
         "the misattributed name eTotalHydTradeCost must be gone (C44)"
+    # the electricity analogue it now mirrors
+    assert hasattr(m, "eEleMarketDayAheadCost")
+
+
+# --- 2026-06 audit batch 3: parameter correctness --------------------------
+# C30 terminal-level endurance backing; C31 FCR-N cap uses min not avg;
+# C37 H2 storage ramp reuse documented; C46 per-unit pre-horizon ramp output.
+
+
+def test_first_step_ramp_uses_per_unit_initial_output():
+    """C46: the first-step thermal ramp used the scalar system aggregate pEleSystemOutput
+    (overwritten across (p,sc), so only the last scenario survived) as every unit's
+    pre-horizon output. It must use the unit's own pEleInitialOutput[p,sc,egt]."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    # within the two first-step ramp branches, the system aggregate must be gone
+    for rule in ("eEleMaxRampUpOutput", "eEleMaxRampDwOutput"):
+        start = text.index(f"def {rule}(")
+        body = text[start:text.index(f"rule={rule}", start)]
+        assert "pEleSystemOutput" not in body, f"{rule} must not use the system aggregate (C46)"
+        assert "pEleInitialOutput'][p,sc,egt]" in body, \
+            f"{rule} must use the per-unit pre-horizon output (C46)"
+
+
+def test_fcrn_volume_cap_uses_minimum_not_average():
+    """C31: the FCR-N volume cap (a symmetric product) must bound the bids by the MINIMUM of
+    the up/down requirements, not their average. The price average (FCR-N revenue) is a
+    separate, legitimate term and is left untouched."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    start = text.index("def eEleFreqContReserveNor(")
+    body = text[start:text.index("rule=eEleFreqContReserveNor", start)]
+    assert "min(model.Par['pOperatingReserveRequire_FCRN_Up']" in body, \
+        "FCR-N volume cap must use min(up, down) (C31)"
+    assert "Require_FCRN_Down'][p,sc,n]) / 2" not in body, \
+        "FCR-N volume cap must not use the average (C31)"
+
+
+def test_terminal_endurance_constraints_exist(green_model):
+    """C30: the rolling endurance constraints leave the last load level's FCR bid unbacked.
+    Terminal-level endurance constraints must exist so end-of-horizon bids are energy-backed.
+    On ElectrolyserFCR the e2h node-level terminal constraint is built with active rows."""
+    m = green_model
+    for name in ("eEleStorageEnduranceUpEnd", "eEleStorageEnduranceDownEnd",
+                 "eEleFreqDownEnduranceConvEnd"):
+        assert hasattr(m, name), f"terminal endurance constraint {name} missing (C30)"
+    assert len(m.eEleFreqDownEnduranceConvEnd) > 0, \
+        "the e2h terminal endurance has no active rows on ElectrolyserFCR (C30)"
+    # the terminal rows reference the LAST load level
+    last = m.n.last()
+    assert any(idx[2] == last for idx in m.eEleFreqDownEnduranceConvEnd), \
+        "terminal endurance must bind the last load level (C30)"
+
+
+def test_h2_storage_ramp_reuse_is_documented():
+    """C37: the hydrogen storage charge/outflow ramp reuses the generation ramp parameter;
+    this is documented as a known data-schema limitation with a dedicated-parameter follow-up."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "Audit C37" in text and "pHydGenOutflowsRamp" in text, \
+        "the C37 ramp-reuse limitation must be documented at the H2 charge ramp"
