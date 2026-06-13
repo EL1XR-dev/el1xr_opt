@@ -100,11 +100,34 @@ factor1 -- energy, FCR, O&M, CO2, fuel, grid fee, energy tax, incentive, Paslag,
 fixed charges + investment lump sum + dimensionless ratios unscaled). factor1 is now settable via
 the FACTOR1 module global (default 1.0).
 VERIFIED: factor1=1 is BYTE-UNCHANGED (21 solve goldens + 54 fast tests pass -> no regression).
-factor1 INVARIANCE is EXACT for the continuous model: Home1 with the peak tariff disabled gives
-identical total cost at factor1=1 and factor1=2 (ratio 1.00000). Guarded by test_factor1_invariant.
-RESIDUAL (documented follow-up): the peak-demand power-tariff is a MILP (binary peak-hour
-selection) whose discrete structure does not scale cleanly with factor1, so peak-tariff cases are
-not exactly invariant. The _adjusted_import constant addend is now scaled by factor1 (a kW
-constant). Making the peak-selection MILP scale-invariant is the remaining factor1 item.
-STILL TODO: factor2 elimination + the PWL part-load-efficiency feature + degradation cost (Phase B,
-not started); the peak-tariff MILP invariance.
+factor1 INVARIANCE is EXACT for the continuous model AND the peak-demand tariff MILP.
+
+PEAK-TARIFF MILP — RESOLVED (was a stale "residual"). Re-measuring on the merged code shows the
+peak tariff IS scale-invariant: Home1 and Grid1 with the peak tariff ENABLED give identical total
+cost at factor1=1 and factor1=2 (Grid1 bit-for-bit, reldiff 0.0; peak cost component invariant in
+every case). The earlier 0.856 non-invariance was an intermediate broken state (before the
+energy-price double-scaling fix and the _adjusted_import addend fix), not a property of the
+peak-selection MILP -- the selected peak hours are unchanged under a uniform rescaling and
+tariff/factor1 x peak-quantity*factor1 is invariant. test_factor1_invariant now runs Home1 with the
+peak tariff ON (no longer disabled).
+
+MAXBUY/MAXSELL — FIXED (audit C38, this branch). The per-step retail caps pEleRetMaxBuy/MaxSell
+(constraints eEleRetMaxBuy/eEleRetMaxSell) are per-step power quantities (kW/step) but were read
+unscaled (not in idx_retail_factoring) -- a sell pinned at the cap earned half the revenue at twice
+the unit scale. Now scaled by factor1 in oM_InputData (a zero "no cap" stays zero). This makes the
+day-ahead market revenue (vTotalEleMrkDARev) exactly invariant (was ratio 0.5). factor1=1 is x1, so
+goldens are byte-unchanged.
+
+REMAINING factor1 RESIDUAL (separate from the peak tariff): the FCR-provision sizing cases
+(HomeBattNoTariff, HomeBattFCRDonly) are still not exactly invariant. The FCR PRICES (/factor1) and
+requirement caps (*factor1) scale correctly and the UPWARD FCR-D bid scales exactly x2, but the
+DOWNWARD FCR-D bid from storage is sub-proportional (~x1.86) and the battery dispatch differs
+qualitatively between scales (charge/inventory profiles not proportional). The cost genuinely
+differs (ratio ~1.16, not equal-cost degeneracy), so a storage FCR-D headroom / SoC-coupling
+interaction binds sub-proportionally. The dimensional audit of those constraints (headroom bounds,
+SoC endurance lines ~743-768) shows them clean, so the next step is to trace which binding actually
+limits the downward bid at factor1=2 (candidate: interaction of the day-ahead charge schedule with
+the down-charge headroom MaxCharge - charge2ndBlock). This is a distinct, harder item.
+
+STILL TODO: the FCR-D storage downward-provision invariance (above); factor2 elimination + the PWL
+part-load-efficiency feature + degradation cost (Phase B, not started).

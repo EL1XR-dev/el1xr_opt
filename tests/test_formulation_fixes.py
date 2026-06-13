@@ -1158,21 +1158,16 @@ def test_factor1_default_is_one(h2_model):
 def test_factor1_invariant():
     """C38: factor1 is a TRUE unit conversion -- it scales extensive quantities by factor1 and
     per-quantity prices by 1/factor1, leaving fixed charges / investment / ratios unscaled, so
-    the optimum (total cost) is INVARIANT. Verified on Home1 with the peak-demand tariff disabled
-    (the discrete peak-tariff MILP does not scale cleanly; that residual is a documented
-    follow-up). Solving at FACTOR1=1 and FACTOR1=2 must give the same total system cost."""
+    the optimum (total cost) is INVARIANT. Verified on Home1 with the peak-demand tariff ENABLED:
+    the discrete peak-tariff MILP is scale-invariant too (the selected peak hours are unchanged
+    under a uniform unit rescaling, and tariff/factor1 x peak-quantity*factor1 is invariant), so
+    no peak component is excluded. Solving at FACTOR1=1 and FACTOR1=2 must give the same total
+    system cost."""
     import el1xr_opt.Modules.oM_InputData as _ID
     src = os.path.join(REPO, "src", "el1xr_opt", "Home1")
     work = tempfile.mkdtemp(prefix="f1inv_")
     dst = os.path.join(work, "Home1")
     shutil.copytree(src, dst)
-    # disable the peak-demand tariff (its MILP selection is not factor1-invariant -- separate WIP)
-    par = os.path.join(dst, "oM_Data_Parameter_Home1.csv")
-    pf = pd.read_csv(par)
-    for c in pf.columns:
-        if "NumberPowerPeaks" in c:
-            pf[c] = 0
-    pf.to_csv(par, index=False)
     # truncate to one week so the solve is fast
     dur = os.path.join(dst, "oM_Data_Duration_Home1.csv")
     dd = pd.read_csv(dur, index_col=[0, 1, 2])
