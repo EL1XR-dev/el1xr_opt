@@ -235,11 +235,19 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # eRetMaxBuy/Sell constraints (they skip a zero cap). The hydrogen retail file
     # has no MaxBuy/MaxSell columns, so activating a hydrogen retailer would
     # otherwise KeyError here; the electricity file already carries them.
+    # factor1 (audit C38): MaxBuy/MaxSell are per-step power caps (kW/step) -- extensive
+    # quantities -- so they must scale by factor1 like the other quantity bounds (the var ub
+    # pEleRetMaximumEnergySell already does). Without this the cap stays fixed while prices
+    # carry 1/factor1, so a sell pinned at the cap earns half the revenue at twice the unit
+    # scale, breaking invariance. They are read unscaled by _update_parameters (not in
+    # idx_retail_factoring), so scale them here. A defaulted/zero cap (= "no cap") stays zero.
     for sector, df_key in [('Ele', 'dfElectricityRetail'), ('Hyd', 'dfHydrogenRetail')]:
         for cap in ['MaxBuy', 'MaxSell']:
             key = f'p{sector}Ret{cap}'
             if key not in parameters_dict:
                 parameters_dict[key] = pd.Series(0.0, index=data_frames[df_key].index)
+            else:
+                parameters_dict[key] = parameters_dict[key] * factor1
         # TariffType is optional too (the hydrogen retail file does not carry it).
         # Default to '' = no peak tariff: the variable-fixing loops compare against
         # 'Hourly'/'Daily' and fix every peak variable of any other type to zero.
