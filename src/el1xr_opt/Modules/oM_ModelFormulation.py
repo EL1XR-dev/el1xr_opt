@@ -137,9 +137,15 @@ def create_objective_function_components(model, optmodel, indlog):
         return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkPPACost[p,sc,n])
     optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [kEUR]'))
 
+    # Audit C44: this rule defines the hydrogen day-ahead BUY cost. The constraint attribute
+    # is named to match its rule and the electricity analogue eEleMarketDayAheadCost (it was
+    # mis-registered as 'eTotalHydTradeCost'). The destination variable vTotalHydMrkPPACost
+    # holds this day-ahead trade cost -- the "PPA" in its name is historical (a separate
+    # hydrogen PPA term was never split out); the variable rename is deferred to avoid
+    # touching the objective registry and result-table column names.
     def eHydMarketDayAheadCost(optmodel, p,sc,n):
         return optmodel.vTotalHydMrkPPACost[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
-    optmodel.__setattr__('eTotalHydTradeCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [kEUR]'))
+    optmodel.__setattr__('eHydMarketDayAheadCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [kEUR]'))
 
     #%% Total hydrogen market revenues
     def eHydMarketRevenue(optmodel, p,sc,n):

@@ -580,13 +580,22 @@ C33. `eEleFreqUp/DownChargeBound` (:581,591,598,608) divide by `pEleMaxCharge` w
 no positivity guard (the e2h analogues guard) — `ZeroDivisionError` for a
 discharge-only ESS with default flags.
 C34. With `pParNumberPowerPeaks == 0` the peak cost (:72) charges a power tariff
-with no kW quantity — a dimensionally meaningless constant.
+with no kW quantity — a dimensionally meaningless constant. **— DONE (warning, batch 2):
+the constant is a fixed objective offset, so it does not change the optimal solution
+(only the reported total cost). A load-time warning now fires when `pParNumberPowerPeaks
+== 0` and a non-zero `pEleRetPowerTariff` is set. Zeroing the offset would move any
+golden that hits this config, so it is left as an optional follow-up. Byte-unchanged.**
 C35. The per-unit binary relaxation loop (oM_InputData.py:1458-1462) never relaxes
 `vHydGenStandBy` and runs over `hgt` (skipping an e2h with `ConstantVarCost == 0`);
 in the LP default the three-state logic is continuously gameable (the demo correctly
-forces `binary_uc`). Document that standby results need binary UC.
+forces `binary_uc`). Document that standby results need binary UC. **— DONE (warning,
+batch 2): a load-time warning fires when a standby-capable electrolyser is run with
+relaxed commitment (`pOptIndBinGenOperat == 0`), stating the standby schedule needs
+binary UC to be meaningful. Byte-unchanged.**
 C36. `vHydGenShutDown[e2h] = 0` by design, but a nonzero `ShutDownCost` in the data
-(AEL_01: 1000) is silently ignored — deserves a load-time warning.
+(AEL_01: 1000) is silently ignored — deserves a load-time warning. **— DONE (warning,
+batch 2): a per-unit warning fires for any electrolyser with `ShutDownCost > 0`, noting
+the shut-down variable is fixed to zero so the cost is ignored. Byte-unchanged.**
 C37. Hydrogen storage outflow ramps (:1488,1498) reuse the *generation* ramp
 parameter `pHydGenRampUp/Down` where electricity had dedicated outflow-ramp
 parameters (commented out) — different physical limits.
@@ -596,7 +605,9 @@ per-unit-capacity (assert the convention); doc says `[MEUR]`, objective says
 `[kEUR]`.
 C39. A future-dated investment candidate (`InitialPeriod > base year`) is silently
 dropped from the model with no warning (the sizing generator works around it by
-rewriting `InitialPeriod`).
+rewriting `InitialPeriod`). **— DONE (warning, batch 2): after the generation sets are
+built, a warning lists any electricity or hydrogen unit dropped because its
+`InitialPeriod` is after the economic base year (single-period run). Byte-unchanged.**
 C40. Heat sector (oM_HeatSector.py): no `COP x heat-to-power efficiency < 1` data
 guard (a free power-heat-power loop is representable); the thermal store has no
 cyclic/terminal condition (initial stock is free energy, horizon ends empty); store
@@ -618,7 +629,13 @@ that activates a hydrogen retailer on a column-less file gets `KeyError` (no sch
 default, unlike the electricity peak factors).
 C44. The hydrogen day-ahead buy cost is stored in `vTotalHydMrkPPACost` under rule
 name `eHydMarketDayAheadCost` registered as `eTotalHydTradeCost` — misattributed in
-any report that greps by name.
+any report that greps by name. **— DONE (batch 2): the constraint attribute is renamed
+from `eTotalHydTradeCost` to `eHydMarketDayAheadCost`, matching its rule and the
+electricity analogue `eEleMarketDayAheadCost` (the old name was referenced nowhere else).
+The destination variable `vTotalHydMrkPPACost` actually holds the day-ahead trade cost;
+a comment records that the "PPA" in its name is historical, and the variable rename is
+deferred to avoid touching the objective registry and result-table columns. Byte-unchanged;
+guarded by `test_hydrogen_day_ahead_constraint_name_matches_rule`.**
 C45. Tautological `(NoDayAhead==1 or NoDayAhead==0)` conjuncts (:1057,1070,1100,
 1111) make the binary-gated 2nd-block branch unreachable for FCR-capable storage —
 dead logic; mutual exclusion still holds via the charge/discharge decisions.

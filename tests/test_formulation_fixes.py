@@ -1044,3 +1044,31 @@ def test_inflow_outflow_bound_docs_not_commitment():
     text = open(MODEL_FORMULATION, encoding="utf-8").read()
     assert "to commitment [p.u.]" not in text, \
         "the misleading 'to commitment' doc must be corrected (C42)"
+
+
+# --- 2026-06 audit batch 2: load-time warnings & relabels -------------------
+# C34 peak cost is a constant offset at zero peaks; C35 standby needs binary UC;
+# C36 ignored electrolyser shut-down cost; C39 dropped future-dated unit;
+# C44 misattributed hydrogen day-ahead constraint name.
+
+
+def test_batch2_warnings_present():
+    """C34/C35/C36/C39: each is a byte-safe load-time warning (no model change). Guard that
+    the warning and its triggering condition are wired in oM_InputData."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    assert "WARNING (C34)" in text and "pParNumberPowerPeaks'] == 0" in text, "C34 warning missing"
+    assert "WARNING (C35)" in text and "pOptIndBinGenOperat'] == 0" in text, "C35 warning missing"
+    assert "WARNING (C36)" in text and "pHydGenShutDownCost'][e2h] > 0" in text, "C36 warning missing"
+    assert "WARNING (C39)" in text and "InitialPeriod'][_g] > _base_year" in text, "C39 warning missing"
+
+
+def test_hydrogen_day_ahead_constraint_name_matches_rule(h2_model):
+    """C44: the hydrogen day-ahead buy cost constraint was registered as
+    ``eTotalHydTradeCost`` while its rule is ``eHydMarketDayAheadCost`` -- a name-grep
+    mismatch. The attribute is now named after its rule, mirroring the electricity analogue
+    ``eEleMarketDayAheadCost``."""
+    m = h2_model
+    assert hasattr(m, "eHydMarketDayAheadCost"), \
+        "hydrogen day-ahead cost constraint must be named eHydMarketDayAheadCost (C44)"
+    assert not hasattr(m, "eTotalHydTradeCost"), \
+        "the misattributed name eTotalHydTradeCost must be gone (C44)"
