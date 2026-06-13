@@ -98,6 +98,29 @@ def test_cost_from_duckdb(label, d, case, expected, rtol, tmp_path):
     _assert_cost(float(pyo.value(model.eTotalSCost)), expected, rtol)
 
 
+@pytest.mark.solve
+def test_retail_buy_couples_to_grid_import():
+    """C14: the commercial retail buy/sell must equal the physical grid import/export at the
+    electricity reference node (eEleImportBuyLink / eEleExportSellLink), so the energy cost and
+    the grid-transfer fee are charged on the same flow. Checked on the multi-node Grid1 case,
+    where the retailer sits at the reference node and the assets are on other nodes reached
+    over lines -- the case that would expose a retail balance that ignored the network."""
+    d = os.path.join(REPO, "src", "el1xr_opt")
+    with truncated_duration(d, "Grid1"):
+        m = routine(**_run_dict(d, "Grid1"))
+    assert m is not None
+    assert len(m.eEleImportBuyLink) > 0 and len(m.eEleExportSellLink) > 0, \
+        "C14 buy<->import coupling constraints were not built"
+    p, sc = list(m.ps)[0]
+    ref = list(m.endrf)
+    imp = sum(m.vEleImport[p, sc, n, nd]() for n in m.n for nd in ref)
+    buy = sum(m.vEleBuy[p, sc, n, er]() for n in m.n for er in m.er)
+    exp = sum(m.vEleExport[p, sc, n, nd]() for n in m.n for nd in ref)
+    sell = sum(m.vEleSell[p, sc, n, er]() for n in m.n for er in m.er)
+    assert abs(imp - buy) < 1e-4, f"grid import {imp} != retail buy {buy} (C14)"
+    assert abs(exp - sell) < 1e-4, f"grid export {exp} != retail sell {sell} (C14)"
+
+
 # --- Sizing / tariff / frequency-market variant cases ------------------------
 # These are small LP cases generated from the H2VPP base by
 # data/sizing/make_sizing_cases.py and read as .duckdb input files. The fixture

@@ -351,17 +351,11 @@ def create_constraints(model, optmodel, indlog):
     # on, so existing cases build an identical constraint.
     community_on = bool(model.Par.get('pOptIndBinCommunity', 0))
 
-    # Audit C14 (analysed, NOT changed -- needs a modelling decision): this is the COMMERCIAL
-    # per-retailer balance (the retailer's assigned generation/demand/charge closed by
-    # vEleBuy/vEleSell). The PHYSICAL nodal balance with line flows and grid import/export is
-    # eEleBalance below. With a single retailer that owns the whole portfolio (every shipped
-    # case), this balance sums the entire system and the network flows are internal, so it is
-    # correct -- no flow term is needed and adding one would double-count the network already
-    # in eEleBalance. With two or more retailers split across nodes (no shipped case has this),
-    # the missing piece is the vEleBuy<->vEleImport coupling (the commented eEleBuyComposition
-    # below was the unfinished attempt), not a flow term here. Designing that multi-retailer
-    # commercial<->physical coupling, and any golden re-baseline it implies, is left as a
-    # deliberate decision; see docs/model_audit.md C14.
+    # Audit C14: this is the COMMERCIAL per-retailer balance (the retailer's assigned
+    # generation/demand/charge closed by vEleBuy/vEleSell). The PHYSICAL nodal balance with
+    # line flows and grid import/export is eEleBalance below. The two layers are tied together
+    # by eEleImportBuyLink / eEleExportSellLink (below), which couple the retail buy/sell to the
+    # grid import/export at the electricity reference node; see docs/model_audit.md C14.
     def eEleRetNodeBalance(optmodel, p,sc,n,er):
         nd = model.Par['pEleRetNode'][er]
         if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]):
@@ -381,12 +375,29 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleRetMaxBuy', Constraint(optmodel.psner, rule=eEleRetMaxBuy, doc='Maximum electricity buys [kWh]'))
 
-    # def eEleBuyComposition(optmodel, p,sc,n,er):
-    #     if model.Par['pEleRetMaxBuy'][er] > 0:
-    #         return optmodel.vEleBuy[p,sc,n,er] == sum(optmodel.vEleDemand[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed) + sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
-    #     else:
-    #         return Constraint.Skip
-    # optmodel.__setattr__('eEleBuyComposition', Constraint(optmodel.psner, rule=eEleBuyComposition, doc='Electricity buy composition [kWh]'))
+    # Audit C14: couple the commercial layer (vEleBuy/vEleSell, which carry the day-ahead
+    # energy cost) to the physical layer (vEleImport/vEleExport at the reference node, which
+    # carry the grid-transfer fee and energy tax). All external trade crosses the electricity
+    # reference node -- import/export are fixed to zero at every other node in network mode --
+    # so the grid import equals the sum of every retailer's buy and the grid export equals the
+    # sum of every retailer's sell. This is the finished form of the old eEleBuyComposition
+    # stub: it makes the energy-cost base and the grid-fee base the same physical quantity and
+    # is correct for one or more retailers. (For a single retailer that owns the whole portfolio
+    # the retail and physical balances already drive buy to the net grid draw, so this is
+    # non-binding there; it becomes load-bearing once multiple retailers transact at the grid.)
+    def eEleImportBuyLink(optmodel, p,sc,n,nd):
+        if nd in model.endrf and len(model.er) > 0:
+            return optmodel.vEleImport[p,sc,n,nd] == sum(optmodel.vEleBuy[p,sc,n,er] for er in model.er)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleImportBuyLink', Constraint(optmodel.psnnd, rule=eEleImportBuyLink, doc='Couple grid import to retail buy at the reference node (C14) [kW]'))
+
+    def eEleExportSellLink(optmodel, p,sc,n,nd):
+        if nd in model.endrf and len(model.er) > 0:
+            return optmodel.vEleExport[p,sc,n,nd] == sum(optmodel.vEleSell[p,sc,n,er] for er in model.er)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleExportSellLink', Constraint(optmodel.psnnd, rule=eEleExportSellLink, doc='Couple grid export to retail sell at the reference node (C14) [kW]'))
 
     # Maximum electricity sells
     def eEleRetMaxSell(optmodel, p,sc,n,er):
