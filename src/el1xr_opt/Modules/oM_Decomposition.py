@@ -100,14 +100,41 @@ def _solve_model(opt, mdl):
 
     appsi solvers raise on load if not optimal; ask not to auto-load and load
     explicitly so duals come through and a clear error is raised on failure.
+
+    Robustness: HiGHS occasionally returns a spurious solver-ERROR status (a
+    presolve/solve internal error, distinct from a real infeasible/unbounded result)
+    on an otherwise solvable master MILP. It is platform/version dependent -- seen on
+    the CI runner for the heat-storage temporal-Benders master, never locally. When the
+    strict load fails on such a status, retry the solve once with HiGHS presolve off,
+    which takes a different algorithmic path and clears the spurious error without
+    changing the optimum (presolve does not alter the LP/MILP solution or its duals).
+    The retry runs only after a solve has already failed, so it cannot affect the normal
+    path; if it also fails the original error propagates.
     """
     from pyomo.environ import value  # noqa: F401  (kept local for symmetry)
     try:
-        res = opt.solve(mdl)
+        return opt.solve(mdl)
     except (ValueError, RuntimeError):
         res = opt.solve(mdl, load_solutions=False)
+    try:
         mdl.solutions.load_from(res)
-    return res
+        return res
+    except ValueError:
+        had = "presolve" in opt.options
+        prev = opt.options.get("presolve") if had else None
+        try:
+            opt.options["presolve"] = "off"
+            res = opt.solve(mdl, load_solutions=False)
+            mdl.solutions.load_from(res)
+            return res
+        finally:
+            if had:
+                opt.options["presolve"] = prev
+            else:
+                try:
+                    del opt.options["presolve"]
+                except (KeyError, TypeError):
+                    pass
 
 
 def benders_solve(make_master, make_subproblem, blocks, config=None,
