@@ -94,13 +94,16 @@ ElectrolyserStandby, H2Tank) with justification + the citations below.
 Phase A first (orthogonal, byte-unchanged), committed as its own unit. Then Phase B (re-baseline).
 User commits/pushes; I prepare commits + commands. Telegram ping at milestones.
 
-## Phase A status (factor1 consistency) — CONTINUOUS PART DONE & VERIFIED
+## Phase A status (factor1 consistency) — DONE & VERIFIED (full invariance across all case types)
 Implemented the full per-dimension reclassification (quantities x factor1; per-quantity prices /
 factor1 -- energy, FCR, O&M, CO2, fuel, grid fee, energy tax, incentive, Paslag, peak-quantity;
 fixed charges + investment lump sum + dimensionless ratios unscaled). factor1 is now settable via
 the FACTOR1 module global (default 1.0).
-VERIFIED: factor1=1 is BYTE-UNCHANGED (21 solve goldens + 54 fast tests pass -> no regression).
-factor1 INVARIANCE is EXACT for the continuous model AND the peak-demand tariff MILP.
+VERIFIED: factor1=1 is BYTE-UNCHANGED (full solve suite + fast tests pass -> no regression).
+factor1 INVARIANCE is now EXACT across ALL case types: the continuous model, the peak-demand tariff
+MILP, the day-ahead market (buy/sell with per-step caps), FCR-D and FCR-N provision with its storage
+SoC-endurance backing, the electricity PPA, the electrolyser, and the investment/sizing layer. Every
+main and sizing case gives ratio 1.00000 at factor1=1 vs 2. Phase A is complete.
 
 PEAK-TARIFF MILP — RESOLVED (was a stale "residual"). Re-measuring on the merged code shows the
 peak tariff IS scale-invariant: Home1 and Grid1 with the peak tariff ENABLED give identical total
@@ -118,16 +121,26 @@ the unit scale. Now scaled by factor1 in oM_InputData (a zero "no cap" stays zer
 day-ahead market revenue (vTotalEleMrkDARev) exactly invariant (was ratio 0.5). factor1=1 is x1, so
 goldens are byte-unchanged.
 
-REMAINING factor1 RESIDUAL (separate from the peak tariff): the FCR-provision sizing cases
-(HomeBattNoTariff, HomeBattFCRDonly) are still not exactly invariant. The FCR PRICES (/factor1) and
-requirement caps (*factor1) scale correctly and the UPWARD FCR-D bid scales exactly x2, but the
-DOWNWARD FCR-D bid from storage is sub-proportional (~x1.86) and the battery dispatch differs
-qualitatively between scales (charge/inventory profiles not proportional). The cost genuinely
-differs (ratio ~1.16, not equal-cost degeneracy), so a storage FCR-D headroom / SoC-coupling
-interaction binds sub-proportionally. The dimensional audit of those constraints (headroom bounds,
-SoC endurance lines ~743-768) shows them clean, so the next step is to trace which binding actually
-limits the downward bid at factor1=2 (candidate: interaction of the day-ahead charge schedule with
-the down-charge headroom MaxCharge - charge2ndBlock). This is a distinct, harder item.
+FCR-D DOWNWARD STORAGE PROVISION — RESOLVED (audit C38). The FCR-provision sizing cases were not
+invariant because the DOWNWARD FCR-D bid from storage was sub-proportional (~x1.86). Two unscaled
+terms, both found via a feasibility-transfer test (scale the factor1=1 optimum -- quantities x2,
+money x1, binaries unchanged -- and check which factor1=2 constraint it violates):
+ 1. pEleMaxStorage / pHydMaxStorage (storage ENERGY capacity, kWh) is NOT in idx_gen_factoring, so
+    it is applied x factor1 only at SOME use sites (the inventory variable bound, the investment
+    layer) and was MISSING the x factor1 at the FCR SoC-endurance constraints
+    (eEleStorageEnduranceDown/DownEnd lines 750/768, eEleFreqDownEnduranceConv/ConvEnd lines
+    867/883), which compare raw MaxStorage against the scaled inventory. At factor1=2 that made the
+    down-charge endurance artificially tight and throttled the downward bid. Fixed: multiply the
+    MaxStorage term by model.factor1 at those four use sites (matching the existing scale-at-use
+    pattern at the inventory bound and the investment layer).
+ 2. The electricity PPA settlement (eEleMarketPPACost, oM_GreenHydrogen) multiplied pEleGenPPAPrice
+    (a per-quantity price, EUR/kWh) by the output (a quantity) WITHOUT 1/factor1, so the PPA cost
+    scaled x2 instead of staying invariant. Fixed: pEleGenPPAPrice / model.factor1 (like the
+    day-ahead energy price). The old code even flagged this with a "REVIEW (units)" comment.
+After both fixes EVERY sizing case is exactly invariant (ratio 1.00000): HomeBatt, HomeBattNoTariff,
+HomeBattNoFCR, HomeBattFCRDonly, HomeBattFCRNonly, Electrolyser, H2Tank. Guarded by
+test_sizing_factor1_invariant (HomeBattFCRDonly + Electrolyser). factor1=1 is x1 / 1/1, so goldens
+are byte-unchanged.
 
-STILL TODO: the FCR-D storage downward-provision invariance (above); factor2 elimination + the PWL
+STILL TODO: factor2 elimination + the PWL
 part-load-efficiency feature + degradation cost (Phase B, not started).
