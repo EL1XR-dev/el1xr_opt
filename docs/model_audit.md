@@ -642,6 +642,24 @@ cyclic/terminal condition (initial stock is free energy, horizon ends empty); st
 charge/discharge bounds use the *energy* capacity as a power rating with no mutual
 exclusivity; a store-only node is missing from the heat-balance node list
 (`n2hts` not in the union); `vHeatNotServed` is uncapped.
+**— DONE (batch 5). No shipped/sizing golden carries heat tables, so all five are latent for
+the cost goldens; verified against `tests/test_heat_sector.py`. Fixes:**
+- **store-only node now in the balance node union (`n2hts` added), so a store on its own node
+  is constrained instead of free;**
+- **`vHeatNotServed` capped by demand (`eHeatNotServedCap`), so it cannot be a paid sink
+  (mirrors hydrogen C41);**
+- **thermal-store terminal condition added (`eHeatInventoryTerminal`: final inventory >=
+  initial), so the initial stock is not free energy drained over the horizon -- the
+  defensible default, matching the electricity store's cycle-time-step tie; chosen autonomously
+  and flagged (a strict `== initial` cyclic form is the alternative);**
+- **free power-heat-power loop now warned at load time when `COP x efficiency >= 1` (such a
+  loop makes the LP unbounded);**
+- **power-rating / mutual-exclusivity (charge/discharge bounded by the energy capacity, no
+  charge-XOR-discharge binary): DOCUMENTED as a known limitation -- harmless at the optimum
+  under `StoEff < 1`; a dedicated power-rating parameter + mutual-exclusivity binary is a
+  schema/MIP follow-up, not changed here.**
+**Guarded by `test_heat_store_terminal_and_not_served_cap`, `test_heat_store_only_node_enters_balance`,
+`test_power_heat_power_loop_warns`.**
 C41. Flexible hydrogen demand has no recovery constraint (unlike
 `eEleDemandShiftBalance`) and `vHNS <= pVarMaxDemand` regardless of the flexed
 demand — `vHydDemand - vHNS` can go negative (a paid sink).
