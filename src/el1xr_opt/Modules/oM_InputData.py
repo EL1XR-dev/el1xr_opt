@@ -18,6 +18,12 @@ from   pyomo.dataportal  import DataPortal
 from  .oM_InputSource     import resolve_source, df_to_set_values
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
+# Unit-scale conversion factor (audit C38). 1.0 by default (byte-unchanged goldens). A true unit
+# conversion: extensive quantities scale by FACTOR1, per-quantity prices by 1/FACTOR1, and fixed
+# charges / investment / dimensionless ratios are unscaled, so the optimum is invariant.
+# Overridable for the factor1-invariance regression test; future hook for a dfParameter input.
+FACTOR1 = 1.0
+
 def data_processing(DirName, CaseName, DateModel, model, indlog):
     # %% Read the input data
     print('-- Reading the input data')
@@ -94,26 +100,21 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     start_time = time.time()
 
     # Constants
-    factor1 = 1e-0  # Conversion factor
-    # Audit C38: factor1 is meant to be a unit-scale conversion (kWh<->MWh<->GWh), but the
-    # current implementation is dimensionally inconsistent at any value != 1, so the optimum
-    # changes with it. Variable cost terms (grid transfer fee, energy tax, energy/FCR) scale
-    # as ~factor1^2 -- both the per-unit rate and the quantity it multiplies are scaled by
-    # factor1 -- while the fixed charges (fastavgift, flat peak tariff) scale only as
-    # ~factor1^1. The relative weighting of the cost terms therefore shifts with factor1
-    # (e.g. factor1 = 2 flips a home-battery case from net cost to net revenue). A valid unit
-    # conversion needs the rate and the quantity to scale OPPOSITELY (so price x quantity is
-    # invariant); a global objective scalar needs EVERY term to scale by the same power. The
-    # code does neither. Only factor1 == 1 is validated, so it is pinned here and guarded.
-    # Future work: make factor1 dimensionally consistent, THEN promote it to a dfParameter
-    # input (CSV/DB) alongside the other pPar* parameters -- exposing it as input before the
-    # fix would surface a knob that silently produces inconsistent results.
-    assert factor1 == 1.0, (
-        "factor1 != 1 is dimensionally inconsistent and unsupported (audit C38): variable "
-        "costs scale ~factor1^2 while fixed charges scale ~factor1, so the optimum changes. "
-        "Keep factor1 == 1 until the scaling is made consistent."
-    )
-    factor2 = 1e-3  # Conversion factor
+    # factor1 is a unit-scale conversion (audit C38) for numerical conditioning -- it lets the
+    # model work at utility (MWh/MEUR) or home (kWh/EUR) scale. It is a TRUE unit conversion, so
+    # it must leave the optimum unchanged: it scales the EXTENSIVE quantities (capacities,
+    # demand, flows, storage energy, network limits, FCR volume, ramps) by factor1, scales each
+    # per-quantity PRICE by 1/factor1 so price x quantity (the money) is invariant, and leaves
+    # fixed charges, investment lump sums, and dimensionless ratios (production function,
+    # compressor/emission rates) unscaled. At factor1 == 1 every scaling is a no-op (goldens
+    # byte-unchanged); a factor1 != 1 run reproduces the same decisions and total cost
+    # (guarded by test_factor1_invariant). FACTOR1 (module global) is the override hook for
+    # that test and the future dfParameter input.
+    factor1 = FACTOR1
+    factor2 = 1e-3  # commitment-cost unit bridge (audit C38) -- to be ELIMINATED in the
+                    # electrolyser-accuracy phase, together with re-entering ConstantTerm/
+                    # StartUpCost/ShutDownCost in the canonical currency. Untouched here so
+                    # Phase A (factor1 consistency) stays byte-unchanged.
     model.factor1 = factor1
     model.factor2 = factor2
 
@@ -151,27 +152,35 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     # Merging sets gg and hh
     model.ehg = model.egg | model.hgg
-    # Extract and cast generation parameters
+    # Extract and cast generation parameters. factor1 (audit C38): per-quantity PRICES carry
+    # 1/factor1, dimensionless RATIOS/availabilities are unscaled, and the extensive quantities
+    # carry factor1. VarMin/MaxStorage are storage energy but read unscaled here -- the factor1
+    # is applied once later at the inventory-bound / investment-cap sites (and the initial
+    # inventory), matching the GenMaximumStorage fallback (C24).
+    _gen_price_suffixes = ('VarMinFuelCost', 'VarMaxFuelCost', 'VarMinEmissionCost', 'VarMaxEmissionCost')
+    _gen_unscaled_suffixes = ('VarMinStorage', 'VarMaxStorage',                       # applied later at bounds
+                              'VarFixedAvailability', 'VarPositionConsumption', 'VarPositionGeneration')  # dimensionless
     for suffix in model.gen_frames_suffixes:
-        # print(suffix)
-        # parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'][model.ehg] * factor1
-        # Storage energy bounds carry the factor1 unit conversion once, applied later at
-        # the inventory-bound / investment-cap sites (and the initial inventory). Read
-        # them unscaled here so the VarStorage path is not scaled twice relative to the
-        # GenMaximumStorage fallback, which is only scaled at those sites (C24).
-        scale = 1.0 if suffix in ('VarMinStorage', 'VarMaxStorage') else factor1
+        if suffix in _gen_price_suffixes:
+            scale = 1.0 / factor1
+        elif suffix in _gen_unscaled_suffixes:
+            scale = 1.0
+        else:
+            scale = factor1
         parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehg, fill_value=0.0) * scale
 
     # Merging sets gg and hh
     model.ehr = model.err | model.hrr
-    # Extract and cast retail parameters
+    # Extract and cast retail parameters. retail_frames_suffixes are the day-ahead energy
+    # buy/sell PRICES (VarEnergyCost/Price), so they carry 1/factor1 (audit C38): the bought/
+    # sold energy scales by factor1, keeping the money invariant.
     for suffix in model.retail_frames_suffixes:
-        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehr, fill_value=0.0) * factor1
+        parameters_dict[f'p{suffix}'] = data_frames[f'df{suffix}'].reindex(columns=model.ehr, fill_value=0.0) / factor1
 
     # Extract and cast operating reserve parameters for RM and RT markets
     for ind in model.reserves_prefixes:
-        parameters_dict[f'pOperatingReservePrice_{ind}'     ] = data_frames['dfOperatingReservePrice'     ][ind] * factor1
-        parameters_dict[f'pOperatingReserveRequire_{ind}'   ] = data_frames['dfOperatingReserveRequire'   ][ind] * factor1
+        parameters_dict[f'pOperatingReservePrice_{ind}'     ] = data_frames['dfOperatingReservePrice'     ][ind] / factor1   # FCR PRICE -> 1/factor1 (audit C38)
+        parameters_dict[f'pOperatingReserveRequire_{ind}'   ] = data_frames['dfOperatingReserveRequire'   ][ind] * factor1   # FCR VOLUME (quantity) -> factor1
         parameters_dict[f'pOperatingReserveActivation_{ind}'] = data_frames['dfOperatingReserveActivation'][ind]
 
     # compute the Demand as the mean over the time step load levels and assign it to active load levels.
@@ -196,8 +205,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # generation indicators
     EleGeneration_ind = data_frames['dfElectricityGeneration'].columns.to_list()
     HydGeneration_ind = data_frames['dfHydrogenGeneration'].columns.to_list()
-    idx_gen_factoring  = ['MaximumPower', 'MinimumPower', 'StandByPower', 'MaximumCharge', 'MinimumCharge', 'OMVariableCost', 'ProductionFunction', 'MaxCompressorConsumption',
-                      'RampUp', 'RampDown', 'CO2EmissionRate', 'MaxOutflowsProd', 'MinOutflowsProd', 'MaxInflowsCons', 'MinInflowsCons', 'OutflowsRampDown', 'OutflowsRampUp']
+    # factor1 (audit C38): only EXTENSIVE quantities are scaled by factor1 here. Prices
+    # (OMVariableCost) are handled as 1/factor1 below, and dimensionless ratios
+    # (ProductionFunction, MaxCompressorConsumption, CO2EmissionRate) are NOT scaled.
+    idx_gen_factoring  = ['MaximumPower', 'MinimumPower', 'StandByPower', 'MaximumCharge', 'MinimumCharge',
+                      'RampUp', 'RampDown', 'MaxOutflowsProd', 'MinOutflowsProd', 'MaxInflowsCons', 'MinInflowsCons', 'OutflowsRampDown', 'OutflowsRampUp']
     # demand indicators
     EleDemand_ind = data_frames['dfElectricityDemand'].columns.to_list()
     HydDemand_ind = data_frames['dfHydrogenDemand'].columns.to_list()
@@ -236,9 +248,13 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
             parameters_dict[key] = pd.Series('', index=data_frames[df_key].index)
 
     for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] * model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost']  # linear fuel cost; O&M is added once in the objective (eTotal{Ele,Hyd}GCost)  [MEUR/GWh]
+        # factor1 (audit C38): per-quantity PRICES carry 1/factor1 so price x quantity (which
+        # scales by factor1) is invariant. LinearVarCost, CO2EmissionCost and OMVariableCost are
+        # such prices; the CO2 emission RATE is a dimensionless ratio and is no longer factored.
+        parameters_dict[f'p{sector[0:3]}GenLinearVarCost'     ] = parameters_dict[f'p{sector[0:3]}GenLinearTerm'          ] / model.factor1 * parameters_dict[f'p{sector[0:3]}GenFuelCost']  # linear fuel cost; O&M is added once in the objective (eTotal{Ele,Hyd}GCost)
+        parameters_dict[f'p{sector[0:3]}GenOMVariableCost'    ] = parameters_dict[f'p{sector[0:3]}GenOMVariableCost'      ] / model.factor1                                                                                                                        # O&M variable cost (price)
         parameters_dict[f'p{sector[0:3]}GenConstantVarCost'   ] = parameters_dict[f'p{sector[0:3]}GenConstantTerm'        ] * model.factor2 * parameters_dict[f'p{sector[0:3]}GenFuelCost']                                                                        # constant term variable cost             [MEUR/h]
-        parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] * model.factor1 * parameters_dict[ 'pParCO2Cost']                                                                                      # CO2 emission cost                       [MEUR/GWh]
+        parameters_dict[f'p{sector[0:3]}GenCO2EmissionCost'   ] = parameters_dict[f'p{sector[0:3]}GenCO2EmissionRate'     ] / model.factor1 * parameters_dict[ 'pParCO2Cost']                                                                                      # CO2 emission cost
         parameters_dict[f'p{sector[0:3]}GenStartUpCost'       ] = parameters_dict[f'p{sector[0:3]}GenStartUpCost'         ] * model.factor2                                                                                                                        # generation startup cost                 [MEUR]
         parameters_dict[f'p{sector[0:3]}GenShutDownCost'      ] = parameters_dict[f'p{sector[0:3]}GenShutDownCost'        ] * model.factor2                                                                                                                        # generation shutdown cost                [MEUR]
         parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
@@ -747,8 +763,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     parameters_dict['pVarMaxDemand'     ] = parameters_dict['pVarMaxDemand'     ].loc[model.psn]
     parameters_dict['pVarMinDemand'     ] = parameters_dict['pVarMinDemand'     ].loc[model.psn]
-    parameters_dict['pVarEnergyCost'    ] = parameters_dict['pVarEnergyCost'    ].loc[model.psn]
-    parameters_dict['pVarEnergyPrice'   ] = parameters_dict['pVarEnergyPrice'   ].loc[model.psn]
+    parameters_dict['pVarEnergyCost'    ] = parameters_dict['pVarEnergyCost'    ].loc[model.psn]   # already 1/factor1 at read (audit C38)
+    parameters_dict['pVarEnergyPrice'   ] = parameters_dict['pVarEnergyPrice'   ].loc[model.psn]   # already 1/factor1 at read (audit C38)
     parameters_dict['pVarMinInflows'    ] = parameters_dict['pVarMinInflows'    ].loc[model.psn]
     parameters_dict['pVarMaxInflows'    ] = parameters_dict['pVarMaxInflows'    ].loc[model.psn]
     parameters_dict['pVarMinOutflows'   ] = parameters_dict['pVarMinOutflows'   ].loc[model.psn]

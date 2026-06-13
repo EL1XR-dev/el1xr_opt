@@ -479,7 +479,7 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
             for (ti, sg, it) in thr_keys)
         m.theta = Var(blocks, within=Reals, bounds=(-1e9, 1e12), initialize=0.0)
         m.cuts = ConstraintList()
-        inv = period_weight * factor1 * sum(invcost[nm] * x[nm] for nm in inv_names)
+        inv = period_weight * sum(invcost[nm] * x[nm] for nm in inv_names)   # factor1 dropped (audit C38): investment lump sum is invariant
         m.obj = Objective(expr=inv + discount * const_value + peak_master
                           + sum(m.theta[b] for b in blocks),
                           sense=minimize)
@@ -834,7 +834,7 @@ def el1xr_benders(dir_name, case_name, date, solver="appsi_highs", config=None):
         x.update({("h", g): m.xh[g] for g in hgc})
         m.theta = Var(blocks, within=Reals, bounds=(-1e9, 1e12))   # recourse cost-to-go
         m.cuts = ConstraintList()
-        inv = period_weight * factor1 * sum(invcost[nm] * x[nm] for nm in names)
+        inv = period_weight * sum(invcost[nm] * x[nm] for nm in names)   # factor1 dropped (audit C38): investment lump sum is invariant
         m.obj = Objective(expr=inv + sum(m.theta[b] for b in blocks), sense=minimize)
         return {"model": m, "x": x, "theta": {b: m.theta[b] for b in blocks}, "cuts": m.cuts}
 

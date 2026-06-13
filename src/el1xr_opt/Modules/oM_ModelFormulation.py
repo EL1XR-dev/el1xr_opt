@@ -69,9 +69,9 @@ def create_objective_function_components(model, optmodel, indlog):
     # Total electricity peak costs
     def eTotalElePeakCost(optmodel, p,sc):
         if model.Par['pParNumberPowerPeaks'] == 0:
-            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * model.factor1 * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
         else:
-            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * model.factor1 * sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / len(model.Peaks))
+            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] / model.factor1 * sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / len(model.Peaks))
     optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [kEUR]'))
 
     # Total electricity net usage costs
@@ -80,12 +80,12 @@ def create_objective_function_components(model, optmodel, indlog):
         # pDuration so it counts energy, matching the duration-weighted "psn" market
         # terms. Without it the charge undercounts by the time-step factor when
         # pParTimeStep > 1 (C15a).
-        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] * model.factor1 * model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] / model.factor1 * model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
     def eTotalEleNetUseFixCost(optmodel, p,sc):
-        return (optmodel.vTotalEleNetUseFixCost[p,sc] == sum(model.Par['pEleRetFastavgift'][er] * model.factor1 * sum(1 for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        return (optmodel.vTotalEleNetUseFixCost[p,sc] == sum(model.Par['pEleRetFastavgift'][er] * sum(1 for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseFixCost', Constraint(optmodel.ps, rule=eTotalEleNetUseFixCost, doc='Total electricity capacity tariff cost [kEUR]'))
 
     #%% Total electricity market costs
@@ -94,7 +94,7 @@ def create_objective_function_components(model, optmodel, indlog):
     optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
-        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er]) * (optmodel.vEleBuy[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
+        return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er] / model.factor1) * (optmodel.vEleBuy[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
 
     #%% Total electricity market revenues
@@ -163,7 +163,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # VAT on electricity taxes costs
     def eEleTaxEnergyCost(optmodel, p,sc):
-        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] * model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] / model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eEleTaxEnergyCost', Constraint(optmodel.ps, rule=eEleTaxEnergyCost, doc='Total electricity taxes costs [kEUR]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
@@ -172,7 +172,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     # Incentives on electricity taxes revenues
     def eEleTaxISRevenue(optmodel, p,sc):
-        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] * model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleExport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) for er in model.er))
+        return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] / model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleExport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) for er in model.er))
     optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [kEUR]'))
 
     #%% Total electricity operation and maintenance costs
@@ -1808,7 +1808,7 @@ def create_constraints(model, optmodel, indlog):
         base = optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
         has_demand = sum(model.Par['pVarMaxDemand'][ed][p, sc, n]
                          for ed in model.ed if (er, ed) in model.r2ed) > 0
-        return (buy_factor * base) if has_demand else (buy_factor * (base + addend))
+        return (buy_factor * base) if has_demand else (buy_factor * (base + addend * model.factor1))   # addend is a kW quantity -> scale by factor1 (audit C38)
 
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         # Check applicability

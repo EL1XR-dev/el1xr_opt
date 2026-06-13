@@ -401,8 +401,9 @@ def seed_horizon_coupling(model):
     def _moms(e):
         return float(Par['pEleRetMoms'][e])
 
-    # fixed network charge: a per-retailer, per-month constant (fastavgift)
-    netfix = sum(float(Par['pEleRetFastavgift'][e]) * factor1 * len(months) * (1 + _moms(e))
+    # fixed network charge: a per-retailer, per-month constant (fastavgift). factor1 dropped
+    # (audit C38): a fixed charge has no quantity, so it is invariant under the unit scale.
+    netfix = sum(float(Par['pEleRetFastavgift'][e]) * len(months) * (1 + _moms(e))
                  for e in er)
     register_horizon_constant(model, "vTotalEleNetUseFixCost", netfix)
 
@@ -427,7 +428,7 @@ def seed_horizon_coupling(model):
                                 "eElePeakNumberMonths"),
             quantity_var="vEleImport", count=n_peaks, items=peak_er,
             node_of={e: Par['pEleRetNode'][e] for e in peak_er},
-            coeff_of={e: _tariff(e) * factor1 * (1 + _moms(e)) / n_peaks for e in peak_er},
+            coeff_of={e: _tariff(e) / factor1 * (1 + _moms(e)) / n_peaks for e in peak_er},  # per-quantity peak price -> 1/factor1 (audit C38), mirrors eTotalElePeakCost
             subgroups=months, level_subgroup="n2m")
     return model
 
