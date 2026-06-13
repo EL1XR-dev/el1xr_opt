@@ -107,8 +107,10 @@ def _solve_model(opt, mdl):
     the CI runner for the heat-storage temporal-Benders master, never locally. When the
     strict load fails on such a status, retry the solve with fallback option sets that
     take different algorithmic paths and clear the spurious error without changing the
-    optimum. The retries run only after a solve has already failed, so they cannot
-    affect the normal path; if all retries also fail the last error propagates.
+    optimum. Later fallbacks also use a fresh solver instance to avoid any persistent
+    internal state left by the failed solve. The retries run only after a solve has
+    already failed, so they cannot affect the normal path; if all retries also fail the
+    last error propagates.
     """
     from pyomo.environ import value  # noqa: F401  (kept local for symmetry)
     try:
@@ -122,18 +124,38 @@ def _solve_model(opt, mdl):
         pass
     # Spurious HiGHS error: retry with progressively different option sets.
     # Each set takes a different algorithmic path; the first that succeeds wins.
+    # Entries with use_fresh=True create a new solver instance (same type as opt)
+    # to clear any persistent internal state left by the failed solve -- helpful
+    # when the appsi_highs HiGHS object holds corrupted LP state across retries.
     # The last entry is tried without a catching except so its error propagates.
     _FALLBACKS = (
-        {"presolve": "off"},
-        {"presolve": "off", "solver": "simplex"},
+        ({"presolve": "off"}, False),
+        ({"presolve": "off", "solver": "simplex"}, False),
+        ({"solver": "ipm"}, True),
+        ({"presolve": "off", "solver": "ipm"}, True),
     )
-    for i, extra in enumerate(_FALLBACKS):
-        saved = {k: opt.options[k] for k in extra if k in opt.options}
-        added_keys = [k for k in extra if k not in opt.options]
-        opt.options.update(extra)
+    for i, (extra, use_fresh) in enumerate(_FALLBACKS):
         is_last = i == len(_FALLBACKS) - 1
+        # Attempt to create a fresh solver instance to clear any corrupted internal
+        # state. This is best-effort: if instantiation fails for any reason (e.g. the
+        # solver class requires constructor arguments or the solver is unavailable in
+        # the current environment) we silently fall back to the original instance and
+        # let the option changes do what they can.
+        if use_fresh:
+            try:
+                cur_opt = type(opt)()
+            except Exception:  # noqa: BLE001 -- intentional best-effort fallback
+                cur_opt = opt
+        else:
+            cur_opt = opt
+        # cur_opt.options is guaranteed to support dict-like access: either it is the
+        # original opt (same options type as before) or a fresh instance of the same
+        # class (whose options object uses the same interface).
+        saved = {k: cur_opt.options[k] for k in extra if k in cur_opt.options}
+        added_keys = [k for k in extra if k not in cur_opt.options]
+        cur_opt.options.update(extra)
         try:
-            res = opt.solve(mdl, load_solutions=False)
+            res = cur_opt.solve(mdl, load_solutions=False)
             mdl.solutions.load_from(res)
             return res
         except (ValueError, RuntimeError):
@@ -144,10 +166,10 @@ def _solve_model(opt, mdl):
         finally:
             for k in added_keys:
                 try:
-                    del opt.options[k]
+                    del cur_opt.options[k]
                 except (KeyError, TypeError):
                     pass
-            opt.options.update(saved)
+            cur_opt.options.update(saved)
 
 
 def benders_solve(make_master, make_subproblem, blocks, config=None,
