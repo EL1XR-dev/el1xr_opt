@@ -1643,6 +1643,15 @@ def create_variables(model, optmodel, indlog):
             optmodel.vEleFreqContReserveNorDownCha[idx].fix(0.0)
             nFixedVariables += 3
 
+    # RES generators carry FCR bid variables (declared over eg) but appear in no FCR
+    # cap, relation, or revenue term, so they are never otherwise constrained. Fix them
+    # to zero so they cannot carry arbitrary values into the result tables (audit C32).
+    for idx in model.psnegr:
+        optmodel.vEleFreqContReserveDisUpwardBid[idx].fix(0.0)
+        optmodel.vEleFreqContReserveDisDownwardBid[idx].fix(0.0)
+        optmodel.vEleFreqContReserveNorBid[idx].fix(0.0)
+        nFixedVariables += 3
+
     # An electrolyser's hydrogen output is set by eAllEnergy2Hyd from its electricity
     # input, so its H2 second-block output variable is unused; fix it to zero. The
     # electrolyser's state logic uses commitment (on), standby and start-up (cold start);

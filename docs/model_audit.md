@@ -554,9 +554,16 @@ hydrogen-generation CSV without the columns crashes.
 C28. `eE2HMinCharge2ndBlock` (:1128-1133) is vacuous: `2ndBlock/Max >= uc - 1` with a
 NonNegative LHS and a nonpositive RHS can never bind. The state chain rests entirely
 on the Max constraint (which suffices for FCR-up; see C3 for the down side).
+**— DONE (documented, batch 1): this is a standard openTEPES min-2nd-block symmetry
+row (like `eHydMinESSOutput2ndBlock` / `eHydMinOutput2ndBlock`), non-binding by design,
+not a bug. A comment at the constraint records this; no logic change.**
 C29. The `>= 0` gates on `pOperatingReserveRequire_*` (27 sites) are always true
 (the parameter is `fillna(0)` and clamped); clearly meant `> 0`. No wrong solutions,
-just dead gating and redundant rows.
+just dead gating and redundant rows. **— DONE (batch 1): all 28 per-unit FCR build
+gates flipped `>= 0` -> `> 0`, so a zero-requirement level skips the dead rows; the
+requirement caps (count-gated, not requirement-gated) still bind the bids to zero, so
+the FCR goldens (HomeBattFCRDonly/FCRNonly, ElectrolyserFCR) are byte-unchanged. Guarded
+by `test_reserve_require_gates_use_strict_positive`.**
 C30. The endurance constraints (storage :620-632 and e2h :705-716) pair the level-n
 inventory with the bid at n-1 and skip `n.first()`, so the **last** level's bid is in
 no endurance constraint — end-of-horizon bids are free of the energy backing.
@@ -565,7 +572,10 @@ a symmetric product the deliverable volume is the *minimum*. Exact when the inpu
 are equal (the usual case).
 C32. RES units get FCR bid variables (declared over `eg|e2h`) that are in no cap, no
 relation, no revenue, and are never fixed — dead variables that can carry arbitrary
-values into the output tables.
+values into the output tables. **— DONE (batch 1): the existing FCR fixing loops run
+over `psnegnr` (non-RES) and `psne2h`, never touching `egr`; a new loop over `model.psnegr`
+fixes the three RES bid variables to zero. They enter no constraint or objective term, so
+the goldens are byte-unchanged. Guarded by `test_res_fcr_bid_variables_are_fixed`.**
 C33. `eEleFreqUp/DownChargeBound` (:581,591,598,608) divide by `pEleMaxCharge` with
 no positivity guard (the e2h analogues guard) — `ZeroDivisionError` for a
 discharge-only ESS with default flags.
@@ -598,6 +608,11 @@ C41. Flexible hydrogen demand has no recovery constraint (unlike
 demand — `vHydDemand - vHNS` can go negative (a paid sink).
 C42. `eEleInflows2Commitment` / `Outflows2Commitment` families (:730-756, 954-980)
 contain no commitment variable despite name and doc — parameter-bound duplicates.
+**— DONE (documented, batch 1): the misleading "to commitment" doc strings and the two
+section comments are corrected to state these bound the in/outflow variable by its
+parameter limit (the commitment-coupled form was never wired). The attribute name
+`...2Commitment` is deliberately retained to avoid renaming the constraint in result/.lp
+output — a separate cosmetic refactor. Guarded by `test_inflow_outflow_bound_docs_not_commitment`.**
 C43. `pHydRetMaxBuy/Sell` exist only if the optional CSV columns do — the first case
 that activates a hydrogen retailer on a column-less file gets `KeyError` (no schema
 default, unlike the electricity peak factors).
@@ -607,6 +622,11 @@ any report that greps by name.
 C45. Tautological `(NoDayAhead==1 or NoDayAhead==0)` conjuncts (:1057,1070,1100,
 1111) make the binary-gated 2nd-block branch unreachable for FCR-capable storage —
 dead logic; mutual exclusion still holds via the charge/discharge decisions.
+**— DONE (batch 1): the always-true conjunct is removed from the four ESS 2nd-block
+output/charge bounds. Behaviour is unchanged (an always-true `and` term drops out), so
+the goldens are byte-unchanged. The binary-gated `else` branch stays reachable only for
+non-FCR storage, as before; making it FCR-reachable would be a separate modelling
+decision. Guarded by `test_no_tautological_nodayahead_conjunct`.**
 C46. First-step electricity ramp (:1340,1350) uses `pEleSystemOutput` — a *system*
 aggregate, and a scalar overwritten across (p,sc) so only the last scenario's value
 survives — as each unit's pre-horizon output; essentially vacuous for small units.

@@ -990,3 +990,57 @@ def test_hydrogen_peak_indicators_on_hydrogen_sets(h2_model):
         assert rets <= hr, \
             f"{vname} is indexed by {sorted(rets - hr)} -- not hydrogen retailers"
         assert not (rets & (er - hr)), f"{vname} carries electricity retailers"
+
+
+# --- 2026-06 audit batch 1: dead / vacuous logic cleanup --------------------
+# C28 eE2HMinCharge2ndBlock vacuous (documented, non-binding by design);
+# C29 reserve-require gates flipped >=0 -> >0; C32 RES FCR bid vars fixed to 0;
+# C42 misleading "2Commitment" docs corrected; C45 tautological NoDayAhead conjunct removed.
+
+
+def test_reserve_require_gates_use_strict_positive():
+    """C29: the per-unit FCR build gates tested ``pOperatingReserveRequire_* >= 0``,
+    always true for a fillna(0), clamped parameter, so they built dead rows at zero-
+    requirement levels. They must test ``> 0`` so a zero requirement skips the row (the
+    requirement cap still binds the bids to zero)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    import re
+    bad = re.findall(r"pOperatingReserveRequire_[A-Za-z_]+'\]\[p,sc,n\]\s*>=\s*0", text)
+    assert not bad, f"reserve-require gates still use '>= 0' (C29): {bad[:3]}"
+    good = re.findall(r"pOperatingReserveRequire_[A-Za-z_]+'\]\[p,sc,n\]\s*>\s*0", text)
+    assert len(good) >= 20, f"expected the reserve-require gates to use '> 0' (C29), found {len(good)}"
+
+
+def test_res_fcr_bid_variables_are_fixed(h2_model):
+    """C32: RES generators (egr) carry FCR bid variables (declared over eg) but appear in
+    no cap, relation, or revenue term. They must be fixed to zero so they cannot carry
+    arbitrary values into the result tables."""
+    m = h2_model
+    assert len(m.egr) > 0, "fixture has no RES generator"
+    p, sc = list(m.ps)[0]
+    n = list(m.n)[0]
+    egr = list(m.egr)[0]
+    for vname in ("vEleFreqContReserveDisUpwardBid", "vEleFreqContReserveDisDownwardBid",
+                  "vEleFreqContReserveNorBid"):
+        v = getattr(m, vname)[p, sc, n, egr]
+        assert v.fixed and v.value == 0.0, \
+            f"{vname}[{egr}] must be fixed to 0 for a RES unit (C32)"
+
+
+def test_no_tautological_nodayahead_conjunct():
+    """C45: the ESS 2nd-block bounds gated on
+    ``(pEleGenNoDayAhead == 1 or pEleGenNoDayAhead == 0)`` -- a binary, so always true --
+    making the binary-gated branch unreachable. The dead conjunct is removed (behaviour is
+    unchanged; mutual exclusion still holds via the charge/discharge decisions)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "pEleGenNoDayAhead'][egs] == 1 or model.Par['pEleGenNoDayAhead'][egs] == 0" not in text, \
+        "the always-true NoDayAhead conjunct must be removed (C45)"
+
+
+def test_inflow_outflow_bound_docs_not_commitment():
+    """C42: the eEle/eHyd Max/Min In/Outflows2Commitment constraints bound the in/outflow
+    variable by a parameter limit -- there is no commitment variable. The misleading
+    'to commitment' doc string is corrected (the attribute name is retained on purpose)."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "to commitment [p.u.]" not in text, \
+        "the misleading 'to commitment' doc must be corrected (C42)"
