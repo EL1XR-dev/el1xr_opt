@@ -186,5 +186,5 @@ HomeBattNoFCR, HomeBattFCRDonly, HomeBattFCRNonly, Electrolyser, H2Tank. Guarded
 test_sizing_factor1_invariant (HomeBattFCRDonly + Electrolyser). factor1=1 is x1 / 1/1, so goldens
 are byte-unchanged.
 
-STILL TODO: factor2 elimination + the PWL
-part-load-efficiency feature + degradation cost (Phase B, not started).
+Phase B is now complete: factor2 elimination, the PWL part-load-efficiency feature, and the
+degradation cost are all done (see the B0+B2 and B1 status notes above).
