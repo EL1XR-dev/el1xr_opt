@@ -891,6 +891,27 @@ def create_constraints(model, optmodel, indlog):
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownEnduranceConvEnd', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConvEnd, doc='Electrolyser FCR-down endurance for the terminal load level (C30)'))
 
+    # Phase 2 -- FCR-down bounded by the compressor RATE, not just the tank volume. The
+    # endurance constraints above limit the extra hydrogen by the empty tank headroom (a
+    # volume limit). A held FCR-down bid, if activated, also has to be COMPRESSED into the
+    # store as it is made: the extra production rate (bid / ProductionFunction) plus the
+    # baseline charge flow must fit through the built compressor throughput at the node.
+    # Only built when a node has both FCR-flagged electrolysers and a compressor-sizing
+    # candidate (model.hgcompc), so cases without compressor sizing are unchanged. Tying the
+    # FCR-down bid to the SIZED compressor rate is the part no reviewed prior work models
+    # (see docs/lit_review_electrolyser_fcr.md).
+    def eEleFreqDownCompressorRate(optmodel, p,sc,n,nd):
+        e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
+        comp_at_node = [hgs for hgs in model.hgcompc if (nd,hgs) in model.n2hg]
+        if not e2h_at_node or not comp_at_node:
+            return Constraint.Skip
+        lhs = sum((optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]
+                 + optmodel.vEleFreqContReserveNorBid       [p,sc,n,e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
+        rhs = sum(model.Par['pHydGenCompressorNameplate'][hgs] * model.factor1 * optmodel.vHydCompInvest[hgs]
+                  - optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in comp_at_node)
+        return lhs <= rhs
+    optmodel.__setattr__('eEleFreqDownCompressorRate', Constraint(optmodel.psnnd, rule=eEleFreqDownCompressorRate, doc='Electrolyser FCR-down extra production rate bounded by spare node compressor throughput'))
+
     # print if the constraints object len is greater than 0
     if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
         len(optmodel.eEleRelationFreqDisUpBid2Gen) > 0 or len(optmodel.eEleRelationFreqDisDownBid2Gen) > 0 or
