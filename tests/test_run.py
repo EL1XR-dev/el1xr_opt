@@ -370,6 +370,64 @@ def test_currency_label(sizing_cases_built, tmp_path):
     assert m2.Par["pParCurrency"] == "EUR"
 
 
+def test_compressor_sizing_structure(sizing_cases_built, tmp_path):
+    """Phase 1 compressor sizing: the compressor is an independent investment decision.
+    Off by default (no candidate set), and when a unit carries a CompressorInvestCost the
+    build variable, the throughput duty bound (tying the charge flow to the build fraction),
+    and the capex term in the total investment cost are all present."""
+    import shutil
+
+    import duckdb
+    from pyomo.core.expr.visitor import identify_variables
+
+    from el1xr_opt.Modules.oM_Sequence import build_model
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+
+    # default: no CompressorInvestCost column -> empty candidate set, nothing added
+    m0 = build_model(sizing_cases_built, "H2Tank", date)
+    assert len(m0.hgs) > 0, "H2Tank should have a hydrogen storage unit"
+    assert len(m0.hgcompc) == 0
+
+    # add the compressor sizing columns to the hydrogen generation table
+    dst = os.path.join(str(tmp_path), "H2Tank.duckdb")
+    shutil.copy(os.path.join(sizing_cases_built, "H2Tank.duckdb"), dst)
+    con = duckdb.connect(dst)
+    cols = [r[0] for r in con.execute(
+        "SELECT column_name FROM information_schema.columns WHERE table_name='data_HydrogenGeneration'").fetchall()]
+    for col in ("CompressorNameplate", "CompressorInvestCost"):
+        if col not in cols:
+            con.execute(f"ALTER TABLE data_HydrogenGeneration ADD COLUMN {col} DOUBLE")
+    con.execute("UPDATE data_HydrogenGeneration SET CompressorNameplate = 10.0, CompressorInvestCost = 1000.0")
+    con.close()
+
+    m = build_model(str(tmp_path), "H2Tank", date)
+    # the storage unit is now a compressor-sizing candidate, with a build variable
+    assert len(m.hgcompc) > 0
+    assert len(m.vHydCompInvest) > 0
+    # the duty bound has active rows and ties the charge flow to the build fraction
+    assert len(m.eHydInvestMaxCompressor) > 0
+    duty_vars = {v.name for v in identify_variables(next(iter(m.eHydInvestMaxCompressor.values())).body)}
+    assert any(vn.startswith("vHydTotalCharge") for vn in duty_vars)
+    assert any(vn.startswith("vHydCompInvest") for vn in duty_vars)
+    # the compressor capex enters the total investment cost
+    icost_vars = {v.name for v in identify_variables(m.eTotalICost.body)}
+    assert any(vn.startswith("vHydCompInvest") for vn in icost_vars)
+
+    # guard: a positive CompressorInvestCost with a zero nameplate fails loudly
+    bad_dir = os.path.join(str(tmp_path), "bad")
+    os.makedirs(bad_dir, exist_ok=True)
+    bad = os.path.join(bad_dir, "H2Tank.duckdb")
+    shutil.copy(os.path.join(sizing_cases_built, "H2Tank.duckdb"), bad)
+    con = duckdb.connect(bad)
+    for col in ("CompressorNameplate", "CompressorInvestCost"):
+        if col not in cols:
+            con.execute(f"ALTER TABLE data_HydrogenGeneration ADD COLUMN {col} DOUBLE")
+    con.execute("UPDATE data_HydrogenGeneration SET CompressorNameplate = 0.0, CompressorInvestCost = 1000.0")
+    con.close()
+    with pytest.raises(ValueError, match="CompressorNameplate"):
+        build_model(bad_dir, "H2Tank", date)
+
+
 def test_electrolyser_fcr_structure(sizing_cases_built):
     """Build (without solving) the ElectrolyserFCR case and check the electrolyser
     FCR wiring is structurally present: the e2h constraints are built, the

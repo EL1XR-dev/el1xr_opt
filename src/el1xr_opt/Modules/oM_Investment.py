@@ -49,7 +49,7 @@ def create_investment(model, optmodel, indlog):
     # unit -- EUR (whatever native currency the data uses; the demo prints SEK). Label fixed.
     setattr(optmodel, 'vTotalICost', Var(within=NonNegativeReals, doc='total annualized investment cost [EUR]'))
 
-    if not len(model.egc) and not len(model.hgc):
+    if not len(model.egc) and not len(model.hgc) and not len(model.hgcompc):
         optmodel.vTotalICost.fix(0.0)
         log_time('--- Declaring the investment layer (no candidate units):', StartTime, ind_log=indlog)
         return model
@@ -57,6 +57,9 @@ def create_investment(model, optmodel, indlog):
     # %% Build-decision variables (fraction of nameplate built, in [0, 1])
     setattr(optmodel, 'vEleGenInvest', Var(model.egc, within=UnitInterval, doc='electricity candidate build fraction [0,1]'))
     setattr(optmodel, 'vHydGenInvest', Var(model.hgc, within=UnitInterval, doc='hydrogen    candidate build fraction [0,1]'))
+    # Compressor build fraction (sized independently of the tank charge port it shares a store
+    # with). Empty when no unit carries a CompressorInvestCost, so default cases are unchanged.
+    setattr(optmodel, 'vHydCompInvest', Var(model.hgcompc, within=UnitInterval, doc='hydrogen compressor candidate build fraction [0,1]'))
 
     # Make the decision binary (all-or-nothing build) for units flagged for it.
     for egc in model.egc:
@@ -69,6 +72,13 @@ def create_investment(model, optmodel, indlog):
         try:
             if model.Par['pHydGenBinaryInvestment'][hgc] == 1:
                 optmodel.vHydGenInvest[hgc].domain = Binary
+        except (KeyError, TypeError):
+            pass
+    # Compressor build decision reuses the storage unit's binary-investment flag (Phase 1).
+    for hgs in model.hgcompc:
+        try:
+            if model.Par['pHydGenBinaryInvestment'][hgs] == 1:
+                optmodel.vHydCompInvest[hgs].domain = Binary
         except (KeyError, TypeError):
             pass
 
@@ -100,6 +110,7 @@ def create_investment(model, optmodel, indlog):
     psnegsc = [(p, sc, n, egsc) for (p, sc, n) in model.psn for egsc in model.egsc]
     psnhgc  = [(p, sc, n, hgc ) for (p, sc, n) in model.psn for hgc  in model.hgc ]
     psnhgsc = [(p, sc, n, hgsc) for (p, sc, n) in model.psn for hgsc in model.hgsc]
+    psnhgcompc = [(p, sc, n, hgs) for (p, sc, n) in model.psn for hgs in model.hgcompc]
     # candidate electrolysers (e2h units that are investment candidates): their
     # design variable is the ELECTRICITY input, so the build decision must cap it.
     e2hc    = [g for g in model.e2h if g in model.hgc]
@@ -149,6 +160,16 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vHydTotalCharge[p, sc, n, hgsc] <= model.Par['pHydMaxCharge'][hgsc][p, sc, n] * optmodel.vHydGenInvest[hgsc]
     optmodel.__setattr__('eHydInvestMaxStorageCharge', Constraint(psnhgsc, rule=eHydInvestMaxStorageCharge, doc='candidate hydrogen storage charge limited by build decision'))
 
+    # Candidate hydrogen compressor: the charge flow into the store (whose compression draws
+    # electricity, pHydGenMaxCompressorConsumption x vHydTotalCharge in the electricity balance)
+    # is limited by the BUILT compressor throughput. This sits alongside the tank charge-port cap
+    # above; the binding one wins, so a large tank can be paired with a small (cheaper, slower)
+    # compressor or vice versa. The nameplate is a quantity, so it is multiplied by factor1 at use
+    # (matching eHydInvestMaxInventory / the pHydMaxStorage scale-at-use pattern).
+    def eHydInvestMaxCompressor(optmodel, p, sc, n, hgcompc):
+        return optmodel.vHydTotalCharge[p, sc, n, hgcompc] <= model.Par['pHydGenCompressorNameplate'][hgcompc] * model.factor1 * optmodel.vHydCompInvest[hgcompc]
+    optmodel.__setattr__('eHydInvestMaxCompressor', Constraint(psnhgcompc, rule=eHydInvestMaxCompressor, doc='candidate hydrogen compressor throughput limited by build decision'))
+
     # %% Total investment cost
     # Unit scaling: model.factor1 is the conversion factor that lets the model work
     # at either utility (MWh) or local/home (kWh) scale. It is applied to the
@@ -178,7 +199,8 @@ def create_investment(model, optmodel, indlog):
     def eTotalICost(optmodel):
         return optmodel.vTotalICost == period_weight * (
             sum(model.Par['pEleGenInvestCost'][egc] * optmodel.vEleGenInvest[egc] for egc in model.egc) +
-            sum(model.Par['pHydGenInvestCost'][hgc] * optmodel.vHydGenInvest[hgc] for hgc in model.hgc))
+            sum(model.Par['pHydGenInvestCost'][hgc] * optmodel.vHydGenInvest[hgc] for hgc in model.hgc) +
+            sum(model.Par['pHydGenCompressorInvestCost'][hgs] * optmodel.vHydCompInvest[hgs] for hgs in model.hgcompc))
     optmodel.__setattr__('eTotalICost', Constraint(rule=eTotalICost, doc='total period-weighted investment cost'))
 
     log_time('--- Declaring the investment (capacity-sizing) layer:', StartTime, ind_log=indlog)

@@ -371,6 +371,26 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict['pHydGenMaxCompressorConsumption'] = parameters_dict['pHydGenMaxCompressorConsumption'].fillna(0.0)
     else:
         parameters_dict['pHydGenMaxCompressorConsumption'] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
+    # Compressor sizing (Phase 1): an optional investment decision for the compressor that
+    # charges a hydrogen store. CompressorNameplate is the rated throughput (same units as the
+    # charge flow it bounds); CompressorInvestCost is its annualized capex. Both default to 0
+    # when the column is absent, so cases without them build unchanged, and a unit is only a
+    # compressor-sizing candidate when its CompressorInvestCost is positive. The nameplate is a
+    # quantity left UNSCALED here and multiplied by factor1 at the use site
+    # (oM_Investment.eHydInvestMaxCompressor), matching the pHydMaxStorage scale-at-use pattern;
+    # the capex is an investment lump sum and is never factor1-scaled.
+    for _comp_col in ['pHydGenCompressorNameplate', 'pHydGenCompressorInvestCost']:
+        if _comp_col in parameters_dict:
+            parameters_dict[_comp_col] = parameters_dict[_comp_col].fillna(0.0)
+        else:
+            parameters_dict[_comp_col] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
+    _comp_bad = [g for g in parameters_dict['pHydGenCompressorInvestCost'].index
+                 if parameters_dict['pHydGenCompressorInvestCost'][g] > 0.0
+                 and parameters_dict['pHydGenCompressorNameplate'][g] <= 0.0]
+    if _comp_bad:
+        raise ValueError(f"Compressor sizing: hydrogen unit(s) {_comp_bad} have CompressorInvestCost > 0 "
+                         f"but CompressorNameplate <= 0; a candidate compressor needs a positive nameplate "
+                         f"throughput, otherwise its charge flow would be forced to zero.")
     # Electrolyser (e2h) FCR participation flags and endurance. When the hydrogen-
     # generation data omits these columns the flags default to 1 ("not participating")
     # and the endurance to 0, so existing cases are unaffected. An electrolyser only
@@ -431,6 +451,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.hgs  = Set(doc='hydrogen storage       units ', initialize=[hgs    for hgs  in           model.hg  if  parameters_dict['pHydGenMaximumStorage']   [hgs]  >  0.0 and (parameters_dict['pVarMaxInflows'].sum()     [hgs] >  0.0 or  parameters_dict['pVarMaxOutflows'].sum()    [hgs] >  0.0 or parameters_dict['pHydGenMaximumCharge'][hgs] > 0.0)])
     model.hgc  = Set(doc='hydrogen candidate     units ', initialize=[hgc    for hgc  in           model.hg  if  parameters_dict['pHydGenInvestCost']       [hgc]  >  0.0])
     model.hgsc = Set(doc='hydrogen storage       units ', initialize=[hgsc   for hgsc in           model.hgs if  parameters_dict['pHydGenInvestCost']      [hgsc]  >  0.0])
+    model.hgcompc = Set(doc='hydrogen compressor candidate', initialize=[hgs for hgs in           model.hgs if  parameters_dict['pHydGenCompressorInvestCost'][hgs] >  0.0])
     model.e2h  = Set(doc='ele2hyd                units ', initialize=[hg     for hg   in           model.hg  if  parameters_dict['pHydGenProductionFunction'][hg]  >  0.0])
     model.h2e  = Set(doc='hyd2ele                units ', initialize=[eg     for eg   in           model.eg  if  parameters_dict['pEleGenProductionFunction'][eg]  >  0.0])
     # Audit C39: a generation unit whose InitialPeriod is after the economic base year is
