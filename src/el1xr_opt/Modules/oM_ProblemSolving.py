@@ -209,7 +209,8 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
 
     log_time('-- Total time for solving the model:', StartTime, ind_log=indlog)
 
-    print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), 'SEK')
+    _currency = optmodel.Par.get('pParCurrency', 'SEK') if hasattr(optmodel, 'Par') else 'SEK'
+    print('Objective function value                  ', round(optmodel.eTotalSCost.expr(), 2), _currency)
 
     # Adding SolverResults to optmodel
     optmodel.SolverResults2 = SolverResults

@@ -138,6 +138,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         else:
             parameters_dict[f'pPar{indicator}'] = data_frames['dfParameter'][indicator].iloc[0]
 
+    # Currency label: the model works in a single canonical currency (a pure label -- no numbers
+    # change with it). Optional dfParameter column 'Currency' (e.g. EUR / SEK / USD); default SEK.
+    # Used for the objective print and the cost-result column header.
+    _cur = parameters_dict.get('pParCurrency', 'SEK')
+    parameters_dict['pParCurrency'] = _cur.strip() if isinstance(_cur, str) and _cur.strip() else 'SEK'
+
     parameters_dict['pDuration'       ] = data_frames['dfDuration']['Duration'] * parameters_dict['pParTimeStep']
     #parameters_dict['pLevelToIDmarket'] = data_frames['dfDuration']['IDMarket'].astype('int')
     parameters_dict['pPeriodWeight'   ] = data_frames['dfPeriod']['Weight'].astype('int')
