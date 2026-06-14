@@ -75,6 +75,11 @@ CASES = {
     # spread is what gives the tank arbitrage value to be sized against.
     "H2Tank":           dict(battery=None, fcrd=True, fcrn=True, h2=("PEMEL_01", 0.05),
                              h2_import=True, green=0),
+    # H2TankCompressor: H2Tank plus a sized compressor on the tank (PEMEL_01). The
+    # compressor is built to cover the realized charging duty -- a small end-to-end
+    # demo of Phase 1 compressor sizing. Decision/invariance case, no golden cost.
+    "H2TankCompressor": dict(battery=None, fcrd=True, fcrn=True, h2=("PEMEL_01", 0.05),
+                             h2_import=True, green=0, compressor=("PEMEL_01", 10.0, 0.05)),
     # Electrolyser: AEL_01 is the candidate; the existing tank (PEMEL_01) stays.
     # The same priced import serves the demand; the electrolyser is built only if
     # making hydrogen from retail electricity beats the import price.
@@ -227,6 +232,15 @@ def _edit_hyd(df, spec):
             for col, val in (("NoFCRD", "No"), ("NoFCRN", "No"),
                              ("EnduranceFCRD", 60.0), ("EnduranceFCRN", 60.0)):
                 df.loc[h2[0], col] = val
+        comp = spec.get("compressor")
+        if comp:
+            # Compressor sizing (Phase 1): a rated throughput and an annualized capex on
+            # one unit; every other unit stays at 0 so it is not a compressor candidate.
+            unit, nameplate, invest = comp
+            df["CompressorNameplate"] = 0.0
+            df["CompressorInvestCost"] = 0.0
+            df.loc[unit, "CompressorNameplate"] = nameplate
+            df.loc[unit, "CompressorInvestCost"] = invest
     return df
 
 

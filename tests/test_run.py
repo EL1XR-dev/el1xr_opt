@@ -159,7 +159,7 @@ SIZING_CASES = [
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
-                     "ElectrolyserStandby", "ElectrolyserFCR"]
+                     "ElectrolyserStandby", "ElectrolyserFCR", "H2TankCompressor"]
 SIZING_RTOL = 1e-5
 
 
@@ -190,7 +190,7 @@ def test_sizing_case_from_duckdb(case, expected, sizing_cases_built):
 
 
 @pytest.mark.solve
-@pytest.mark.parametrize("case", ["HomeBattFCRDonly", "Electrolyser"])
+@pytest.mark.parametrize("case", ["HomeBattFCRDonly", "Electrolyser", "H2TankCompressor"])
 def test_sizing_factor1_invariant(case, sizing_cases_built):
     """C38: factor1 is a true unit conversion, so the optimum is invariant under it. This guards
     the paths the main invariance test (Home1) does not exercise: FCR-D/FCR-N provision and its
@@ -241,6 +241,30 @@ def test_h2_sizing_decisions(case, unit, full_build, sizing_cases_built):
     assert hns < 1e-6, f"hydrogen demand not fully served (HNS={hns:.4f} kgH2)"
     discharge = sum(model.vHydTotalOutput["period1", "sc01", n, "PEMEL_01"]() for n in model.n)
     assert discharge > 1.0, f"tank never discharged (total {discharge:.4f} kgH2)"
+
+
+@pytest.mark.solve
+def test_compressor_sizing_decision(sizing_cases_built):
+    """Phase 1 compressor sizing, end to end: the compressor on the hydrogen tank is
+    built to a positive fraction, the tank's charge flow never exceeds the built
+    compressor throughput (the duty bound holds in the solution), and the tank
+    actually charges -- so the compressor is sized to the realized charging duty."""
+    model = routine(dir=sizing_cases_built, case="H2TankCompressor", solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    assert len(model.hgcompc) == 1, "exactly one compressor-sizing candidate expected"
+    u = next(iter(model.hgcompc))
+    frac = model.vHydCompInvest[u]()
+    assert 0.0 < frac <= 1.0 + 1e-6, f"compressor build fraction {frac:.4f}, expected a positive build"
+    built = model.Par["pHydGenCompressorNameplate"][u] * model.factor1 * frac
+    peak = 0.0
+    for idx in model.vHydTotalCharge:
+        if idx[-1] == u:
+            ch = model.vHydTotalCharge[idx]()
+            peak = max(peak, ch)
+            assert ch <= built + 1e-4, f"charge {ch:.4f} exceeds built compressor throughput {built:.4f}"
+    assert peak > 1e-3, f"tank never charged (peak {peak:.4f}), compressor sizing not exercised"
 
 
 @pytest.mark.solve
