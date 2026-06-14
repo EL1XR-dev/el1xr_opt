@@ -159,7 +159,8 @@ SIZING_CASES = [
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
-                     "ElectrolyserStandby", "ElectrolyserFCR", "H2TankCompressor"]
+                     "ElectrolyserStandby", "ElectrolyserFCR", "H2TankCompressor",
+                     "ElectrolyserFCRCompressor"]
 SIZING_RTOL = 1e-5
 
 
@@ -265,6 +266,46 @@ def test_compressor_sizing_decision(sizing_cases_built):
             peak = max(peak, ch)
             assert ch <= built + 1e-4, f"charge {ch:.4f} exceeds built compressor throughput {built:.4f}"
     assert peak > 1e-3, f"tank never charged (peak {peak:.4f}), compressor sizing not exercised"
+
+
+def test_compressor_fcr_coupling_structure(sizing_cases_built):
+    """Phase 2: with both an FCR electrolyser and a sized compressor at a node, the FCR-down
+    rate coupling is built, tying the electrolyser's down-bids to the spare compressor
+    throughput (the built compressor rate minus the baseline charge flow)."""
+    from pyomo.core.expr.visitor import identify_variables
+
+    from el1xr_opt.Modules.oM_Sequence import build_model
+    m = build_model(sizing_cases_built, "ElectrolyserFCRCompressor",
+                    datetime.datetime.now().replace(second=0, microsecond=0))
+    assert "PEMEL_01" in m.hgcompc and "AEL_01" in m.e2h
+    assert len(m.eEleFreqDownCompressorRate) > 0
+    names = {v.name.split("[")[0]
+             for v in identify_variables(next(iter(m.eEleFreqDownCompressorRate.values())).body)}
+    assert "vEleFreqContReserveDisDownwardBid" in names
+    assert "vEleFreqContReserveNorBid" in names
+    assert "vHydCompInvest" in names
+    assert "vHydTotalCharge" in names
+
+
+@pytest.mark.solve
+def test_compressor_fcr_coupling_solves(sizing_cases_built):
+    """Phase 2 end to end: the combined FCR + compressor-sizing case solves, the compressor
+    is built, the FCR-down rate constraint is active, and it holds in the solution (the extra
+    production a held down-bid would make fits the spare compressor throughput at the node)."""
+    model = routine(dir=sizing_cases_built, case="ElectrolyserFCRCompressor", solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    assert model.vHydCompInvest["PEMEL_01"]() > 0.0, "compressor not built"
+    assert len(model.eEleFreqDownCompressorRate) > 0
+    # every rate-constraint row is satisfied in the solution
+    for idx in model.eEleFreqDownCompressorRate:
+        con = model.eEleFreqDownCompressorRate[idx]
+        body = pyo.value(con.body)
+        if con.upper is not None:
+            assert body <= float(pyo.value(con.upper)) + 1e-4
+        if con.lower is not None:
+            assert body >= float(pyo.value(con.lower)) - 1e-4
 
 
 @pytest.mark.solve

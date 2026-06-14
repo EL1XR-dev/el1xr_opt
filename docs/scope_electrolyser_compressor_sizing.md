@@ -117,10 +117,14 @@ physically complete picture.
 
 - **Phase 1 (core):** duty bound + capex. Default-off, byte-unchanged, small and safe. Closes the
   el1xr feature gap so all three assets are sized.
-- **Phase 2 (optional, novelty):** the FCR-down rate coupling. Re-baselines the e2h FCR goldens with
-  justification (like the earlier Phase B re-baselines). This is where compressor sizing becomes a
-  contribution — Johnsen 2026 folds the compressor away entirely, and no reviewed paper gates FCR-down
-  by compressor throughput.
+- **Phase 2 (DONE, novelty):** the FCR-down rate coupling — `eEleFreqDownCompressorRate` in
+  oM_ModelFormulation. Per node and load level, the extra hydrogen a held FCR-down bid would make
+  (sum of DisDownward + Nor bids / ProductionFunction) plus the baseline charge must fit the built
+  compressor throughput. Gated on a node having BOTH FCR-flagged electrolysers and a compressor-sizing
+  candidate, so it is default-off byte-unchanged: the existing e2h FCR goldens are NOT re-baselined
+  (no shipped case combines compressor sizing with FCR). Demonstrated by the new
+  `ElectrolyserFCRCompressor` case (structural + solve tests). This is the contribution — Johnsen 2026
+  folds the compressor away entirely, and no reviewed paper gates FCR-down by compressor throughput.
 
 ## Novelty note
 
