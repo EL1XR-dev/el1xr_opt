@@ -341,6 +341,35 @@ def test_electrolyser_canonical_costs_and_degradation(sizing_cases_built):
         "the electrolyser shut-down cost must still be billed via the e2h shut-down term"
 
 
+def test_currency_label(sizing_cases_built, tmp_path):
+    """The currency is a configurable label only -- the model works in a single canonical unit,
+    so no numbers change with it. It defaults to SEK and is settable via the dfParameter
+    'Currency' column (used for the objective print and the cost-result column header)."""
+    import shutil
+
+    import duckdb
+
+    from el1xr_opt.Modules.oM_Sequence import build_model
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+
+    # default currency is SEK
+    m = build_model(sizing_cases_built, "Electrolyser", date)
+    assert m.Par["pParCurrency"] == "SEK"
+
+    # settable via the dfParameter Currency column
+    dst = os.path.join(str(tmp_path), "Electrolyser.duckdb")
+    shutil.copy(os.path.join(sizing_cases_built, "Electrolyser.duckdb"), dst)
+    con = duckdb.connect(dst)
+    cols = [r[0] for r in con.execute(
+        "SELECT column_name FROM information_schema.columns WHERE table_name='data_Parameter'").fetchall()]
+    if "Currency" not in cols:
+        con.execute("ALTER TABLE data_Parameter ADD COLUMN Currency VARCHAR")
+    con.execute("UPDATE data_Parameter SET Currency = 'EUR'")
+    con.close()
+    m2 = build_model(str(tmp_path), "Electrolyser", date)
+    assert m2.Par["pParCurrency"] == "EUR"
+
+
 def test_electrolyser_fcr_structure(sizing_cases_built):
     """Build (without solving) the ElectrolyserFCR case and check the electrolyser
     FCR wiring is structurally present: the e2h constraints are built, the

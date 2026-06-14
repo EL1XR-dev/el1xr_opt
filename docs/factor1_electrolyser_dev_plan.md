@@ -72,9 +72,15 @@ throughput (IEA/IRENA cost ranges; Refaat 2026 degradation-as-cost framing). Re-
 H2Tank 6776.72 -> 6779.40, Electrolyser 6776.72 -> 6779.39 (delta +2.68 SEK = degradation 1.59 +
 fractional startup 1.08; validated by decomposition). Main + battery goldens unchanged (AEL inactive
 there). Tests: test_electrolyser_canonical_costs_and_degradation (factor2 gone, canonical values,
-degradation wired, e2h shut-down billed). DEFERRED: Currency label option (EUR/SEK/USD) -- dfOption
-is int-cast so a string Currency needs separate string-param plumbing (like pParBalanceMode); small
-follow-up, cosmetic (single canonical unit).
+degradation wired, e2h shut-down billed).
+
+CURRENCY LABEL -- DONE (branch feature/currency-label). pParCurrency (default 'SEK') read from an
+optional dfParameter 'Currency' column (string, like the DemandType precedent; dfParameter is not
+int-cast, unlike dfOption). LABEL ONLY -- single canonical unit, so no numbers change. Used in the
+objective print (oM_ProblemSolving) and the cost-result CSV column header (oM_OutputData, write-time
+rename only; 'SEK' stays the internal value-column key so helpers / links / plots are untouched).
+Test: test_currency_label (default SEK + settable to EUR via the column). Plot axis titles and the
+per-kWh price labels still read 'SEK/kWh' (secondary cosmetic, left as-is).
 
 B1. Piecewise-linear part-load efficiency (replace the constant ProductionFunction = 56.82
 kWh/kgH2). FLAG-GATED: default = constant (legacy/non-e2h cases byte-unchanged); PWL when a flag

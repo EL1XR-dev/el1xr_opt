@@ -409,7 +409,9 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     }).join(df_static) # aappend original static granular components
 
     Output_TotalCost_Static = df_results.stack().to_frame(name='SEK').rename_axis(['Period', 'Scenario', 'Component']).reset_index()
-    Output_TotalCost_Static.to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
+    # 'SEK' is the internal value-column key; the written file uses the configured currency label.
+    _currency = model.Par.get('pParCurrency', 'SEK') if hasattr(model, 'Par') else 'SEK'
+    Output_TotalCost_Static.rename(columns={'SEK': _currency}).to_csv(f"{_path}/oM_Result_01_rTotalCost_Static_{CaseName}.csv", index=False, sep=',')
 
     # -- Plotting helper function ---
     def get(df, comp):
