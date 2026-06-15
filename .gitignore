@@ -181,3 +181,6 @@ data/**/*.sol
 # Temporary CSV folders left by data/sizing/make_sizing_cases.py --keep-csv,
 # and any results.duckdb written under a case folder when solving.
 data/sizing/*/
+
+# Local working draft, not for the repo
+docs/paper_related_work_novelty_draft.md
