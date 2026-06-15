@@ -151,7 +151,7 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         Solver.options["mip_max_nodes"]        = 1000000
         Solver.options["mip_max_leaves"]       = 1000000
         Solver.options["threads"]              = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
-        Solver.options["time_limit"]           = 1000
+        Solver.options["time_limit"]           = 1200
         Solver.options["ipm_iteration_limit"]  = 1800000
         print("HiGHS solver options configured.")
 
