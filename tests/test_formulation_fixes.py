@@ -208,7 +208,7 @@ def test_highs_time_limit_not_too_low():
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, int):
                     time_limit = node.value.value
     assert time_limit is not None, "could not find HiGHS time_limit option"
-    assert time_limit >= 1000, "HiGHS time_limit is too low for validation cases"
+    assert time_limit >= 1200, "HiGHS time_limit is too low for validation cases"
 
 
 def test_hydrogen_demand_respects_base_year_period():
