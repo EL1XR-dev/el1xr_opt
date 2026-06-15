@@ -40,6 +40,7 @@ constructing one by hand trips unrelated set-membership assumptions in the build
 """
 import datetime
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -61,6 +62,7 @@ MODULES = os.path.join(REPO, "src", "el1xr_opt", "Modules")
 MODEL_FORMULATION = os.path.join(MODULES, "oM_ModelFormulation.py")
 INPUT_DATA = os.path.join(MODULES, "oM_InputData.py")
 INVESTMENT = os.path.join(MODULES, "oM_Investment.py")
+PROBLEM_SOLVING = os.path.join(MODULES, "oM_ProblemSolving.py")
 
 
 @pytest.fixture(scope="module")
@@ -184,6 +186,15 @@ def test_ele_rampdown_uses_correct_param_name():
     assert "pEleGenRampDw'" not in text, \
         "misspelled parameter pEleGenRampDw was reintroduced"
     assert "pEleGenRampDown'" in text
+
+
+def test_highs_time_limit_not_too_low():
+    """The AMPL HiGHS time limit should not be so low that validation solves end with
+    a merely feasible solution before reaching the compressor/FCR optimum."""
+    text = open(PROBLEM_SOLVING, encoding="utf-8").read()
+    m = re.search(r'Solver\.options\["time_limit"\]\s*=\s*(\d+)', text)
+    assert m is not None, "could not find HiGHS time_limit option"
+    assert int(m.group(1)) >= 1000, "HiGHS time_limit is too low for validation cases"
 
 
 def test_hydrogen_demand_respects_base_year_period():
