@@ -436,10 +436,11 @@ def test_currency_label(sizing_cases_built, tmp_path):
 
 
 def test_compressor_sizing_structure(sizing_cases_built, tmp_path):
-    """Phase 1 compressor sizing: the compressor is an independent investment decision.
-    Off by default (no candidate set), and when a unit carries a CompressorInvestCost the
+    """Phase 1 compressor sizing: when a unit carries a CompressorInvestCost the
     build variable, the throughput duty bound (tying the charge flow to the build fraction),
-    and the capex term in the total investment cost are all present."""
+    and the capex term in the total investment cost are all present. When the same unit is
+    also a tank investment candidate, the compressor build fraction is tied to the tank's
+    via eHydCompInvestLink."""
     import shutil
 
     import duckdb
@@ -477,6 +478,13 @@ def test_compressor_sizing_structure(sizing_cases_built, tmp_path):
     # the compressor capex enters the total investment cost
     icost_vars = {v.name for v in identify_variables(m.eTotalICost.body)}
     assert any(vn.startswith("vHydCompInvest") for vn in icost_vars)
+    # the unit is also a tank candidate (H2Tank has FixedInvestmentCost on the same unit),
+    # so the linking constraint must be present and tie vHydCompInvest to vHydGenInvest
+    assert hasattr(m, 'eHydCompInvestLink') and len(m.eHydCompInvestLink) > 0, \
+        "eHydCompInvestLink must exist when the unit is both a tank and compressor candidate"
+    link_vars = {v.name for v in identify_variables(next(iter(m.eHydCompInvestLink.values())).body)}
+    assert any(vn.startswith("vHydCompInvest") for vn in link_vars)
+    assert any(vn.startswith("vHydGenInvest") for vn in link_vars)
 
     # guard: a positive CompressorInvestCost with a zero nameplate fails loudly
     bad_dir = os.path.join(str(tmp_path), "bad")

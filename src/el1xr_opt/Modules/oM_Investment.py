@@ -57,8 +57,9 @@ def create_investment(model, optmodel, indlog):
     # %% Build-decision variables (fraction of nameplate built, in [0, 1])
     setattr(optmodel, 'vEleGenInvest', Var(model.egc, within=UnitInterval, doc='electricity candidate build fraction [0,1]'))
     setattr(optmodel, 'vHydGenInvest', Var(model.hgc, within=UnitInterval, doc='hydrogen    candidate build fraction [0,1]'))
-    # Compressor build fraction (sized independently of the tank charge port it shares a store
-    # with). Empty when no unit carries a CompressorInvestCost, so default cases are unchanged.
+    # Compressor build fraction. Empty when no unit carries a CompressorInvestCost, so default
+    # cases are unchanged. For units that are also tank investment candidates (in both hgcompc
+    # and hgsc), the build fraction is tied to the tank's via eHydCompInvestLink below.
     setattr(optmodel, 'vHydCompInvest', Var(model.hgcompc, within=UnitInterval, doc='hydrogen compressor candidate build fraction [0,1]'))
 
     # Make the decision binary (all-or-nothing build) for units flagged for it.
@@ -81,6 +82,16 @@ def create_investment(model, optmodel, indlog):
                 optmodel.vHydCompInvest[hgs].domain = Binary
         except (KeyError, TypeError):
             pass
+
+    # Link the compressor build fraction to the tank build fraction for units that are
+    # investment candidates for both. This enforces that the compressor is built at the same
+    # scale as the tank it charges: you cannot build a larger compressor than the tank or
+    # leave a built tank without a proportionally sized compressor.
+    hgs_linked = [hgs for hgs in model.hgcompc if hgs in model.hgsc]
+    if hgs_linked:
+        def eHydCompInvestLink(optmodel, hgs):
+            return optmodel.vHydCompInvest[hgs] == optmodel.vHydGenInvest[hgs]
+        optmodel.__setattr__('eHydCompInvestLink', Constraint(hgs_linked, rule=eHydCompInvestLink, doc='compressor build fraction equals tank build fraction'))
 
     # Optional lower/upper bounds on the build fraction, if provided in the data.
     for egc in model.egc:
