@@ -268,6 +268,28 @@ def test_compressor_sizing_decision(sizing_cases_built):
     assert peak > 1e-3, f"tank never charged (peak {peak:.4f}), compressor sizing not exercised"
 
 
+def test_compressor_tied_to_candidate_tank(sizing_cases_built):
+    """A compressor only makes sense if the tank it injects into is built. When that tank
+    is itself an investment candidate (H2TankCompressor: PEMEL_01 is both), the build
+    coupling vHydCompInvest <= vHydGenInvest is added. When the compressor sits on an
+    EXISTING tank (ElectrolyserFCRCompressor: the candidate is the electrolyser, the tank
+    exists), no coupling row is built -- the compressor keeps its own free build decision."""
+    from pyomo.core.expr.visitor import identify_variables
+
+    from el1xr_opt.Modules.oM_Sequence import build_model
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+
+    m = build_model(sizing_cases_built, "H2TankCompressor", date)
+    assert len(m.eHydCompInvestLink) == 1, "coupling expected when the tank is a candidate"
+    row = next(iter(m.eHydCompInvestLink.values()))
+    names = {v.name.split("[")[0] for v in identify_variables(row.body)}
+    assert "vHydCompInvest" in names and "vHydGenInvest" in names
+
+    m2 = build_model(sizing_cases_built, "ElectrolyserFCRCompressor", date)
+    assert len(m2.eHydCompInvestLink) == 0, \
+        "no coupling expected when the compressor sits on an existing tank"
+
+
 def test_compressor_fcr_coupling_structure(sizing_cases_built):
     """Phase 2: with both an FCR electrolyser and a sized compressor at a node, the FCR-down
     rate coupling is built, tying the electrolyser's down-bids to the spare compressor
@@ -538,6 +560,22 @@ def test_electrolyser_fcr_structure(sizing_cases_built):
     bid = model.vEleFreqContReserveDisUpwardBid
     e2h_bids = [bid[idx] for idx in bid if idx[-1] == u]
     assert e2h_bids and not any(v.fixed for v in e2h_bids)
+
+
+@pytest.mark.solve
+def test_electrolyser_fcr_solves(sizing_cases_built):
+    """Base ElectrolyserFCR solves to a sane (small) objective. This is the regression
+    guard the missing solve test would have caught: the case was infeasible (no hydrogen
+    import to back the demand) and the solver only returned a penalty-laden pseudo-solution,
+    which surfaced later as the compressor case failing to build the compressor."""
+    model = routine(dir=sizing_cases_built, case="ElectrolyserFCR", solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None
+    # the electrolyser FCR endurance path is built and the solve is feasible (a real cost,
+    # not the large penalty value an infeasible case returns)
+    assert len(model.eEleFreqDownEnduranceConv) > 0
+    assert 0.0 < float(pyo.value(model.eTotalSCost)) < 1.0e4
 
 
 @pytest.mark.solve

@@ -85,17 +85,24 @@ CASES = {
     # making hydrogen from retail electricity beats the import price.
     "Electrolyser":     dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10),
                              h2_import=True, green=0),
-    # Electrolyser FCR validation: a small (feasible) hydrogen demand keeps the
-    # electrolyser running, so it has consumption to modulate. The NoFCR case is the
-    # baseline; the FCR case lets the electrolyser bid FCR. The FCR case should cost
-    # less, by the FCR revenue the electrolyser earns.
-    "ElectrolyserNoFCR": dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=False),
-    "ElectrolyserFCR":   dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=True),
+    # Electrolyser FCR validation: a hydrogen demand keeps the electrolyser running, so it
+    # has consumption to modulate. The NoFCR case is the baseline; the FCR case lets the
+    # electrolyser bid FCR. The FCR case should cost less, by the FCR revenue the
+    # electrolyser earns. A priced hydrogen import backs the demand: the electrolyser sits
+    # at Node2, which only has local solar for electricity, so it cannot make the full
+    # 0.5 kgH2/h on its own. Without the import the demand is unservable and the case is
+    # infeasible. Green-H2 matching stays on here so the matching structure is testable.
+    "ElectrolyserNoFCR": dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=False, h2_import=True),
+    "ElectrolyserFCR":   dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10), h2_demand=0.5, e2h_fcr=True, h2_import=True),
     # ElectrolyserFCR plus a sized compressor on the tank (PEMEL_01): exercises the Phase 2
     # FCR-down rate coupling -- the electrolyser's FCR-down bid is bounded by the spare
     # compressor throughput at the node, on top of the tank-headroom volume limit.
+    # green=0 here so the electrolyser can draw grid electricity and run hard enough to
+    # hold real FCR-down bids; with matching on (and all solar dropped in this single-period
+    # run) its consumption is pinned near zero and the FCR-down coupling is never exercised.
     "ElectrolyserFCRCompressor": dict(battery=None, fcrd=True, fcrn=True, h2=("AEL_01", 0.10),
-                                      h2_demand=0.5, e2h_fcr=True, compressor=("PEMEL_01", 2.0, 0.05)),
+                                      h2_demand=0.5, e2h_fcr=True, compressor=("PEMEL_01", 2.0, 0.05),
+                                      green=0, h2_import=True),
     # Three-state electrolyser demonstration: binary commitment, a small electrolyser, and
     # a hydrogen demand burst with a one-hour gap (0.09, 0, 0.09) and no storage buffer.
     # The electrolyser sits in STANDBY through the idle hour (drawing only its standby

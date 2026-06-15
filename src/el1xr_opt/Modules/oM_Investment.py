@@ -170,6 +170,20 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vHydTotalCharge[p, sc, n, hgcompc] <= model.Par['pHydGenCompressorNameplate'][hgcompc] * model.factor1 * optmodel.vHydCompInvest[hgcompc]
     optmodel.__setattr__('eHydInvestMaxCompressor', Constraint(psnhgcompc, rule=eHydInvestMaxCompressor, doc='candidate hydrogen compressor throughput limited by build decision'))
 
+    # Compressor build tied to its tank build. A compressor raises the hydrogen to the
+    # tank's storage pressure and injects it, so building a compressor only makes sense if
+    # the tank it feeds is built. When that tank is ITSELF an investment candidate, the
+    # compressor build fraction cannot exceed the tank build fraction (no compressor on a
+    # tank that was not built). The coupling is only added when the tank is a candidate
+    # (hgcompc unit also in hgc); a compressor sitting on an existing tank, or feeding a
+    # standalone high-pressure demand, keeps its own free build decision -- there is no
+    # blanket "no tank => no compressor" rule, since high-pressure delivery (tube-trailer,
+    # refuelling, pipeline injection) can need compression without on-site storage.
+    hgcompc_with_candidate_tank = [hgs for hgs in model.hgcompc if hgs in model.hgc]
+    def eHydCompInvestLink(optmodel, hgs):
+        return optmodel.vHydCompInvest[hgs] <= optmodel.vHydGenInvest[hgs]
+    optmodel.__setattr__('eHydCompInvestLink', Constraint(hgcompc_with_candidate_tank, rule=eHydCompInvestLink, doc='compressor build cannot exceed the build of the candidate tank it feeds'))
+
     # %% Total investment cost
     # Unit scaling: model.factor1 is the conversion factor that lets the model work
     # at either utility (MWh) or local/home (kWh) scale. It is applied to the
