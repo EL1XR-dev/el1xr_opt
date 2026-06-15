@@ -40,7 +40,7 @@ constructing one by hand trips unrelated set-membership assumptions in the build
 """
 import datetime
 import os
-import re
+import ast
 import shutil
 import subprocess
 import sys
@@ -192,9 +192,23 @@ def test_highs_time_limit_not_too_low():
     """The AMPL HiGHS time limit should not be so low that validation solves end with
     a merely feasible solution before reaching the compressor/FCR optimum."""
     text = open(PROBLEM_SOLVING, encoding="utf-8").read()
-    m = re.search(r'Solver\.options\["time_limit"\]\s*=\s*(\d+)', text)
-    assert m is not None, "could not find HiGHS time_limit option"
-    assert int(m.group(1)) >= 1000, "HiGHS time_limit is too low for validation cases"
+    tree = ast.parse(text)
+    time_limit = None
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        for target in node.targets:
+            if not (
+                isinstance(target, ast.Subscript)
+                and isinstance(target.value, ast.Attribute)
+                and target.value.attr == "options"
+            ):
+                continue
+            if isinstance(target.slice, ast.Constant) and target.slice.value == "time_limit":
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, int):
+                    time_limit = node.value.value
+    assert time_limit is not None, "could not find HiGHS time_limit option"
+    assert time_limit >= 1000, "HiGHS time_limit is too low for validation cases"
 
 
 def test_hydrogen_demand_respects_base_year_period():
