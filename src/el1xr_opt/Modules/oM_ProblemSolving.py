@@ -141,7 +141,19 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         # Solver.options["log_file"]             = os.path.join(_path, f"oM_{CaseName}.log")
         # Solver.options["log_to_console"]         = True
         Solver.options["presolve"]               = "on"
-        Solver.options["solver"]               = "ipm"
+        # Use simplex (not the interior-point method) as the LP algorithm. On these
+        # home/community-scale LPs simplex is fast AND it reports infeasibility quickly
+        # and reliably. The interior-point path could not cleanly prove infeasibility on a
+        # near-infeasible model: it ran out the whole time limit and returned a
+        # tolerance-violating pseudo-solution, which then read as a (wrong) "feasible"
+        # answer downstream. Simplex flags the same model infeasible in a fraction of a
+        # second.
+        Solver.options["solver"]               = "simplex"
+        # Scale the constraint matrix before solving. The model spans a wide coefficient
+        # range (operating costs ~1, the value-of-lost-load penalty ~1e5, efficiency and
+        # reserve-block terms ~1e-3), so explicit equilibration scaling tightens the
+        # conditioning and reduces solver tolerance warnings.
+        Solver.options["simplex_scale_strategy"] = 2
         Solver.options["parallel"]             = "on"
         Solver.options["run_crossover"]        = "on"  # HiGHS allows on/off only
         Solver.options["mip_rel_gap"]          = 0.02  # equivalent to MIPGap
@@ -183,6 +195,15 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
 
     SolverResults.write()  # summary of results
     optmodel.SolverResults1 = SolverResults
+
+    # Surface a non-optimal solve loudly. A solver that stops infeasible, or hits the time
+    # or iteration limit, leaves the model holding a meaningless (or only partially solved)
+    # point; using those values silently is how an infeasible case looked like a feasible
+    # one. Warn clearly so callers and tests see it rather than trusting the variables.
+    _tc = SolverResults.solver.termination_condition
+    if _tc != TerminationCondition.optimal:
+        print(f"WARNING: solver did not reach an optimal solution (termination: {_tc}); "
+              f"the model variable values may be meaningless. Check feasibility and limits.")
 
     # %% fix values of binary variables to get dual variables and solve it again
     print('# ============================================================================= #')
