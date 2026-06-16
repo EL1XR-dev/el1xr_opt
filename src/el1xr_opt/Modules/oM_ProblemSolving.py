@@ -169,6 +169,17 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         Solver.options["threads"]              = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
         Solver.options["time_limit"]           = 150
         Solver.options["ipm_iteration_limit"]  = 1800000
+        # Deterministic mode for reproducible golden-cost tests. A parallel MILP returns a
+        # different within-the-gap incumbent depending on the thread count and HiGHS
+        # version, so a golden cost pinned to a tight tolerance flakes from one machine to
+        # another. When EL1XR_HIGHS_DETERMINISTIC is set, solve single-threaded to a zero
+        # MIP gap, so the returned objective is the proven optimum and is reproducible.
+        # Off by default, so production runs keep parallel solving and the 2% gap.
+        if os.environ.get("EL1XR_HIGHS_DETERMINISTIC", "").lower() in ("1", "true", "yes"):
+            Solver.options["parallel"]    = "off"
+            Solver.options["threads"]     = 1
+            Solver.options["mip_rel_gap"] = 0.0
+            Solver.options["mip_abs_gap"] = 0.0
         print("HiGHS solver options configured.")
 
     # ---- Solve ----
