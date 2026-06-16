@@ -76,7 +76,7 @@ def _assert_cost(actual, expected, rtol):
 
 @pytest.mark.solve
 @pytest.mark.parametrize("label,d,case,expected,rtol", CASES, ids=CASE_IDS)
-def test_cost_from_csv(label, d, case, expected, rtol):
+def test_cost_from_csv(label, d, case, expected, rtol, deterministic_highs):
     """Solve the case reading its CSV folder; check the golden cost."""
     with truncated_duration(d, case):
         model = routine(**_run_dict(d, case))
@@ -86,7 +86,7 @@ def test_cost_from_csv(label, d, case, expected, rtol):
 
 @pytest.mark.solve
 @pytest.mark.parametrize("label,d,case,expected,rtol", CASES, ids=CASE_IDS)
-def test_cost_from_duckdb(label, d, case, expected, rtol, tmp_path):
+def test_cost_from_duckdb(label, d, case, expected, rtol, tmp_path, deterministic_highs):
     """Solve the same (truncated) case from a .duckdb file; check the golden cost."""
     work = tmp_path / label
     os.makedirs(work / case)  # output folder for results
@@ -181,7 +181,7 @@ def sizing_cases_built():
 
 @pytest.mark.solve
 @pytest.mark.parametrize("case,expected", SIZING_CASES)
-def test_sizing_case_from_duckdb(case, expected, sizing_cases_built):
+def test_sizing_case_from_duckdb(case, expected, sizing_cases_built, deterministic_highs):
     """Solve each variant case from its generated .duckdb and check the golden cost."""
     model = routine(dir=sizing_cases_built, case=case, solver="highs",
                     date=datetime.datetime.now().replace(second=0, microsecond=0),
