@@ -126,10 +126,14 @@ def solving_model(DirName, CaseName, SolverName, optmodel, pWriteLP, indlog):
         Solver.options["MIPFocus"]        = 1
         Solver.options["Presolve"]        = 2
         Solver.options["RINS"]            = 100
-        Solver.options["Crossover"]       = -1
+        Solver.options["Crossover"]       = -1         # skip crossover: the kW-scale model with
+                                                       # tight must-serve equalities makes crossover
+                                                       # numerically declare a feasible barrier
+                                                       # optimum "infeasibleOrUnbounded"
+        Solver.options["BarHomogeneous"]  = 1          # robust infeasible/unbounded detection
         # Solver.options["FeasibilityTol"]  = 1e-9
         Solver.options["FeasibilityTol"]  = 1e-8
-        Solver.options["NumericFocus"]    = 1
+        Solver.options["NumericFocus"]    = 3
         Solver.options["MIPGap"]          = 0.02
         Solver.options["Threads"]         = int((psutil.cpu_count(True) + psutil.cpu_count(False)) / 2)
         Solver.options["TimeLimit"]       = 1000

@@ -1154,6 +1154,30 @@ def test_factor1_default_is_one(h2_model):
     assert _ID.FACTOR1 == 1.0, "the FACTOR1 module-global default must be 1.0"
 
 
+def test_not_served_penalty_price_scaled_by_inverse_factor1():
+    """C38: ENSCost / HNSCost are per-quantity penalty PRICES (cost per unserved kWh / kg)
+    multiplying the extensive vENS / vHNS (which carry factor1), so they must be read with
+    1/factor1 -- like every other price -- to keep the not-served penalty cost invariant.
+    They were originally lumped into the same branch as the extensive Target / Ramp quantities
+    and scaled by factor1, which made the penalty off by factor1**2. The bug was latent only
+    because vENS == vHNS == 0 whenever all demand is served, so it never showed in the
+    all-served goldens; it distorts the penalty the moment a firm contract leaves demand
+    unserved. CO2Cost stays unscaled here (it is scaled via the emission rate at the use site).
+    Checked at the source: the read-scaling loop must split Cost (/factor1) from Target/Ramp
+    (*factor1)."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    start = text.index("Extract, process parameter variables")
+    body = text[start:text.index("Currency label", start)]
+    assert "'Cost' in indicator" in body and "/ factor1" in body, \
+        "the per-quantity Cost penalty prices (ENSCost/HNSCost) must be read with 1/factor1 (C38)"
+    assert "'Target' in indicator or 'Ramp' in indicator" in body and "* factor1" in body, \
+        "the extensive Target/Ramp quantities must stay on the *factor1 branch (C38)"
+    # the Cost branch must divide; it must not be the multiply branch any more
+    cost_branch = body[body.index("elif 'Cost' in indicator"):body.index("elif 'Target'")]
+    assert "/ factor1" in cost_branch and "* factor1" not in cost_branch, \
+        "the Cost branch must divide by factor1, not multiply (C38)"
+
+
 @pytest.mark.solve
 def test_factor1_invariant():
     """C38: factor1 is a TRUE unit conversion -- it scales extensive quantities by factor1 and
