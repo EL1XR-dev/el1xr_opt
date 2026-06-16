@@ -111,6 +111,14 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # (guarded by test_factor1_invariant). FACTOR1 (module global) is the override hook for
     # that test and the future dfParameter input.
     factor1 = FACTOR1
+    # Optional per-case override from a 'Factor1' column in the Parameter input, for
+    # numerical conditioning at different scales without a code change (the optimum is
+    # invariant -- see test_factor1_invariant). Falls back to the module default when
+    # absent or blank. (_f1 == _f1 is False only for NaN, so it skips empty cells.)
+    if 'Factor1' in data_frames['dfParameter'].columns:
+        _f1 = data_frames['dfParameter']['Factor1'].iloc[0]
+        if _f1 == _f1 and float(_f1) > 0:
+            factor1 = float(_f1)
     # factor2 (the old 1e-3 commitment-cost unit bridge) is ELIMINATED (audit Phase B / B0):
     # the model now works in a single canonical currency, so ConstantTerm / StartUpCost /
     # ShutDownCost are entered directly in that currency (no hidden scaling). See the
@@ -133,7 +141,19 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     # Extract, process parameter variables and add to parameters_dict
     for indicator in parameter_ind:
-        if ('Cost' in indicator or 'Target' in indicator or 'Ramp' in indicator) and 'CO2' not in indicator:
+        if 'CO2' in indicator:
+            # CO2Cost is carried unscaled here; the 1/factor1 is applied via the emission
+            # rate at the use site (pGenCO2EmissionCost), so do not scale it twice.
+            parameters_dict[f'pPar{indicator}'] = data_frames['dfParameter'][indicator].iloc[0]
+        elif 'Cost' in indicator:
+            # ENSCost / HNSCost are per-quantity PENALTY PRICES (cost per unserved kWh/kg)
+            # multiplying the extensive vENS/vHNS (which carry factor1), so they carry
+            # 1/factor1 -- NOT factor1 -- to keep the penalty cost invariant (audit C38).
+            # They were previously lumped with Target/Ramp and scaled by factor1, which made
+            # the not-served penalty off by factor1**2 (latent only while ENS/HNS == 0).
+            parameters_dict[f'pPar{indicator}'] = data_frames['dfParameter'][indicator].iloc[0] / factor1
+        elif 'Target' in indicator or 'Ramp' in indicator:
+            # extensive quantities (demand target, ramp limit) carry factor1
             parameters_dict[f'pPar{indicator}'] = data_frames['dfParameter'][indicator].iloc[0] * factor1
         else:
             parameters_dict[f'pPar{indicator}'] = data_frames['dfParameter'][indicator].iloc[0]
@@ -217,6 +237,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
                       'RampUp', 'RampDown', 'MaxOutflowsProd', 'MinOutflowsProd', 'MaxInflowsCons', 'MinInflowsCons', 'OutflowsRampDown', 'OutflowsRampUp']
     # demand indicators
     EleDemand_ind = data_frames['dfElectricityDemand'].columns.to_list()
+    # Per-demand hydrogen price (sale price / willingness-to-pay, currency/kgH2). An
+    # optional 'Price' column; default 0 leaves existing cases unchanged. Read into
+    # pHydDemPrice and credited as revenue for served demand in the objective
+    # (eTotalHydRCost), so different sectors can be sold at different prices.
+    if 'Price' not in data_frames['dfHydrogenDemand'].columns:
+        data_frames['dfHydrogenDemand']['Price'] = 0.0
     HydDemand_ind = data_frames['dfHydrogenDemand'].columns.to_list()
     idx_dem_factoring = ['MaximumPower']
 
@@ -234,6 +260,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     _update_parameters(data_frames, parameters_dict, factor1, HydGeneration_ind, idx_gen_factoring, 'dfHydrogenGeneration', 'pHydGen')
     _update_parameters(data_frames, parameters_dict, factor1, HydDemand_ind, idx_dem_factoring, 'dfHydrogenDemand', 'pHydDem')
     _update_parameters(data_frames, parameters_dict, factor1, HydRetail_ind, idx_retail_factoring, 'dfHydrogenRetail', 'pHydRet')
+    # The per-demand hydrogen price is a per-quantity PRICE, so it carries 1/factor1
+    # (audit C38), like the energy and FCR prices: the served quantity (vHydDemand)
+    # scales by factor1, so price x quantity (the revenue) stays invariant.
+    parameters_dict['pHydDemPrice'] = parameters_dict['pHydDemPrice'] / factor1
 
     # Per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
     # retail file omits them, default the cap to 0.0, read as "no cap" by the

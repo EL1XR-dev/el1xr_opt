@@ -259,11 +259,18 @@ def create_objective_function_components(model, optmodel, indlog):
         return optmodel.vTotalHydCCost[p,sc,n] == sum(model.Par['pHydGenLinearTerm'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs)
     optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [kEUR]'))
 
-    # Hydrogen reliability cost [M€]
+    # Hydrogen reliability cost [M€], net of per-demand sale revenue.
     def eTotalHydRCost(optmodel, p,sc,n):
         # Hydrogen not served: same fix as the electricity reliability cost above --
         # the psn aggregation supplies the single duration weight. See docs/model_audit.md.
-        return (optmodel.vTotalHydRCost[p,sc,n] == sum(model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd] for hd in model.hd))
+        # Per-demand price (pHydDemPrice, default 0): the served quantity
+        # (vHydDemand - vHNS) earns the demand's own price as REVENUE, so different
+        # consumer sectors can be sold hydrogen at different prices. With price 0 this
+        # reduces to the original not-served penalty (existing cases unchanged).
+        return (optmodel.vTotalHydRCost[p,sc,n] == sum(
+            model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd]
+            - model.Par['pHydDemPrice'][hd] * (optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd])
+            for hd in model.hd))
     optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [kEUR]'))
 
     log_time('--- Declaring the ObjFunc components:', StartTime, ind_log=indlog)
