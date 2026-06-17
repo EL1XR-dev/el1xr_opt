@@ -56,6 +56,13 @@ _SOLVER = _solver()
 pytestmark = pytest.mark.skipif(_SOLVER is None, reason="needs an LP/dual solver")
 
 
+def _have_gurobi():
+    try:
+        return bool(SolverFactory("gurobi").available(exception_flag=False))
+    except Exception:
+        return False
+
+
 def _levels(n):
     return [f"t{ i + 1:04d}" for i in range(n)]
 
@@ -459,6 +466,9 @@ def test_el1xr_temporal_benders_heat_storage_matches_monolithic(n_blocks):
         f"temporal benders {res['objective']:.6f} vs monolith {mono:.6f}"
 
 
+@pytest.mark.skipif(not _have_gurobi(), reason="integer (Lagrangian) temporal Benders is validated with "
+                    "gurobi (MILP subproblems + the status-checked solve path); the appsi-HiGHS path is "
+                    "not yet supported, so skip where gurobi is absent (e.g. CI).")
 @pytest.mark.solve
 def test_el1xr_temporal_benders_integer_commitment_matches_monolith():
     """Integer (SDDiP-style Lagrangian) temporal Benders on a case with BINARY unit
