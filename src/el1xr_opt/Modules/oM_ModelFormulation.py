@@ -239,8 +239,33 @@ def create_objective_function_components(model, optmodel, indlog):
                                                    # Degradation (audit Phase B / B2): stack-wear cost per kWh of PRODUCTIVE electricity
                                                    # (input minus the standby draw, which makes no hydrogen) -- the real cost of flexible
                                                    # operation, amortising stack replacement over throughput. Zero for non-electrolysers.
-                                                   sum(model.Par['pHydGenDegradationCost'][e2h] * (optmodel.vEleTotalCharge[p,sc,n,e2h] - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p,sc,n,e2h]) for e2h in model.e2h))
+                                                   sum(model.Par['pHydGenDegradationCost'][e2h] * (optmodel.vEleTotalCharge[p,sc,n,e2h] - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p,sc,n,e2h]) for e2h in model.e2h) +
+                                                   # M2: load-dependent degradation surcharge -- an EXTRA stack-wear cost on the high-load
+                                                   # (2nd-block) consumption, a piecewise-linear stand-in for the current-density-dependent
+                                                   # voltage rise (the stack degrades faster at higher load, so flexing up for FCR-down and
+                                                   # running hard costs more than throughput alone implies). Zero by default (audit M2).
+                                                   sum(model.Par['pHydGenDegradationCost2ndBlock'][e2h] * optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h) +
+                                                   # M2b: cycling-degradation cost on |delta productive consumption| (the FCR-modulation stress
+                                                   # the throughput term misses); active only when a unit carries RampDegradationCost > 0.
+                                                   (sum(model.Par['pHydGenRampDegradationCost'][e2h] * optmodel.vHydGenRampAbs[p,sc,n,e2h] for e2h in model.e2h) if getattr(model, '_ramp_deg_active', False) and n != model.n.first() else 0))
     optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
+
+    # M2b: linearise |delta productive consumption| for the electrolyser cycling-degradation cost.
+    # productive consumption = vEleTotalCharge - StandByPower * vHydGenStandBy; vHydGenRampAbs >=
+    # |prod[n] - prod[n-1]| via the two one-sided constraints. Built only when active.
+    if getattr(model, '_ramp_deg_active', False):
+        def _prod(optmodel, p, sc, n, e2h):
+            return optmodel.vEleTotalCharge[p,sc,n,e2h] - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p,sc,n,e2h]
+        def eHydRampDegradationUp(optmodel, p, sc, n, e2h):
+            if n == model.n.first():
+                return Constraint.Skip
+            return optmodel.vHydGenRampAbs[p,sc,n,e2h] >= _prod(optmodel,p,sc,n,e2h) - _prod(optmodel,p,sc,model.n.prev(n),e2h)
+        optmodel.__setattr__('eHydRampDegradationUp', Constraint(optmodel.psne2h, rule=eHydRampDegradationUp, doc='electrolyser cycling: ramp-abs >= +delta consumption [kW]'))
+        def eHydRampDegradationDn(optmodel, p, sc, n, e2h):
+            if n == model.n.first():
+                return Constraint.Skip
+            return optmodel.vHydGenRampAbs[p,sc,n,e2h] >= _prod(optmodel,p,sc,model.n.prev(n),e2h) - _prod(optmodel,p,sc,n,e2h)
+        optmodel.__setattr__('eHydRampDegradationDn', Constraint(optmodel.psne2h, rule=eHydRampDegradationDn, doc='electrolyser cycling: ramp-abs >= -delta consumption [kW]'))
 
     # Hydrogen start-up / shut-down cost [M€] -- per-event, summed over the load levels
     # WITHOUT pDuration (a 'ps' objective term). The e2h start-up and shut-down terms cover an

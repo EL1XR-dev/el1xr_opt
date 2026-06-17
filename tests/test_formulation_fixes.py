@@ -1154,6 +1154,43 @@ def test_factor1_default_is_one(h2_model):
     assert _ID.FACTOR1 == 1.0, "the FACTOR1 module-global default must be 1.0"
 
 
+def test_electrolyser_load_degradation_surcharge():
+    """M2: an optional load-dependent stack-degradation surcharge costs the high-load
+    (2nd-block) electrolyser consumption -- a piecewise-linear stand-in for the
+    current-density-dependent voltage rise, so FCR-down/high-load operation costs more than
+    throughput alone implies. It is a per-quantity PRICE (read with 1/factor1) and defaults
+    to zero (byte-unchanged goldens). Checked at the source."""
+    obj = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "pHydGenDegradationCost2ndBlock" in obj and "vEleTotalCharge2ndBlock" in obj, \
+        "eTotalHydGCost must add the 2nd-block load-degradation surcharge (M2)"
+    # oM_InputData builds the name per sector via an f-string (p{sector}GenDegradation...),
+    # so match the suffix, and check it is read with 1/factor1 and defaults to zero.
+    src = open(INPUT_DATA, encoding="utf-8").read()
+    assert "GenDegradationCost2ndBlock'] = parameters_dict[f'p{sector[0:3]}GenDegradationCost2ndBlock'] / model.factor1" in src, \
+        "the load-degradation surcharge is a price -> read with 1/factor1 (M2)"
+    assert "GenDegradationCost2ndBlock'] = pd.Series(0.0" in src, \
+        "the surcharge must default to zero when the column is absent (M2)"
+
+
+def test_electrolyser_cycling_degradation_optional():
+    """M2b: an optional cycling-degradation cost on |delta productive consumption| captures the
+    FCR-modulation stress the throughput term misses. It is built only when a unit carries
+    RampDegradationCost > 0 (so default cases are byte-unchanged), linearised by two one-sided
+    ramp constraints, priced as a 1/factor1 per-quantity cost, and the first load level is fixed
+    to zero. Checked at the source."""
+    obj = open(MODEL_FORMULATION, encoding="utf-8").read()
+    assert "pHydGenRampDegradationCost" in obj and "vHydGenRampAbs" in obj, \
+        "eTotalHydGCost must add the cycling-degradation term (M2b)"
+    assert "eHydRampDegradationUp" in obj and "eHydRampDegradationDn" in obj, \
+        "the |delta| must be linearised by two one-sided ramp constraints (M2b)"
+    assert "_ramp_deg_active" in obj, "the cycling term must be guarded (built only when active) (M2b)"
+    src = open(INPUT_DATA, encoding="utf-8").read()
+    assert "model._ramp_deg_active = any(" in src and "vHydGenRampAbs" in src, \
+        "the ramp-abs variable must be built only when a unit has RampDegradationCost > 0 (M2b)"
+    assert "GenRampDegradationCost'] = pd.Series(0.0" in src, \
+        "the cycling cost must default to zero when the column is absent (M2b)"
+
+
 def test_not_served_penalty_price_scaled_by_inverse_factor1():
     """C38: ENSCost / HNSCost are per-quantity penalty PRICES (cost per unserved kWh / kg)
     multiplying the extensive vENS / vHNS (which carry factor1), so they must be read with
