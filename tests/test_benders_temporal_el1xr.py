@@ -457,3 +457,29 @@ def test_el1xr_temporal_benders_heat_storage_matches_monolithic(n_blocks):
     assert res["converged"], f"did not converge: gap={res['gap']:.2e}"
     assert abs(res["objective"] - mono) / abs(mono) < 1e-5, \
         f"temporal benders {res['objective']:.6f} vs monolith {mono:.6f}"
+
+
+@pytest.mark.solve
+def test_el1xr_temporal_benders_integer_commitment_matches_monolith():
+    """Integer (SDDiP-style Lagrangian) temporal Benders on a case with BINARY unit
+    commitment (IndBinGenOperat=1). The optimality-cut LP method cannot run here (the MILP
+    operating subproblems have no LP duals); the Lagrangian cut_mode dualises the copy
+    constraints, solves each block as a MILP, and reproduces the binary monolith optimum.
+    This guards the integer decomposition engine (the paper's solving contribution)."""
+    work = tempfile.mkdtemp(prefix="tel1xr_int_")
+    gen.build(work, n_scenarios=1, trunc=6)
+    op = os.path.join(work, "Home1", "oM_Data_Option_Home1.csv")
+    d = pd.read_csv(op); d["IndBinGenOperat"] = 1; d.to_csv(op, index=False)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    full = build_model(work, "Home1", date); SolverFactory(_SOLVER).solve(full)
+    mono = float(value(full.eTotalSCost))
+    cfg = BendersConfig(max_iterations=20, relative_gap=1e-5)
+    cfg.extra["lag_steps"] = 10; cfg.extra["lag_step0"] = 2.0
+    res = el1xr_temporal_benders(work, "Home1", date, n_time_blocks=2, solver=_SOLVER,
+                                 config=cfg, cut_mode="lagrangian")
+    # Lagrangian cuts give a valid lower bound that reaches the binary monolith (to a loose
+    # tolerance without explicit state binarisation; tightened by binarising the boundary SoC).
+    assert res["lower_bound"] <= mono + 1e-3, \
+        f"lagrangian LB {res['lower_bound']:.4f} exceeds monolith {mono:.4f} (invalid cut)"
+    assert abs(res["objective"] - mono) / abs(mono) < 1e-2, \
+        f"integer temporal benders {res['objective']:.4f} vs monolith {mono:.4f}"

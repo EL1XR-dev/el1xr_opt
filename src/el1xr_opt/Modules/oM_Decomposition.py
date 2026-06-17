@@ -173,7 +173,7 @@ def _solve_model(opt, mdl):
 
 
 def benders_solve(make_master, make_subproblem, blocks, config=None,
-                  solver="appsi_highs", solve_blocks=None):
+                  solver="appsi_highs", solve_blocks=None, cut_mode="lp"):
     """Generic multi-cut (L-shaped) Benders decomposition.
 
     Assumes relative complete recourse (every subproblem is feasible for any
@@ -236,7 +236,81 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
             solved[b] = (qb, lam)
         return solved
 
-    solve = solve_blocks if solve_blocks is not None else _solve_sequential
+    def _solve_lagrangian(x_hat):
+        # Integer-aware cuts (SDDiP-style). For each block, dualise the copy constraints
+        # (deactivate the fixings, add sum_n pi_n * xcopy_n to the block objective, solved as
+        # a MILP so the recourse stays integer) and ascend pi to maximise the Lagrangian dual
+        # g(pi) = phi(pi) - sum_n pi_n * x_hat_n, where phi(pi) is the dualised block value.
+        # The cut is theta_b >= g(pi*) + sum_n (-pi*_n)(x_n - x_hat_n) -- the same shape as the
+        # LP cut (q_b = g(pi*), lam = -pi*), but a VALID lower bound on the integer recourse.
+        # With a binarised linking state (the master binary-expands it) these cuts are tight.
+        from pyomo.environ import Param, Objective, Reals, Set, minimize, value as _val
+        steps = int(cfg.extra.get("lag_steps", 20))
+        step0 = float(cfg.extra.get("lag_step0", 1.0))
+        solved = {}
+        for b in blocks:
+            sub = subs[b]; m = sub["model"]; sub["set_xhat"](x_hat)
+            xcopy = sub["xcopy"]
+            # only dualise the keys this block actually couples on: a temporal block uses its
+            # own incoming/outgoing boundaries (+ investment + its thresholds), not every
+            # other block's boundary copy. Relaxing an unused (unbounded) copy would leave it
+            # uninitialised and the Lagrangian unbounded. Inactive keys keep their fixing and
+            # get a zero cut coefficient.
+            active = [n for n in sub.get("active_keys", names) if n in xcopy]
+            missing = [n for n in active if n not in xcopy]
+            if missing:
+                raise ValueError(f"lagrangian cut_mode needs a copy var for every active key; "
+                                 f"block {b} is missing {missing[:3]}{'...' if len(missing) > 3 else ''}")
+            if not hasattr(m, "_lag_pi"):                       # one-time Lagrangian setup
+                # jagged index: linking keys have mixed lengths (investment 2-tuples,
+                # boundary 3-tuples, threshold 4-tuples), so the Set must be dimen=None.
+                m._lag_idx = Set(initialize=list(active), dimen=None, ordered=True)
+                m._lag_pi = Param(m._lag_idx, mutable=True, initialize=0.0, within=Reals)
+                for n in active:
+                    sub["fix"][n].deactivate()
+                m._lag_obj = Objective(expr=sub["obj"].expr
+                                       + sum(m._lag_pi[n] * xcopy[n] for n in active), sense=minimize)
+                sub["obj"].deactivate()
+            # subgradient ascent on the Lagrangian dual g(pi). The dual is -inf for some pi
+            # (the freed block is unbounded there, e.g. uncapped arbitrage at max investment);
+            # the ascent must stay in the finite domain, so a pi that makes the block unbounded
+            # (or otherwise non-optimal) is REJECTED: revert to the best pi and shrink the step.
+            # pi=0 is always finite (the recourse) and gives a valid starting lower bound.
+            pi = {n: 0.0 for n in active}
+            best_g, best_pi = -float("inf"), dict(pi)
+            scale = step0
+            for t in range(1, steps + 1):
+                for n in active:
+                    m._lag_pi[n] = pi[n]
+                try:
+                    _r = opt_sub.solve(m, load_solutions=False)
+                    if "optimal" not in str(_r.solver.termination_condition).lower():
+                        raise RuntimeError("non-optimal Lagrangian (pi out of finite domain)")
+                    try:
+                        m.solutions.load_from(_r)
+                    except Exception:
+                        _solve_model(opt_sub, m)         # appsi fallback load
+                    phi = float(_val(m._lag_obj))
+                    xc = {n: float(_val(xcopy[n])) for n in active}
+                except Exception:                        # L(pi) = -inf here: back off
+                    pi = dict(best_pi); scale *= 0.5
+                    continue
+                g = phi - sum(pi[n] * x_hat[n] for n in active)  # Lagrangian dual at x_hat
+                if g > best_g:
+                    best_g, best_pi = g, dict(pi)
+                sg = {n: xc[n] - x_hat[n] for n in active}       # subgradient of g wrt pi
+                stp = scale / t
+                for n in active:
+                    pi[n] += stp * sg[n]
+            solved[b] = (best_g, {n: (-best_pi[n] if n in best_pi else 0.0) for n in names})
+        return solved
+
+    if cut_mode == "lagrangian":
+        if solve_blocks is not None:
+            raise NotImplementedError("lagrangian cut_mode does not support external solve_blocks yet")
+        solve = _solve_lagrangian
+    else:
+        solve = solve_blocks if solve_blocks is not None else _solve_sequential
 
     best_ub = float("inf")
     gap = float("inf")
@@ -368,7 +442,8 @@ def _build_window(dir_name, case_name, date, keep_scenario, level_names):
 
 
 def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
-                           solver="appsi_highs", config=None):
+                           solver="appsi_highs", config=None, cut_mode="lp",
+                           binarize_state=None):
     """Solve one (period, scenario) el1xr operating horizon by temporal Benders.
 
     The horizon is split into ``n_time_blocks`` contiguous time blocks coupled by
@@ -427,6 +502,12 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
     levels = list(full.n)
     factor1 = float(full.factor1)
     period_weight = sum(float(full.Par['pDiscountFactor'][pp]) for pp in full.p)
+    # SDDiP-style boundary-state binarisation: required for the Lagrangian cut_mode (the
+    # boundary inventory is the linking STATE; binarising it onto a finite grid both bounds
+    # the dualised copies, so the Lagrangian is bounded, and makes the cuts tight, so the
+    # method converges to the integer optimum). Default on for cut_mode='lagrangian'.
+    _binstate = (cut_mode == "lagrangian") if binarize_state is None else bool(binarize_state)
+    _nbits = int((config or BendersConfig()).extra.get("state_bits", 8))
     discount = float(full.Par['pDiscountFactor'][p])
     invcost = {("e", g): float(full.Par['pEleGenInvestCost'][g]) for g in egc}
     invcost.update({("h", g): float(full.Par['pHydGenInvestCost'][g]) for g in hgc})
@@ -530,6 +611,28 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         _bvar = {"Se": m.Se, "Sh": m.Sh, "St": m.St}
         for (kind, k, g) in bnd_names:
             x[(kind, k, g)] = _bvar[kind][k, g]
+        if _binstate:
+            # binary-expand each boundary state onto a [0, cap] grid (cap = nameplate*factor1),
+            # so the dualised subproblem copies are bounded (Lagrangian bounded) and the cuts
+            # are tight at the grid points (SDDiP exactness). The cut interface is unchanged --
+            # x still maps to m.Se/m.Sh/m.St, which are now pinned to the grid.
+            _caps = {"Se": {g: maxE[g] * factor1 for g in egs},
+                     "Sh": {g: maxH[g] * factor1 for g in hgs},
+                     "St": {s: maxHt[s] * factor1 for s in hts}}
+            _bit = {"Se": Var(range(max(K - 1, 1)), egs, range(_nbits), within=Binary),
+                    "Sh": Var(range(max(K - 1, 1)), hgs, range(_nbits), within=Binary),
+                    "St": Var(range(max(K - 1, 1)), hts, range(_nbits), within=Binary)}
+            m.SeBit, m.ShBit, m.StBit = _bit["Se"], _bit["Sh"], _bit["St"]
+            denom = float(2 ** _nbits - 1)
+            for kind, items in (("Se", egs), ("Sh", hgs), ("St", hts)):
+                cl = ConstraintList()
+                setattr(m, f"{kind}BinDef", cl)
+                for kk in range(max(K - 1, 1)):
+                    for g in items:
+                        cap = _caps[kind][g]
+                        cl.add(_bvar[kind][kk, g]
+                               == sum((cap / denom) * (2 ** j) * _bit[kind][kk, g, j]
+                                      for j in range(_nbits)))
         # threshold linking variable per (descriptor, subgroup, item): the master holds
         # the N*t part of each threshold-LP and its cost; each window adds its own
         # sum_n (quantity_n - t)_+.
@@ -587,9 +690,14 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         sub._se = Param(range(max(K - 1, 1)), egs, mutable=True, initialize=0.0)
         sub._sh = Param(range(max(K - 1, 1)), hgs, mutable=True, initialize=0.0)
         sub._st = Param(range(max(K - 1, 1)), hts, mutable=True, initialize=0.0)
-        sub.Secopy = Var(range(max(K - 1, 1)), egs, within=Reals)
-        sub.Shcopy = Var(range(max(K - 1, 1)), hgs, within=Reals)
-        sub.Stcopy = Var(range(max(K - 1, 1)), hts, within=Reals)
+        # The boundary copies are bounded to [0, cap] when the state is binarised, so the
+        # dualised Lagrangian (cut_mode='lagrangian') is bounded; otherwise free (LP mode).
+        _seb = (lambda mm, k, g: (0.0, maxE[g] * factor1)) if _binstate else None
+        _shb = (lambda mm, k, g: (0.0, maxH[g] * factor1)) if _binstate else None
+        _stb = (lambda mm, k, s: (0.0, maxHt[s] * factor1)) if _binstate else None
+        sub.Secopy = Var(range(max(K - 1, 1)), egs, within=Reals, bounds=_seb)
+        sub.Shcopy = Var(range(max(K - 1, 1)), hgs, within=Reals, bounds=_shb)
+        sub.Stcopy = Var(range(max(K - 1, 1)), hts, within=Reals, bounds=_stb)
         sub.sefix = Constraint(range(max(K - 1, 1)), egs,
                                rule=lambda mm, kk, g: mm.Secopy[kk, g] == mm._se[kk, g])
         sub.shfix = Constraint(range(max(K - 1, 1)), hgs,
@@ -765,10 +873,25 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
 
         xcopy = {("e", g): sub.vEleGenInvest[g] for g in egc}
         xcopy.update({("h", g): sub.vHydGenInvest[g] for g in hgc})
+        # full copy-var map for every linking key (needed by the Lagrangian cut_mode):
+        # the boundary-inventory copies and the peak-threshold copies, matching `fix`.
+        _copyvar = {"Se": sub.Secopy, "Sh": sub.Shcopy, "St": sub.Stcopy}
+        for (kind, kk, g) in bnd_names:
+            xcopy[(kind, kk, g)] = _copyvar[kind][kk, g]
+        if thresholds:
+            for key in thr_keys:
+                xcopy[("t",) + key] = sub.tpkcopy[key]
+        # keys this block actually couples on (for the Lagrangian cut_mode): all investment,
+        # its own incoming (k-1) / outgoing (k) boundaries, and the thresholds its window hits.
+        active_keys = ([("e", g) for g in egc] + [("h", g) for g in hgc]
+                       + [(kind, kk, g) for (kind, kk, g) in bnd_names if kk in (k - 1, k)])
+        if thresholds:
+            active_keys += [("t", ti, sub_maps[ti][nn], it) for (ti, it, nn) in thr_u]
         return {"model": sub, "xcopy": xcopy, "fix": fix, "set_xhat": set_xhat,
-                "obj": sub.benders_obj, "recourse": recourse_value}
+                "obj": sub.benders_obj, "recourse": recourse_value, "active_keys": active_keys}
 
-    return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver)
+    return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver,
+                         cut_mode=cut_mode)
 
 
 def _build_el1xr_subproblem(dir_name, case_name, date, block, egc, hgc, discount, penalty):
