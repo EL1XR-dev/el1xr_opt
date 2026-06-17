@@ -30,6 +30,13 @@ def _have_highs():
         return False
 
 
+def _have_gurobi():
+    try:
+        return bool(SolverFactory("gurobi").available(exception_flag=False))
+    except Exception:
+        return False
+
+
 pytestmark = pytest.mark.skipif(not _have_highs(), reason="needs an LP solver (HiGHS)")
 
 
@@ -92,3 +99,73 @@ def test_benders_matches_monolithic():
         f"benders {res['objective']:.4f} vs monolithic {mono_obj:.4f}"
     for g in GENS:
         assert abs(res["x"][g] - mono_cap[g]) < 1e-3, f"cap[{g}] {res['x'][g]} vs {mono_cap[g]}"
+
+
+# --- integer recourse: Lagrangian cut_mode (SDDiP-style) closes the integrality gap -------
+#
+# A two-stage problem with a binarised inter-stage STATE and an INTEGER recourse (a fixed
+# commitment charge makes the recourse value non-convex). LP optimality cuts (relaxed
+# subproblem) stall at the convex-envelope bound; Lagrangian cuts from the MILP subproblem,
+# tight at the binary state, reach the integer monolith optimum. This guards the integer
+# decomposition engine (the paper's solving contribution).
+_A, _D2, _FC, _M = 3.0, 3.0, 5.0, 100.0
+_W = {"b0": 1.0, "b1": 2.0}; _NM = ["b0", "b1"]; _BLK = [0]
+
+
+def _lag_master():
+    m = ConcreteModel()
+    from pyomo.environ import Binary
+    m.b = Var(_NM, within=Binary); m.th = Var(_BLK, bounds=(0, None)); m.s = Var(bounds=(0, 3))
+    m.sdef = Constraint(expr=m.s == sum(_W[n] * m.b[n] for n in _NM))
+    m.cuts = ConstraintList(); m.obj = Objective(expr=_A * m.s + sum(m.th[b] for b in _BLK))
+    return {"model": m, "x": {n: m.b[n] for n in _NM}, "theta": {b: m.th[b] for b in _BLK}, "cuts": m.cuts}
+
+
+def _lag_sub_factory(integer):
+    from pyomo.environ import Binary, UnitInterval
+
+    def _make(block):
+        m = ConcreteModel()
+        m.zc = Var(_NM, bounds=(0, 1)); m.u = Var(within=Binary if integer else UnitInterval)
+        m.p = Var(within=NonNegativeReals); m.s = Var(bounds=(0, 3))
+        m.bhat = Param(_NM, mutable=True, initialize=0.0)
+        m.fixc = Constraint(_NM, rule=lambda mm, n: mm.zc[n] == mm.bhat[n])
+        m.sdef = Constraint(expr=m.s == sum(_W[n] * m.zc[n] for n in _NM))
+        m.dem = Constraint(expr=m.s + m.p >= _D2); m.cap = Constraint(expr=m.p <= _M * m.u)
+        m.obj = Objective(expr=_FC * m.u + m.p, sense=minimize); m.dual = Suffix(direction=Suffix.IMPORT)
+
+        def set_xhat(x_hat):
+            for n in _NM:
+                m.bhat[n] = x_hat[n]
+        return {"model": m, "xcopy": {n: m.zc[n] for n in _NM},
+                "fix": {n: m.fixc[n] for n in _NM}, "set_xhat": set_xhat, "obj": m.obj}
+    return _make
+
+
+def _lag_monolith():
+    from pyomo.environ import Binary
+    m = ConcreteModel(); m.b = Var(_NM, within=Binary); m.u = Var(within=Binary)
+    m.p = Var(within=NonNegativeReals); m.s = Var(bounds=(0, 3))
+    m.sdef = Constraint(expr=m.s == sum(_W[n] * m.b[n] for n in _NM))
+    m.dem = Constraint(expr=m.s + m.p >= _D2); m.cap = Constraint(expr=m.p <= _M * m.u)
+    m.obj = Objective(expr=_A * m.s + _FC * m.u + m.p)
+    SolverFactory("gurobi").solve(m)
+    return value(m.obj)
+
+
+@pytest.mark.solve
+@pytest.mark.skipif(not _have_gurobi(), reason="needs gurobi (integer recourse + duals)")
+def test_lagrangian_cut_closes_integrality_gap():
+    mono = _lag_monolith()
+    cfg = BendersConfig(max_iterations=40, relative_gap=1e-6)
+    cfg.extra["lag_steps"] = 60; cfg.extra["lag_step0"] = 4.0
+    lp = benders_solve(_lag_master, _lag_sub_factory(False), _BLK, config=cfg,
+                       solver="gurobi", cut_mode="lp")
+    lg = benders_solve(_lag_master, _lag_sub_factory(True), _BLK, config=cfg,
+                       solver="gurobi", cut_mode="lagrangian")
+    # LP cuts are inexact: their lower bound stalls strictly below the integer optimum.
+    assert mono - lp["lower_bound"] > 1e-2, \
+        f"LP cuts unexpectedly tight: LB={lp['lower_bound']:.4f} vs monolith {mono:.4f}"
+    # Lagrangian cuts on the binarised state reach the integer optimum.
+    assert abs(lg["lower_bound"] - mono) < 1e-2, \
+        f"lagrangian LB={lg['lower_bound']:.4f} did not reach monolith {mono:.4f}"
