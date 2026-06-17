@@ -296,6 +296,15 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         _df_gen_key = 'dfElectricityGeneration' if sector == 'Ele' else 'dfHydrogenGeneration'
         if f'p{sector[0:3]}GenDegradationCost' not in parameters_dict:
             parameters_dict[f'p{sector[0:3]}GenDegradationCost'] = pd.Series(0.0, index=data_frames[_df_gen_key].index)
+        # Load-dependent degradation surcharge (M2): an optional EXTRA stack-wear cost on the
+        # high-load (2nd-block) consumption; default zero so existing cases are unaffected.
+        if f'p{sector[0:3]}GenDegradationCost2ndBlock' not in parameters_dict:
+            parameters_dict[f'p{sector[0:3]}GenDegradationCost2ndBlock'] = pd.Series(0.0, index=data_frames[_df_gen_key].index)
+        # Cycling degradation cost (M2b): an optional stack-wear cost per kW of hour-to-hour
+        # change in productive consumption -- the FCR-modulation/cycling stress the throughput
+        # term misses; default zero so existing cases are unaffected.
+        if f'p{sector[0:3]}GenRampDegradationCost' not in parameters_dict:
+            parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] = pd.Series(0.0, index=data_frames[_df_gen_key].index)
         # factor1 (audit C38): per-quantity PRICES carry 1/factor1 so price x quantity (which
         # scales by factor1) is invariant. LinearVarCost, CO2EmissionCost and OMVariableCost are
         # such prices; the CO2 emission RATE is a dimensionless ratio and is no longer factored.
@@ -308,6 +317,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         # Degradation cost (audit Phase B / B2): a stack-wear PRICE per kWh of productive
         # electricity, so it carries 1/factor1 like the other per-quantity prices (default 0).
         parameters_dict[f'p{sector[0:3]}GenDegradationCost'   ] = parameters_dict[f'p{sector[0:3]}GenDegradationCost'     ] / model.factor1                                                                                                                        # stack degradation cost (price per kWh)
+        # M2: load-dependent degradation surcharge, a per-quantity price on the high-load
+        # (2nd-block) consumption, so it carries 1/factor1 like the other prices (default 0).
+        parameters_dict[f'p{sector[0:3]}GenDegradationCost2ndBlock'] = parameters_dict[f'p{sector[0:3]}GenDegradationCost2ndBlock'] / model.factor1
+        # M2b: cycling degradation, a per-quantity price on |delta consumption| -> 1/factor1 (default 0).
+        parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] = parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] / model.factor1
         parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
         parameters_dict[f'p{sector[0:3]}GenRetireCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedRetirementCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed retirement cost        [MEUR]                                                                           # H2 outflows ramp down rate              [tonH2]
 
@@ -1213,7 +1227,19 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vEleDemPeakDay',                    Var(model.psder,   within=PositiveReals, doc='electricity daily peak                                                  [kW]'))
     setattr(optmodel, 'vHydDemPeakDay',                    Var(model.psdhr,   within=PositiveReals, doc='hydrogen    daily peak                                                [kgH2]'))
 
+    # M2b: cycling-degradation auxiliary variable, built only when any electrolyser carries a
+    # RampDegradationCost > 0, so default cases are byte-unchanged. Holds |delta productive
+    # consumption| (linearised in oM_ModelFormulation) and is priced in the generation cost.
+    model._ramp_deg_active = any(float(model.Par['pHydGenRampDegradationCost'][e2h]) > 0 for e2h in model.e2h)
+
     # Define continuous variables
+    if model._ramp_deg_active:
+        setattr(optmodel, 'vHydGenRampAbs',               Var(model.psne2h,  within=NonNegativeReals, doc='electrolyser |delta productive consumption| for cycling degradation [kW]'))
+        # the first load level has no previous hour, so its ramp is undefined -- fix to zero
+        # (no constraint, no cost) rather than leave a dangling variable.
+        for _idx in model.psne2h:
+            if _idx[2] == model.n.first():
+                optmodel.vHydGenRampAbs[_idx].fix(0.0)
     setattr(optmodel, 'vEleBuy',                           Var(model.psner,   within=NonNegativeReals, doc='electricity retail  buy                                                 [kW]'))
     setattr(optmodel, 'vEleSell',                          Var(model.psner,   within=NonNegativeReals, doc='electricity retail  sell                                                [kW]'))
     setattr(optmodel, 'vEleDemand',                        Var(model.psned,   within=NonNegativeReals, doc='electricity demand                                                      [kW]'))
