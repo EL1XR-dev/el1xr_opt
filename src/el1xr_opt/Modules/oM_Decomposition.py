@@ -302,7 +302,22 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
                 stp = scale / t
                 for n in active:
                     pi[n] += stp * sg[n]
-            solved[b] = (best_g, {n: (-best_pi[n] if n in best_pi else 0.0) for n in names})
+            # true recourse at x_hat for the UB: re-fix the copies and solve the block MILP
+            # with its own (un-penalised) objective. The Lagrangian value (best_g) is only a
+            # lower bound, so it must NOT be used as the UB.
+            for n in active:
+                m._lag_pi[n] = 0.0
+                sub["fix"][n].activate()
+            m._lag_obj.deactivate(); sub["obj"].activate()
+            try:
+                _solve_model(opt_sub, m)
+                true_q = sub["recourse"]() if "recourse" in sub else float(_val(sub["obj"]))
+            except Exception:
+                true_q = float("inf")               # infeasible at x_hat -> steers the master away
+            sub["obj"].deactivate(); m._lag_obj.activate()
+            for n in active:
+                sub["fix"][n].deactivate()
+            solved[b] = (best_g, {n: (-best_pi[n] if n in best_pi else 0.0) for n in names}, true_q)
         return solved
 
     if cut_mode == "lagrangian":
@@ -322,8 +337,12 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         theta_hat = {b: float(value(M["theta"][b])) for b in blocks}
         first_stage_cost = lb - sum(theta_hat.values())
 
-        solved = solve(x_hat)                  # {block: (q_b, lam)}
-        recourse = sum(q_b for q_b, _ in solved.values())
+        solved = solve(x_hat)                  # {block: (cut_q, lam[, ub_q])}
+        # The UB is the TRUE recourse at the master point. In LP mode cut_q is already the
+        # true recourse; in Lagrangian mode cut_q is a LOWER bound (the cut), so the block
+        # also returns ub_q = the true integer recourse (master point fixed) -- using the
+        # cut value as the UB would falsely "converge" to the loose Lagrangian bound.
+        recourse = sum((v[2] if len(v) > 2 else v[0]) for v in solved.values())
 
         ub = first_stage_cost + recourse
         best_ub = min(best_ub, ub)
@@ -333,9 +352,9 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         if gap <= cfg.relative_gap:
             break
 
-        # add an optimality cut per block: theta_b >= q_b + sum_n lam_n (x_n - x_hat_n)
+        # add an optimality cut per block: theta_b >= cut_q + sum_n lam_n (x_n - x_hat_n)
         for b in blocks:
-            q_b, lam = solved[b]
+            q_b, lam = solved[b][0], solved[b][1]
             M["cuts"].add(
                 M["theta"][b] >= q_b + sum(lam[n] * (M["x"][n] - x_hat[n]) for n in names))
 
