@@ -173,7 +173,8 @@ def _solve_model(opt, mdl):
 
 
 def benders_solve(make_master, make_subproblem, blocks, config=None,
-                  solver="appsi_highs", solve_blocks=None, cut_mode="lp"):
+                  solver="appsi_highs", solve_blocks=None, cut_mode="lp",
+                  ub_recourse=None):
     """Generic multi-cut (L-shaped) Benders decomposition.
 
     Assumes relative complete recourse (every subproblem is feasible for any
@@ -244,9 +245,11 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         # The cut is theta_b >= g(pi*) + sum_n (-pi*_n)(x_n - x_hat_n) -- the same shape as the
         # LP cut (q_b = g(pi*), lam = -pi*), but a VALID lower bound on the integer recourse.
         # With a binarised linking state (the master binary-expands it) these cuts are tight.
-        from pyomo.environ import Param, Objective, Reals, Set, minimize, value as _val
+        from pyomo.environ import (Param, Objective, Reals, Set, minimize, maximize,
+                                    ConcreteModel, Var, ConstraintList, value as _val)
         steps = int(cfg.extra.get("lag_steps", 20))
         step0 = float(cfg.extra.get("lag_step0", 1.0))
+        lag_method = str(cfg.extra.get("lag_method", "level")).lower()
         solved = {}
         for b in blocks:
             sub = subs[b]; m = sub["model"]; sub["set_xhat"](x_hat)
@@ -271,38 +274,118 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
                 m._lag_obj = Objective(expr=sub["obj"].expr
                                        + sum(m._lag_pi[n] * xcopy[n] for n in active), sense=minimize)
                 sub["obj"].deactivate()
-            # subgradient ascent on the Lagrangian dual g(pi). The dual is -inf for some pi
-            # (the freed block is unbounded there, e.g. uncapped arbitrage at max investment);
-            # the ascent must stay in the finite domain, so a pi that makes the block unbounded
-            # (or otherwise non-optimal) is REJECTED: revert to the best pi and shrink the step.
-            # pi=0 is always finite (the recourse) and gives a valid starting lower bound.
-            pi = {n: 0.0 for n in active}
-            best_g, best_pi = -float("inf"), dict(pi)
-            scale = step0
-            for t in range(1, steps + 1):
-                for n in active:
-                    m._lag_pi[n] = pi[n]
+            # The Lagrangian dual g(pi) = phi(pi) - pi.x_hat is CONCAVE; we maximise it. With a
+            # binarised (bounded-copy) state phi(pi) is finite for every pi, so g is finite
+            # everywhere. _eval(pi) solves the freed block MILP and returns (g, supergradient s);
+            # it returns None where the block is non-optimal/unbounded (an unbounded-copy or
+            # LP-mode pi), which the ascent then skips. pi is held as a position vector aligned
+            # to idx so the inner QP/LP models can use a plain integer index.
+            idx = list(active); D = len(idx)
+            xh = [x_hat[n] for n in idx]
+
+            def _eval(pivec):
+                for j, n in enumerate(idx):
+                    m._lag_pi[n] = pivec[j]
                 try:
                     _r = opt_sub.solve(m, load_solutions=False)
                     if "optimal" not in str(_r.solver.termination_condition).lower():
-                        raise RuntimeError("non-optimal Lagrangian (pi out of finite domain)")
+                        return None
                     try:
                         m.solutions.load_from(_r)
                     except Exception:
                         _solve_model(opt_sub, m)         # appsi fallback load
                     phi = float(_val(m._lag_obj))
-                    xc = {n: float(_val(xcopy[n])) for n in active}
-                except Exception:                        # L(pi) = -inf here: back off
-                    pi = dict(best_pi); scale *= 0.5
-                    continue
-                g = phi - sum(pi[n] * x_hat[n] for n in active)  # Lagrangian dual at x_hat
-                if g > best_g:
-                    best_g, best_pi = g, dict(pi)
-                sg = {n: xc[n] - x_hat[n] for n in active}       # subgradient of g wrt pi
-                stp = scale / t
-                for n in active:
-                    pi[n] += stp * sg[n]
-            solved[b] = (best_g, {n: (-best_pi[n] if n in best_pi else 0.0) for n in names})
+                    xc = [float(_val(xcopy[n])) for n in idx]
+                except Exception:
+                    return None
+                g = phi - sum(pivec[j] * xh[j] for j in range(D))
+                s = [xc[j] - xh[j] for j in range(D)]    # supergradient of g at pi
+                return g, s
+
+            if lag_method == "subgradient":
+                # NORMALISED diminishing-step subgradient ascent (legacy / fallback, kept for
+                # A/B comparison): take a 1/sqrt(t) step along the unit supergradient; a pi that
+                # makes the block non-optimal is rejected (revert to best pi, shrink the step).
+                pivec = [0.0] * D
+                best_g, best_pivec, scale = -float("inf"), list(pivec), step0
+                for t in range(1, steps + 1):
+                    ev = _eval(pivec)
+                    if ev is None:
+                        pivec = list(best_pivec); scale *= 0.5; continue
+                    g, s = ev
+                    if g > best_g:
+                        best_g, best_pivec = g, list(pivec)
+                    norm = sum(v * v for v in s) ** 0.5
+                    if norm > 1e-9:
+                        stp = scale / (t ** 0.5) / norm
+                        pivec = [pivec[j] + stp * s[j] for j in range(D)]
+                best_pi = {idx[j]: best_pivec[j] for j in range(D)}
+            else:
+                # LEVEL-BUNDLE ascent. Keep the whole bundle of supergradient cuts; each is an
+                # upper affine model of the concave dual. Take U = max_pi min_i[g_i +
+                # s_i.(pi - pi_i)] over a box (an upper bound on the dual optimum), set a level
+                # ell = L + lam (U - L), and project the stability centre onto {model >= ell}.
+                # This uses every past evaluation and is scale-free, so it closes the dual far
+                # faster and more reliably than a single subgradient step (the week-scale case
+                # where the plain subgradient under-maximises).
+                lam = float(cfg.extra.get("lag_level", 0.5))
+                box = float(cfg.extra.get("lag_box", 1.0e5))
+                tol = float(cfg.extra.get("lag_tol", 1e-6))
+                ev = _eval([0.0] * D)
+                if ev is None:
+                    best_g, best_pi = -float("inf"), {n: 0.0 for n in active}
+                else:
+                    g0, s0 = ev
+                    bundle = [([0.0] * D, g0, s0)]
+                    best_g, best_pivec, center = g0, [0.0] * D, [0.0] * D
+                    for _it in range(steps):
+                        um = ConcreteModel(); um.j = Set(initialize=list(range(D)), ordered=True)
+                        um.pi = Var(um.j, bounds=(-box, box)); um.tau = Var(); um.c = ConstraintList()
+                        for (pv, gv, sv) in bundle:
+                            um.c.add(um.tau <= gv + sum(sv[j] * (um.pi[j] - pv[j]) for j in range(D)))
+                        um.o = Objective(expr=um.tau, sense=maximize)
+                        try:
+                            _solve_model(opt_sub, um); U = float(_val(um.tau))
+                        except Exception:
+                            break
+                        if U - best_g <= tol * (1.0 + abs(best_g)):
+                            break
+                        level = best_g + lam * (U - best_g)
+                        lp = ConcreteModel(); lp.j = Set(initialize=list(range(D)), ordered=True)
+                        lp.pi = Var(lp.j); lp.c = ConstraintList()
+                        for (pv, gv, sv) in bundle:
+                            lp.c.add(gv + sum(sv[j] * (lp.pi[j] - pv[j]) for j in range(D)) >= level)
+                        lp.o = Objective(expr=sum((lp.pi[j] - center[j]) ** 2 for j in range(D)),
+                                         sense=minimize)
+                        try:
+                            _solve_model(opt_sub, lp)
+                            pinew = [float(_val(lp.pi[j])) for j in range(D)]
+                        except Exception:
+                            break
+                        ev = _eval(pinew)
+                        if ev is None:
+                            break
+                        g, s = ev; bundle.append((list(pinew), g, s))
+                        if g > best_g:
+                            best_g, best_pivec = g, list(pinew)
+                        center = list(pinew)
+                    best_pi = {idx[j]: best_pivec[j] for j in range(D)}
+            # true recourse at x_hat for the UB: re-fix the copies and solve the block MILP
+            # with its own (un-penalised) objective. The Lagrangian value (best_g) is only a
+            # lower bound, so it must NOT be used as the UB.
+            for n in active:
+                m._lag_pi[n] = 0.0
+                sub["fix"][n].activate()
+            m._lag_obj.deactivate(); sub["obj"].activate()
+            try:
+                _solve_model(opt_sub, m)
+                true_q = sub["recourse"]() if "recourse" in sub else float(_val(sub["obj"]))
+            except Exception:
+                true_q = float("inf")               # infeasible at x_hat -> steers the master away
+            sub["obj"].deactivate(); m._lag_obj.activate()
+            for n in active:
+                sub["fix"][n].deactivate()
+            solved[b] = (best_g, {n: (-best_pi[n] if n in best_pi else 0.0) for n in names}, true_q)
         return solved
 
     if cut_mode == "lagrangian":
@@ -322,8 +405,19 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         theta_hat = {b: float(value(M["theta"][b])) for b in blocks}
         first_stage_cost = lb - sum(theta_hat.values())
 
-        solved = solve(x_hat)                  # {block: (q_b, lam)}
-        recourse = sum(q_b for q_b, _ in solved.values())
+        solved = solve(x_hat)                  # {block: (cut_q, lam[, ub_q])}
+        # The UB is the TRUE recourse at the master point. In LP mode cut_q is already the
+        # true recourse; in Lagrangian mode cut_q is a LOWER bound (the cut), so the block
+        # also returns ub_q = the true integer recourse (master point fixed) -- using the
+        # cut value as the UB would falsely "converge" to the loose Lagrangian bound.
+        # When an ``ub_recourse`` hook is given (the integer/binarised temporal mode), the
+        # per-block ub_q fixes every storage boundary to the master's binarised-grid value,
+        # which the blocks cannot meet exactly (an elastic-penalty UB); the hook instead
+        # recovers a feasible UB by a forward pass (boundaries free, fed block to block).
+        if ub_recourse is not None:
+            recourse = ub_recourse(x_hat, subs, opt_sub)
+        else:
+            recourse = sum((v[2] if len(v) > 2 else v[0]) for v in solved.values())
 
         ub = first_stage_cost + recourse
         best_ub = min(best_ub, ub)
@@ -333,9 +427,9 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         if gap <= cfg.relative_gap:
             break
 
-        # add an optimality cut per block: theta_b >= q_b + sum_n lam_n (x_n - x_hat_n)
+        # add an optimality cut per block: theta_b >= cut_q + sum_n lam_n (x_n - x_hat_n)
         for b in blocks:
-            q_b, lam = solved[b]
+            q_b, lam = solved[b][0], solved[b][1]
             M["cuts"].add(
                 M["theta"][b] >= q_b + sum(lam[n] * (M["x"][n] - x_hat[n]) for n in names))
 
@@ -890,8 +984,70 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         return {"model": sub, "xcopy": xcopy, "fix": fix, "set_xhat": set_xhat,
                 "obj": sub.benders_obj, "recourse": recourse_value, "active_keys": active_keys}
 
+    def _forward_ub(x_hat, subs, opt_sub):
+        # SDDiP forward pass for a clean upper bound. Fix the investment (and the peak
+        # thresholds) to the master point and solve the blocks in time order: each block's
+        # INCOMING boundary is fixed to the previous block's realised OUTGOING state and its
+        # own outgoing boundary is left FREE, so the block chooses its end inventory. The
+        # boundary states are then feasible by construction (no grid-mismatch elastic
+        # penalty), so the summed real recourse is a true upper bound -- unlike fixing every
+        # boundary to the binarised-grid master value, which the blocks cannot meet exactly.
+        from pyomo.environ import value as _val
+        prevE, prevH, prevHt = dict(initE), dict(initH), dict(initHt)
+        total = 0.0
+        for k in range(K):
+            s = subs[k]; m = s["model"]
+            s["set_xhat"](x_hat)
+            # switch the block out of its Lagrangian state into a primal forward solve.
+            if hasattr(m, "_lag_obj"):
+                m._lag_obj.deactivate()
+            s["obj"].activate()
+            for g in egc:
+                m.bfix_e[g].activate()
+            for g in hgc:
+                m.bfix_h[g].activate()
+            for key in thr_keys:
+                m.tpkfix[key].activate()
+            if k > 0:                              # incoming boundary = previous outgoing
+                for g in egs:
+                    m._se[k - 1, g] = prevE[g]; m.sefix[k - 1, g].activate()
+                for g in hgs:
+                    m._sh[k - 1, g] = prevH[g]; m.shfix[k - 1, g].activate()
+                for sn in hts:
+                    m._st[k - 1, sn] = prevHt[sn]; m.stfix[k - 1, sn].activate()
+            # this block's outgoing boundary (index k) stays unfixed: the block picks it.
+            _solve_model(opt_sub, m)
+            total += s["recourse"]()
+            if k < K - 1:                          # read the realised outgoing state
+                for g in egs:
+                    prevE[g] = float(_val(m.Secopy[k, g]))
+                for g in hgs:
+                    prevH[g] = float(_val(m.Shcopy[k, g]))
+                for sn in hts:
+                    prevHt[sn] = float(_val(m.Stcopy[k, sn]))
+            # restore the Lagrangian state (active-key fixings off, _lag_obj on) for the
+            # next cut-generation pass.
+            s["obj"].deactivate()
+            if hasattr(m, "_lag_obj"):
+                m._lag_obj.activate()
+            for g in egc:
+                m.bfix_e[g].deactivate()
+            for g in hgc:
+                m.bfix_h[g].deactivate()
+            for key in thr_keys:
+                m.tpkfix[key].deactivate()
+            if k > 0:
+                for g in egs:
+                    m.sefix[k - 1, g].deactivate()
+                for g in hgs:
+                    m.shfix[k - 1, g].deactivate()
+                for sn in hts:
+                    m.stfix[k - 1, sn].deactivate()
+        return total
+
     return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver,
-                         cut_mode=cut_mode)
+                         cut_mode=cut_mode,
+                         ub_recourse=(_forward_ub if cut_mode == "lagrangian" else None))
 
 
 def _build_el1xr_subproblem(dir_name, case_name, date, block, egc, hgc, discount, penalty):
