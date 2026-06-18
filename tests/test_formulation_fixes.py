@@ -1251,26 +1251,29 @@ def test_factor1_invariant():
         f"factor1 must leave the optimum invariant: cost {c1} (f1=1) vs {c2} (f1=2)"
 
 
-def test_hydrogen_demand_quota_noop_by_default(h2_model):
-    """Hydrogen demand volume quota: ``eHydDemandQuota`` is declared but Skips for every
-    index unless a demand carries ``pHydDemQuotaSteps`` > 0. Shipped cases set no quota,
-    so the constraint is empty (no-op) and the default parameters are 0 -- the guarantee
-    that this feature leaves existing solves byte-unchanged."""
+def test_hydrogen_demand_shift_noop_by_default(h2_model):
+    """Hydrogen demand shift: ``eHydDemandShifted`` / ``eHydDemandShiftBalance`` are declared
+    but Skip for every index unless a demand carries ``pHydDemShiftedSteps`` > 0. Shipped
+    cases set no shift, so both constraints are empty (no-op), the ``vHydDemFlex`` variable
+    is not created, and the parameters default to 0 -- the guarantee that this feature leaves
+    existing solves byte-unchanged."""
     m = h2_model
-    assert hasattr(m, "eHydDemandQuota"), "quota constraint was not declared"
-    assert len(m.eHydDemandQuota) == 0, \
-        "quota constraint must be empty (no-op) when no demand carries a quota"
+    assert hasattr(m, "eHydDemandShifted"), "shift constraint was not declared"
+    assert hasattr(m, "eHydDemandShiftBalance"), "shift balance was not declared"
+    assert len(m.eHydDemandShifted) == 0 and len(m.eHydDemandShiftBalance) == 0, \
+        "shift constraints must be empty (no-op) when no demand carries a shift window"
+    assert not hasattr(m, "vHydDemFlex"), "vHydDemFlex must not be created without a shift"
     assert len(m.hd) > 0, "test case has no hydrogen demand"
     for hd in m.hd:
-        assert int(m.Par['pHydDemQuotaSteps'][hd]) == 0, "default quota steps must be 0"
-        assert float(m.Par['pHydDemQuota'][hd]) == 0.0, "default quota volume must be 0"
+        assert int(m.Par['pHydDemShiftedSteps'][hd]) == 0, "default shift steps must be 0"
+        assert float(m.Par['pHydDemFlexPercent'][hd]) == 0.0, "default flex percent must be 0"
 
 
-def test_hydrogen_demand_quota_activates_when_set(tmp_path):
-    """When a hydrogen demand is Flexible and carries pHydDemQuotaSteps > 0, the
-    eHydDemandQuota constraint builds one volume floor per window, and the floor is the
-    duration-weighted sum of vHydDemand over the window. Injects a 2-step quota into a
-    copy of the H2Tank case (24 load levels -> 12 windows)."""
+def test_hydrogen_demand_shift_activates_when_set(tmp_path):
+    """When a hydrogen demand carries pHydDemShiftedSteps > 0, the shift builds: one
+    ``eHydDemandShifted`` row per load level (vHydDemand == profile + vHydDemFlex) and one
+    ``eHydDemandShiftBalance`` row per window whose two sides preserve the window total.
+    Injects an 8-step shift into a copy of the H2Tank case (24 load levels -> 3 windows)."""
     import duckdb
 
     src_db = os.path.join(SIZING_DIR, "H2Tank.duckdb")
@@ -1278,25 +1281,27 @@ def test_hydrogen_demand_quota_activates_when_set(tmp_path):
         subprocess.run([sys.executable, os.path.join(SIZING_DIR, "make_sizing_cases.py")],
                        check=True, cwd=REPO)
     work = str(tmp_path)
-    db = os.path.join(work, "H2TankQuota.duckdb")
+    db = os.path.join(work, "H2TankShift.duckdb")
     shutil.copy(src_db, db)
     con = duckdb.connect(db)
-    con.execute("ALTER TABLE data_HydrogenDemand ADD COLUMN QuotaSteps INTEGER")
-    con.execute("ALTER TABLE data_HydrogenDemand ADD COLUMN Quota DOUBLE")
-    con.execute("UPDATE data_HydrogenDemand SET Flexible='Yes', QuotaSteps=2, Quota=1.0")
+    con.execute("ALTER TABLE data_HydrogenDemand ADD COLUMN ShiftedSteps INTEGER")
+    con.execute("ALTER TABLE data_HydrogenDemand ADD COLUMN FlexPercent DOUBLE")
+    con.execute("UPDATE data_HydrogenDemand SET ShiftedSteps=8, FlexPercent=0.5")
     con.close()
 
     date = datetime.datetime.now().replace(second=0, microsecond=0)
-    m = build_model(work, "H2TankQuota", date)
+    m = build_model(work, "H2TankShift", date)
 
-    assert any(int(m.Par['pHydDemQuotaSteps'][hd]) == 2 for hd in m.hd), \
-        "quota steps did not load from the demand table"
-    assert len(m.eHydDemandQuota) == len(m.n) // 2 * len(m.hd), \
-        "expected one quota constraint per 2-step window per demand"
-    # each row is the window sum of vHydDemand >= the (factor1-scaled) quota
-    idx = next(iter(m.eHydDemandQuota))
-    repn = generate_standard_repn(m.eHydDemandQuota[idx].body)
-    assert len(repn.linear_vars) == 2 and all(c == pytest.approx(1.0) for c in repn.linear_coefs), \
-        "window floor must be the unit-weighted sum of two vHydDemand terms"
-    assert all(v.name.startswith("vHydDemand") for v in repn.linear_vars), \
-        "quota floor must be on the scheduled demand vHydDemand"
+    assert any(int(m.Par['pHydDemShiftedSteps'][hd]) == 8 for hd in m.hd), \
+        "shift steps did not load from the demand table"
+    assert hasattr(m, "vHydDemFlex"), "vHydDemFlex must be created when a shift is set"
+    # one 'shifted' equality per (level, shifted demand); one balance per window
+    assert len(m.eHydDemandShifted) == len(m.n) * len(m.hd), \
+        "expected one shifted equality per load level per shifted demand"
+    assert len(m.eHydDemandShiftBalance) == len(m.n) // 8 * len(m.hd), \
+        "expected one balance per 8-step window per shifted demand"
+    # the balance preserves the window total: LHS = sum of vHydDemand, RHS = constant
+    idx = next(iter(m.eHydDemandShiftBalance))
+    repn = generate_standard_repn(m.eHydDemandShiftBalance[idx].body)
+    assert len(repn.linear_vars) == 8 and all(v.name.startswith("vHydDemand") for v in repn.linear_vars), \
+        "balance must sum the window's vHydDemand terms"
