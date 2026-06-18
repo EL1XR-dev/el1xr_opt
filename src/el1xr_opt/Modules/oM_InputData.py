@@ -265,6 +265,20 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # scales by factor1, so price x quantity (the revenue) stays invariant.
     parameters_dict['pHydDemPrice'] = parameters_dict['pHydDemPrice'] / factor1
 
+    # Optional hydrogen demand volume quota. pHydDemQuotaSteps = window length in load
+    # levels (e.g. 24 = daily), pHydDemQuota = contracted delivered volume per window
+    # [kgH2]. Both default to 0 when the columns are absent, so eHydDemandQuota Skips and
+    # existing cases are unchanged. The quota is a hydrogen quantity, so it scales by
+    # factor1 like vHydDemand (mirroring pVarMaxDemand); the step count is a unit-less
+    # window length and is not scaled.
+    for _q_col, _q_def in (('pHydDemQuotaSteps', 0), ('pHydDemQuota', 0.0)):
+        if _q_col in parameters_dict:
+            parameters_dict[_q_col] = parameters_dict[_q_col].fillna(_q_def)
+        else:
+            parameters_dict[_q_col] = pd.Series(_q_def, index=parameters_dict['pHydDemFlexible'].index)
+    parameters_dict['pHydDemQuotaSteps'] = parameters_dict['pHydDemQuotaSteps'].astype(int)
+    parameters_dict['pHydDemQuota'] = parameters_dict['pHydDemQuota'] * factor1
+
     # Per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
     # retail file omits them, default the cap to 0.0, read as "no cap" by the
     # eRetMaxBuy/Sell constraints (they skip a zero cap). The hydrogen retail file
