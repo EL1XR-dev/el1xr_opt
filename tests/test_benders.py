@@ -169,3 +169,18 @@ def test_lagrangian_cut_closes_integrality_gap():
     # Lagrangian cuts on the binarised state reach the integer optimum.
     assert abs(lg["lower_bound"] - mono) < 1e-2, \
         f"lagrangian LB={lg['lower_bound']:.4f} did not reach monolith {mono:.4f}"
+
+
+@pytest.mark.solve
+@pytest.mark.skipif(not _have_highs(), reason="needs an LP/MILP solver")
+def test_lp_fix_cut_runs_on_integer_recourse():
+    """Fix-and-resolve LP cuts (``cut_mode='lp_fix'``) let the lp-style path RUN on an INTEGER
+    subproblem that has no native duals: solve the block MILP, fix its discrete vars (relaxing
+    their domain), and re-solve the continuous restriction to recover the x-fixing duals. The
+    bound is inexact in general (``cut_mode='lagrangian'`` is the valid one); here we only
+    require that it runs and returns a finite bound rather than erroring on the missing duals."""
+    cfg = BendersConfig(max_iterations=30, relative_gap=1e-6)
+    res = benders_solve(_lag_master, _lag_sub_factory(True), _BLK, config=cfg,
+                        solver="appsi_highs", cut_mode="lp_fix")
+    assert res["lower_bound"] is not None and abs(res["lower_bound"]) < 1e6, \
+        f"lp_fix did not produce a finite bound: {res.get('lower_bound')}"

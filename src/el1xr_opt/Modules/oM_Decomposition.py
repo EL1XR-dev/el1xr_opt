@@ -237,6 +237,55 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
             solved[b] = (qb, lam)
         return solved
 
+    def _solve_lp_fix(x_hat):
+        # Fix-and-resolve LP cuts for INTEGER recourse. The plain lp mode needs duals of the
+        # x-fixing constraints, but a binary block has none. So: solve the block MILP, take its
+        # integer recourse value q_b, then fix every discrete var to its solution (and relax its
+        # domain so the re-solve is a pure LP), re-solve the continuous restriction, and read the
+        # fixing-constraint duals lam. The (q_b, lam) cut has the same shape as the lp cut.
+        # IMPORTANT: these duals support only the CONVEX ENVELOPE of the value function, so the
+        # resulting bound is INEXACT for the integer problem (it is the inexact baseline against
+        # which the valid cut_mode='lagrangian' is compared). Restores fixings/domains after.
+        from pyomo.environ import Var, Reals, Suffix
+        solved = {}
+        for b in blocks:
+            sub = subs[b]; m = sub["model"]
+            sub["set_xhat"](x_hat)
+            # The first solve is a MILP, which has no duals; some solver interfaces (appsi_highs)
+            # try to load duals whenever a dual Suffix exists and error. So remove the Suffix for
+            # the MILP solve and re-add it (empty) for the LP re-solve, which then populates it.
+            has_dual = hasattr(m, "dual")
+            if has_dual:
+                m.del_component("dual")
+            _solve_model(opt_sub, m)                                   # MILP solve (no duals)
+            qb = sub["recourse"]() if "recourse" in sub else float(value(sub["obj"]))
+            if has_dual:
+                m.dual = Suffix(direction=Suffix.IMPORT)
+            # Relax the domain of EVERY discrete var (not just the free ones) so the re-solve
+            # is a pure LP with duals -- a discrete var that the model already fixed still
+            # declares an integer domain, which keeps the solver in MIP mode (no duals).
+            touched = []
+            for v in m.component_data_objects(Var, active=True):
+                if not v.is_continuous():
+                    was_fixed = v.fixed
+                    touched.append((v, v.domain, was_fixed))
+                    v.domain = Reals
+                    if not was_fixed:
+                        v.fix(v.value)                                # pin the free ones at their MILP value
+            try:
+                _solve_model(opt_sub, m)                               # continuous restriction -> duals
+                # default a missing dual to 0: some solvers (gurobi) presolve a fixing
+                # constraint away when its var is also bounded, so its dual is not reported;
+                # the lp_fix cut is the inexact baseline, so a zero coefficient is acceptable.
+                lam = {n: float(m.dual.get(sub["fix"][n], 0.0)) for n in names}
+            finally:
+                for v, dom, was_fixed in touched:
+                    if not was_fixed:
+                        v.unfix()
+                    v.domain = dom
+            solved[b] = (qb, lam)
+        return solved
+
     def _solve_lagrangian(x_hat):
         # Integer-aware cuts (SDDiP-style). For each block, dualise the copy constraints
         # (deactivate the fixings, add sum_n pi_n * xcopy_n to the block objective, solved as
@@ -392,6 +441,10 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         if solve_blocks is not None:
             raise NotImplementedError("lagrangian cut_mode does not support external solve_blocks yet")
         solve = _solve_lagrangian
+    elif cut_mode == "lp_fix":
+        if solve_blocks is not None:
+            raise NotImplementedError("lp_fix cut_mode does not support external solve_blocks yet")
+        solve = _solve_lp_fix
     else:
         solve = solve_blocks if solve_blocks is not None else _solve_sequential
 

@@ -265,19 +265,19 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # scales by factor1, so price x quantity (the revenue) stays invariant.
     parameters_dict['pHydDemPrice'] = parameters_dict['pHydDemPrice'] / factor1
 
-    # Optional hydrogen demand volume quota. pHydDemQuotaSteps = window length in load
-    # levels (e.g. 24 = daily), pHydDemQuota = contracted delivered volume per window
-    # [kgH2]. Both default to 0 when the columns are absent, so eHydDemandQuota Skips and
-    # existing cases are unchanged. The quota is a hydrogen quantity, so it scales by
-    # factor1 like vHydDemand (mirroring pVarMaxDemand); the step count is a unit-less
-    # window length and is not scaled.
-    for _q_col, _q_def in (('pHydDemQuotaSteps', 0), ('pHydDemQuota', 0.0)):
-        if _q_col in parameters_dict:
-            parameters_dict[_q_col] = parameters_dict[_q_col].fillna(_q_def)
+    # Optional hydrogen demand shift (load shifting that preserves the per-window total),
+    # the hydrogen analogue of the electricity demand shift. pHydDemShiftedSteps = window
+    # length in load levels (e.g. 24 = daily, 168 = weekly), pHydDemFlexPercent = how far
+    # each hour may deviate from its profile, as a fraction of that hour's demand. Both
+    # default to 0 when the columns are absent, so eHydDemandShifted / eHydDemandShiftBalance
+    # Skip and existing cases are unchanged. The step count and the fraction are unit-less,
+    # so neither is scaled by factor1.
+    for _s_col, _s_def in (('pHydDemShiftedSteps', 0), ('pHydDemFlexPercent', 0.0)):
+        if _s_col in parameters_dict:
+            parameters_dict[_s_col] = parameters_dict[_s_col].fillna(_s_def)
         else:
-            parameters_dict[_q_col] = pd.Series(_q_def, index=parameters_dict['pHydDemFlexible'].index)
-    parameters_dict['pHydDemQuotaSteps'] = parameters_dict['pHydDemQuotaSteps'].astype(int)
-    parameters_dict['pHydDemQuota'] = parameters_dict['pHydDemQuota'] * factor1
+            parameters_dict[_s_col] = pd.Series(_s_def, index=parameters_dict['pHydDemFlexible'].index)
+    parameters_dict['pHydDemShiftedSteps'] = parameters_dict['pHydDemShiftedSteps'].astype(int)
 
     # Per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
     # retail file omits them, default the cap to 0.0, read as "no cap" by the
@@ -1315,6 +1315,9 @@ def create_variables(model, optmodel, indlog):
     if sum(model.Par['pEleDemFlexible'][idx] for idx in model.ed) > 0:
         setattr(optmodel, 'vEleDemFlex',                   Var(model.psned,  within=           Reals, doc='flexible electricity demand                 [kW]'))
 
+    if any(model.Par['pHydDemShiftedSteps'][idx] > 0 for idx in model.hd):
+        setattr(optmodel, 'vHydDemFlex',                   Var(model.psnhd,  within=           Reals, doc='shiftable hydrogen demand deviation          [kgH2]'))
+
     log_time('--- Defining the continuous variables', StartTime, ind_log=indlog)
 
     # Define binary variables
@@ -1495,14 +1498,25 @@ def create_variables(model, optmodel, indlog):
         optmodel.vHydSell[idx].setub(model.Par['pHydRetMaximumEnergySell'][idx[-1]])
 
     for idx in model.psnhd:
-        if model.Par['pHydDemFlexible'][idx[-1]] == 0.0:
-            optmodel.vHydDemand[idx].setlb(model.Par['pVarMaxDemand'][idx[-1]][idx[:3]])
-            optmodel.vHydDemand[idx].setub(model.Par['pVarMaxDemand'][idx[-1]][idx[:3]])
+        vmax = model.Par['pVarMaxDemand'][idx[-1]][idx[:3]]
+        if model.Par['pHydDemShiftedSteps'][idx[-1]] > 0:
+            # Shiftable demand: vHydDemand is pinned to the profile plus a bounded deviation
+            # (eHydDemandShifted) and the per-window total is preserved (eHydDemandShiftBalance),
+            # so leave vHydDemand free and bound the deviation instead (mirrors vEleDemFlex).
+            fp = model.Par['pHydDemFlexPercent'][idx[-1]]
+            optmodel.vHydDemFlex[idx].setlb(-vmax * fp)
+            optmodel.vHydDemFlex[idx].setub(+vmax * fp)
+            optmodel.vHNS[idx].setlb(0.0)
+            optmodel.vHNS[idx].setub(vmax * (1.0 + fp))
         else:
-            optmodel.vHydDemand[idx].setlb(model.Par['pVarMinDemand'][idx[-1]][idx[:3]])
-            optmodel.vHydDemand[idx].setub(model.Par['pVarMaxDemand'][idx[-1]][idx[:3]])
-        optmodel.vHNS[idx].setlb(0.0)
-        optmodel.vHNS[idx].setub(model.Par['pVarMaxDemand'][idx[-1]][idx[:3]])
+            if model.Par['pHydDemFlexible'][idx[-1]] == 0.0:
+                optmodel.vHydDemand[idx].setlb(vmax)
+                optmodel.vHydDemand[idx].setub(vmax)
+            else:
+                optmodel.vHydDemand[idx].setlb(model.Par['pVarMinDemand'][idx[-1]][idx[:3]])
+                optmodel.vHydDemand[idx].setub(vmax)
+            optmodel.vHNS[idx].setlb(0.0)
+            optmodel.vHNS[idx].setub(vmax)
 
     for idx in model.psnhg:
         optmodel.vHydTotalOutput[idx].setlb(0.0)

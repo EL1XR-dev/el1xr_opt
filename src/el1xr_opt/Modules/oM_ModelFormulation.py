@@ -541,23 +541,28 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleDemandShiftBalance', Constraint(optmodel.psned, rule=eEleDemandShiftBalance, doc='Electricity demand shift balance'))
 
-    # Hydrogen delivered-volume quota. Over each window of pHydDemQuotaSteps load levels
-    # the SCHEDULED hydrogen (vHydDemand, duration-weighted) must meet the contracted
-    # volume pHydDemQuota; hours within the window are free up to the per-hour cap
-    # (vHydDemand upper bound), so production can shift to cheap hours and buffer in
-    # storage. Physical shortfall stays soft through the per-hour vHNS penalty. Skips
-    # (no-op) unless pHydDemQuotaSteps is set, so existing cases are unchanged. This is the
-    # hydrogen analogue of the electricity demand shift above, but a volume floor rather
-    # than a shift-preserving balance.
-    def eHydDemandQuota(optmodel, p,sc,n,hd):
-        steps = model.Par['pHydDemQuotaSteps'][hd]
-        if model.Par['pHydDemFlexible'][hd] == 1.0 and steps and model.n.ord(n) % steps == 0:
-            window = n2_list[model.n.ord(n) - steps:model.n.ord(n)]
-            scheduled = sum(optmodel.vHydDemand[p,sc,n2,hd] * model.Par['pDuration'][p,sc,n2] for n2 in window)
-            return scheduled >= model.Par['pHydDemQuota'][hd]
+    # Hydrogen demand shift: load shifting that preserves the per-window total. The
+    # hydrogen analogue of the electricity demand shift above. The scheduled demand equals
+    # the profile plus a bounded deviation (eHydDemandShifted), and over each window of
+    # pHydDemShiftedSteps load levels the total scheduled demand equals the total profile
+    # (eHydDemandShiftBalance) -- so the day/week/month volume is unchanged and only the
+    # timing moves. Both Skip (no-op) unless pHydDemShiftedSteps is set, so existing cases
+    # are unchanged.
+    def eHydDemandShifted(optmodel, p,sc,n,hd):
+        if model.Par['pHydDemShiftedSteps'][hd] > 0:
+            return optmodel.vHydDemand[p,sc,n,hd] == model.Par['pVarMaxDemand'][hd][p,sc,n] + optmodel.vHydDemFlex[p,sc,n,hd]
         else:
             return Constraint.Skip
-    optmodel.__setattr__('eHydDemandQuota', Constraint(optmodel.psnhd, rule=eHydDemandQuota, doc='Hydrogen scheduled-volume quota per window [kgH2]'))
+    optmodel.__setattr__('eHydDemandShifted', Constraint(optmodel.psnhd, rule=eHydDemandShifted, doc='Hydrogen demand after shifting [kgH2]'))
+
+    def eHydDemandShiftBalance(optmodel, p,sc,n,hd):
+        steps = model.Par['pHydDemShiftedSteps'][hd]
+        if steps > 0 and model.n.ord(n) % steps == 0:
+            window = n2_list[model.n.ord(n) - steps:model.n.ord(n)]
+            return sum(optmodel.vHydDemand[p,sc,n2,hd] for n2 in window) == sum(model.Par['pVarMaxDemand'][hd][p,sc,n2] for n2 in window)
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eHydDemandShiftBalance', Constraint(optmodel.psnhd, rule=eHydDemandShiftBalance, doc='Hydrogen demand shift balance [kgH2]'))
 
     # Hydrogen not served cannot exceed the hydrogen demand actually scheduled.
     # Flexible hydrogen demand is a curtailable range [min, max] (the hydrogen demand
