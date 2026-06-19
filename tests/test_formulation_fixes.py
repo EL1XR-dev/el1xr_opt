@@ -1305,3 +1305,186 @@ def test_hydrogen_demand_shift_activates_when_set(tmp_path):
     repn = generate_standard_repn(m.eHydDemandShiftBalance[idx].body)
     assert len(repn.linear_vars) == 8 and all(v.name.startswith("vHydDemand") for v in repn.linear_vars), \
         "balance must sum the window's vHydDemand terms"
+
+
+# --- Fuel cell (h2e) FCR provision -------------------------------------------
+# A hydrogen fuel cell (model.h2e, a subset of the electricity generators) can be
+# sized and is already in the FCR requirement and revenue sums, but it had no
+# physical reserve-provision constraints, so it could bid unlimited FCR. The new
+# constraints give the fuel-cell bids their physical backing:
+#   eEleFreqUpHeadroomFuelCell    -- up bid  <= spare capacity (MaxPower*build - output)
+#   eEleFreqDownHeadroomFuelCell  -- down bid <= output (can back down to zero)
+#   eEleFreqUpBoundFuelCell       -- up bid / MaxPower <= availability
+#   eEleFreqDownBoundFuelCell     -- down bid / MaxPower <= availability
+#   eEleFreqUpEnduranceFuelCell   -- NOVEL: hydrogen burned over the up endurance
+#                                    window must already be in the node's tanks
+#   eEleFreqUpEnduranceFuelCellEnd-- terminal-level version of the endurance bound
+
+def test_fuel_cell_fcr_constraints_present_in_source():
+    """Source-level check: the six fuel-cell FCR rules exist, iterate over the h2e (psnh2e)
+    or node (psnnd) index, gate on the generator's own pEleGenNoFCRD / pEleGenNoFCRN flags,
+    and the novel up-endurance backs the up bid with the node's hydrogen-store CONTENTS
+    (vHydInventory), not the empty headroom the electrolyser down-endurance uses."""
+    text = open(MODEL_FORMULATION, encoding="utf-8").read()
+    for rule, idx in [
+        ("eEleFreqUpHeadroomFuelCell", "psnh2e"),
+        ("eEleFreqDownHeadroomFuelCell", "psnh2e"),
+        ("eEleFreqUpBoundFuelCell", "psnh2e"),
+        ("eEleFreqDownBoundFuelCell", "psnh2e"),
+        ("eEleFreqUpEnduranceFuelCell", "psnnd"),
+        ("eEleFreqUpEnduranceFuelCellEnd", "psnnd"),
+    ]:
+        assert f"def {rule}(" in text, f"missing fuel-cell FCR rule {rule}"
+        decl = text.index(f"rule={rule},")
+        assert f"optmodel.{idx}" in text[text.index(f"def {rule}("):decl], \
+            f"{rule} must be declared over {idx}"
+
+    # up-headroom: built MaxPower minus the current output, build-fraction for a candidate
+    start = text.index("def eEleFreqUpHeadroomFuelCell(")
+    body = text[start:text.index("rule=eEleFreqUpHeadroomFuelCell,")]
+    assert "pEleMaxPower'][h2e][p,sc,n] * optmodel.vEleGenInvest[h2e] - optmodel.vEleTotalOutput[p,sc,n,h2e]" in body, \
+        "candidate fuel-cell up headroom must be MaxPower*build - output"
+    assert "pEleMaxPower'][h2e][p,sc,n] - optmodel.vEleTotalOutput[p,sc,n,h2e]" in body, \
+        "fixed fuel-cell up headroom must be MaxPower - output"
+    assert "pEleGenNoFCRD'][h2e] == 0" in body and "pEleGenNoFCRN'][h2e] == 0" in body, \
+        "up headroom must gate on the fuel cell's own opt-out flags"
+
+    # down-headroom: bounded by the output (can back down to zero)
+    start = text.index("def eEleFreqDownHeadroomFuelCell(")
+    body = text[start:text.index("rule=eEleFreqDownHeadroomFuelCell,")]
+    assert "<= optmodel.vEleTotalOutput[p,sc,n,h2e]" in body, \
+        "fuel-cell down headroom must be bounded by the output"
+
+    # novel up-endurance: lhs uses the production function and the EnduranceFCRD/N windows;
+    # rhs is the tank CONTENTS (vHydInventory), not the empty headroom
+    start = text.index("def eEleFreqUpEnduranceFuelCell(")
+    body = text[start:text.index("rule=eEleFreqUpEnduranceFuelCell,")]
+    assert "pEleGenEnduranceFCRD'][h2e]/60" in body and "pEleGenEnduranceFCRN'][h2e]/60" in body, \
+        "up endurance must weight the bids by EnduranceFCRD/N over 60 min"
+    assert "pEleGenProductionFunction'][h2e]" in body, \
+        "up endurance must convert delivered energy to kg H2 via the production function"
+    assert "rhs = sum(optmodel.vHydInventory[p,sc,n,hgs]" in body, \
+        "up endurance rhs must be the tank contents (vHydInventory), not the headroom"
+    assert "model.n2eg" in body, "up endurance must map fuel cells to nodes via n2eg"
+
+
+def test_ele_endurance_param_defaults_to_zero():
+    """The fuel-cell endurance windows pEleGenEnduranceFCRD / pEleGenEnduranceFCRN must be
+    read with a 0 default (mirroring the electrolyser pHydGenEndurance* read), so a case that
+    omits the columns has a zero-lhs up-endurance constraint and the feature stays inert."""
+    text = open(INPUT_DATA, encoding="utf-8").read()
+    assert "['pEleGenEnduranceFCRD', 'pEleGenEnduranceFCRN']" in text, \
+        "the Ele endurance default block must list both endurance params"
+    block = text[text.index("['pEleGenEnduranceFCRD', 'pEleGenEnduranceFCRN']"):]
+    block = block[:block.index("pEleGenRES")] if "pEleGenRES" in block else block[:400]
+    assert "fillna(0.0)" in block and "pd.Series(0.0" in block, \
+        "missing Ele endurance columns must default to a 0 Series"
+
+
+def _make_fuel_cell_case(work, *, endurance=2.0, n_levels=6):
+    """Copy the ElectrolyserFCR sizing case and add one fuel cell (h2e) on Node2, the node
+    that already carries the hydrogen store (PEMEL_01, MaximumStorage 22, InitialStorage 0).
+    The fuel cell has pEleGenNoFCRD/N == 0 (it offers FCR) and a positive EnduranceFCRD, so
+    the new up-endurance constraint is backed by the near-empty store. Duration is truncated
+    to ``n_levels`` load levels to keep the solve small. Returns the case name."""
+    import duckdb
+
+    src_db = os.path.join(SIZING_DIR, "ElectrolyserFCR.duckdb")
+    if not os.path.isfile(src_db):
+        subprocess.run([sys.executable, os.path.join(SIZING_DIR, "make_sizing_cases.py")],
+                       check=True, cwd=REPO)
+    case = "FuelCellFCR"
+    db = os.path.join(work, f"{case}.duckdb")
+    shutil.copy(src_db, db)
+    os.makedirs(os.path.join(work, case), exist_ok=True)  # results folder
+    unit = "FuelCell_01"
+    con = duckdb.connect(db)
+    # 1. register the unit in the electricity-generation dimension dict
+    con.execute(f"INSERT INTO dict_ElectricityGeneration VALUES ('{unit}')")
+    # 2. a generation row: a fixed (non-candidate) fuel cell on Node2 that converts
+    #    hydrogen to electricity (ProductionFunction = kWh per kgH2) and offers FCR.
+    egcols = [c for c in con.execute("select * from data_ElectricityGeneration limit 0").df().columns]
+    vals = {c: None for c in egcols}
+    vals.update({
+        egcols[0]: unit, "Node": "Node2", "Retailer": "EleR_01",
+        "Technology": "FuelCell", "NoDayAhead": "No", "NoFCRD": "No", "NoFCRN": "No",
+        "InitialPeriod": 2020, "FinalPeriod": 2050,
+        "MaximumPower": 5.0, "MinimumPower": 0.0,
+        "ProductionFunction": 20.0, "Availability": 1.0,
+        "EnduranceFCRD": endurance, "EnduranceFCRN": endurance,
+        "FixedAvailability": "Yes",
+    })
+    placeholders = ", ".join("?" for _ in egcols)
+    con.execute(f"INSERT INTO data_ElectricityGeneration VALUES ({placeholders})",
+                [vals[c] for c in egcols])
+    # 3. add the unit's column to every per-generator time-series table. Only fixed
+    #    availability needs a value (1 = always available); the others are left NULL so the
+    #    capacity falls back to the nameplate (the same pattern the EV / BESS units use; a
+    #    finite VarMaxGeneration would feed the GenMaximumPower fallback at the build site).
+    for tab in [r[0] for r in con.execute("show tables").fetchall()]:
+        if not tab.startswith("data_Var"):
+            continue
+        cols = con.execute(f"select * from {tab} limit 0").df().columns.tolist()
+        if "EV_01" not in cols:
+            continue
+        con.execute(f'ALTER TABLE {tab} ADD COLUMN "{unit}" DOUBLE')
+        if tab == "data_VarFixedAvailability":
+            con.execute(f'UPDATE {tab} SET "{unit}" = 1.0')
+    # 4. truncate the horizon for a fast solve: blank the Duration of later load levels so
+    #    they drop out of model.n (the same trick test_run uses), rather than deleting rows.
+    keep = [f"t{str(i + 1).zfill(4)}" for i in range(n_levels)]
+    keep_sql = ", ".join(f"'{k}'" for k in keep)
+    con.execute(f"UPDATE data_Duration SET Duration = NULL WHERE __idx2 NOT IN ({keep_sql})")
+    con.close()
+    return case, unit
+
+
+@pytest.mark.solve
+def test_fuel_cell_fcr_builds_and_binds(tmp_path):
+    """End-to-end: a fuel cell with pEleGenNoFCRD/N == 0 and EnduranceFCRD > 0 builds and
+    solves, the new fuel-cell FCR constraints have active rows, and they bind the bids:
+    the up bid never exceeds the spare capacity, the down bid never exceeds the output, and
+    the up bid is limited by the (near-empty) hydrogen store through the endurance window."""
+    work = str(tmp_path)
+    case, unit = _make_fuel_cell_case(work, endurance=2.0)
+    model = routine(dir=work, case=case, solver="highs",
+                    date=datetime.datetime.now().replace(second=0, microsecond=0),
+                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    assert model is not None, "fuel-cell case failed to solve"
+    assert unit in set(model.h2e), "the fuel cell did not enter the h2e set"
+
+    # the new constraints were actually built (non-empty)
+    for cname in ["eEleFreqUpHeadroomFuelCell", "eEleFreqDownHeadroomFuelCell",
+                  "eEleFreqUpBoundFuelCell", "eEleFreqDownBoundFuelCell",
+                  "eEleFreqUpEnduranceFuelCell", "eEleFreqUpEnduranceFuelCellEnd"]:
+        assert len(getattr(model, cname)) > 0, f"{cname} has no active rows"
+
+    p, sc = list(model.ps)[0]
+    nd = "Node2"
+    # 1. up headroom: bid <= MaxPower - output (fixed unit, so MaxPower directly)
+    maxp = model.Par['pEleMaxPower'][unit]
+    for n in model.n:
+        up = model.vEleFreqContReserveDisUpwardBid[p, sc, n, unit]()
+        nor = model.vEleFreqContReserveNorBid[p, sc, n, unit]()
+        out = model.vEleTotalOutput[p, sc, n, unit]()
+        assert (up + nor) <= maxp[p, sc, n] - out + 1e-4, \
+            f"up bid exceeds spare capacity at {n}"
+        # 2. down headroom: down bid <= output
+        dn = model.vEleFreqContReserveDisDownwardBid[p, sc, n, unit]()
+        assert (dn + nor) <= out + 1e-4, f"down bid exceeds output at {n}"
+
+    # 3. up endurance: the hydrogen burned to hold the up bid over the endurance window
+    #    must fit in the node's store at the matching level. With InitialStorage 0 the
+    #    store starts near empty, so the endurance physically limits the first up bids.
+    end_d = model.Par['pEleGenEnduranceFCRD'][unit]
+    end_n = model.Par['pEleGenEnduranceFCRN'][unit]
+    pf = model.Par['pEleGenProductionFunction'][unit]
+    hgs_node = [hgs for hgs in model.hgs if (nd, hgs) in model.n2hg]
+    levels = list(model.n)
+    for i in range(1, len(levels)):
+        n, nprev = levels[i], levels[i - 1]
+        burned = ((end_d / 60) * model.vEleFreqContReserveDisUpwardBid[p, sc, nprev, unit]()
+                  + (end_n / 60) * model.vEleFreqContReserveNorBid[p, sc, nprev, unit]()) / pf
+        stored = sum(model.vHydInventory[p, sc, n, hgs]() for hgs in hgs_node)
+        assert burned <= stored + 1e-4, \
+            f"up endurance violated at {n}: burns {burned} kgH2 but only {stored} stored"
