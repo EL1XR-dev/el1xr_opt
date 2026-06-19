@@ -119,17 +119,17 @@ def create_objective_function_components(model, optmodel, indlog):
         # pay a non-RES unit that is neither thermal nor storage -- it has a bid variable
         # but no cap, no provision and is never fixed, so its bid would be free and the
         # paid revenue would make the objective unbounded (C17).
-        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h)
+        return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e]) for h2e in model.h2e if model.Par['pEleGenNoFCRD'][h2e] == 0)
     optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [kEUR]'))
 
     def eEleMarketFCRDDwRevenue(optmodel, p,sc,n):
         # backed providers only (egt / egs / e2h), as in eEleMarketFCRDUpRevenue (C17)
-        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h)
+        return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,h2e]) for h2e in model.h2e if model.Par['pEleGenNoFCRD'][h2e] == 0)
     optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [kEUR]'))
 
     def eEleMarketFCRNRevenue(optmodel, p,sc,n):
         # backed providers only (egt / egs / e2h), as in eEleMarketFCRDUpRevenue (C17)
-        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egt]) for egt in model.egt) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]) for egs in model.egs) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h)
+        return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egt]) for egt in model.egt) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]) for egs in model.egs) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e]) for h2e in model.h2e if model.Par['pEleGenNoFCRN'][h2e] == 0)
     optmodel.__setattr__('eEleMarketFCRNRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRNRevenue, doc='Total electricity market FCR-N revenues [kEUR]'))
 
     #%% Total hydrogen market costs
@@ -621,21 +621,21 @@ def create_constraints(model, optmodel, indlog):
     # FCR-D required
     def eEleFreqContReserveDisUpward(optmodel, p,sc,n):
         if sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) + sum(1 for e2h in model.e2h if model.Par['pHydGenNoFCRD'][e2h] == 0):
-            return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRD'][e2h] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
+            return sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRD'][e2h] == 0) + sum(optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e] for h2e in model.h2e if model.Par['pEleGenNoFCRD'][h2e] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqContReserveDisUpward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisUpward, doc='Frequency containment reserve - upward'))
 
     def eEleFreqContReserveDisDownward(optmodel, p,sc,n):
         if sum(1 for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) + sum(1 for e2h in model.e2h if model.Par['pHydGenNoFCRD'][e2h] == 0):
-            return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRD'][e2h] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n]
+            return sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRD'][egt] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRD'][egs] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRD'][e2h] == 0) + sum(optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,h2e] for h2e in model.h2e if model.Par['pEleGenNoFCRD'][h2e] == 0) <= model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqContReserveDisDownward', Constraint(optmodel.psn, rule=eEleFreqContReserveDisDownward, doc='Frequency containment reserve - downward'))
 
     def eEleFreqContReserveNor(optmodel, p,sc,n):
         if sum(1 for egt in model.egt if model.Par['pEleGenNoFCRN'][egt] == 0) + sum(1 for egs in model.egs if model.Par['pEleGenNoFCRN'][egs] == 0) + sum(1 for e2h in model.e2h if model.Par['pHydGenNoFCRN'][e2h] == 0):
-            return sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRN'][egt] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRN'][egs] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRN'][e2h] == 0) <= min(model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n], model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n])
+            return sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egt] for egt in model.egt if model.Par['pEleGenNoFCRN'][egt] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,egs] for egs in model.egs if model.Par['pEleGenNoFCRN'][egs] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h] for e2h in model.e2h if model.Par['pHydGenNoFCRN'][e2h] == 0) + sum(optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e] for h2e in model.h2e if model.Par['pEleGenNoFCRN'][h2e] == 0) <= min(model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n], model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqContReserveNor', Constraint(optmodel.psn, rule=eEleFreqContReserveNor, doc='Frequency containment reserve - normal'))
@@ -966,6 +966,97 @@ def create_constraints(model, optmodel, indlog):
                   - optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in comp_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownCompressorRate', Constraint(optmodel.psnnd, rule=eEleFreqDownCompressorRate, doc='Electrolyser FCR-down extra production rate bounded by spare node compressor throughput'))
+
+    # --- Fuel cell (h2e) FCR provision: generation-side mirror of the thermal-generator
+    # formulation. A fuel cell is a hydrogen-fired generator (h2e is a subset of model.eg),
+    # so it offers FCR by modulating its electricity output (FCR-up = produce more, FCR-down
+    # = back off). The bids are the same variables the thermal generators use, already summed
+    # into the FCR requirement and revenue. These constraints give them the missing physical
+    # backing. Gated on the generator's own participation flags pEleGenNoFCRD / pEleGenNoFCRN
+    # (default 1), so a unit only offers FCR when those columns are set to "No". The FCR-N
+    # bid (NorBid) is symmetric: it appears in both the up-headroom (1) and the down-headroom
+    # (2), so it is automatically bounded by min(spare-up, output) -- the correct two-sided
+    # availability for a generator.
+    #
+    # 1. Up-bid headroom: the up bid (FCR-D up + FCR-N) cannot exceed the spare generation
+    #    capacity, i.e. built MaxPower minus the current output. For a candidate fuel cell the
+    #    capacity is the built fraction (MaxPower * build); for a fixed unit it is MaxPower
+    #    directly (mirrors the candidate/fixed split used for the storage and electrolyser
+    #    headroom constraints).
+    def eEleFreqUpHeadroomFuelCell(optmodel, p,sc,n,h2e):
+        if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRD'][h2e] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][h2e] == 0):
+            if h2e in model.egc:
+                return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e] + optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e] <= model.Par['pEleMaxPower'][h2e][p,sc,n] * optmodel.vEleGenInvest[h2e] - optmodel.vEleTotalOutput[p,sc,n,h2e]
+            return optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e] + optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e] <= model.Par['pEleMaxPower'][h2e][p,sc,n] - optmodel.vEleTotalOutput[p,sc,n,h2e]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqUpHeadroomFuelCell', Constraint(optmodel.psnh2e, rule=eEleFreqUpHeadroomFuelCell, doc='FCR-D and FCR-N upward headroom for a fuel cell (spare generation capacity)'))
+
+    # 2. Down-bid headroom: the down bid (FCR-D down + FCR-N) cannot exceed the current
+    #    output, because a generator can back off only as far as zero.
+    def eEleFreqDownHeadroomFuelCell(optmodel, p,sc,n,h2e):
+        if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRD'][h2e] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][h2e] == 0):
+            return optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,h2e] + optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e] <= optmodel.vEleTotalOutput[p,sc,n,h2e]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDownHeadroomFuelCell', Constraint(optmodel.psnh2e, rule=eEleFreqDownHeadroomFuelCell, doc='FCR-D and FCR-N downward headroom for a fuel cell (can back down to zero)'))
+
+    # 3. Availability bound: the up and down bids, scaled by the nameplate, cannot exceed the
+    #    unit's fixed availability (mirrors eEleFreqUpDischargeBound / eEleFreqDownDischargeBound
+    #    for storage and eEleFreqUpChargeBoundConv for the electrolyser).
+    def eEleFreqUpBoundFuelCell(optmodel, p,sc,n,h2e):
+        if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRD'][h2e] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][h2e] == 0)) and model.Par['pEleMaxPower'][h2e][p,sc,n]:
+            return (optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e] + optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e]) / model.Par['pEleMaxPower'][h2e][p,sc,n] <= model.Par['pVarFixedAvailability'][h2e][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqUpBoundFuelCell', Constraint(optmodel.psnh2e, rule=eEleFreqUpBoundFuelCell, doc='FCR upward availability bound for a fuel cell'))
+
+    def eEleFreqDownBoundFuelCell(optmodel, p,sc,n,h2e):
+        if ((model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRD'][h2e] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and model.Par['pEleGenNoFCRN'][h2e] == 0)) and model.Par['pEleMaxPower'][h2e][p,sc,n]:
+            return (optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,h2e] + optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e]) / model.Par['pEleMaxPower'][h2e][p,sc,n] <= model.Par['pVarFixedAvailability'][h2e][p,sc,n]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleFreqDownBoundFuelCell', Constraint(optmodel.psnh2e, rule=eEleFreqDownBoundFuelCell, doc='FCR downward availability bound for a fuel cell'))
+
+    # 4. NOVEL upward endurance, node level. This is the dual of the electrolyser down-endurance
+    #    (eEleFreqDownEnduranceConv): a fuel cell sustaining an UP bid over the endurance window
+    #    BURNS hydrogen, so the hydrogen it would consume must already be available in the node's
+    #    tanks. lhs = sum over h2e at the node of the energy that would be delivered over the
+    #    endurance window (EnduranceFCRD/60 * up-bid + EnduranceFCRN/60 * Nor-bid), converted to
+    #    kg of hydrogen by dividing by the production function (electricity per kg). rhs = the
+    #    hydrogen actually stored in the node's tanks (tank CONTENTS, not headroom). The bid at
+    #    n-1 is backed by the inventory at n, mirroring the rolling form of the electrolyser
+    #    constraint; the first level is skipped. With EnduranceFCRD/N defaulting to 0 the
+    #    left-hand side is 0, so the constraint is inert for cases that do not set an endurance.
+    def eEleFreqUpEnduranceFuelCell(optmodel, p,sc,n,nd):
+        if n == model.n.first():
+            return Constraint.Skip
+        h2e_at_node = [h2e for h2e in model.h2e if (nd,h2e) in model.n2eg and (model.Par['pEleGenNoFCRD'][h2e] == 0 or model.Par['pEleGenNoFCRN'][h2e] == 0)]
+        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        if not h2e_at_node:
+            return Constraint.Skip
+        lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,1),h2e]
+                 + (model.Par['pEleGenEnduranceFCRN'][h2e]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,1),h2e]) / model.Par['pEleGenProductionFunction'][h2e] for h2e in h2e_at_node)
+        rhs = sum(optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        return lhs <= rhs
+    optmodel.__setattr__('eEleFreqUpEnduranceFuelCell', Constraint(optmodel.psnnd, rule=eEleFreqUpEnduranceFuelCell, doc='Fuel-cell FCR-up endurance bounded by node hydrogen-store contents'))
+
+    # C30: the rolling endurance above backs the bid at n-1 with the store contents at n and
+    # skips the first level, leaving the last level's bid unbacked. Add a terminal row that
+    # backs the last level's bid with the last level's store contents (mirrors
+    # eEleFreqDownEnduranceConvEnd for the fuel-cell node).
+    def eEleFreqUpEnduranceFuelCellEnd(optmodel, p,sc,n,nd):
+        if n != model.n.last():
+            return Constraint.Skip
+        h2e_at_node = [h2e for h2e in model.h2e if (nd,h2e) in model.n2eg and (model.Par['pEleGenNoFCRD'][h2e] == 0 or model.Par['pEleGenNoFCRN'][h2e] == 0)]
+        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        if not h2e_at_node:
+            return Constraint.Skip
+        lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e]
+                 + (model.Par['pEleGenEnduranceFCRN'][h2e]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,n,h2e]) / model.Par['pEleGenProductionFunction'][h2e] for h2e in h2e_at_node)
+        rhs = sum(optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        return lhs <= rhs
+    optmodel.__setattr__('eEleFreqUpEnduranceFuelCellEnd', Constraint(optmodel.psnnd, rule=eEleFreqUpEnduranceFuelCellEnd, doc='Fuel-cell FCR-up endurance for the terminal load level (C30)'))
 
     # print if the constraints object len is greater than 0
     if (len(optmodel.eEleFreqContReserveDisUpward) > 0 or len(optmodel.eEleFreqContReserveDisDownward) > 0 or
@@ -1524,6 +1615,13 @@ def create_constraints(model, optmodel, indlog):
 
     # Total output of a committed unit (all except the VRES units) [GW]
     def eEleTotalOutput(optmodel, p,sc,n,egnr):
+        # A fuel cell (h2e) is a hydrogen-fired generator: its output is set by the
+        # hydrogen-to-electricity relation eAllEnergy2Ele (output == hydrogen charge *
+        # production function), not by the thermal output/2nd-block blocks. It also has no
+        # vEleFreqContReserveDisUpGen reserve variable (those live on psnegt only), so skip
+        # it here -- its FCR is handled by the dedicated fuel-cell headroom/endurance rules.
+        if egnr in model.h2e:
+            return Constraint.Skip
         if model.Par['pEleMaxPower'][egnr][p,sc,n]:
             if  egnr in model.egs:
                 return optmodel.vEleTotalOutput[p,sc,n,egnr]                                           ==                                             optmodel.vEleTotalOutput2ndBlock[p,sc,n,egnr] + model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egnr] - model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egnr] + model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] * optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egnr] - model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] * optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egnr]

@@ -463,6 +463,14 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
             parameters_dict[end_col] = parameters_dict[end_col].fillna(0.0)
         else:
             parameters_dict[end_col] = pd.Series(0.0, index=parameters_dict['pHydGenProductionFunction'].index)
+    # Electricity-generator (incl. fuel-cell h2e) FCR endurance windows in minutes. When
+    # the electricity-generation data omits these columns the endurance defaults to 0, so
+    # the new fuel-cell up-endurance constraints have a zero left-hand side and stay inert.
+    for end_col in ['pEleGenEnduranceFCRD', 'pEleGenEnduranceFCRN']:
+        if end_col in parameters_dict:
+            parameters_dict[end_col] = parameters_dict[end_col].fillna(0.0)
+        else:
+            parameters_dict[end_col] = pd.Series(0.0, index=parameters_dict['pEleGenProductionFunction'].index)
     parameters_dict['pEleGenRES'               ] = parameters_dict['pEleGenRES'               ].map(idxDict)
     parameters_dict['pEleGenESS'               ] = parameters_dict['pEleGenESS'               ].map(idxDict)
     parameters_dict['pEleGenEV'                ] = parameters_dict['pEleGenEV'                ].map(idxDict)
