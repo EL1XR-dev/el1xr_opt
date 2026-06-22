@@ -188,7 +188,13 @@ def create_objective_function_components(model, optmodel, indlog):
         # duration-weighted -- a start at a k-hour level is one start, not k (C15b).
         return optmodel.vTotalEleGCost[p,sc,n] == (sum(model.Par['pEleGenLinearVarCost'  ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ) +
                                                    sum(model.Par['pEleGenConstantVarCost'][egt] *       optmodel.vEleGenCommitment     [p,sc,n,egt] for egt in model.egt) +
-                                                   sum(model.Par['pEleGenOMVariableCost' ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ))
+                                                   sum(model.Par['pEleGenOMVariableCost' ][eg ] *       optmodel.vEleTotalOutput       [p,sc,n,eg ] for eg  in model.eg ) +
+                                                   # M3: battery cycle-ageing throughput cost -- a stack-wear PRICE per kWh DISCHARGED. It
+                                                   # captures the sub-daily FCR micro-cycling that the daily depth-of-discharge segment cost
+                                                   # (vTotalEleDCost) does not see -- the daily DoD only counts the day's max-min swing, so
+                                                   # FCR's within-day cycling is otherwise free. Per-kWh cost from the DoD/cycle-life curve
+                                                   # (Ghanaee et al. 2026) and grid-battery replacement capex; default 0 so other cases are unchanged.
+                                                   sum(model.Par['pEleGenDegradationCost'][egs] *       optmodel.vEleTotalOutput       [p,sc,n,egs] for egs in model.egs))
     optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [kEUR]'))
 
     # Electricity start-up / shut-down cost [M€] -- per-event, summed over the load

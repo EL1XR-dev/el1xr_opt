@@ -918,7 +918,13 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     for idx in model.reserves_prefixes:
         parameters_dict[f'pOperatingReservePrice_{idx}'     ][parameters_dict[f'pOperatingReservePrice_{idx}'     ] < pEleEpsilon] = 0.0
         parameters_dict[f'pOperatingReserveRequire_{idx}'   ][parameters_dict[f'pOperatingReserveRequire_{idx}'   ] < pEleEpsilon] = 0.0
-        parameters_dict[f'pOperatingReserveActivation_{idx}'][parameters_dict[f'pOperatingReserveActivation_{idx}'] < pEleEpsilon] = 0.0
+        # Activation is a dimensionless fraction in [0,1], so it needs a fraction-scaled floor
+        # -- NOT pEleEpsilon, which is demand-scaled (~max demand x 1e-5) and falls to ~1e-7 when
+        # electricity demand is small (as in this VPP). Sub-0.01% activations are physically
+        # negligible but, left in the matrix, span it down to ~1e-7 and break the LP barrier at
+        # year scale (the FCR-D-only / FCR-N-only single-product cases failed exactly on this).
+        _act_floor = 1e-4
+        parameters_dict[f'pOperatingReserveActivation_{idx}'][parameters_dict[f'pOperatingReserveActivation_{idx}'] < _act_floor] = 0.0
 
     for sector in ['Ele', 'Hyd']:
         if sector == 'Ele':
@@ -1146,8 +1152,15 @@ def create_variables(model, optmodel, indlog):
     model.pwlbp     = list(range(4))   # breakpoint indices 0..3
     model.pwlseg    = list(range(3))   # segment indices 0..2 (between adjacent breakpoints)
     if int(model.Par.get('pOptIndBinElectrolyserPWL', 0)) == 1:
-        _anchor_f    = [0.10, 0.20, 0.50, 0.85, 1.00]   # load fraction
-        _anchor_mult = [1.35, 1.25, 1.08, 0.97, 1.00]   # specific energy / full-load value
+        _anchor_f = [0.10, 0.20, 0.50, 0.85, 1.00]   # load fraction
+        # Specific energy / full-load value, by electrolyser technology. Alkaline (AEL)
+        # degrades more steeply at part load, while PEM holds a flatter efficiency across
+        # its wider turn-down range (alkaline shape: Brauns & Turek 2020, Processes 8(2):248;
+        # PEM is flatter: Buttler & Spliethoff 2018, Renew. Sustain. Energy Rev. 82:2440).
+        # The technology is read per unit from pHydGenTechnology; any unit not recognised as
+        # PEM keeps the alkaline shape, so single-technology cases are byte-unchanged.
+        _anchor_mult_alk = [1.35, 1.25, 1.08, 0.97, 1.00]   # alkaline (default)
+        _anchor_mult_pem = [1.15, 1.10, 1.04, 0.98, 1.00]   # PEM: flatter part-load
         for g in model.e2h:
             pf   = float(model.Par['pHydGenProductionFunction'][g])
             pmax = max(float(model.Par['pHydMaxCharge'][g][idx]) for idx in model.psn)
@@ -1157,6 +1170,8 @@ def create_variables(model, optmodel, indlog):
                 pmin = 0.0
             if pf <= 0.0 or pmax <= 0.0:
                 continue
+            _tech = str(model.Par['pHydGenTechnology'].get(g, '')).upper()
+            _anchor_mult = _anchor_mult_pem if 'PEM' in _tech else _anchor_mult_alk
             fmin  = max(min(pmin / pmax, 1.0), 0.0)
             fracs = [fmin + (1.0 - fmin) * t for t in (0.0, 0.4, 0.75, 1.0)]
             model.pwl_curve[g] = [(f * pmax, (f * pmax) / (pf * float(np.interp(f, _anchor_f, _anchor_mult)))) for f in fracs]
