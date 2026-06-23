@@ -20,6 +20,84 @@ from   pyomo.environ  import Var, Constraint, Binary, UnitInterval, NonNegativeR
 from  .utils.oM_Utils import log_time
 
 
+def _round(v):
+    """Round a scalar so float noise does not split otherwise-identical units. NaN
+    (unset numeric/categorical fields) maps to a single sentinel because NaN != NaN
+    would otherwise split two units that are both 'unset' on the same field."""
+    try:
+        f = float(v)
+        return "__nan__" if f != f else round(f, 9)
+    except (TypeError, ValueError):
+        return v
+
+
+def _hashable(x, pd):
+    """Reduce a per-unit parameter value (scalar / Series / DataFrame / array) to a
+    hashable, rounded representation for comparing two units."""
+    if isinstance(x, pd.DataFrame):
+        return tuple(tuple(_round(v) for v in row) for row in x.values.tolist())
+    if isinstance(x, pd.Series):
+        return tuple(_round(v) for v in x.tolist())
+    if hasattr(x, "tolist"):  # numpy array / scalar
+        t = x.tolist()
+        return tuple(_round(v) for v in t) if isinstance(t, list) else _round(t)
+    if isinstance(x, (list, tuple)):
+        return tuple(_round(v) for v in x)
+    return _round(x)
+
+
+def _extract_for_unit(v, g, pd):
+    """Pull unit g's slice out of one parameter container (dict / Series / DataFrame),
+    or None if the parameter does not carry a value for g."""
+    try:
+        if isinstance(v, dict):
+            return _hashable(v[g], pd) if g in v else None
+        if isinstance(v, pd.DataFrame):
+            return _hashable(v[g], pd) if g in v.columns else None
+        if isinstance(v, pd.Series):
+            idx = v.index
+            if isinstance(idx, pd.MultiIndex):
+                if g in idx.get_level_values(-1):
+                    return _hashable(v.xs(g, level=-1), pd)
+                return None
+            return _hashable(v.loc[g], pd) if g in idx else None
+    except Exception:
+        return None
+    return None
+
+
+def _unit_signature(Par, g, pd):
+    """A unit's signature = every per-unit parameter value it carries, in name order.
+    Two units with equal signatures are interchangeable (identical in every parameter
+    the model reads), so ordering their build is valid symmetry-breaking."""
+    sig = []
+    for name in sorted(Par):
+        val = _extract_for_unit(Par[name], g, pd)
+        if val is not None:
+            sig.append((name, val))
+    return tuple(sig)
+
+
+def _identical_groups(Par, candidates):
+    """Partition candidate units into groups that are identical in ALL per-unit
+    parameters. Singletons are dropped (nothing to order). Any unit whose signature
+    cannot be built/hashed gets a unique key, so it is never grouped (fail-safe: a
+    non-identical pair is never ordered)."""
+    import pandas as pd
+    sig = {}
+    for i, g in enumerate(candidates):
+        try:
+            s = _unit_signature(Par, g, pd)
+            hash(s)
+            sig[g] = s
+        except Exception:
+            sig[g] = ("__nogroup__", i)
+    groups = {}
+    for g in candidates:
+        groups.setdefault(sig[g], []).append(g)
+    return [grp for grp in groups.values() if len(grp) > 1]
+
+
 def create_investment(model, optmodel, indlog):
     """Add the capacity-sizing (investment) layer to the model.
 
@@ -101,6 +179,34 @@ def create_investment(model, optmodel, indlog):
             optmodel.vHydGenInvest[hgc].setub(model.Par['pHydGenInvestmentUp'][hgc])
         except (KeyError, TypeError):
             pass
+
+    # %% Symmetry-breaking across identical candidate units (opt-in, LP-preserving).
+    # Interchangeable candidates -- e.g. two identical electrolyser modules AEL_01/AEL_02 --
+    # create a permutation symmetry: any optimal build can be relabelled across the twins, so
+    # the LP relaxation is degenerate and the barrier stalls (the root of the FCR-N-only case
+    # defeating the barrier). Chaining the build fractions in a fixed order,
+    # vInvest[u_i] >= vInvest[u_{i+1}], removes the symmetry WITHOUT changing the optimal
+    # objective (identical units are exchangeable, so a sorted build is always attainable).
+    # Gated by pOptIndBinSymmetryBreaking (default 0 -> no constraint, existing cases
+    # byte-unchanged). Units are grouped only when ALL their per-unit parameters match, so a
+    # non-identical pair is never ordered.
+    if int(model.Par.get('pOptIndBinSymmetryBreaking', 0)) == 1:
+        def _add_symmetry_order(var, candidates, tag):
+            pairs = []
+            for grp in _identical_groups(model.Par, candidates):
+                ordered = sorted(grp)
+                pairs.extend(zip(ordered, ordered[1:]))
+            if not pairs:
+                return
+            optmodel.__setattr__(
+                f'eSymmetry{tag}',
+                Constraint(list(pairs), rule=lambda om, a, b: var[a] >= var[b],
+                           doc=f'symmetry-breaking build order for identical {tag} candidates'))
+            print(f'-- Symmetry-breaking: ordered {len(pairs)} identical {tag} candidate '
+                  f'pair(s): {list(pairs)}')
+        _add_symmetry_order(optmodel.vEleGenInvest,  list(model.egc),     'EleGen')
+        _add_symmetry_order(optmodel.vHydGenInvest,  list(model.hgc),     'HydGen')
+        _add_symmetry_order(optmodel.vHydCompInvest, list(model.hgcompc), 'HydComp')
 
     # %% Capacity coupling: an unbuilt candidate has zero usable capacity.
     # These are extra caps on top of the existing nameplate bounds, so they are
