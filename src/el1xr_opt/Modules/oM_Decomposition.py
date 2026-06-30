@@ -77,11 +77,15 @@ def first_stage_components() -> dict:
     * ``complicating`` — first-stage decisions shared by every block (the Benders
       master variables): the investment / sizing build fractions.
     * ``linking`` — variables shared only between consecutive time blocks when the
-      time axis is split: the storage inventory at each block boundary.
+      time axis is split: the storage inventory at each block boundary, plus the
+      trailing FCR reserve bids that a reserve-endurance constraint reads one step
+      back across the boundary (the augmented boundary state).
     """
     return {
         "complicating": ["vEleGenInvest", "vHydGenInvest", "vTotalICost"],
-        "linking": ["vEleInventory", "vHydInventory"],
+        "linking": ["vEleInventory", "vHydInventory",
+                    "vEleFreqContReserveDisUpwardBid", "vEleFreqContReserveDisDownwardBid",
+                    "vEleFreqContReserveNorBid"],
     }
 
 
@@ -299,16 +303,27 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
         steps = int(cfg.extra.get("lag_steps", 20))
         step0 = float(cfg.extra.get("lag_step0", 1.0))
         lag_method = str(cfg.extra.get("lag_method", "level")).lower()
+        # Keep the first-stage INVESTMENT hard-fixed in the blocks instead of dualising it.
+        # A dualised continuous investment lets each block "build" the unit internally for a
+        # cheap multiplier penalty, so the cut never reflects that a no-build master point is
+        # infeasible and the master stalls (it never gets pushed to build). With investment
+        # hard the block operates at exactly the master's build fraction, so the recourse at a
+        # no-build point is genuinely high; the cut's investment slope is read from the LP dual
+        # of the fixing (fix integers, relax, re-solve), a valid Benders cut on the continuous
+        # first stage. The temporal boundary + bid state stays Lagrangian (integer-exact).
+        hard_invest = bool(cfg.extra.get("lag_hard_invest", True))
         solved = {}
         for b in blocks:
             sub = subs[b]; m = sub["model"]; sub["set_xhat"](x_hat)
             xcopy = sub["xcopy"]
             # only dualise the keys this block actually couples on: a temporal block uses its
-            # own incoming/outgoing boundaries (+ investment + its thresholds), not every
-            # other block's boundary copy. Relaxing an unused (unbounded) copy would leave it
-            # uninitialised and the Lagrangian unbounded. Inactive keys keep their fixing and
-            # get a zero cut coefficient.
-            active = [n for n in sub.get("active_keys", names) if n in xcopy]
+            # own incoming/outgoing boundaries (+ its thresholds), not every other block's
+            # boundary copy. Relaxing an unused (unbounded) copy would leave it uninitialised
+            # and the Lagrangian unbounded. Inactive keys keep their fixing and get a zero (or,
+            # for hard investment, an LP-dual) cut coefficient.
+            inv_keys = [n for n in names if n[0] in ("e", "h")]
+            active = [n for n in sub.get("active_keys", names)
+                      if n in xcopy and not (hard_invest and n[0] in ("e", "h"))]
             missing = [n for n in active if n not in xcopy]
             if missing:
                 raise ValueError(f"lagrangian cut_mode needs a copy var for every active key; "
@@ -421,20 +436,51 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
                     best_pi = {idx[j]: best_pivec[j] for j in range(D)}
             # true recourse at x_hat for the UB: re-fix the copies and solve the block MILP
             # with its own (un-penalised) objective. The Lagrangian value (best_g) is only a
-            # lower bound, so it must NOT be used as the UB.
+            # lower bound, so it must NOT be used as the UB. When investment is hard, also read
+            # its cut slope here from the LP dual of the fixing (fix integers, relax, re-solve).
+            from pyomo.environ import Var as _Var, Reals as _Re, Suffix as _Suf
+            lam_inv = {n: 0.0 for n in inv_keys}
             for n in active:
                 m._lag_pi[n] = 0.0
                 sub["fix"][n].activate()
             m._lag_obj.deactivate(); sub["obj"].activate()
             try:
-                _solve_model(opt_sub, m)
+                _had_dual = hasattr(m, "dual")
+                if _had_dual:
+                    m.del_component("dual")
+                _solve_model(opt_sub, m)            # MILP at x_hat (investment hard-fixed)
                 true_q = sub["recourse"]() if "recourse" in sub else float(_val(sub["obj"]))
+                if hard_invest and inv_keys:
+                    # fix the discrete vars at their MILP values and relax their domain, so the
+                    # re-solve is a pure LP whose fixing-constraint duals give the investment
+                    # cut slope (a valid Benders cut on the continuous build fraction).
+                    m.dual = _Suf(direction=_Suf.IMPORT)
+                    _touched = []
+                    for v in m.component_data_objects(_Var, active=True):
+                        if not v.is_continuous():
+                            _wf = v.fixed; _touched.append((v, v.domain, _wf)); v.domain = _Re
+                            if not _wf:
+                                v.fix(v.value)
+                    try:
+                        _solve_model(opt_sub, m)
+                        lam_inv = {n: float(m.dual.get(sub["fix"][n], 0.0)) for n in inv_keys}
+                    finally:
+                        for v, dom, _wf in _touched:
+                            if not _wf:
+                                v.unfix()
+                            v.domain = dom
+                        m.del_component("dual")
+                        if _had_dual:
+                            m.dual = _Suf(direction=_Suf.IMPORT)
             except Exception:
                 true_q = float("inf")               # infeasible at x_hat -> steers the master away
             sub["obj"].deactivate(); m._lag_obj.activate()
             for n in active:
                 sub["fix"][n].deactivate()
-            solved[b] = (best_g, {n: (-best_pi[n] if n in best_pi else 0.0) for n in names}, true_q)
+            lam = {n: (-best_pi[n] if n in best_pi else 0.0) for n in names}
+            for n in inv_keys:
+                lam[n] = lam_inv.get(n, 0.0)
+            solved[b] = (best_g, lam, true_q)
         return solved
 
     if cut_mode == "lagrangian":
@@ -728,6 +774,105 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                  + [("Sh", k, g) for k in range(K - 1) for g in hgs]
                  + [("St", k, s) for k in range(K - 1) for s in hts])
 
+    # --- Augmented boundary state: trailing FCR reserve bids ---------------------
+    # The reserve-endurance constraints couple a reserve bid at step n-1 to the
+    # storage state at step n, so when a time-block seam falls between n-1 and n the
+    # constraint pairs a decision in block k (the trailing bid) with a state in block
+    # k+1 (the inventory/headroom). A scalar boundary SoC cannot carry the trailing
+    # bid, so the receiving block drops the constraint and the decomposition reports a
+    # cheaper-than-true optimum (over-bidding reserve at every seam). The fix is to
+    # carry the trailing bid across the seam as part of the boundary state, exactly as
+    # the inventory levels are carried. Today the endurance window is one step back
+    # (W=2), so only the single trailing bid is needed. Inert (no new state) for a
+    # case with no FCR-endurance units, so non-FCR cases are byte-unchanged.
+    carry_bids = bool(cfg.extra.get("carry_trailing_bids", True))
+    e2h_units = list(getattr(full, "e2h", []) or [])
+    h2e_units = list(getattr(full, "h2e", []) or [])
+    nodes = list(getattr(full, "nd", []) or [])
+    n2hg = set(full.n2hg) if hasattr(full, "n2hg") else set()
+    n2eg = set(full.n2eg) if hasattr(full, "n2eg") else set()
+
+    def _flag0(key, u):
+        try:
+            return int(full.Par[key][u]) == 0
+        except (KeyError, TypeError):
+            return False
+
+    def _ele_fcrd(u):
+        return _flag0('pEleGenNoFCRD', u)
+
+    def _ele_fcrn(u):
+        return _flag0('pEleGenNoFCRN', u)
+
+    def _hyd_fcrd(u):
+        return _flag0('pHydGenNoFCRD', u)
+
+    def _hyd_fcrn(u):
+        return _flag0('pHydGenNoFCRN', u)
+
+    def _ele_fcr(u):
+        return _ele_fcrd(u) or _ele_fcrn(u)
+
+    def _hyd_fcr(u):
+        return _hyd_fcrd(u) or _hyd_fcrn(u)
+
+    # node membership (replicates the monolith's node filters incl. the FCR guard)
+    e2h_node = {nd: [u for u in e2h_units if (nd, u) in n2hg and _hyd_fcr(u)] for nd in nodes}
+    h2e_node = {nd: [u for u in h2e_units if (nd, u) in n2eg and _ele_fcr(u)] for nd in nodes}
+    hgs_node = {nd: [u for u in hgs if (nd, u) in n2hg] for nd in nodes}
+    # battery units whose endurance constraint can straddle a seam (FCR-flagged and
+    # actually storing energy over the horizon)
+    endur_egs = [g for g in egs
+                 if _ele_fcr(g) and any(float(full.Par['pEleMaxStorage'][g][p, sc, n]) for n in levels)]
+    # the trailing-bid components carried across each seam. btype maps to a bid var:
+    #   'up'  -> vEleFreqContReserveDisUpwardBid    (FCR-D up: battery, fuel cell)
+    #   'dn'  -> vEleFreqContReserveDisDownwardBid  (FCR-D down: battery, electrolyser)
+    #   'nor' -> vEleFreqContReserveNorBid          (FCR-N: all of them)
+    # Only carry a component when its FCR product is enabled for the unit; a disabled
+    # bid is pinned to zero by a hard constraint, so tying it to a nonzero master copy
+    # would make the sending block infeasible.
+    bid_comp = []                                    # list of (unit, btype)
+    if carry_bids:
+        for g in endur_egs:                          # battery: up/dn are FCR-D, nor is FCR-N
+            if _ele_fcrd(g):
+                bid_comp += [(g, 'up'), (g, 'dn')]
+            if _ele_fcrn(g):
+                bid_comp += [(g, 'nor')]
+        for nd in nodes:
+            for u in e2h_node[nd]:                   # electrolyser down: FCR-D / FCR-N (hyd flags)
+                if _hyd_fcrd(u):
+                    bid_comp += [(u, 'dn')]
+                if _hyd_fcrn(u):
+                    bid_comp += [(u, 'nor')]
+            for u in h2e_node[nd]:                   # fuel cell up: FCR-D / FCR-N (ele flags)
+                if _ele_fcrd(u):
+                    bid_comp += [(u, 'up')]
+                if _ele_fcrn(u):
+                    bid_comp += [(u, 'nor')]
+        _seen = set()
+        bid_comp = [c for c in bid_comp if not (c in _seen or _seen.add(c))]
+    bid_names = [("Bid", k, u, bt) for k in range(K - 1) for (u, bt) in bid_comp]
+    _BIDVAR = {'up': 'vEleFreqContReserveDisUpwardBid',
+               'dn': 'vEleFreqContReserveDisDownwardBid',
+               'nor': 'vEleFreqContReserveNorBid'}
+
+    def _bid_cap(u):
+        # loose nameplate cap for the carried bid (master-var bound, binarisation grid
+        # top). The true bid is bounded inside the sending block, so a generous cap
+        # never changes the LP optimum; for the Lagrangian grid a tighter cap helps.
+        for key in ('pEleMaxPower', 'pEleMaxCharge'):
+            try:
+                return max(max(float(full.Par[key][u][p, sc, n]) for n in levels) * factor1, 1.0)
+            except (KeyError, TypeError):
+                continue
+        for key in ('pHydGenMaximumPower', 'pHydGenMaximumCharge'):
+            try:
+                return max(float(full.Par[key][u]) * factor1, 1.0)
+            except (KeyError, TypeError):
+                continue
+        return float(cfg.extra.get("bid_cap", 1e6))
+    bidcap = {u: _bid_cap(u) for (u, _bt) in bid_comp}
+
     def _binary(kind, g):
         key = 'pEleGenBinaryInvestment' if kind == "e" else 'pHydGenBinaryInvestment'
         try:
@@ -758,6 +903,13 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         _bvar = {"Se": m.Se, "Sh": m.Sh, "St": m.St}
         for (kind, k, g) in bnd_names:
             x[(kind, k, g)] = _bvar[kind][k, g]
+        # trailing-bid linking variables (one per seam, FCR unit, bid component): no
+        # master cost, bounded by a loose nameplate cap so the binarised grid is finite.
+        m.Bid = Var([(k, u, bt) for k in range(max(K - 1, 1)) for (u, bt) in bid_comp],
+                    within=NonNegativeReals,
+                    bounds=lambda mm, k, u, bt: (0.0, bidcap[u]), initialize=0.0)
+        for (_tag, k, u, bt) in bid_names:
+            x[("Bid", k, u, bt)] = m.Bid[k, u, bt]
         if _binstate:
             # binary-expand each boundary state onto a [0, cap] grid (cap = nameplate*factor1),
             # so the dualised subproblem copies are bounded (Lagrangian bounded) and the cuts
@@ -780,6 +932,18 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                         cl.add(_bvar[kind][kk, g]
                                == sum((cap / denom) * (2 ** j) * _bit[kind][kk, g, j]
                                       for j in range(_nbits)))
+            # binarise the trailing-bid components onto their own [0, cap] grid, so the
+            # dualised bid copies are bounded and the Lagrangian cut is tight there too.
+            if bid_comp:
+                m.BidBit = Var([(k, u, bt, j) for k in range(max(K - 1, 1))
+                                for (u, bt) in bid_comp for j in range(_nbits)], within=Binary)
+                m.BidBinDef = ConstraintList()
+                for kk in range(max(K - 1, 1)):
+                    for (u, bt) in bid_comp:
+                        cap = bidcap[u]
+                        m.BidBinDef.add(m.Bid[kk, u, bt]
+                                        == sum((cap / denom) * (2 ** j) * m.BidBit[kk, u, bt, j]
+                                               for j in range(_nbits)))
         # threshold linking variable per (descriptor, subgroup, item): the master holds
         # the N*t part of each threshold-LP and its cost; each window adds its own
         # sum_n (quantity_n - t)_+.
@@ -852,6 +1016,18 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         sub.stfix = Constraint(range(max(K - 1, 1)), hts,
                                rule=lambda mm, kk, s: mm.Stcopy[kk, s] == mm._st[kk, s])
 
+        # trailing-bid copies: one per seam, FCR unit, bid component. The copy is tied
+        # to the master Bid value (bidfix, the cut's dual source); only the incoming
+        # (k-1, used by the receiving endurance rows) and outgoing (k, tied to this
+        # window's last-level bid) ones enter this block's constraints.
+        _bidx = [(kk, u, bt) for kk in range(max(K - 1, 1)) for (u, bt) in bid_comp]
+        if bid_comp:
+            sub._bid = Param(_bidx, mutable=True, initialize=0.0)
+            _bidb = (lambda mm, kk, u, bt: (0.0, bidcap[u])) if _binstate else None
+            sub.Bidcopy = Var(_bidx, within=Reals, bounds=_bidb)
+            sub.bidfix = Constraint(
+                _bidx, rule=lambda mm, kk, u, bt: mm.Bidcopy[kk, u, bt] == mm._bid[kk, u, bt])
+
         # incoming boundary (k > 0): replace the window's first-level inventory
         # balance (which uses the constant initial inventory) with one reading the
         # incoming boundary copy. Hourly cycle, so the window over the level is [a].
@@ -904,6 +1080,82 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         sub.out_ht = Constraint(hts, rule=lambda mm, s: (
             mm.vHeatInventory[p, sc, b, s] == mm.Stcopy[k, s]
             if (k < K - 1 and (p, sc, b, s) in mm.vHeatInventory) else Constraint.Skip))
+
+        # --- straddling reserve-endurance: sending and receiving sides of each seam.
+        bid_comp_set = set(bid_comp)
+        if bid_comp and k < K - 1:
+            # sending side: tie this window's last-level (b) bids to the outgoing copy.
+            def _out_bid(mm, u, bt):
+                bv = getattr(mm, _BIDVAR[bt])
+                if (p, sc, b, u) not in bv:
+                    return Constraint.Skip
+                return bv[p, sc, b, u] == mm.Bidcopy[k, u, bt]
+            sub.out_bid = Constraint(list(bid_comp), rule=_out_bid)
+            # drop the spurious terminal endurance rows the window adds at b: b is not
+            # the true horizon end, so the bid at b is backed by the inventory one step
+            # ahead (the receiving block's first-level rolling row below), not by b's own
+            # inventory. Only the b-level rows exist in the window (guard n==n.last()).
+            # Their names are recorded so the forward-pass primal heuristic can re-activate
+            # them: backing the trailing bid with the sending block's own ending inventory
+            # forces it to retain enough energy, which keeps the greedy forward solution
+            # feasible (without it the relieved sending block ends empty and the receiving
+            # block cannot charge fast enough to back the bid -> large elastic slack).
+            sub._fwd_end_rows = []
+            for cn in ("eEleStorageEnduranceUpEnd", "eEleStorageEnduranceDownEnd",
+                       "eEleFreqDownEnduranceConvEnd", "eEleFreqUpEnduranceFuelCellEnd"):
+                c = getattr(sub, cn, None)
+                if c is not None:
+                    c.deactivate()
+                    sub._fwd_end_rows.append(cn)
+        if bid_comp and k > 0:
+            # receiving side: re-add the rolling endurance rows the window drops at its
+            # first level a (a has ordinal 1, so prev(a) lies in the previous block).
+            # Read the trailing bid from the incoming copy Bidcopy[k-1]; back it with
+            # this block's first-level inventory/headroom. Same inequality as the
+            # monolith, one term supplied by the boundary copy. Elastic (not in
+            # keep_hard) so the block stays feasible for any incoming master bid.
+            Par = sub.Par
+
+            def _bc(u, bt):
+                # carried trailing bid, or 0 when that component is not carried (the
+                # bid var is pinned to zero in the monolith too, so the term vanishes).
+                return sub.Bidcopy[k - 1, u, bt] if (u, bt) in bid_comp_set else 0.0
+            sub.seam_endur = ConstraintList()
+            for g in egs:                                  # battery up / down
+                if (p, sc, a, g) not in sub.vEleInventory or not Par['pEleMaxStorage'][g][p, sc, a]:
+                    continue
+                if (g, 'up') in bid_comp_set or (g, 'nor') in bid_comp_set:
+                    sub.seam_endur.add(
+                        sub.vEleInventory[p, sc, a, g]
+                        >= (1.0 / Par['pEleGenEfficiency_discharge'][g])
+                        * ((Par['pEleGenEnduranceFCRD'][g] / 60) * _bc(g, 'up')
+                           + (Par['pEleGenEnduranceFCRN'][g] / 60) * _bc(g, 'nor')))
+                if (g, 'dn') in bid_comp_set or (g, 'nor') in bid_comp_set:
+                    sub.seam_endur.add(
+                        Par['pEleMaxStorage'][g][p, sc, a] * factor1 - sub.vEleInventory[p, sc, a, g]
+                        >= Par['pEleGenEfficiency_charge'][g]
+                        * ((Par['pEleGenEnduranceFCRD'][g] / 60) * _bc(g, 'dn')
+                           + (Par['pEleGenEnduranceFCRN'][g] / 60) * _bc(g, 'nor')))
+            for nd in nodes:                               # electrolyser FCR-down per node
+                e2h_n = e2h_node[nd]
+                if not e2h_n or not any((u, bt) in bid_comp_set for u in e2h_n for bt in ('dn', 'nor')):
+                    continue
+                lhs = sum(((Par['pHydGenEnduranceFCRD'][u] / 60) * _bc(u, 'dn')
+                           + (Par['pHydGenEnduranceFCRN'][u] / 60) * _bc(u, 'nor'))
+                          / Par['pHydGenProductionFunction'][u] for u in e2h_n)
+                rhs = sum(Par['pHydMaxStorage'][hs][p, sc, a] * factor1 - sub.vHydInventory[p, sc, a, hs]
+                          for hs in hgs_node[nd] if (p, sc, a, hs) in sub.vHydInventory)
+                sub.seam_endur.add(lhs <= rhs)
+            for nd in nodes:                               # fuel-cell FCR-up per node
+                h2e_n = h2e_node[nd]
+                if not h2e_n or not any((u, bt) in bid_comp_set for u in h2e_n for bt in ('up', 'nor')):
+                    continue
+                lhs = sum(((Par['pEleGenEnduranceFCRD'][u] / 60) * _bc(u, 'up')
+                           + (Par['pEleGenEnduranceFCRN'][u] / 60) * _bc(u, 'nor'))
+                          / Par['pEleGenProductionFunction'][u] for u in h2e_n)
+                rhs = sum(sub.vHydInventory[p, sc, a, hs]
+                          for hs in hgs_node[nd] if (p, sc, a, hs) in sub.vHydInventory)
+                sub.seam_endur.add(lhs <= rhs)
 
         sub.eTotalSCost.deactivate()
 
@@ -964,7 +1216,7 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         # fixing and the u-definition are exact too, so they stay hard.
         keep_hard = ("bfix_e", "bfix_h", "sefix", "shfix", "stfix",
                      "rep_e", "rep_h", "rep_ht", "out_e", "out_h", "out_ht",
-                     "tpkfix", "upkdef")
+                     "tpkfix", "upkdef", "bidfix", "out_bid")
         targets = [c for c in sub.component_objects(Constraint, active=True)
                    if c.name not in keep_hard]
         TransformationFactory('core.add_slack_variables').apply_to(sub, targets=targets)
@@ -991,12 +1243,16 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                          + peak_win + heat_win)
         sub.benders_obj = Objective(expr=real_recourse + penalty * slack_sum, sense=minimize)
 
-        def recourse_value():
+        def recourse_value(slack_tol=0.0):
             # the value passed to the Benders bound and cut: the true recourse plus
             # the penalty on any GENUINE slack. Negative slack within the solver's
             # feasibility tolerance is clamped to zero, so a large penalty cannot turn
             # that drift into a spurious reduction (which would poison the bound).
-            pos = sum(s for s in (float(value(v)) for v in slack_vars) if s > 0.0)
+            # ``slack_tol`` (used only by the forward-pass UB) ignores per-constraint slack
+            # below the tolerance, so a binarisation/feasibility-tolerance-scale residual
+            # (e.g. a grid-mismatch of ~1e-5) is not amplified by the 1e7 penalty into a
+            # meaningless upper bound; genuine infeasibility (slack >> tol) is still counted.
+            pos = sum(s for s in (float(value(v)) for v in slack_vars) if s > slack_tol)
             return float(value(real_recourse)) + penalty * pos
 
         fix = {("e", g): sub.bfix_e[g] for g in egc}
@@ -1006,6 +1262,8 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
             fix[(kind, kk, g)] = _bfix[kind][kk, g]
         for key in thr_keys:
             fix[("t",) + key] = sub.tpkfix[key]
+        for (_tag, kk, u, bt) in bid_names:
+            fix[("Bid", kk, u, bt)] = sub.bidfix[kk, u, bt]
 
         def set_xhat(x_hat):
             for g in egc:
@@ -1017,6 +1275,8 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                 _bpar[kind][kk, g] = x_hat[(kind, kk, g)]
             for key in thr_keys:
                 sub._tpk[key] = x_hat[("t",) + key]
+            for (_tag, kk, u, bt) in bid_names:
+                sub._bid[kk, u, bt] = x_hat[("Bid", kk, u, bt)]
 
         xcopy = {("e", g): sub.vEleGenInvest[g] for g in egc}
         xcopy.update({("h", g): sub.vHydGenInvest[g] for g in hgc})
@@ -1028,12 +1288,17 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         if thresholds:
             for key in thr_keys:
                 xcopy[("t",) + key] = sub.tpkcopy[key]
+        if bid_comp:
+            for (_tag, kk, u, bt) in bid_names:
+                xcopy[("Bid", kk, u, bt)] = sub.Bidcopy[kk, u, bt]
         # keys this block actually couples on (for the Lagrangian cut_mode): all investment,
         # its own incoming (k-1) / outgoing (k) boundaries, and the thresholds its window hits.
         active_keys = ([("e", g) for g in egc] + [("h", g) for g in hgc]
                        + [(kind, kk, g) for (kind, kk, g) in bnd_names if kk in (k - 1, k)])
         if thresholds:
             active_keys += [("t", ti, sub_maps[ti][nn], it) for (ti, it, nn) in thr_u]
+        if bid_comp:
+            active_keys += [("Bid", kk, u, bt) for (_tag, kk, u, bt) in bid_names if kk in (k - 1, k)]
         return {"model": sub, "xcopy": xcopy, "fix": fix, "set_xhat": set_xhat,
                 "obj": sub.benders_obj, "recourse": recourse_value, "active_keys": active_keys}
 
@@ -1045,8 +1310,12 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
         # boundary states are then feasible by construction (no grid-mismatch elastic
         # penalty), so the summed real recourse is a true upper bound -- unlike fixing every
         # boundary to the binarised-grid master value, which the blocks cannot meet exactly.
+        # For the reserve-endurance coupling there is one extra step: each sending block's
+        # terminal endurance rows are re-activated for this primal sweep (see below), so it
+        # retains the energy needed to back its trailing bid in the next block.
         from pyomo.environ import value as _val
         prevE, prevH, prevHt = dict(initE), dict(initH), dict(initHt)
+        prevBid = {(u, bt): 0.0 for (u, bt) in bid_comp}   # carried trailing bids
         total = 0.0
         for k in range(K):
             s = subs[k]; m = s["model"]
@@ -1068,9 +1337,20 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                     m._sh[k - 1, g] = prevH[g]; m.shfix[k - 1, g].activate()
                 for sn in hts:
                     m._st[k - 1, sn] = prevHt[sn]; m.stfix[k - 1, sn].activate()
+                for (u, bt) in bid_comp:           # incoming trailing bid = previous outgoing
+                    m._bid[k - 1, u, bt] = prevBid[(u, bt)]; m.bidfix[k - 1, u, bt].activate()
+            # re-activate this (sending) block's terminal endurance rows for the primal
+            # heuristic only: they back the trailing bid with the block's own ending
+            # inventory, so the greedy sweep retains enough energy and the next block can
+            # back the bid -- otherwise the exact split (which moves that backing to the
+            # next block) leaves this block free to end empty and the UB blows up on slack.
+            for cn in getattr(m, "_fwd_end_rows", []):
+                getattr(m, cn).activate()
             # this block's outgoing boundary (index k) stays unfixed: the block picks it.
             _solve_model(opt_sub, m)
-            total += s["recourse"]()
+            # forward-pass UB: ignore per-constraint slack below a small tolerance, so a
+            # binarisation grid-mismatch residual is not amplified by the 1e7 penalty.
+            total += s["recourse"](slack_tol=float(cfg.extra.get("fwd_slack_tol", 1e-4)))
             if k < K - 1:                          # read the realised outgoing state
                 for g in egs:
                     prevE[g] = float(_val(m.Secopy[k, g]))
@@ -1078,8 +1358,12 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                     prevH[g] = float(_val(m.Shcopy[k, g]))
                 for sn in hts:
                     prevHt[sn] = float(_val(m.Stcopy[k, sn]))
+                for (u, bt) in bid_comp:
+                    prevBid[(u, bt)] = float(_val(m.Bidcopy[k, u, bt]))
             # restore the Lagrangian state (active-key fixings off, _lag_obj on) for the
             # next cut-generation pass.
+            for cn in getattr(m, "_fwd_end_rows", []):
+                getattr(m, cn).deactivate()   # back to the exact-split state
             s["obj"].deactivate()
             if hasattr(m, "_lag_obj"):
                 m._lag_obj.activate()
@@ -1096,6 +1380,8 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
                     m.shfix[k - 1, g].deactivate()
                 for sn in hts:
                     m.stfix[k - 1, sn].deactivate()
+                for (u, bt) in bid_comp:
+                    m.bidfix[k - 1, u, bt].deactivate()
         return total
 
     return benders_solve(make_master, make_subproblem, blocks, config=cfg, solver=solver,

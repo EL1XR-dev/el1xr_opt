@@ -493,3 +493,118 @@ def test_el1xr_temporal_benders_integer_commitment_matches_monolith():
         f"lagrangian LB {res['lower_bound']:.4f} exceeds monolith {mono:.4f} (invalid cut)"
     assert abs(res["objective"] - mono) / abs(mono) < 1e-2, \
         f"integer temporal benders {res['objective']:.4f} vs monolith {mono:.4f}"
+
+
+# --- reserve-endurance across a block seam (the augmented boundary state) --------
+# The FCR endurance constraints back a reserve bid at step n-1 with the storage state
+# at step n. When a block seam falls between n-1 and n, a scalar boundary SoC cannot
+# carry the trailing bid, so the receiving block drops the constraint and the split
+# reports a cheaper-than-true optimum. el1xr_temporal_benders carries the trailing bid
+# as part of the boundary state (cfg.extra["carry_trailing_bids"], default on), which
+# makes the seam endurance exact. This test puts an endurance window across the seam
+# and checks (a) the augmented split reproduces the monolith and (b) the old scalar-SoC
+# split (carry off) does not -- the regression that demonstrates the contribution.
+
+
+def _make_fcr_endurance_case(work, binary_commitment=False):
+    """Home1 with BESS_01 providing FCR-D up under a 3-hour endurance window, a
+    mandatory up-reserve required through the first block only, and a demand spike one
+    step after the seam. The battery must hold enough stored energy at the spike step
+    to back the bid placed at the last step of the first block -- a constraint that
+    straddles the seam between t4 (block 1) and t5 (block 2). With ``binary_commitment``
+    the unit-commitment binaries are turned back on (gen.build relaxes them), so the
+    operating subproblems are MILPs and the integer decomposition path is exercised."""
+    gen.build(work, n_scenarios=1, trunc=8)
+    d = os.path.join(work, "Home1")
+    if binary_commitment:
+        op = os.path.join(d, "oM_Data_Option_Home1.csv")
+        o = pd.read_csv(op); o["IndBinGenOperat"] = 1; o.to_csv(op, index=False)
+    egp = os.path.join(d, "oM_Data_ElectricityGeneration_Home1.csv")
+    eg = pd.read_csv(egp); col = eg.columns[0]; m = eg[col] == "BESS_01"
+    eg.loc[m, "NoFCRD"] = "No"          # enable FCR-D (up and down)
+    eg.loc[m, "NoFCRN"] = "Yes"         # keep FCR-N off (only the FCR-D up endurance)
+    eg.loc[m, "EnduranceFCRD"] = 180.0  # 3-hour window: endurance, not power, limits the bid
+    eg.loc[m, "InitialStorage"] = 5.0
+    eg.loc[m, "MaximumStorage"] = 10.0
+    eg.loc[m, "MaximumPower"] = 5.0
+    eg.loc[m, "MaximumCharge"] = 5.0
+    eg.to_csv(egp, index=False)
+    # mandatory FCR-D up through t1..t4 (the first block), then released
+    rrp = os.path.join(d, "oM_Data_OperatingReserveRequire_Home1.csv")
+    rq = pd.read_csv(rrp); lvl = rq.columns[2]
+    rq["FCRD_Up"] = [2.0 if int(str(x)[1:]) <= 4 else 0.0 for x in rq[lvl]]
+    rq.to_csv(rrp, index=False)
+    # demand spike one step after the seam: the battery wants to discharge the energy
+    # that backs the t4 bid, which the seam endurance must forbid
+    dmp = os.path.join(d, "oM_Data_VarMaxDemand_Home1.csv")
+    dd = pd.read_csv(dmp); dlvl = dd.columns[2]
+    dd.loc[dd[dlvl] == "t0005", "EleD_01"] = 8.0
+    dd.to_csv(dmp, index=False)
+    return work
+
+
+@pytest.mark.solve
+def test_el1xr_temporal_benders_reserve_endurance_seam():
+    work = _make_fcr_endurance_case(tempfile.mkdtemp(prefix="tel1xr_fcr_"))
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    full = build_model(work, "Home1", date)
+    SolverFactory(_SOLVER).solve(full)
+    mono = float(value(full.eTotalSCost))
+
+    def solve(carry):
+        cfg = BendersConfig(max_iterations=300, relative_gap=1e-9,
+                            extra={"carry_trailing_bids": carry})
+        return el1xr_temporal_benders(work, "Home1", date, n_time_blocks=2,
+                                      solver=_SOLVER, config=cfg)
+
+    aug = solve(True)
+    scalar = solve(False)
+    assert aug["converged"], f"augmented split did not converge: gap={aug['gap']:.2e}"
+    # (a) the augmented boundary state reproduces the monolith exactly
+    rel_aug = abs(aug["objective"] - mono) / abs(mono)
+    assert rel_aug < 1e-6, \
+        f"augmented split {aug['objective']:.6f} vs monolith {mono:.6f} (rel {rel_aug:.2e})"
+    # (b) the old scalar-SoC split drops the seam endurance and lands off the monolith;
+    # the gap is the phantom reserve revenue the augmented state removes
+    rel_scalar = abs(scalar["objective"] - mono) / abs(mono)
+    assert rel_scalar > 1e-5, \
+        f"scalar-SoC split {scalar['objective']:.6f} unexpectedly matched monolith " \
+        f"{mono:.6f} (rel {rel_scalar:.2e}); the seam endurance was not exercised"
+
+
+@pytest.mark.solve
+@pytest.mark.skipif(not _have_gurobi(),
+                    reason="integer (Lagrangian) subproblems need MILP duals; Gurobi only")
+def test_el1xr_temporal_benders_fcr_endurance_integer():
+    """Reserve endurance across a seam AND binary unit commitment: the integer version
+    of the augmented-boundary-state test. The MILP operating subproblems have no LP duals,
+    so the integer optimum needs SDDiP-style Lagrangian cuts on the binarised boundary
+    state (cut_mode='lagrangian', binarize_state=True). With the trailing FCR bids carried
+    in that binarised state, the cuts give a valid lower bound that reaches the binary
+    monolith within the binarisation tolerance. This guards the augmented state on the
+    integer decomposition path (the paper's solving contribution), where the earlier
+    seam-endurance test only covered the LP path."""
+    work = _make_fcr_endurance_case(tempfile.mkdtemp(prefix="tel1xr_fcrint_"),
+                                    binary_commitment=True)
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    full = build_model(work, "Home1", date)
+    SolverFactory(_SOLVER).solve(full)
+    mono = float(value(full.eTotalSCost))
+
+    cfg = BendersConfig(max_iterations=30, relative_gap=1e-5,
+                        extra={"carry_trailing_bids": True, "state_bits": 8,
+                               "lag_steps": 10, "lag_step0": 2.0})
+    res = el1xr_temporal_benders(work, "Home1", date, n_time_blocks=2, solver=_SOLVER,
+                                 config=cfg, cut_mode="lagrangian", binarize_state=True)
+    # Integer-exactness is judged by the LOWER BOUND: the SDDiP Lagrangian cuts give a
+    # valid lower bound on the integer optimum, and exactness means that bound reaches the
+    # binary monolith (from below) within the binarisation tolerance. The forward-pass
+    # primal upper bound (res["objective"]) is a greedy heuristic that can be loose under
+    # the trailing-bid coupling, so it is not the exactness signal here.
+    lb = res["lower_bound"]
+    assert lb <= mono + 1e-3 * abs(mono), \
+        f"lagrangian LB {lb:.4f} exceeds monolith {mono:.4f} (invalid cut)"
+    rel_lb = abs(mono - lb) / abs(mono)
+    assert rel_lb < 2e-2, \
+        f"integer FCR-endurance lower bound {lb:.4f} does not reach monolith {mono:.4f} " \
+        f"(rel {rel_lb:.2e}); raise state_bits if this is binarisation-limited"
