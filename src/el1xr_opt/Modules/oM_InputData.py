@@ -165,6 +165,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict['pParCurrency'] = _cur.strip() if isinstance(_cur, str) and _cur.strip() else 'SEK'
 
     parameters_dict['pDuration'       ] = data_frames['dfDuration']['Duration'] * parameters_dict['pParTimeStep']
+    # N2T hoglasttid mask (per load level, 0/1): weekdays 06-22 in the winter months, set by
+    # build_case from the real calendar. Drives the hogbelastningsavgift peak and the time-of-use
+    # transfer fee. Absent in older cases -> all zero (no high-load charge / flat transfer).
+    parameters_dict['pEleHighLoadHour'] = (data_frames['dfDuration']['HighLoad'].astype(float)
+        if 'HighLoad' in data_frames['dfDuration'].columns
+        else pd.Series(0.0, index=data_frames['dfDuration'].index))
     #parameters_dict['pLevelToIDmarket'] = data_frames['dfDuration']['IDMarket'].astype('int')
     parameters_dict['pPeriodWeight'   ] = data_frames['dfPeriod']['Weight'].astype('int')
     parameters_dict['pScenProb'       ] = data_frames['dfScenario']['Probability'].astype('float')
@@ -1260,6 +1266,7 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalHydRCost',                    Var(model.psn,     within=             Reals, doc='total system hydrogen    reliability cost                            [EUR]'))
 
     setattr(optmodel, 'vEleDemPeakGlobal',                 Var(model.psmer, model.Peaks, within=PositiveReals, doc='electricity peak                                             [kW]'))
+    setattr(optmodel, 'vEleHighLoadPeak',                  Var(model.psmer,             within=PositiveReals, doc='electricity high-load peak (hogbelastning)                  [kW]'))
     setattr(optmodel, 'vHydDemPeakGlobal',                 Var(model.psmhr, model.Peaks, within=PositiveReals, doc='hydrogen    peak                                           [kgH2]'))
     setattr(optmodel, 'vEleDemPeakDay',                    Var(model.psder,   within=PositiveReals, doc='electricity daily peak                                                  [kW]'))
     setattr(optmodel, 'vHydDemPeakDay',                    Var(model.psdhr,   within=PositiveReals, doc='hydrogen    daily peak                                                [kgH2]'))
@@ -1351,7 +1358,8 @@ def create_variables(model, optmodel, indlog):
         # setattr(optmodel, 'vEleStorOperat',                Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vEleStorCharge',                Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vEleStorDischarge',             Var(model.psnegs,             within=UnitInterval, initialize=0, doc='storage   binary discharge            '))
-        setattr(optmodel, 'vElePeakGlobalInd',             Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
+        if model.Par['pOptIndPeakThresholdLP'] == 0:
+            setattr(optmodel, 'vElePeakGlobalInd',         Var(model.psner, model.Peaks, within=UnitInterval, initialize=0, doc='peak hour indicator                   '))
         setattr(optmodel, 'vElePeakMonthInd',              Var(model.psder, model.Peaks, within=UnitInterval, initialize=0, doc='monthly peak hour indicator           '))
         setattr(optmodel, 'vElePeakDayInd',                Var(model.psdner,             within=UnitInterval, initialize=0, doc='daily peak hour indicator             '))
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=UnitInterval, initialize=0, doc='generator binary commitment           '))
@@ -1371,7 +1379,8 @@ def create_variables(model, optmodel, indlog):
         # setattr(optmodel, 'vEleStorOperat',                Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary operation            '))
         setattr(optmodel, 'vEleStorCharge',                Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary charge               '))
         setattr(optmodel, 'vEleStorDischarge',             Var(model.psnegs,             within=Binary,       initialize=0, doc='storage   binary discharge            '))
-        setattr(optmodel, 'vElePeakGlobalInd',             Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
+        if model.Par['pOptIndPeakThresholdLP'] == 0:
+            setattr(optmodel, 'vElePeakGlobalInd',         Var(model.psner, model.Peaks, within=Binary,       initialize=0, doc='peak hour indicator                   '))
         setattr(optmodel, 'vElePeakMonthInd',              Var(model.psder, model.Peaks, within=Binary,       initialize=0, doc='monthly peak hour indicator           '))
         setattr(optmodel, 'vElePeakDayInd',                Var(model.psdner,             within=Binary,       initialize=0, doc='daily peak hour indicator             '))
         setattr(optmodel, 'vHydGenCommitment',             Var(model.psnhg,              within=Binary,       initialize=0, doc='generator binary commitment           '))
@@ -1385,6 +1394,18 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydPeakMonthInd',              Var(model.psdhr, model.Peaks, within=Binary,       initialize=0, doc='monthly peak hour indicator           '))
         setattr(optmodel, 'vHydPeakDayInd',                Var(model.psdnhr,             within=Binary,       initialize=0, doc='daily peak hour indicator             '))
 
+    # Exact binary-free peak charge (CVaR / sum-of-largest threshold-LP). When the
+    # flag is on, the monthly billed peak per (month, retailer) is carried by a free
+    # threshold plus per-hour non-negative slacks instead of the big-M peak-hour
+    # selection, so the ~(hours x peaks) indicator block is never built. Hourly
+    # tariff only (the daily-peak path keeps the indicator formulation).
+    if model.Par['pOptIndPeakThresholdLP'] == 1:
+        setattr(optmodel, 'vElePeakThreshold', Var(model.psmer, within=Reals,            initialize=0, doc='monthly peak threshold (CVaR)            [kW]'))
+        setattr(optmodel, 'vElePeakSlack',     Var(model.psner, within=NonNegativeReals, initialize=0, doc='peak import over the threshold (CVaR)    [kW]'))
+
+    # Compact tight 3-state cut (IndElectrolyser3StateTight) adds the warm-state-continuity facet in
+    # oM_ModelFormulation using the existing u/z/su variables -- no extra variables to declare here.
+
     # Electrolyser PWL part-load efficiency (audit Phase B / B1): breakpoint weights (lambda)
     # and the active-segment indicator for the SOS2 convex combination. Built only for the
     # flagged electrolysers (model.hpwl), so default-off cases declare nothing (byte-unchanged).
@@ -1395,7 +1416,10 @@ def create_variables(model, optmodel, indlog):
         _pwl_bp_idx  = [(p, sc, n, g, k) for (p, sc, n) in model.psn for g in model.hpwl for k in model.pwlbp]
         _pwl_seg_idx = [(p, sc, n, g, s) for (p, sc, n) in model.psn for g in model.hpwl for s in model.pwlseg]
         setattr(optmodel, 'vHydGenPWLWeight',  Var(_pwl_bp_idx,  within=NonNegativeReals, initialize=0, doc='electrolyser PWL breakpoint weight (lambda)'))
-        setattr(optmodel, 'vHydGenPWLSegment', Var(_pwl_seg_idx, within=_pwl_seg_domain,  initialize=0, doc='electrolyser PWL active-segment indicator'))
+        # Segment indicator only when NOT relaxing the PWL; the relax keeps the free convex
+        # combination (no SOS2 binaries), exact on a concave curve when H2 is valued.
+        if model.Par['pOptIndElectrolyserPWLRelax'] == 0:
+            setattr(optmodel, 'vHydGenPWLSegment', Var(_pwl_seg_idx, within=_pwl_seg_domain,  initialize=0, doc='electrolyser PWL active-segment indicator'))
 
     if model.Par['pOptIndBinNetOperat'] == 0:
         setattr(optmodel, 'vEleNetCommit',                 Var(model.psnela,  within=UnitInterval, initialize=0, doc='network binary operation              '))
@@ -1624,10 +1648,11 @@ def create_variables(model, optmodel, indlog):
         #     optmodel.vHydDemPeakDay[idx].fix(0.0)
         #     nFixedVariables += 1.0
         # fixing vElePeakGlobalInd, model.psner and model.Peaks
-        for idx in model.psner:
-            for peak in model.Peaks:
-                optmodel.__getattribute__('vElePeakGlobalInd')[idx, peak].fix(0.0)
-                nFixedVariables += 1.0
+        if model.Par['pOptIndPeakThresholdLP'] == 0:
+            for idx in model.psner:
+                for peak in model.Peaks:
+                    optmodel.__getattribute__('vElePeakGlobalInd')[idx, peak].fix(0.0)
+                    nFixedVariables += 1.0
         # fixing vHydPeakGlobalInd, model.psnhr and model.Peaks
         for idx in model.psnhr:
             for peak in model.Peaks:

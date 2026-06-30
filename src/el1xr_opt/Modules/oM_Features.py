@@ -68,6 +68,27 @@ FEATURES = [
             doc="piecewise-linear electrolyser part-load efficiency (else constant ProductionFunction)"),
     Feature("symmetry_breaking", "IndBinSymmetryBreaking", 0, makes_integer=False,
             doc="order identical candidate units' build fractions to break permutation symmetry (LP-preserving)"),
+    Feature("peak_threshold_lp", "IndPeakThresholdLP", 0, makes_integer=False,
+            doc="exact binary-free CVaR/sum-of-largest LP for the monthly peak charge "
+                "(Hourly tariff); replaces the big-M peak-hour selection and its indicators"),
+    Feature("stor_fcr_leg_exclusive", "IndStorFCRLegExclusive", 0, makes_integer=False,
+            doc="gate storage FCR reserve on each leg by its charge/discharge mode binary so "
+                "a battery cannot bid reserve from both legs at once (exact when the mode binary "
+                "is enforced); closes the simultaneous-charge+discharge FCR loophole"),
+    Feature("electrolyser_pwl_relax", "IndElectrolyserPWLRelax", 0, makes_integer=False,
+            doc="drop the electrolyser PWL segment binaries + SOS2 adjacency, keeping the free "
+                "convex combination of breakpoints; exact for a concave H2 curve when H2 is valued "
+                "(the optimum sits on the upper envelope). Needs IndBinElectrolyserPWL on"),
+    Feature("electrolyser_3state_tight", "IndElectrolyser3StateTight", 0, makes_integer=False,
+            doc="compact tight 3-state cut: add the warm-state-continuity facet "
+                "u_t+z_t <= u_{t-1}+z_{t-1}+su_t (the one facet the loose off/standby/on rows miss). "
+                "Completes the transition-polytope convex hull in the original u/z/su variables -- the "
+                "same tightening as the arc/flow extended formulation but with no extra columns"),
+    Feature("electrolyser_oper_symbreak", "IndElectrolyserOperSymBreak", 0, makes_integer=False,
+            doc="operational symmetry-breaking for identical electrolyser units: per-hour lexicographic "
+                "state ordering (on, then on-or-standby) within each identical group, removing the "
+                "permutation symmetry that weakens the MILP. Exact when min-up/down is off (no per-unit "
+                "intertemporal coupling). Complements the investment-side IndBinSymmetryBreaking"),
 ]
 
 FLAG_DEFAULTS = {f.flag: f.default for f in FEATURES}

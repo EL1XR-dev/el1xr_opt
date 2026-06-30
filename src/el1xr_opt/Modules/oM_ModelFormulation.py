@@ -70,8 +70,27 @@ def create_objective_function_components(model, optmodel, indlog):
     def eTotalElePeakCost(optmodel, p,sc):
         if model.Par['pParNumberPowerPeaks'] == 0:
             return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
-        else:
-            return (optmodel.vTotalElePeakCost[p,sc] == sum(model.Par['pEleRetPowerTariff'][er] / model.factor1 * sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / len(model.Peaks))
+        N = len(model.Peaks)
+        def _ret_billed_peaks(er):
+            # mean of the N highest hourly imports per month, summed over months
+            if model.Par['pOptIndPeakThresholdLP'] == 1 and model.Par['pEleRetTariffType'][er] == 'Hourly':
+                # CVaR/threshold form: sum_m [ t_m + (1/N) sum_{n in m} s_n ]
+                return (sum(optmodel.vElePeakThreshold[p,sc,m,er] for m in model.moy)
+                        + sum(optmodel.vElePeakSlack[p,sc,n,er] for n in model.n) / N)
+            # legacy big-M selection form: (1/N) sum_{m,peak} ranked peak values
+            return sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) / N
+        # N2T hogbelastningsavgift (second demand charge), folded into the peak-cost component:
+        # pEleRetHighLoadTariff x sum_m highest-hoglasttid-hour. Zero unless the case carries the tariff.
+        _hl = 'pEleRetHighLoadTariff' in model.Par
+        def _ret_highload(er):
+            if _hl and model.Par['pEleRetHighLoadTariff'][er]:
+                return sum(optmodel.vEleHighLoadPeak[p,sc,m,er] for m in model.moy)
+            return 0.0
+        return (optmodel.vTotalElePeakCost[p,sc] == sum(
+            (model.Par['pEleRetPowerTariff'][er] / model.factor1 * _ret_billed_peaks(er)
+             + (model.Par['pEleRetHighLoadTariff'][er] / model.factor1 * _ret_highload(er) if _hl else 0.0))
+            * (1 + model.Par['pEleRetMoms'][er])
+            for er in model.er))
     optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [kEUR]'))
 
     # Total electricity net usage costs
@@ -80,7 +99,16 @@ def create_objective_function_components(model, optmodel, indlog):
         # pDuration so it counts energy, matching the duration-weighted "psn" market
         # terms. Without it the charge undercounts by the time-step factor when
         # pParTimeStep > 1 (C15a).
-        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(model.Par['pEleRetOverforingsavgift'][er] / model.factor1 * model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
+        # N2T time-of-use transfer: hoglasttid rate (pEleRetOverforingHigh) on masked hours,
+        # ovrig-tid rate (pEleRetOverforingsavgift) otherwise. Flat (ovrig-tid only) if the case
+        # carries no hoglasttid rate column.
+        _tou = 'pEleRetOverforingHigh' in model.Par
+        def _ovf_rate(er, p, sc, n):
+            base = model.Par['pEleRetOverforingsavgift'][er]
+            if _tou and model.Par['pEleRetOverforingHigh'][er]:
+                return base + (model.Par['pEleRetOverforingHigh'][er] - base) * model.Par['pEleHighLoadHour'][p,sc,n]
+            return base
+        return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(_ovf_rate(er,p,sc,n) / model.factor1 * model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
 
     # Total electricity capacity tariff costs
@@ -194,7 +222,13 @@ def create_objective_function_components(model, optmodel, indlog):
                                                    # (vTotalEleDCost) does not see -- the daily DoD only counts the day's max-min swing, so
                                                    # FCR's within-day cycling is otherwise free. Per-kWh cost from the DoD/cycle-life curve
                                                    # (Ghanaee et al. 2026) and grid-battery replacement capex; default 0 so other cases are unchanged.
-                                                   sum(model.Par['pEleGenDegradationCost'][egs] *       optmodel.vEleTotalOutput       [p,sc,n,egs] for egs in model.egs))
+                                                   sum(model.Par['pEleGenDegradationCost'][egs] *       optmodel.vEleTotalOutput       [p,sc,n,egs] for egs in model.egs) +
+                                                   # M3b: rate-dependent battery wear -- an EXTRA per-kWh degradation cost on the high-power
+                                                   # 2nd discharge block (vEleTotalOutput2ndBlock), the convex, increasing-marginal analogue of
+                                                   # the electrolyser's M2 load surcharge. Captures faster capacity fade at high C-rate /
+                                                   # aggressive FCR activation that the flat throughput price (M3) misses. A 2-piece convex
+                                                   # piecewise-linear wear cost that stays LP/MILP. Default 0 (param pre-loaded) so cases are unchanged.
+                                                   sum(model.Par['pEleGenDegradationCost2ndBlock'][egs] * optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs))
     optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [kEUR]'))
 
     # Electricity start-up / shut-down cost [M€] -- per-event, summed over the load
@@ -789,6 +823,36 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeBound', Constraint(optmodel.psnegs, rule=eEleFreqDownChargeBound, doc='FCR-D downward charge bound'))
 
+    # Leg-exclusive FCR (feature IndStorFCRLegExclusive). A battery is either charging or
+    # discharging (eEleStorageMode: vEleStorCharge + vEleStorDischarge <= availability), so it
+    # must not bid reserve from BOTH legs in the same hour -- doing so double-counts headroom and
+    # overstates FCR capability. Gate each leg's total FCR reserve by its mode binary times the
+    # leg rating; combined with the mode exclusivity this closes the simultaneous
+    # charge+discharge reserve loophole. Constant rating * binary = linear; the existing headroom
+    # rows still cap built/2nd-block capacity, so the nameplate here is only the on/off gate.
+    # Exact when the mode binary is enforced (MILP); tightens the relaxation otherwise.
+    def _stor_fcr_active(p, sc, n, egs):
+        return (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 or model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0
+                or model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 or model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0)
+
+    def eEleStorFCRDischargeLeg(optmodel, p,sc,n,egs):
+        if model.Par['pOptIndStorFCRLegExclusive'] == 1 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5 and _stor_fcr_active(p,sc,n,egs):
+            return (optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]
+                    + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]
+                    ) <= model.Par['pEleMaxPower'][egs][p,sc,n] * optmodel.vEleStorDischarge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorFCRDischargeLeg', Constraint(optmodel.psnegs, rule=eEleStorFCRDischargeLeg, doc='leg-exclusive FCR: discharge-leg reserve only when discharging'))
+
+    def eEleStorFCRChargeLeg(optmodel, p,sc,n,egs):
+        if model.Par['pOptIndStorFCRLegExclusive'] == 1 and model.Par['pEleMaxCharge'][egs][p,sc,n] > 1e-5 and _stor_fcr_active(p,sc,n,egs):
+            return (optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]
+                    + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
+                    ) <= model.Par['pEleMaxCharge'][egs][p,sc,n] * optmodel.vEleStorCharge[p,sc,n,egs]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorFCRChargeLeg', Constraint(optmodel.psnegs, rule=eEleStorFCRChargeLeg, doc='leg-exclusive FCR: charge-leg reserve only when charging'))
+
     def eEleFreqDownDischargeBound(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
             if model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
@@ -1278,16 +1342,22 @@ def create_constraints(model, optmodel, indlog):
             return sum(optmodel.vHydGenPWLWeight[p,sc,n,g,k] for k in model.pwlbp) == optmodel.vHydGenCommitment[p,sc,n,g]
         optmodel.__setattr__('ePWLConvexity', Constraint(psn_hpwl, rule=ePWLConvexity, doc='electrolyser PWL weights sum to the on-state'))
 
-        def ePWLSegmentSum(optmodel, p,sc,n,g):
-            return sum(optmodel.vHydGenPWLSegment[p,sc,n,g,s] for s in model.pwlseg) == optmodel.vHydGenCommitment[p,sc,n,g]
-        optmodel.__setattr__('ePWLSegmentSum', Constraint(psn_hpwl, rule=ePWLSegmentSum, doc='electrolyser PWL exactly one active segment when on'))
+        # Segment-sum + SOS2 adjacency enforce a single active segment via the segment binaries.
+        # The PWL-relax (IndElectrolyserPWLRelax=1) drops both, keeping only the free convex
+        # combination (ePWLConvexity + ePWLPower + ePWLHydrogen): on a concave H2 curve the
+        # optimum then sits on the upper envelope when H2 is valued, so the binaries are not
+        # needed and the relaxation is exact. Verify the curve binds at every productive hour.
+        if model.Par['pOptIndElectrolyserPWLRelax'] == 0:
+            def ePWLSegmentSum(optmodel, p,sc,n,g):
+                return sum(optmodel.vHydGenPWLSegment[p,sc,n,g,s] for s in model.pwlseg) == optmodel.vHydGenCommitment[p,sc,n,g]
+            optmodel.__setattr__('ePWLSegmentSum', Constraint(psn_hpwl, rule=ePWLSegmentSum, doc='electrolyser PWL exactly one active segment when on'))
 
-        psn_hpwl_bp = [(p, sc, n, g, k) for (p, sc, n) in model.psn for g in _hpwl for k in model.pwlbp]
-        def ePWLAdjacency(optmodel, p,sc,n,g,k):
-            # weight on breakpoint k is allowed only if an adjacent segment (k-1 or k) is active
-            segs = [s for s in (k - 1, k) if s in model.pwlseg]
-            return optmodel.vHydGenPWLWeight[p,sc,n,g,k] <= sum(optmodel.vHydGenPWLSegment[p,sc,n,g,s] for s in segs)
-        optmodel.__setattr__('ePWLAdjacency', Constraint(psn_hpwl_bp, rule=ePWLAdjacency, doc='electrolyser PWL SOS2 adjacency (weights only on the active segment)'))
+            psn_hpwl_bp = [(p, sc, n, g, k) for (p, sc, n) in model.psn for g in _hpwl for k in model.pwlbp]
+            def ePWLAdjacency(optmodel, p,sc,n,g,k):
+                # weight on breakpoint k is allowed only if an adjacent segment (k-1 or k) is active
+                segs = [s for s in (k - 1, k) if s in model.pwlseg]
+                return optmodel.vHydGenPWLWeight[p,sc,n,g,k] <= sum(optmodel.vHydGenPWLSegment[p,sc,n,g,s] for s in segs)
+            optmodel.__setattr__('ePWLAdjacency', Constraint(psn_hpwl_bp, rule=ePWLAdjacency, doc='electrolyser PWL SOS2 adjacency (weights only on the active segment)'))
 
         def ePWLPower(optmodel, p,sc,n,g):
             return optmodel.vEleTotalCharge[p,sc,n,g] - model.Par['pHydGenStandByPower'][g] * optmodel.vHydGenStandBy[p,sc,n,g] == sum(optmodel.vHydGenPWLWeight[p,sc,n,g,k] * model.pwl_curve[g][k][0] for k in model.pwlbp)
@@ -1348,6 +1418,49 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydElectrolyserStartUpBound', Constraint(optmodel.psne2h, rule=eHydElectrolyserStartUpBound, doc='electrolyser start-up implies the unit is on'))
+
+    # Operational symmetry-breaking for identical electrolyser units (feature
+    # IndElectrolyserOperSymBreak). Identical units (same signature in every parameter) create a
+    # per-hour permutation symmetry that bloats branch-and-bound and weakens the bound. Order each
+    # identical group lexicographically every hour -- by ON, then by ON-or-standby -- so only one
+    # representative of each symmetric schedule survives. Exact when min-up/down is off (no per-unit
+    # intertemporal coupling that the ordering could distort). Complements the investment-side ordering.
+    if model.Par['pOptIndElectrolyserOperSymBreak'] == 1:
+        from .oM_Investment import _identical_groups
+        _e2h_pairs = [(grp[i], grp[i+1]) for grp in _identical_groups(model.Par, list(model.e2h))
+                      for i in range(len(grp) - 1)]
+        _psn_pairs = [(p, sc, n, gi, gj) for (p, sc, n) in model.psn for (gi, gj) in _e2h_pairs]
+        if _e2h_pairs:
+            print(f'-- Operational symmetry-breaking: ordered {len(_e2h_pairs)} identical electrolyser pair(s): {_e2h_pairs}', flush=True)
+
+        def eHydOperSymOn(om, p,sc,n,gi,gj):
+            return om.vHydGenCommitment[p,sc,n,gi] >= om.vHydGenCommitment[p,sc,n,gj]
+        optmodel.__setattr__('eHydOperSymOn', Constraint(_psn_pairs, rule=eHydOperSymOn, doc='oper symmetry-break: order identical electrolysers by ON state'))
+
+        def eHydOperSymWarm(om, p,sc,n,gi,gj):
+            return (om.vHydGenCommitment[p,sc,n,gi] + om.vHydGenStandBy[p,sc,n,gi]
+                    >= om.vHydGenCommitment[p,sc,n,gj] + om.vHydGenStandBy[p,sc,n,gj])
+        optmodel.__setattr__('eHydOperSymWarm', Constraint(_psn_pairs, rule=eHydOperSymWarm, doc='oper symmetry-break: order identical electrolysers by on-or-standby'))
+
+    # Compact tight 3-state cut (feature IndElectrolyser3StateTight). The off/standby/on 2-period
+    # transition polytope has one facet the loose single-period rows above miss (computed via vertex
+    # enumeration of the 8 transitions): the WARM-STATE CONTINUITY facet
+    #     u_t + z_t <= u_{t-1} + z_{t-1} + su_t
+    # i.e. the stack is on-or-standby at t only if it was on-or-standby at t-1, or it cold-started.
+    # Adding this single inequality (no new columns) completes the convex hull of the transition
+    # polytope -- the same tightening as the arc/flow extended formulation but compact, so it does not
+    # bloat the model or degrade the primal heuristics.
+    if model.Par['pOptIndElectrolyser3StateTight'] == 1:
+        def eHydElectrolyserWarmContinuity(optmodel, p,sc,n,e2h):
+            if model.Par['pHydGenStandByStatus'][e2h] == 1:
+                if n == model.n.first():
+                    prev_warm = model.Par['pHydInitialUC'][p,sc,e2h] + model.Par['pHydInitialStandBy'][p,sc,e2h]
+                else:
+                    prev_warm = optmodel.vHydGenCommitment[p,sc,model.n.prev(n),e2h] + optmodel.vHydGenStandBy[p,sc,model.n.prev(n),e2h]
+                return optmodel.vHydGenCommitment[p,sc,n,e2h] + optmodel.vHydGenStandBy[p,sc,n,e2h] <= prev_warm + optmodel.vHydGenStartUp[p,sc,n,e2h]
+            else:
+                return Constraint.Skip
+        optmodel.__setattr__('eHydElectrolyserWarmContinuity', Constraint(optmodel.psne2h, rule=eHydElectrolyserWarmContinuity, doc='compact tight 3-state: warm at t requires warm at t-1 or a cold start'))
 
     def eAllEnergy2Ele(optmodel, p,sc,n,h2e):
         if model.Par['pEleMaxPower'][h2e][p,sc,n] and h2e in model.h2e:
@@ -2038,7 +2151,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         # Check applicability
-        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+        if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
@@ -2050,7 +2163,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourValue', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourValue, doc='peak hour selection'))
 
     def eElePeakHourInd_C1(optmodel, p,sc,n,er,m,peak):
-        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+        if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
@@ -2059,7 +2172,7 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourInd_C1', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C1, doc='peak hour indicator'))
 
     def eElePeakHourInd_C2(optmodel, p,sc,n,er,m,peak):
-        if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+        if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
@@ -2068,11 +2181,46 @@ def create_constraints(model, optmodel, indlog):
     optmodel.__setattr__('eElePeakHourInd_C2', Constraint(optmodel.psner, optmodel.moy, optmodel.Peaks, rule=eElePeakHourInd_C2, doc='peak hour indicator'))
 
     def eElePeakNumberMonths(optmodel, m,peak):
-        if model.Par['pParNumberPowerPeaks'] > 0 and sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Hourly') > 0:
+        if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Hourly') > 0:
             return sum(optmodel.vElePeakGlobalInd[p,sc,n,er,peak] for p,sc,n,er in model.psner if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m) == 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakNumberMonths', Constraint(optmodel.moy, optmodel.Peaks, rule=eElePeakNumberMonths, doc='peak number of months'))
+
+    # Exact binary-free peak charge (CVaR / sum-of-largest). The billed monthly peak
+    # is the mean of the N_pk highest hourly imports. Because the objective minimises
+    # the peak charge and the charge increases with import, that mean equals
+    #     billed_m = t_m + (1/N_pk) * sum_{n in m} s_n,   s_n >= import_n - t_m,  s_n >= 0,
+    # with t_m free (it settles at the N_pk-th largest import). No binaries, exact,
+    # tight LP -- the same threshold reformulation the decomposition path already uses.
+    # Built in place of the big-M peak-hour selection when pOptIndPeakThresholdLP == 1
+    # (Hourly tariff only). One slack constraint per (hour, retailer); the threshold
+    # and the (1/N_pk) average enter the cost in eTotalElePeakCost.
+    def eElePeakThreshold(optmodel, p,sc,n,er,m):
+        if model.Par['pOptIndPeakThresholdLP'] == 1 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            return optmodel.vElePeakSlack[p,sc,n,er] >= adjusted_buy - optmodel.vElePeakThreshold[p,sc,m,er]
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eElePeakThreshold', Constraint(optmodel.psner, optmodel.moy, rule=eElePeakThreshold, doc='peak threshold (CVaR/sum-of-largest)'))
+
+    # N2T hogbelastningsavgift: a SECOND demand charge on the single highest import during
+    # hoglasttid (weekdays 06-22, winter months), via the per-hour pEleHighLoadHour mask.
+    # vEleHighLoadPeak[m] >= import on every masked hour of month m -> at the optimum it equals
+    # that month's highest hoglasttid import (an exact, binary-free max). Months with no masked
+    # hour leave it at its zero lower bound, so it bills nothing outside the winter window.
+    # Charged in eTotalElePeakCost at pEleRetHighLoadTariff. Built only when the case carries the
+    # tariff column (pEleRetHighLoadTariff) and the hoglasttid mask.
+    _highload_on = 'pEleRetHighLoadTariff' in model.Par
+    def eEleHighLoadPeak(optmodel, p,sc,n,er,m):
+        if (_highload_on and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er]
+                and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m
+                and model.Par['pEleHighLoadHour'][p,sc,n] > 0.5):
+            adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            return optmodel.vEleHighLoadPeak[p,sc,m,er] >= adjusted_buy
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleHighLoadPeak', Constraint(optmodel.psner, optmodel.moy, rule=eEleHighLoadPeak, doc='N2T hogbelastning peak (highest hoglasttid hour per month)'))
 
     # print if the constraints object len is greater than 0
     if len(optmodel.eElePeakHourValue) > 0 or len(optmodel.eElePeakHourInd_C1) > 0 or len(optmodel.eElePeakHourInd_C2) > 0 or len(optmodel.eElePeakNumberMonths) > 0:
