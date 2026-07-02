@@ -290,6 +290,49 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vHydCompInvest[hgs] <= optmodel.vHydGenInvest[hgs]
     optmodel.__setattr__('eHydCompInvestLink', Constraint(hgcompc_with_candidate_tank, rule=eHydCompInvestLink, doc='compressor build cannot exceed the build of the candidate tank it feeds'))
 
+    # %% Commitment coupling: a committable candidate can be on only if it is built.
+    # The unit-commitment binary (and its start-up / shut-down) is otherwise free of the
+    # build decision. The reserve-headroom rows for a committable unit are gated by the
+    # commitment, not by the build fraction, so a partially built unit -- or, when its
+    # minimum power is zero, an unbuilt-but-committed unit -- could hold operating reserve on
+    # second-block capacity it never built (the same phantom-capacity leak fixed for storage
+    # reserve, but on the generation side). Tie the commitment to the build fraction so an
+    # unbuilt unit cannot commit and a fractionally built one commits at most its built share;
+    # the start-up and shut-down transitions are bounded the same way for consistency in the
+    # min-up/down and ramp rows. Only committable candidates are covered: electricity thermal
+    # units (egt) and hydrogen scheduled units / electrolysers (hgt, e2h). Storage is excluded
+    # -- it uses its own charge/discharge mode binaries, already bounded by the invested power
+    # through the energy caps above. With a build fraction of 1 every bound is slack, so a
+    # fully built or non-candidate unit is unchanged.
+    ele_uc_cand = [g for g in model.egc if g in model.egt]
+    hyd_uc_cand = [g for g in model.hgc if g in model.hgt or g in model.e2h]
+    psn_ele_uc  = [(p, sc, n, g) for (p, sc, n) in model.psn for g in ele_uc_cand]
+    psn_hyd_uc  = [(p, sc, n, g) for (p, sc, n) in model.psn for g in hyd_uc_cand]
+
+    def eEleInvestCommitment(optmodel, p, sc, n, g):
+        return optmodel.vEleGenCommitment[p, sc, n, g] <= optmodel.vEleGenInvest[g]
+    optmodel.__setattr__('eEleInvestCommitment', Constraint(psn_ele_uc, rule=eEleInvestCommitment, doc='candidate electricity unit can commit only up to its build fraction'))
+
+    def eEleInvestStartUp(optmodel, p, sc, n, g):
+        return optmodel.vEleGenStartUp[p, sc, n, g] <= optmodel.vEleGenInvest[g]
+    optmodel.__setattr__('eEleInvestStartUp', Constraint(psn_ele_uc, rule=eEleInvestStartUp, doc='candidate electricity unit can start up only up to its build fraction'))
+
+    def eEleInvestShutDown(optmodel, p, sc, n, g):
+        return optmodel.vEleGenShutDown[p, sc, n, g] <= optmodel.vEleGenInvest[g]
+    optmodel.__setattr__('eEleInvestShutDown', Constraint(psn_ele_uc, rule=eEleInvestShutDown, doc='candidate electricity unit can shut down only up to its build fraction'))
+
+    def eHydInvestCommitment(optmodel, p, sc, n, g):
+        return optmodel.vHydGenCommitment[p, sc, n, g] <= optmodel.vHydGenInvest[g]
+    optmodel.__setattr__('eHydInvestCommitment', Constraint(psn_hyd_uc, rule=eHydInvestCommitment, doc='candidate hydrogen unit can commit only up to its build fraction'))
+
+    def eHydInvestStartUp(optmodel, p, sc, n, g):
+        return optmodel.vHydGenStartUp[p, sc, n, g] <= optmodel.vHydGenInvest[g]
+    optmodel.__setattr__('eHydInvestStartUp', Constraint(psn_hyd_uc, rule=eHydInvestStartUp, doc='candidate hydrogen unit can start up only up to its build fraction'))
+
+    def eHydInvestShutDown(optmodel, p, sc, n, g):
+        return optmodel.vHydGenShutDown[p, sc, n, g] <= optmodel.vHydGenInvest[g]
+    optmodel.__setattr__('eHydInvestShutDown', Constraint(psn_hyd_uc, rule=eHydInvestShutDown, doc='candidate hydrogen unit can shut down only up to its build fraction'))
+
     # %% Total investment cost
     # Unit scaling: model.factor1 is the conversion factor that lets the model work
     # at either utility (MWh) or local/home (kWh) scale. It is applied to the
