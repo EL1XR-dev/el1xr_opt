@@ -756,13 +756,20 @@ def create_constraints(model, optmodel, indlog):
     # The tight headroom bounds for FCR-D provision from an electric ESS is defined as follows:
     def eEleFreqUpDischargeHeadroom(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):
+            # For a candidate storage unit cap the up-discharge reserve by the BUILT power
+            # (nameplate * build fraction), so a fractionally built unit cannot sell upward
+            # reserve on discharge capacity it has not built (mirrors the C21b down-charge fix).
             if  model.Par['pEleGenNoDayAhead'][egs] == 0 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
+                if egs in model.egsc:
+                    return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] * optmodel.vEleGenInvest[egs] - optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
                 return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] - optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs]
             else:
                 # Discharge reserve must be bounded by the DISCHARGE rating, not the charge
                 # rating: a non-dischargeable unit (MaxPower ~ 0) then has zero discharge
                 # headroom, and a NoDayAhead unit (output2ndBlock fixed to 0) is bounded by
                 # its MaxPower -- the same quantity as the branch above (C18).
+                if egs in model.egsc:
+                    return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n] * optmodel.vEleGenInvest[egs]
                 return optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] <= model.Par['pEleMaxPower'][egs][p,sc,n]
         else:
             return Constraint.Skip
