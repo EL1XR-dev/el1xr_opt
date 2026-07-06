@@ -145,17 +145,26 @@ SIZING_CASES = [
     # others were not bidding at the last level and are unchanged. (C31 min-vs-avg and C46
     # per-unit ramp are latent here: the FCR-N up/down requirements are equal and these cases
     # have no thermal ramp units.)
-    pytest.param("HomeBatt",          44.27655530263448, id="HomeBatt"),
-    pytest.param("HoodBatt",         -19.98879641148733, id="HoodBatt"),
-    pytest.param("HomeBattNoTariff", 125.5265553026345,  id="HomeBattNoTariff"),
+    # Re-baselined again for the two deliverability fixes (commit "Explicit FCR activation
+    # settlement + two deliverability fixes"): (1) the storage FCR-endurance rows are now scaled
+    # by the invested fraction for candidate storage, so a fractionally built battery can no
+    # longer back reserve bids with storage headroom it never built; (2) the second-block
+    # charge/discharge caps are now always mode-gated, removing the FCR-capable relaxation branch
+    # that let FCR-permitted storage charge and discharge at the same step. Both remove spurious
+    # reserve revenue, so every FCR-active case costs a little more. HomeBattNoFCR (no FCR) is
+    # unchanged. The RESERVE_DELIVERY settlement flag is off by default and does not touch these.
+    pytest.param("HomeBatt",          77.99448007148432, id="HomeBatt"),
+    pytest.param("HoodBatt",          -8.526878740120654, id="HoodBatt"),
+    pytest.param("HomeBattNoTariff", 159.2444800714843,  id="HomeBattNoTariff"),
     pytest.param("HomeBattNoFCR",    122.8894702739726,  id="HomeBattNoFCR"),
-    pytest.param("HomeBattFCRDonly",  67.90928111201895, id="HomeBattFCRDonly"),
-    pytest.param("HomeBattFCRNonly",  57.34981288056188, id="HomeBattFCRNonly"),
+    pytest.param("HomeBattFCRDonly",  87.31389903178864, id="HomeBattFCRDonly"),
+    pytest.param("HomeBattFCRNonly",  85.28472259865546, id="HomeBattFCRNonly"),
     # H2Tank / Electrolyser re-baselined for Phase B (B0+B2): factor2 eliminated (commitment costs
     # now in canonical SEK -- cold start 30, shut-down 5, no-load 0) plus the new per-kWh stack
-    # degradation cost (0.07 SEK/kWh) on the electrolyser. Net +~2.68 SEK vs the pre-Phase-B golden.
-    pytest.param("H2Tank",            6779.395958990599, id="H2Tank"),
-    pytest.param("Electrolyser",      6779.392248118394, id="Electrolyser"),
+    # degradation cost (0.07 SEK/kWh) on the electrolyser. Re-baselined again (+~24 SEK) for the
+    # invest-scaled hydrogen-store FCR-endurance backing from the same deliverability commit.
+    pytest.param("H2Tank",            6803.802470003136, id="H2Tank"),
+    pytest.param("Electrolyser",      6803.798790907101, id="Electrolyser"),
 ]
 SIZING_CASE_NAMES = ["HomeBatt", "HoodBatt", "HomeBattNoTariff", "HomeBattNoFCR",
                      "HomeBattFCRDonly", "HomeBattFCRNonly", "H2Tank", "Electrolyser",
