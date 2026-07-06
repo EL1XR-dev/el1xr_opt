@@ -1137,13 +1137,15 @@ def test_h2_storage_ramp_reuse_is_documented():
 
 
 def test_investment_cost_unit_label_consistent():
-    """C38: vTotalICost is added directly to the [EUR] operating-cost components in
-    eTotalSCost, so its unit must be EUR -- the [MEUR] label was wrong."""
+    """C38: vTotalICost is summed directly into the operating-cost components in eTotalSCost
+    (no unit conversion), so it must carry the same money unit as the objective. The model is
+    currency-agnostic, so the money doc-tags are the neutral [money] (the Currency label is a
+    separate display setting, tested in test_currency_label), not a specific currency."""
     inv = open(INVESTMENT, encoding="utf-8").read()
-    assert "investment cost [EUR]" in inv, "vTotalICost must be labelled [EUR] (C38)"
-    assert "investment cost [MEUR]" not in inv, "the wrong [MEUR] label must be gone (C38)"
+    assert "investment cost [money]" in inv, "vTotalICost must be labelled [money] (C38)"
+    assert "[MEUR]" not in inv and "[EUR]" not in inv, "currency-specific money tags must be gone (C38)"
     obj = open(MODEL_FORMULATION, encoding="utf-8").read()
-    assert "Total system cost [EUR]" in obj, "the objective unit label must be [EUR] to match (C38)"
+    assert "Total system cost [money]" in obj, "the objective unit label must be [money] to match (C38)"
 
 
 def test_factor1_default_is_one(h2_model):
