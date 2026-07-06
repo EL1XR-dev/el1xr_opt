@@ -81,8 +81,13 @@ def create_green_hydrogen(model, optmodel, indlog):
             # quantity (x factor1), so the price carries 1/factor1 -- like the day-ahead energy
             # price (pVarEnergyCost, scaled at read) -- to keep price x quantity invariant under
             # the unit scale. At factor1=1 this is unchanged (goldens byte-unchanged).
+            # Take-as-produced means must-take: the buyer pays the strike on the AVAILABLE
+            # energy (the pEleMaxPower profile), not on the dispatched output -- otherwise
+            # curtailing the contracted wind is a free option and the PPA is undervalued.
+            # Dispatch remains free to curtail physically; PPA units are existing
+            # (non-candidate) plants, so no invest-scaling applies.
             return optmodel.vTotalEleMrkPPACost[p, sc, n] == sum(
-                model.Par['pEleGenPPAPrice'][egppa] / model.factor1 * optmodel.vEleTotalOutput[p, sc, n, egppa] for egppa in ppa_units)
+                model.Par['pEleGenPPAPrice'][egppa] / model.factor1 * model.Par['pEleMaxPower'][egppa][(p, sc, n)] for egppa in ppa_units)
         optmodel.__setattr__('eEleMarketPPACost', Constraint(model.psn, rule=eEleMarketPPACost, doc='electricity PPA take-as-produced cost'))
         # REVIEW (virtual PPA): vTotalEleMrkPPARev stays at zero (physical PPA).
         # For a virtual PPA contract-for-difference, free and define it here too.

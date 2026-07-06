@@ -6,6 +6,7 @@
 # erik.alvarez@ri.se
 
 # Importing Libraries
+import os            # env-gated model options
 import time          # count clock time
 from   pyomo.environ     import Constraint, Objective, minimize
 from   collections       import defaultdict
@@ -116,23 +117,80 @@ def create_objective_function_components(model, optmodel, indlog):
         return (optmodel.vTotalEleNetUseFixCost[p,sc] == sum(model.Par['pEleRetFastavgift'][er] * sum(1 for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
     optmodel.__setattr__('eTotalEleNetUseFixCost', Constraint(optmodel.ps, rule=eTotalEleNetUseFixCost, doc='Total electricity capacity tariff cost [kEUR]'))
 
+    # Reserve delivery/settlement option (design note 2026-07-04): when ON, the day-ahead
+    # energy legs settle the BASELINE position (vEleBuyBase/vEleSellBase) and the activated
+    # reserve energy settles explicitly at the day-ahead price (vTotalEleActRev/Cost), tied
+    # together by the delivery identity below, which forces activation across the meter.
+    # When OFF (default) everything reduces to the original formulation.
+    _delivery_on = int(model.Par.get('pOptIndReserveDeliverySettlement', 0)) == 1
+
+    # site-level kappa-weighted activated reserve energy (upward delivered / downward absorbed);
+    # bids of units that may not provide a product are fixed to zero in oM_InputData, so
+    # unfiltered sums over the provider classes are exact.
+    def _act_up(optmodel, p,sc,n):
+        prov = list(model.egt) + list(model.egs) + list(model.e2h) + list(model.h2e)
+        return sum(model.Par['pOperatingReserveActivation_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,g]
+                 + model.Par['pOperatingReserveActivation_FCRN_Up'][p,sc,n] * optmodel.vEleFreqContReserveNorBid[p,sc,n,g] for g in prov)
+
+    def _act_dn(optmodel, p,sc,n):
+        prov = list(model.egt) + list(model.egs) + list(model.e2h) + list(model.h2e)
+        return sum(model.Par['pOperatingReserveActivation_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,g]
+                 + model.Par['pOperatingReserveActivation_FCRN_Down'][p,sc,n] * optmodel.vEleFreqContReserveNorBid[p,sc,n,g] for g in prov)
+
     #%% Total electricity market costs
     def eEleMarketCost(optmodel, p,sc,n):
+        if _delivery_on:
+            return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkDACost[p,sc,n] + optmodel.vTotalEleMrkPPACost[p,sc,n] + optmodel.vTotalEleActCost[p,sc,n])
         return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkDACost[p,sc,n] + optmodel.vTotalEleMrkPPACost[p,sc,n])
     optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
+        if _delivery_on:
+            # full retail buy price (spot + paslag) on the BASELINE buy position. Keeping the
+            # markup on the baseline (not the metered) leg makes a simultaneous baseline
+            # buy+sell (a wash position) cost the markup, so the delivery identity cannot be
+            # satisfied by free wash trades and activation must genuinely move the position.
+            return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'][er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er] / model.factor1) * optmodel.vEleBuyBase[p,sc,n,er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
         return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er] / model.factor1) * (optmodel.vEleBuy[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
 
     #%% Total electricity market revenues
     def eEleMarketRevenue(optmodel, p,sc,n):
+        if _delivery_on:
+            return (optmodel.vTotalEleMRev[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n] + optmodel.vTotalEleActRev[p,sc,n])
         return (optmodel.vTotalEleMRev[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n])
     optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [kEUR]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
+        if _delivery_on:
+            return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (optmodel.vEleSellBase[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
         return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (optmodel.vEleSell[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
     optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
+
+    if _delivery_on:
+        # activation-energy settlement at the day-ahead proxy (retailer-averaged price;
+        # exact for the single-retailer case, documented caveat for multi-retailer).
+        _n_er = max(len(model.er), 1)
+
+        def eEleActUpRevenue(optmodel, p,sc,n):
+            _p_sell = sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / _n_er
+            return optmodel.vTotalEleActRev[p,sc,n] == _p_sell * _act_up(optmodel, p,sc,n)
+        optmodel.__setattr__('eEleActUpRevenue', Constraint(optmodel.psn, rule=eEleActUpRevenue, doc='Upward reserve activation energy settled at the DA price [kEUR]'))
+
+        def eEleActDownCost(optmodel, p,sc,n):
+            _p_buy = sum(model.Par['pVarEnergyCost'][er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / _n_er
+            return optmodel.vTotalEleActCost[p,sc,n] == _p_buy * _act_dn(optmodel, p,sc,n)
+        optmodel.__setattr__('eEleActDownCost', Constraint(optmodel.psn, rule=eEleActDownCost, doc='Downward reserve activation energy settled at the DA price [kEUR]'))
+
+        # Delivery identity: the metered exchange equals the baseline position shifted by the
+        # net activated reserve energy of the whole site, so a held bid's activation must
+        # cross the meter (internal re-routing, e.g. absorbing own curtailed wind, does not
+        # count as delivery). With no bids this collapses to metered == baseline.
+        def eEleActivationDelivery(optmodel, p,sc,n):
+            return sum(optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] for er in model.er) == \
+                   sum(optmodel.vEleBuyBase[p,sc,n,er] - optmodel.vEleSellBase[p,sc,n,er] for er in model.er) \
+                   + _act_dn(optmodel, p,sc,n) - _act_up(optmodel, p,sc,n)
+        optmodel.__setattr__('eEleActivationDelivery', Constraint(optmodel.psn, rule=eEleActivationDelivery, doc='Metered exchange = baseline position + net activated reserve energy [kW]'))
 
     def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
         return optmodel.vTotalEleMrkFrqRev[p,sc,n] == optmodel.vTotalEleFCRDUpRev[p,sc,n] + optmodel.vTotalEleFCRDDwRev[p,sc,n] + optmodel.vTotalEleFCRNRev[p,sc,n]
@@ -287,7 +345,11 @@ def create_objective_function_components(model, optmodel, indlog):
                                                    sum(model.Par['pHydGenDegradationCost2ndBlock'][e2h] * optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h) +
                                                    # M2b: cycling-degradation cost on |delta productive consumption| (the FCR-modulation stress
                                                    # the throughput term misses); active only when a unit carries RampDegradationCost > 0.
-                                                   (sum(model.Par['pHydGenRampDegradationCost'][e2h] * optmodel.vHydGenRampAbs[p,sc,n,e2h] for e2h in model.e2h) if getattr(model, '_ramp_deg_active', False) and n != model.n.first() else 0))
+                                                   (sum(model.Par['pHydGenRampDegradationCost'][e2h] * optmodel.vHydGenRampAbs[p,sc,n,e2h] for e2h in model.e2h) if getattr(model, '_ramp_deg_active', False) and n != model.n.first() else 0) -
+                                                   # Byproduct valorisation CREDIT (O2 to aquaculture + waste heat to district heating, per the
+                                                   # HiWhyV valley) per kgH2 produced -- a revenue, so SUBTRACTED from the generation cost.
+                                                   # Zero by default (pHydGenByproductCredit defaults to 0), so other cases are unchanged.
+                                                   sum(model.Par['pHydGenByproductCredit'][e2h] * optmodel.vHydTotalOutput[p,sc,n,e2h] for e2h in model.e2h))
     optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
 
     # M2b: linearise |delta productive consumption| for the electrolyser cycling-degradation cost.
@@ -886,7 +948,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleStorageEnduranceDown(optmodel, p,sc,n,egs):
         if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n != model.n.first():
-            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,1),egs])
+            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 * (optmodel.vEleGenInvest[egs] if egs in model.egsc else 1.0) - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,1),egs])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D and FCR-N downward'))
@@ -904,7 +966,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eEleStorageEnduranceDownEnd(optmodel, p,sc,n,egs):
         if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n == model.n.last():
-            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
+            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 * (optmodel.vEleGenInvest[egs] if egs in model.egsc else 1.0) - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceDownEnd', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDownEnd, doc='Storage endurance for the terminal-level FCR-D/N downward bid (C30)'))
@@ -1003,7 +1065,7 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
         lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),e2h]
                  + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,1),e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
-        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] * model.factor1 - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] * model.factor1 * (optmodel.vHydGenInvest[hgs] if hgs in model.hgc else 1.0) - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownEnduranceConv', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConv, doc='Electrolyser FCR-down endurance bounded by node hydrogen-store headroom'))
 
@@ -1019,7 +1081,7 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
         lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]
                  + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,n,e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
-        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] * model.factor1 - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] * model.factor1 * (optmodel.vHydGenInvest[hgs] if hgs in model.hgc else 1.0) - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownEnduranceConvEnd', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConvEnd, doc='Electrolyser FCR-down endurance for the terminal load level (C30)'))
 
@@ -1581,11 +1643,14 @@ def create_constraints(model, optmodel, indlog):
     # Maximum and minimum output of the second block of an electricity ESS [p.u.]
     def eEleMaxESSOutput2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5:
-            # return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= 1.0
-            if model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0:
-                return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= 1.0
-            else:
-                return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
+            # BUGFIX (2026-07-04): the discharge-mode gate must hold whether or not the unit may
+            # bid FCR. The FCR-capable branch previously relaxed the RHS to 1.0, which removed the
+            # charge/discharge exclusivity for FCR-capable storage (simultaneous charge+discharge
+            # in the LP) and let the mere FCR *permission* change the physical dispatch. The
+            # discharge-side reserve legs (DisUpDis, NorUpDis) belong under the same gate: upward
+            # reserve carried on the discharge leg needs the unit in discharge mode; a charging
+            # unit offers upward reserve through the charge legs instead.
+            return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxPower'][egs][p,sc,n] <= optmodel.vEleStorDischarge[p,sc,n,egs]
         elif model.Par['pEleMaxPower'][egs][p,sc,n] <= 1e-5 and model.Par['pEleGenNoDayAhead'][egs] == 0 and (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0):
             return (optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
         else:
@@ -1624,11 +1689,10 @@ def create_constraints(model, optmodel, indlog):
     # Maximum and minimum charge of an ESS [p.u.]
     def eEleMaxESSCharge2ndBlock(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n]:
-            # return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
-            if model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0:
-                return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= 1.0
-            else:
-                return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
+            # BUGFIX (2026-07-04): mirror of eEleMaxESSOutput2ndBlock — the charge-mode gate must
+            # hold whether or not the unit may bid FCR (the FCR-capable branch previously relaxed
+            # the RHS to 1.0). Down-reserve carried on the charge leg needs charge mode.
+            return (optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]) / model.Par['pEleMaxCharge'][egs][p,sc,n] <= optmodel.vEleStorCharge[p,sc,n,egs]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxESSCharge2ndBlock', Constraint(optmodel.psnegs, rule=eEleMaxESSCharge2ndBlock, doc='max charge of an ESS [p.u.]'))
@@ -2335,8 +2399,15 @@ def create_constraints(model, optmodel, indlog):
         log_time('--- Declaring the peak hour selection (daily peaks - month):', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
 
+    # Transport mode (TRANSPORT_NET=1): drop the DC Kirchhoff (voltage-angle) equation. On a RADIAL
+    # network with unbounded voltage angles it is exactly redundant -- flows are fully determined by
+    # the nodal balance -- so removing it is bit-identical while eliminating its ill-conditioned
+    # 1/(reactance*TTC) coefficients (the [1e-4, 3e4] matrix range that stalls the barrier). Only safe
+    # on radial networks; on meshed networks the angle constraint carries the loop-flow physics.
+    _transport_net = os.environ.get('TRANSPORT_NET', '0') == '1'
+
     def eKirchhoff2ndLaw(optmodel, p,sc,n,ni,nf,cc):
-        if model.Par[('pOptIndBinSingleNode')] == 0 and model.Par['pEleNetInitialPeriod'][ni,nf,cc] <= model.Par['pParEconomicBaseYear'] and model.Par['pEleNetFinalPeriod'][ni,nf,cc] >= model.Par['pParEconomicBaseYear'] and (ni,nf,cc) in model.elea:
+        if not _transport_net and model.Par[('pOptIndBinSingleNode')] == 0 and model.Par['pEleNetInitialPeriod'][ni,nf,cc] <= model.Par['pParEconomicBaseYear'] and model.Par['pEleNetFinalPeriod'][ni,nf,cc] >= model.Par['pParEconomicBaseYear'] and (ni,nf,cc) in model.elea:
             return optmodel.vEleNetFlow[p,sc,n,ni,nf,cc] / model.Par['pEleNetTTC'][ni,nf,cc] - (optmodel.vEleNetTheta[p,sc,n,ni] - optmodel.vEleNetTheta[p,sc,n,nf]) / model.Par['pEleNetReactance'][ni,nf,cc] / model.Par['pEleNetTTC'][ni,nf,cc] * 0.1 == 0
         else:
             return Constraint.Skip
