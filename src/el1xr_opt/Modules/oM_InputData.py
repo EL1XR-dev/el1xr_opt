@@ -125,6 +125,48 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # generation-cost block below and the realistic electrolyser values in the data.
     model.factor1 = factor1
 
+    # Money base (per-case, from the Parameter 'MoneyBase' column; default 1.0 = no scaling). This is
+    # the single in-model money-conditioning knob: every money-valued INPUT is divided by money_base
+    # here, so the case-builder can write raw currency and the model owns the scaling. It rides on top
+    # of factor1 (which converts per-quantity prices for the extensive basis); together they set the
+    # money coefficient magnitudes. Optimum-invariant (a uniform scale on the objective); the reported
+    # objective is scaled back for display. Column list mirrors build_case._scale_money (+ ByproductCredit).
+    money_base = 1.0
+    if 'MoneyBase' in data_frames['dfParameter'].columns:
+        _mb = data_frames['dfParameter']['MoneyBase'].iloc[0]
+        if _mb == _mb and float(_mb) > 0:
+            money_base = float(_mb)
+    model.money_base = money_base
+    if money_base != 1.0:
+        _money_cols = {
+            'Parameter': ['ENSCost', 'HNSCost', 'CO2Cost', 'EleConnInvestCost'],
+            'ElectricityGeneration': ['FuelCost', 'OMVariableCost', 'LinearTerm', 'ConstantTerm',
+                'StartUpCost', 'ShutDownCost', 'FixedInvestmentCost', 'FixedRetirementCost',
+                'PPAPrice', 'DegradationCost', 'DoDS1', 'DoDS2', 'DoDS3'],
+            'HydrogenGeneration': ['FuelCost', 'OMVariableCost', 'LinearTerm', 'ConstantTerm',
+                'StartUpCost', 'ShutDownCost', 'FixedInvestmentCost', 'FixedRetirementCost',
+                'DegradationCost', 'CompressorInvestCost', 'DegradationCost2ndBlock',
+                'RampDegradationCost', 'ByproductCredit'],
+            'ElectricityRetail': ['Fastavgift', 'Overforingsavgift', 'PowerTariff', 'EnergyTax',
+                'Paslag', 'HighLoadTariff', 'OverforingHigh'],
+            'HydrogenRetail': ['paslag', 'netavgift'],
+            'HydrogenDemand': ['Price'],
+        }
+        _money_allcols = ['VarEnergyPrice', 'VarEnergyCost', 'OperatingReservePrice']
+        for _stem, _cols in _money_cols.items():
+            _df = data_frames.get(f'df{_stem}')
+            if _df is not None:
+                for _c in _cols:
+                    if _c in _df.columns:
+                        _df[_c] = pd.to_numeric(_df[_c], errors='coerce') / money_base
+        for _stem in _money_allcols:
+            _df = data_frames.get(f'df{_stem}')
+            if _df is not None:
+                for _c in _df.columns:
+                    _s = pd.to_numeric(_df[_c], errors='coerce')
+                    if _s.notna().mean() > 0.5:   # value column (money); skip any string index columns
+                        _df[_c] = _s / money_base
+
     # Option Indicators
     option_ind = data_frames['dfOption'].columns.to_list()
 
@@ -325,6 +367,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         # term misses; default zero so existing cases are unaffected.
         if f'p{sector[0:3]}GenRampDegradationCost' not in parameters_dict:
             parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] = pd.Series(0.0, index=data_frames[_df_gen_key].index)
+        # Byproduct (O2 + waste heat) valorisation credit per kgH2 of output; a per-quantity
+        # CREDIT applied as a negative term in eTotalHydGCost (default 0 -> existing cases unchanged).
+        if f'p{sector[0:3]}GenByproductCredit' not in parameters_dict:
+            parameters_dict[f'p{sector[0:3]}GenByproductCredit'] = pd.Series(0.0, index=data_frames[_df_gen_key].index)
         # factor1 (audit C38): per-quantity PRICES carry 1/factor1 so price x quantity (which
         # scales by factor1) is invariant. LinearVarCost, CO2EmissionCost and OMVariableCost are
         # such prices; the CO2 emission RATE is a dimensionless ratio and is no longer factored.
@@ -342,6 +388,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict[f'p{sector[0:3]}GenDegradationCost2ndBlock'] = parameters_dict[f'p{sector[0:3]}GenDegradationCost2ndBlock'] / model.factor1
         # M2b: cycling degradation, a per-quantity price on |delta consumption| -> 1/factor1 (default 0).
         parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] = parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] / model.factor1
+        # Byproduct credit (per kgH2) is a per-quantity price, so it carries 1/factor1 (default 0).
+        parameters_dict[f'p{sector[0:3]}GenByproductCredit'] = parameters_dict[f'p{sector[0:3]}GenByproductCredit'] / model.factor1
         parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
         parameters_dict[f'p{sector[0:3]}GenRetireCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedRetirementCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed retirement cost        [MEUR]                                                                           # H2 outflows ramp down rate              [tonH2]
 
@@ -1231,6 +1279,12 @@ def create_variables(model, optmodel, indlog):
     setattr(optmodel, 'vTotalEleMrkDARev',                 Var(model.psn,     within=             Reals, doc='total electricity day-ahead market revenue                           [EUR]'))
     setattr(optmodel, 'vTotalEleMrkPPARev',                Var(model.psn,     within=             Reals, doc='total electricity PPA market       revenue                           [EUR]'))
     setattr(optmodel, 'vTotalEleMrkFrqRev',                Var(model.psn,     within=             Reals, doc='total electricity frequency market revenue                           [EUR]'))
+    # reserve activation-energy settlement (pOptIndReserveDeliverySettlement): delivered
+    # upward energy earns, absorbed downward energy pays, at the day-ahead price (the
+    # conservative proxy for the regulation price). Kept as separate named components so a
+    # real up/down regulation-price series can replace the proxy without touching constraints.
+    setattr(optmodel, 'vTotalEleActRev',                   Var(model.psn,     within=             Reals, doc='reserve activation energy settlement revenue (upward, at DA price)   [EUR]'))
+    setattr(optmodel, 'vTotalEleActCost',                  Var(model.psn,     within=             Reals, doc='reserve activation energy settlement cost   (downward, at DA price)  [EUR]'))
 
     # ancillary services revenues
     setattr(optmodel, 'vTotalEleFCRDUpRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D up    market revenue                         [EUR]'))
@@ -1286,6 +1340,13 @@ def create_variables(model, optmodel, indlog):
                 optmodel.vHydGenRampAbs[_idx].fix(0.0)
     setattr(optmodel, 'vEleBuy',                           Var(model.psner,   within=NonNegativeReals, doc='electricity retail  buy                                                 [kW]'))
     setattr(optmodel, 'vEleSell',                          Var(model.psner,   within=NonNegativeReals, doc='electricity retail  sell                                                [kW]'))
+    # Reserve delivery/settlement (pOptIndReserveDeliverySettlement): baseline day-ahead
+    # POSITION, distinct from the metered exchange above. The metered exchange equals the
+    # baseline shifted by the kappa-weighted net reserve activation (delivery identity in
+    # oM_ModelFormulation), so activated energy must cross the meter and cannot be "delivered"
+    # by internal re-routing. Fixed to zero when the option is off (vars then appear nowhere).
+    setattr(optmodel, 'vEleBuyBase',                       Var(model.psner,   within=NonNegativeReals, doc='electricity baseline day-ahead buy position                             [kW]'))
+    setattr(optmodel, 'vEleSellBase',                      Var(model.psner,   within=NonNegativeReals, doc='electricity baseline day-ahead sell position                            [kW]'))
     setattr(optmodel, 'vEleDemand',                        Var(model.psned,   within=NonNegativeReals, doc='electricity demand                                                      [kW]'))
     setattr(optmodel, 'vENS',                              Var(model.psned,   within=NonNegativeReals, doc='electricity not served                                                  [kW]'))
     setattr(optmodel, 'vEleTotalOutput',                   Var(model.psneg,   within=NonNegativeReals, doc='total electricity output of the unit                                    [kW]'))
@@ -1322,7 +1383,7 @@ def create_variables(model, optmodel, indlog):
 
     setattr(optmodel, 'vEleNetFlow',                       Var(model.psnela,  within=           Reals, doc='electricity net flow                                                    [kW]'))
     setattr(optmodel, 'vHydNetFlow',                       Var(model.psnhpa,  within=           Reals, doc='hydrogen    net flow                                                  [kgH2]'))
-    setattr(optmodel, 'vEleNetTheta',                      Var(model.psnnd,   within=           Reals, doc='electricity net theta                                                   [kW]'))
+    setattr(optmodel, 'vEleNetTheta',                      Var(model.psnnd,   within=           Reals, doc='electricity net voltage angle                                          [rad]'))
 
     setattr(optmodel, 'vEleFreqContReserveDisUpwardBid',   Var(model.psnege2h, within=NonNegativeReals, doc='electricity frequency containment reserve upward bid                   [kW]'))
     setattr(optmodel, 'vEleFreqContReserveDisDownwardBid', Var(model.psnege2h, within=NonNegativeReals, doc='electricity frequency containment reserve downward bid                 [kW]'))
@@ -1458,7 +1519,8 @@ def create_variables(model, optmodel, indlog):
 
     sub_rev_vars = [optmodel.vTotalEleMrkDARev,
                     optmodel.vTotalHydMrkPPARev,
-                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev, optmodel.vTotalEleFCRDUpRev, optmodel.vTotalEleFCRDDwRev]
+                    optmodel.vTotalEleISRev, optmodel.vTotalEleMrkFrqRev, optmodel.vTotalEleFCRDUpRev, optmodel.vTotalEleFCRDDwRev,
+                    optmodel.vTotalEleActRev, optmodel.vTotalEleActCost]
 
     # ed_vars = [optmodel.vENS]
 
@@ -1473,11 +1535,23 @@ def create_variables(model, optmodel, indlog):
         var.setub(zero_upper_bound)
 
     # Electricity
+    _delivery_on = int(model.Par.get('pOptIndReserveDeliverySettlement', 0)) == 1
     for idx in model.psner:
         optmodel.vEleBuy [idx].setlb(model.Par['pEleRetMinimumEnergyBuy' ][idx[-1]])
         optmodel.vEleBuy [idx].setub(model.Par['pEleRetMaximumEnergyBuy' ][idx[-1]])
         optmodel.vEleSell[idx].setlb(model.Par['pEleRetMinimumEnergySell'][idx[-1]])
         optmodel.vEleSell[idx].setub(model.Par['pEleRetMaximumEnergySell'][idx[-1]])
+        if _delivery_on:
+            # baseline position lives under the same commercial limits as the metered exchange
+            optmodel.vEleBuyBase [idx].setub(model.Par['pEleRetMaximumEnergyBuy' ][idx[-1]])
+            optmodel.vEleSellBase[idx].setub(model.Par['pEleRetMaximumEnergySell'][idx[-1]])
+        else:
+            optmodel.vEleBuyBase [idx].fix(0.0)
+            optmodel.vEleSellBase[idx].fix(0.0)
+    if not _delivery_on:
+        for idx in model.psn:
+            optmodel.vTotalEleActRev [idx].fix(0.0)
+            optmodel.vTotalEleActCost[idx].fix(0.0)
 
     for idx in model.psned:
         if model.Par['pEleDemFlexible'][idx[-1]] == 0.0:
@@ -2092,11 +2166,11 @@ def create_variables(model, optmodel, indlog):
     for idx in model.psnegs:
         if model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-1)]] + model.Par['pEleMaxPower'][idx[-1]][idx[:(len(idx)-1)]] > 0.0:
             if model.n.ord(idx[-2]) == model.Par['pEleCycleTimeStep'][idx[-1]]:
-                if model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                if model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]] * model.factor1:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
             elif model.n.ord(idx[-2]) > model.Par['pEleCycleTimeStep'][idx[-1]]:
-                if model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]:
+                if model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] * model.factor1 + sum(model.Par['pDuration'][idx[:(len(idx)-2)]+(n2,)] * (model.Par['pEleMaxInflows'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] - model.Par['pEleMinPower'][idx[-1]][idx[:(len(idx)-2)]+(n2,)] + model.Par['pEleGenEfficiency'][idx[-1]] * model.Par['pEleMaxCharge'][idx[-1]][idx[:(len(idx)-2)]+(n2,)]) for n2 in list(model.n2)[model.n.ord(idx[-2]) - model.Par['pEleCycleTimeStep'][idx[-1]]:model.n.ord(idx[-2])]) < model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]] * model.factor1:
                     print('### Inventory equation violation ', idx)
                     assert(0==1)
 
@@ -2109,30 +2183,37 @@ def create_variables(model, optmodel, indlog):
     #         optmodel.__getattribute__(f'vHydCommitment')[idx].fix(1.0)
     #         nFixedVariables += 2
 
-    # identify if MaxStorage is equal to MinStorage for some ESS units
+    # identify if MaxStorage is equal to MinStorage for some ESS units.
+    # factor1 fix: pEleMaxStorage/pEleMinStorage are read raw (factor1 is applied per use site), while
+    # vEleEnergyInflows/Outflows and pEleInitialInventory are factor1-scaled. Scale the storage caps by
+    # model.factor1 here so the fixed values and comparisons share one basis (was raw-vs-scaled when
+    # factor1 != 1). Only fires for fixed-inventory (MaxStorage==MinStorage) units -- none in this case.
+    f1 = model.factor1
     for idx in model.psnegs:
+        cur = idx[:(len(idx)-1)]
+        maxS = model.Par['pEleMaxStorage'][idx[-1]][cur] * f1
+        minS = model.Par['pEleMinStorage'][idx[-1]][cur] * f1
         if model.n.ord(idx[-2]) > 1:
             prev_idx = idx[:(len(idx) - 2)] + (model.n.prev(idx[-2]),)
-            if abs(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]) <= 1e-5 and abs(model.Par['pEleMaxStorage'][idx[-1]][prev_idx] - model.Par['pEleMinStorage'][idx[-1]][prev_idx]) <= 1e-5:
-                # compare the pEleMaxStorage of the current time step with the one of the previous time step
-                if model.Par['pEleMaxStorage'][idx[-1]][prev_idx] > model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
-                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][prev_idx] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
-                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(model.Par['pEleMaxStorage'][idx[-1]][prev_idx] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
-                elif model.Par['pEleMaxStorage'][idx[-1]][prev_idx] < model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
-                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][prev_idx])
-                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][prev_idx])
-                # else:
-                #     optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(0.0)
-                #     optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(0.0)
-                #     nFixedVariables += 2
+            maxS_prev = model.Par['pEleMaxStorage'][idx[-1]][prev_idx] * f1
+            minS_prev = model.Par['pEleMinStorage'][idx[-1]][prev_idx] * f1
+            if abs(maxS - minS) <= 1e-5 and abs(maxS_prev - minS_prev) <= 1e-5:
+                # compare the (scaled) MaxStorage of the current time step with the previous one
+                if maxS_prev > maxS:
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].setub(maxS_prev - maxS)
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(maxS_prev - maxS)
+                elif maxS_prev < maxS:
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].setub(maxS - maxS_prev)
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(maxS - maxS_prev)
         else:
-            if abs(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMinStorage'][idx[-1]][idx[:(len(idx)-1)]]) <= 1e-5:
-                if model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] > model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
-                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].setub(model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
-                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]])
-                elif model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]] < model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]]:
-                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].setub(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
-                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(model.Par['pEleMaxStorage'][idx[-1]][idx[:(len(idx)-1)]] - model.Par['pEleInitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
+            init = model.Par['pEleInitialInventory'][idx[-1]][cur]  # already factor1-scaled
+            if abs(maxS - minS) <= 1e-5:
+                if init > maxS:
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].setub(init - maxS)
+                    optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(init - maxS)
+                elif init < maxS:
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].setub(maxS - init)
+                    optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(maxS - init)
                 # else:
                 #     optmodel.__getattribute__(f'vEleEnergyInflows')[idx].fix(0.0)
                 #     optmodel.__getattribute__(f'vEleEnergyOutflows')[idx].fix(0.0)

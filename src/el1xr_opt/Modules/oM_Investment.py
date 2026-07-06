@@ -66,12 +66,23 @@ def _extract_for_unit(v, g, pd):
     return None
 
 
+# Computed merit-order warm-start states (not per-unit INPUT parameters): the model pre-commits
+# generators in set order until initial demand is met, so two otherwise-identical units can get
+# different initial output/UC purely by position. Excluded from the identity signature so identical
+# candidates (e.g. two identical wind plants) are still detected and ordered.
+_WARMSTART_PARAMS = frozenset({'pEleInitialOutput', 'pEleInitialUC', 'pHydInitialOutput', 'pHydInitialUC'})
+
+
 def _unit_signature(Par, g, pd):
     """A unit's signature = every per-unit parameter value it carries, in name order.
     Two units with equal signatures are interchangeable (identical in every parameter
-    the model reads), so ordering their build is valid symmetry-breaking."""
+    the model reads), so ordering their build is valid symmetry-breaking. Computed
+    warm-start states (see _WARMSTART_PARAMS) are excluded -- they are merit-order
+    artifacts, not inputs, and identical units may differ there."""
     sig = []
     for name in sorted(Par):
+        if name in _WARMSTART_PARAMS:
+            continue
         val = _extract_for_unit(Par[name], g, pd)
         if val is not None:
             sig.append((name, val))
@@ -333,6 +344,48 @@ def create_investment(model, optmodel, indlog):
         return optmodel.vHydGenShutDown[p, sc, n, g] <= optmodel.vHydGenInvest[g]
     optmodel.__setattr__('eHydInvestShutDown', Constraint(psn_hyd_uc, rule=eHydInvestShutDown, doc='candidate hydrogen unit can shut down only up to its build fraction'))
 
+    # %% Grid-connection capacity investment (industrial VPP; opt-in via pParEleConnInvestCost>0).
+    # An industrial VPP builds its own grid connection up to the point of common coupling
+    # (transformer, switchgear, cable) -- real project capex the DSO does not bear. Size ONE
+    # bidirectional connection capacity that must cover both the import (electrolyser load,
+    # battery charge) and the export (wind, battery / fuel-cell discharge) at each retail node,
+    # and pay its annualized per-kW capex. The effekttariff prices ongoing peak USE; this prices
+    # the connection CAPEX and makes the connection size an endogenous trade-off with the asset
+    # builds. Default off (parameter absent or 0), so cases without it are byte-unchanged. The
+    # cost coefficient carries 1/factor1 (a 'Cost' Parameter) and multiplies the extensive
+    # capacity, so the product is unit-invariant like the other operating-cost terms.
+    conn_cost = float(model.Par.get('pParEleConnInvestCost', 0.0) or 0.0)
+    optmodel._conn_active = conn_cost > 0.0
+    if optmodel._conn_active:
+        setattr(optmodel, 'vEleConnCap', Var(within=NonNegativeReals, doc='invested grid-connection capacity [kW, factor1-scaled like other powers]'))
+        # Grid exchange physically occurs at the electricity reference (slack) node: the model couples
+        # vEleImport/vEleExport to the retail buy/sell there and fixes them to zero at every other node.
+        # So the connection must bound import/export at the reference node (not the retailer node -- the
+        # two coincide only when the retailer sits on the reference node).
+        conn_nodes = sorted(model.endrf) or sorted({model.Par['pEleRetNode'][er] for er in model.er})
+        psn_conn = [(p, sc, n, nd) for (p, sc, n) in model.psn for nd in conn_nodes]
+
+        def eEleConnImport(optmodel, p, sc, n, nd):
+            return optmodel.vEleImport[p, sc, n, nd] <= optmodel.vEleConnCap
+        optmodel.__setattr__('eEleConnImport', Constraint(psn_conn, rule=eEleConnImport, doc='grid import bounded by the invested connection capacity'))
+
+        def eEleConnExport(optmodel, p, sc, n, nd):
+            return optmodel.vEleExport[p, sc, n, nd] <= optmodel.vEleConnCap
+        optmodel.__setattr__('eEleConnExport', Constraint(psn_conn, rule=eEleConnExport, doc='grid export bounded by the invested connection capacity'))
+
+        # Reserve delivery/settlement option: the BASELINE day-ahead position must also fit the
+        # invested connection (a position beyond deliverable capacity cannot be scheduled). This
+        # is what stops a down-activation bid from being "delivered" by scheduling a baseline
+        # export above the physical cap and absorbing own curtailed generation instead.
+        if int(model.Par.get('pOptIndReserveDeliverySettlement', 0)) == 1:
+            def eEleConnBuyBase(optmodel, p, sc, n, er):
+                return optmodel.vEleBuyBase[p, sc, n, er] <= optmodel.vEleConnCap
+            optmodel.__setattr__('eEleConnBuyBase', Constraint(model.psner, rule=eEleConnBuyBase, doc='baseline buy position bounded by the invested connection capacity'))
+
+            def eEleConnSellBase(optmodel, p, sc, n, er):
+                return optmodel.vEleSellBase[p, sc, n, er] <= optmodel.vEleConnCap
+            optmodel.__setattr__('eEleConnSellBase', Constraint(model.psner, rule=eEleConnSellBase, doc='baseline sell position bounded by the invested connection capacity'))
+
     # %% Total investment cost
     # Unit scaling: model.factor1 is the conversion factor that lets the model work
     # at either utility (MWh) or local/home (kWh) scale. It is applied to the
@@ -360,10 +413,14 @@ def create_investment(model, optmodel, indlog):
     period_weight = sum(model.Par['pDiscountFactor'][p] for p in model.p)
 
     def eTotalICost(optmodel):
+        # Grid-connection capex (annualized, per invested kW of connection capacity); 0 when the
+        # feature is off. Recurs each period like the asset capex, so it is period-weighted too.
+        conn_term = (conn_cost * optmodel.vEleConnCap) if getattr(optmodel, '_conn_active', False) else 0.0
         return optmodel.vTotalICost == period_weight * (
             sum(model.Par['pEleGenInvestCost'][egc] * optmodel.vEleGenInvest[egc] for egc in model.egc) +
             sum(model.Par['pHydGenInvestCost'][hgc] * optmodel.vHydGenInvest[hgc] for hgc in model.hgc) +
-            sum(model.Par['pHydGenCompressorInvestCost'][hgs] * optmodel.vHydCompInvest[hgs] for hgs in model.hgcompc))
+            sum(model.Par['pHydGenCompressorInvestCost'][hgs] * optmodel.vHydCompInvest[hgs] for hgs in model.hgcompc) +
+            conn_term)
     optmodel.__setattr__('eTotalICost', Constraint(rule=eTotalICost, doc='total period-weighted investment cost'))
 
     log_time('--- Declaring the investment (capacity-sizing) layer:', StartTime, ind_log=indlog)
