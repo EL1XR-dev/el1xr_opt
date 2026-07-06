@@ -25,7 +25,7 @@ def create_objective_function(model, optmodel, indlog):
     # defining the objective function
     def eTotalSCost(optmodel):
         return optmodel.vTotalSCost
-    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [EUR]'))
+    optmodel.__setattr__('eTotalSCost', Objective(rule=eTotalSCost, sense=minimize, doc='Total system cost [money]'))
 
     def eTotalTCost(optmodel):
         # vTotalICost is the investment cost from the capacity-sizing layer
@@ -37,7 +37,7 @@ def create_objective_function(model, optmodel, indlog):
         # zero when the case has no heat sector.
         heat_cost = getattr(optmodel, 'HeatOperatingCost', 0.0)
         return (optmodel.vTotalSCost == optmodel.vTotalICost + heat_cost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
-    optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [kEUR]'))
+    optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [money]'))
 
     # Cost / revenue components of the objective, summed from a registry so a new
     # cost-bearing feature registers its term instead of editing these rules. The
@@ -48,11 +48,11 @@ def create_objective_function(model, optmodel, indlog):
 
     def eTotalCComponent(optmodel, p,sc):
         return optmodel.vTotalCComponent[p,sc] == aggregate_terms(model, optmodel, p, sc, model._cost_terms)
-    optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [kEUR]'))
+    optmodel.__setattr__('eTotalCComponent', Constraint(optmodel.ps, rule=eTotalCComponent, doc='Total cost components [money]'))
 
     def eTotalRComponent(optmodel, p,sc):
         return optmodel.vTotalRComponent[p,sc] == aggregate_terms(model, optmodel, p, sc, model._revenue_terms)
-    optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [kEUR]'))
+    optmodel.__setattr__('eTotalRComponent', Constraint(optmodel.ps, rule=eTotalRComponent, doc='Total revenue components [money]'))
 
     log_time('--- Declaring the totals components of the ObjFunc:', StartTime, ind_log=indlog)
 
@@ -65,7 +65,7 @@ def create_objective_function_components(model, optmodel, indlog):
     #%% Total electricity grid usage cost [M€]
     def eEleNetGridUsageCost(optmodel, p,sc):
         return optmodel.vTotalEleNCost[p,sc] == optmodel.vTotalElePeakCost[p,sc] + optmodel.vTotalEleNetUseVarCost[p,sc] + optmodel.vTotalEleNetUseFixCost[p,sc]
-    optmodel.__setattr__('eNetGridUsageCost', Constraint(optmodel.ps, rule=eEleNetGridUsageCost, doc='Total electricity grid usage cost [kEUR]'))
+    optmodel.__setattr__('eNetGridUsageCost', Constraint(optmodel.ps, rule=eEleNetGridUsageCost, doc='Total electricity grid usage cost [money]'))
 
     # Total electricity peak costs
     def eTotalElePeakCost(optmodel, p,sc):
@@ -92,7 +92,7 @@ def create_objective_function_components(model, optmodel, indlog):
              + (model.Par['pEleRetHighLoadTariff'][er] / model.factor1 * _ret_highload(er) if _hl else 0.0))
             * (1 + model.Par['pEleRetMoms'][er])
             for er in model.er))
-    optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [kEUR]'))
+    optmodel.__setattr__('eTotalElePeakCost', Constraint(optmodel.ps, rule=eTotalElePeakCost, doc='Total electricity peak cost [money]'))
 
     # Total electricity net usage costs
     def eTotalEleNetUseVarCost(optmodel, p,sc):
@@ -110,12 +110,12 @@ def create_objective_function_components(model, optmodel, indlog):
                 return base + (model.Par['pEleRetOverforingHigh'][er] - base) * model.Par['pEleHighLoadHour'][p,sc,n]
             return base
         return (optmodel.vTotalEleNetUseVarCost[p,sc] == sum(sum(_ovf_rate(er,p,sc,n) / model.factor1 * model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
-    optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [kEUR]'))
+    optmodel.__setattr__('eTotalEleNetUseVarCost', Constraint(optmodel.ps, rule=eTotalEleNetUseVarCost, doc='Total electricity net usage cost [money]'))
 
     # Total electricity capacity tariff costs
     def eTotalEleNetUseFixCost(optmodel, p,sc):
         return (optmodel.vTotalEleNetUseFixCost[p,sc] == sum(model.Par['pEleRetFastavgift'][er] * sum(1 for m in model.moy) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
-    optmodel.__setattr__('eTotalEleNetUseFixCost', Constraint(optmodel.ps, rule=eTotalEleNetUseFixCost, doc='Total electricity capacity tariff cost [kEUR]'))
+    optmodel.__setattr__('eTotalEleNetUseFixCost', Constraint(optmodel.ps, rule=eTotalEleNetUseFixCost, doc='Total electricity capacity tariff cost [money]'))
 
     # Reserve delivery/settlement option (design note 2026-07-04): when ON, the day-ahead
     # energy legs settle the BASELINE position (vEleBuyBase/vEleSellBase) and the activated
@@ -142,7 +142,7 @@ def create_objective_function_components(model, optmodel, indlog):
         if _delivery_on:
             return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkDACost[p,sc,n] + optmodel.vTotalEleMrkPPACost[p,sc,n] + optmodel.vTotalEleActCost[p,sc,n])
         return (optmodel.vTotalEleMCost[p,sc,n] == optmodel.vTotalEleMrkDACost[p,sc,n] + optmodel.vTotalEleMrkPPACost[p,sc,n])
-    optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [kEUR]'))
+    optmodel.__setattr__('eEleMarketCost', Constraint(optmodel.psn, rule=eEleMarketCost, doc='Total electricity market costs [money]'))
 
     def eEleMarketDayAheadCost(optmodel, p,sc,n):
         if _delivery_on:
@@ -152,20 +152,20 @@ def create_objective_function_components(model, optmodel, indlog):
             # satisfied by free wash trades and activation must genuinely move the position.
             return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'][er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er] / model.factor1) * optmodel.vEleBuyBase[p,sc,n,er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
         return optmodel.vTotalEleMrkDACost[p,sc,n] == sum((model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetPaslag'][er] / model.factor1) * (optmodel.vEleBuy[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
-    optmodel.__setattr__('eEleMarketDayAheadCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [kEUR]'))
+    optmodel.__setattr__('eEleMarketDayAheadCost', Constraint(optmodel.psn, rule=eEleMarketDayAheadCost, doc='Total electricity trade cost [money]'))
 
     #%% Total electricity market revenues
     def eEleMarketRevenue(optmodel, p,sc,n):
         if _delivery_on:
             return (optmodel.vTotalEleMRev[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n] + optmodel.vTotalEleActRev[p,sc,n])
         return (optmodel.vTotalEleMRev[p,sc,n] == optmodel.vTotalEleMrkDARev[p,sc,n] + optmodel.vTotalEleMrkPPARev[p,sc,n] + optmodel.vTotalEleMrkFrqRev[p,sc,n])
-    optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [kEUR]'))
+    optmodel.__setattr__('eEleMarketRevenue', Constraint(optmodel.psn, rule=eEleMarketRevenue, doc='Total electricity market revenues [money]'))
 
     def eEleMarketDayAheadRevenue(optmodel, p,sc,n):
         if _delivery_on:
             return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (optmodel.vEleSellBase[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
         return optmodel.vTotalEleMrkDARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (optmodel.vEleSell[p,sc,n,er]) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er)
-    optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [kEUR]'))
+    optmodel.__setattr__('eEleMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eEleMarketDayAheadRevenue, doc='Total electricity market day-ahead revenues [money]'))
 
     if _delivery_on:
         # activation-energy settlement at the day-ahead proxy (retailer-averaged price;
@@ -175,12 +175,12 @@ def create_objective_function_components(model, optmodel, indlog):
         def eEleActUpRevenue(optmodel, p,sc,n):
             _p_sell = sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / _n_er
             return optmodel.vTotalEleActRev[p,sc,n] == _p_sell * _act_up(optmodel, p,sc,n)
-        optmodel.__setattr__('eEleActUpRevenue', Constraint(optmodel.psn, rule=eEleActUpRevenue, doc='Upward reserve activation energy settled at the DA price [kEUR]'))
+        optmodel.__setattr__('eEleActUpRevenue', Constraint(optmodel.psn, rule=eEleActUpRevenue, doc='Upward reserve activation energy settled at the DA price [money]'))
 
         def eEleActDownCost(optmodel, p,sc,n):
             _p_buy = sum(model.Par['pVarEnergyCost'][er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / _n_er
             return optmodel.vTotalEleActCost[p,sc,n] == _p_buy * _act_dn(optmodel, p,sc,n)
-        optmodel.__setattr__('eEleActDownCost', Constraint(optmodel.psn, rule=eEleActDownCost, doc='Downward reserve activation energy settled at the DA price [kEUR]'))
+        optmodel.__setattr__('eEleActDownCost', Constraint(optmodel.psn, rule=eEleActDownCost, doc='Downward reserve activation energy settled at the DA price [money]'))
 
         # Delivery identity: the metered exchange equals the baseline position shifted by the
         # net activated reserve energy of the whole site, so a held bid's activation must
@@ -194,7 +194,7 @@ def create_objective_function_components(model, optmodel, indlog):
 
     def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
         return optmodel.vTotalEleMrkFrqRev[p,sc,n] == optmodel.vTotalEleFCRDUpRev[p,sc,n] + optmodel.vTotalEleFCRDDwRev[p,sc,n] + optmodel.vTotalEleFCRNRev[p,sc,n]
-    optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [kEUR]'))
+    optmodel.__setattr__('eEleMarketFrequencyRevenue', Constraint(optmodel.psn, rule=eEleMarketFrequencyRevenue, doc='Total electricity market frequency revenues [money]'))
 
     def eEleMarketFCRDUpRevenue(optmodel, p,sc,n):
         # the FCR price is already factor1-scaled at read (oM_InputData), like the
@@ -206,22 +206,22 @@ def create_objective_function_components(model, optmodel, indlog):
         # but no cap, no provision and is never fixed, so its bid would be free and the
         # paid revenue would make the objective unbounded (C17).
         return optmodel.vTotalEleFCRDUpRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,e2h]) for e2h in model.e2h) + sum((model.Par['pOperatingReservePrice_FCRD_Up'][p,sc,n] * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e]) for h2e in model.h2e if model.Par['pEleGenNoFCRD'][h2e] == 0)
-    optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [kEUR]'))
+    optmodel.__setattr__('eEleMarketFCRDUpRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDUpRevenue, doc='Total electricity market FCR-D upwards revenues [money]'))
 
     def eEleMarketFCRDDwRevenue(optmodel, p,sc,n):
         # backed providers only (egt / egs / e2h), as in eEleMarketFCRDUpRevenue (C17)
         return optmodel.vTotalEleFCRDDwRev[p,sc,n] == sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egt]) for egt in model.egt) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs]) for egs in model.egs) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]) for e2h in model.e2h) + sum((model.Par['pOperatingReservePrice_FCRD_Down'][p,sc,n] * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,h2e]) for h2e in model.h2e if model.Par['pEleGenNoFCRD'][h2e] == 0)
-    optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [kEUR]'))
+    optmodel.__setattr__('eEleMarketFCRDDwRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRDDwRevenue, doc='Total electricity market FCR-D downwards revenues [money]'))
 
     def eEleMarketFCRNRevenue(optmodel, p,sc,n):
         # backed providers only (egt / egs / e2h), as in eEleMarketFCRDUpRevenue (C17)
         return optmodel.vTotalEleFCRNRev[p,sc,n] == sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egt]) for egt in model.egt) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs]) for egs in model.egs) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,e2h]) for e2h in model.e2h) + sum(((model.Par['pOperatingReservePrice_FCRN_Up'][p,sc,n] + model.Par['pOperatingReservePrice_FCRN_Down'][p,sc,n]) / 2 * optmodel.vEleFreqContReserveNorBid[p,sc,n,h2e]) for h2e in model.h2e if model.Par['pEleGenNoFCRN'][h2e] == 0)
-    optmodel.__setattr__('eEleMarketFCRNRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRNRevenue, doc='Total electricity market FCR-N revenues [kEUR]'))
+    optmodel.__setattr__('eEleMarketFCRNRevenue', Constraint(optmodel.psn, rule=eEleMarketFCRNRevenue, doc='Total electricity market FCR-N revenues [money]'))
 
     #%% Total hydrogen market costs
     def eHydMarketCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydMCost[p,sc,n] == optmodel.vTotalHydMrkPPACost[p,sc,n])
-    optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [kEUR]'))
+    optmodel.__setattr__('eHydMarketCost', Constraint(optmodel.psn, rule=eHydMarketCost, doc='Total hydrogen market costs [money]'))
 
     # Audit C44: this rule defines the hydrogen day-ahead BUY cost. The constraint attribute
     # is named to match its rule and the electricity analogue eEleMarketDayAheadCost (it was
@@ -231,44 +231,44 @@ def create_objective_function_components(model, optmodel, indlog):
     # touching the objective registry and result-table column names.
     def eHydMarketDayAheadCost(optmodel, p,sc,n):
         return optmodel.vTotalHydMrkPPACost[p,sc,n] == sum(model.Par['pVarEnergyCost'][hr][p,sc,n] * optmodel.vHydBuy[p,sc,n,hr] for hr in model.hr)
-    optmodel.__setattr__('eHydMarketDayAheadCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [kEUR]'))
+    optmodel.__setattr__('eHydMarketDayAheadCost', Constraint(optmodel.psn, rule=eHydMarketDayAheadCost, doc='Total hydrogen trade cost [money]'))
 
     #%% Total hydrogen market revenues
     def eHydMarketRevenue(optmodel, p,sc,n):
         return (optmodel.vTotalHydMRev[p,sc,n] == optmodel.vTotalHydMrkPPARev[p,sc,n])
-    optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [kEUR]'))
+    optmodel.__setattr__('eHydMarketRevenue', Constraint(optmodel.psn, rule=eHydMarketRevenue, doc='Total hydrogen market revenues [money]'))
 
     def eHydMarketDayAheadRevenue(optmodel, p,sc,n):
         return optmodel.vTotalHydMrkPPARev[p,sc,n] == sum(model.Par['pVarEnergyPrice'][hr][p,sc,n] * optmodel.vHydSell[p,sc,n,hr] for hr in model.hr)
-    optmodel.__setattr__('eHydMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eHydMarketDayAheadRevenue, doc='Total hydrogen market day-ahead revenues [kEUR]'))
+    optmodel.__setattr__('eHydMarketDayAheadRevenue', Constraint(optmodel.psn, rule=eHydMarketDayAheadRevenue, doc='Total hydrogen market day-ahead revenues [money]'))
 
     #%% Total electricity taxes costs
     def eEleTaxCost(optmodel, p,sc):
         return (optmodel.vTotalEleXCost[p,sc] == optmodel.vTotalEleEnergyTaxCost[p,sc])
-    optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [kEUR]'))
+    optmodel.__setattr__('eEleTaxCost', Constraint(optmodel.ps, rule=eEleTaxCost, doc='Total electricity taxes costs [money]'))
 
     # VAT on electricity taxes costs
     def eEleTaxEnergyCost(optmodel, p,sc):
         return (optmodel.vTotalEleEnergyTaxCost[p,sc] == sum(model.Par['pEleRetEnergyTax'][er] / model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) * (1 + model.Par['pEleRetMoms'][er]) for er in model.er))
-    optmodel.__setattr__('eEleTaxEnergyCost', Constraint(optmodel.ps, rule=eEleTaxEnergyCost, doc='Total electricity taxes costs [kEUR]'))
+    optmodel.__setattr__('eEleTaxEnergyCost', Constraint(optmodel.ps, rule=eEleTaxEnergyCost, doc='Total electricity taxes costs [money]'))
 
     def eEleTaxRevenue(optmodel, p,sc):
         return (optmodel.vTotalEleXRev[p,sc] == optmodel.vTotalEleISRev[p,sc])
-    optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [kEUR]'))
+    optmodel.__setattr__('eEleTaxRevenue', Constraint(optmodel.ps, rule=eEleTaxRevenue, doc='Total electricity taxes revenues [money]'))
 
     # Incentives on electricity taxes revenues
     def eEleTaxISRevenue(optmodel, p,sc):
         return (optmodel.vTotalEleISRev[p,sc] == sum(model.Par['pEleRetIncentive'][er] / model.factor1 * sum(model.Par['pDuration'][p,sc,n] * optmodel.vEleExport[p, sc, n, model.Par['pEleRetNode'][er]] for n in model.n) for er in model.er))
-    optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [kEUR]'))
+    optmodel.__setattr__('eEleTaxISRevenue', Constraint(optmodel.ps, rule=eEleTaxISRevenue, doc='Total electricity taxes revenues [money]'))
 
     #%% Total electricity operation and maintenance costs
     def eEleOpMaintCost(optmodel, p,sc,n):
         return (optmodel.vTotalEleOCost[p,sc,n] == sum(optmodel.__getattribute__(f'vTotal{eng}GCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}ECost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}CCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}RCost')[p,sc,n] for eng in ['Ele']))
-    optmodel.__setattr__('eEleOpMaintCost', Constraint(optmodel.psn, rule=eEleOpMaintCost, doc='Total electricity operation and maintenance costs [kEUR]'))
+    optmodel.__setattr__('eEleOpMaintCost', Constraint(optmodel.psn, rule=eEleOpMaintCost, doc='Total electricity operation and maintenance costs [money]'))
 
     # Electricity generation operation cost [M€]
     def eTotalEleGCost(optmodel, p,sc,n):
-        # No-load (ConstantVarCost) is a EUR/h cost while committed, so it stays here and
+        # No-load (ConstantVarCost) is a money/h cost while committed, so it stays here and
         # is correctly duration-weighted by the psn aggregation. The per-event start-up /
         # shut-down costs were moved to eTotalEleSUCost (a ps term) so they are NOT
         # duration-weighted -- a start at a k-hour level is one start, not k (C15b).
@@ -287,7 +287,7 @@ def create_objective_function_components(model, optmodel, indlog):
                                                    # aggressive FCR activation that the flat throughput price (M3) misses. A 2-piece convex
                                                    # piecewise-linear wear cost that stays LP/MILP. Default 0 (param pre-loaded) so cases are unchanged.
                                                    sum(model.Par['pEleGenDegradationCost2ndBlock'][egs] * optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs))
-    optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [kEUR]'))
+    optmodel.__setattr__('eTotalEleGCost', Constraint(optmodel.psn, rule=eTotalEleGCost, doc='Total electricity generation cost [money]'))
 
     # Electricity start-up / shut-down cost [M€] -- per-event, summed over the load
     # levels WITHOUT pDuration (registered as a 'ps' objective term) so a start at a
@@ -295,22 +295,22 @@ def create_objective_function_components(model, optmodel, indlog):
     def eTotalEleSUCost(optmodel, p,sc):
         return optmodel.vTotalEleSUCost[p,sc] == sum(sum(model.Par['pEleGenStartUpCost' ][egt] * optmodel.vEleGenStartUp [p,sc,n,egt] +
                                                          model.Par['pEleGenShutDownCost'][egt] * optmodel.vEleGenShutDown[p,sc,n,egt] for egt in model.egt) for n in model.n)
-    optmodel.__setattr__('eTotalEleSUCost', Constraint(optmodel.ps, rule=eTotalEleSUCost, doc='Total electricity start-up/shut-down cost [kEUR]'))
+    optmodel.__setattr__('eTotalEleSUCost', Constraint(optmodel.ps, rule=eTotalEleSUCost, doc='Total electricity start-up/shut-down cost [money]'))
 
     # Electricity generation emission cost [M€]
     def eTotalEleECost(optmodel, p,sc,n):
         return optmodel.vTotalEleECost[p,sc,n] == sum(model.Par['pGenCO2EmissionCost'][egt] * optmodel.vEleTotalOutput[p,sc,n,egt] for egt in model.egt)
-    optmodel.__setattr__('eTotalECost', Constraint(optmodel.psn, rule=eTotalEleECost, doc='Total emission cost [kEUR]'))
+    optmodel.__setattr__('eTotalECost', Constraint(optmodel.psn, rule=eTotalEleECost, doc='Total emission cost [money]'))
 
     # Electricity consumption operation cost [M€]
     def eTotalEleCCost(optmodel, p,sc,n):
         return optmodel.vTotalEleCCost[p,sc,n] == sum(model.Par['pEleGenLinearTerm'][egs] * optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs)
-    optmodel.__setattr__('eTotalEleCCost', Constraint(optmodel.psn, rule=eTotalEleCCost, doc='Total consumption cost in electricity units [kEUR]'))
+    optmodel.__setattr__('eTotalEleCCost', Constraint(optmodel.psn, rule=eTotalEleCCost, doc='Total consumption cost in electricity units [money]'))
 
     # Electricity storage degradation cost [M€]
     def eTotalEleDCost(optmodel, p,sc,d):
         return optmodel.vTotalEleDCost[p,sc,d] == sum(model.Par['pEleGenDoDC1'][egs] * optmodel.vEleInventoryDoDS1Day[p,sc,d,egs] + model.Par['pEleGenDoDC2'][egs] * optmodel.vEleInventoryDoDS2Day[p,sc,d,egs] + model.Par['pEleGenDoDC3'][egs] * optmodel.vEleInventoryDoDS3Day[p,sc,d,egs] for egs in model.egs)
-    optmodel.__setattr__('eTotalEleDCost', Constraint(optmodel.psd, rule=eTotalEleDCost, doc='Total degradation cost in electricity storage units [kEUR]'))
+    optmodel.__setattr__('eTotalEleDCost', Constraint(optmodel.psd, rule=eTotalEleDCost, doc='Total degradation cost in electricity storage units [money]'))
 
     # Electricity reliability cost [M€]
     def eTotalEleRCost(optmodel, p,sc,n):
@@ -320,16 +320,16 @@ def create_objective_function_components(model, optmodel, indlog):
         # so it must NOT be applied here too -- doing so weighted ENS by pDuration**2
         # while its siblings were weighted by pDuration once. See docs/model_audit.md.
         return (optmodel.vTotalEleRCost[p,sc,n] == sum(model.Par['pParENSCost'] * optmodel.vENS[p,sc,n,ed] for ed in model.ed))
-    optmodel.__setattr__('eTotalEleRCost', Constraint(optmodel.psn, rule=eTotalEleRCost, doc='Total reliability cost in electricity consumers [kEUR]'))
+    optmodel.__setattr__('eTotalEleRCost', Constraint(optmodel.psn, rule=eTotalEleRCost, doc='Total reliability cost in electricity consumers [money]'))
 
     #%% Total hydrogen operation and maintenance costs
     def eHydOpMaintCost(optmodel, p,sc,n):
         return (optmodel.vTotalHydOCost[p,sc,n] == sum(optmodel.__getattribute__(f'vTotal{eng}GCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}CCost')[p,sc,n] + optmodel.__getattribute__(f'vTotal{eng}RCost')[p,sc,n] for eng in ['Hyd']))
-    optmodel.__setattr__('eHydOpMaintCost', Constraint(optmodel.psn, rule=eHydOpMaintCost, doc='Total hydrogen operation and maintenance costs [kEUR]'))
+    optmodel.__setattr__('eHydOpMaintCost', Constraint(optmodel.psn, rule=eHydOpMaintCost, doc='Total hydrogen operation and maintenance costs [money]'))
 
     # Hydrogen generation operation cost [M€]
     def eTotalHydGCost(optmodel, p,sc,n):
-        # As on the electricity side (C15b): no-load stays here (duration-weighted EUR/h);
+        # As on the electricity side (C15b): no-load stays here (duration-weighted money/h);
         # the per-event start-up / shut-down costs moved to eTotalHydSUCost (a ps term).
         return optmodel.vTotalHydGCost[p,sc,n] == (sum(model.Par['pHydGenLinearVarCost'  ][hg ] *       optmodel.vHydTotalOutput       [p,sc,n,hg ] for hg  in model.hg ) +
                                                    sum(model.Par['pHydGenConstantVarCost'][hgt] *       optmodel.vHydGenCommitment     [p,sc,n,hgt] for hgt in model.hgt) +
@@ -350,7 +350,7 @@ def create_objective_function_components(model, optmodel, indlog):
                                                    # HiWhyV valley) per kgH2 produced -- a revenue, so SUBTRACTED from the generation cost.
                                                    # Zero by default (pHydGenByproductCredit defaults to 0), so other cases are unchanged.
                                                    sum(model.Par['pHydGenByproductCredit'][e2h] * optmodel.vHydTotalOutput[p,sc,n,e2h] for e2h in model.e2h))
-    optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [kEUR]'))
+    optmodel.__setattr__('eTotalHydGCost', Constraint(optmodel.psn, rule=eTotalHydGCost, doc='Total hydrogen generation cost [money]'))
 
     # M2b: linearise |delta productive consumption| for the electrolyser cycling-degradation cost.
     # productive consumption = vEleTotalCharge - StandByPower * vHydGenStandBy; vHydGenRampAbs >=
@@ -379,12 +379,12 @@ def create_objective_function_components(model, optmodel, indlog):
                                                      sum(model.Par['pHydGenStartUpCost' ][e2h] * optmodel.vHydGenStartUp [p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) +
                                                      sum(model.Par['pHydGenShutDownCost'][hgt] * optmodel.vHydGenShutDown[p,sc,n,hgt] for hgt in model.hgt) +
                                                      sum(model.Par['pHydGenShutDownCost'][e2h] * optmodel.vHydGenShutDown[p,sc,n,e2h] for e2h in model.e2h if e2h not in model.hgt) for n in model.n)
-    optmodel.__setattr__('eTotalHydSUCost', Constraint(optmodel.ps, rule=eTotalHydSUCost, doc='Total hydrogen start-up/shut-down cost [kEUR]'))
+    optmodel.__setattr__('eTotalHydSUCost', Constraint(optmodel.ps, rule=eTotalHydSUCost, doc='Total hydrogen start-up/shut-down cost [money]'))
 
     # Hydrogen consumption operation cost [M€]
     def eTotalHydCCost(optmodel, p,sc,n):
         return optmodel.vTotalHydCCost[p,sc,n] == sum(model.Par['pHydGenLinearTerm'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs)
-    optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [kEUR]'))
+    optmodel.__setattr__('eTotalHydCCost', Constraint(optmodel.psn, rule=eTotalHydCCost, doc='Total consumption cost in hydrogen units [money]'))
 
     # Hydrogen reliability cost [M€], net of per-demand sale revenue.
     def eTotalHydRCost(optmodel, p,sc,n):
@@ -398,7 +398,7 @@ def create_objective_function_components(model, optmodel, indlog):
             model.Par['pParHNSCost'] * optmodel.vHNS[p,sc,n,hd]
             - model.Par['pHydDemPrice'][hd] * (optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd])
             for hd in model.hd))
-    optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [kEUR]'))
+    optmodel.__setattr__('eTotalHydRCost', Constraint(optmodel.psn, rule=eTotalHydRCost, doc='Total reliability cost in hydrogen consumers [money]'))
 
     log_time('--- Declaring the ObjFunc components:', StartTime, ind_log=indlog)
 

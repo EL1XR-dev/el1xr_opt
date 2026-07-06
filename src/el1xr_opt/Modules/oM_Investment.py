@@ -133,10 +133,11 @@ def create_investment(model, optmodel, indlog):
 
     # Always create the total investment-cost variable so the objective can use
     # it even when there are no candidate units.
-    # Audit C38: the unit label was [MEUR], but vTotalICost is added directly to the [EUR]
-    # operating-cost components in eTotalSCost (no unit conversion), so it must be in the same
-    # unit -- EUR (whatever native currency the data uses; the demo prints SEK). Label fixed.
-    setattr(optmodel, 'vTotalICost', Var(within=NonNegativeReals, doc='total annualized investment cost [EUR]'))
+    # Audit C38: vTotalICost is added directly to the operating-cost components in eTotalSCost
+    # (no unit conversion), so it must be in the same money unit. The model is currency-agnostic:
+    # every objective term is in the input data's native currency (the demo data is SEK). All the
+    # money doc-tags read [money] rather than a specific currency for this reason.
+    setattr(optmodel, 'vTotalICost', Var(within=NonNegativeReals, doc='total annualized investment cost [money]'))
 
     if not len(model.egc) and not len(model.hgc) and not len(model.hgcompc):
         optmodel.vTotalICost.fix(0.0)

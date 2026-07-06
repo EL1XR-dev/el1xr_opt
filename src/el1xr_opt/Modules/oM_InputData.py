@@ -390,8 +390,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] = parameters_dict[f'p{sector[0:3]}GenRampDegradationCost'] / model.factor1
         # Byproduct credit (per kgH2) is a per-quantity price, so it carries 1/factor1 (default 0).
         parameters_dict[f'p{sector[0:3]}GenByproductCredit'] = parameters_dict[f'p{sector[0:3]}GenByproductCredit'] / model.factor1
-        parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [MEUR]
-        parameters_dict[f'p{sector[0:3]}GenRetireCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedRetirementCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed retirement cost        [MEUR]                                                                           # H2 outflows ramp down rate              [tonH2]
+        parameters_dict[f'p{sector[0:3]}GenInvestCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedInvestmentCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed cost                   [money]
+        parameters_dict[f'p{sector[0:3]}GenRetireCost'        ] = parameters_dict[f'p{sector[0:3]}GenFixedRetirementCost' ]        * parameters_dict[f'p{sector[0:3]}GenFixedChargeRate']                                                                          # generation fixed retirement cost        [money]                                                                           # H2 outflows ramp down rate              [tonH2]
 
     parameters_dict['pNodeLat'                 ] = data_frames['dfNodeLocation']['Latitude'          ]                                                                                                                                                             # node latitude                           [º]
     parameters_dict['pNodeLon'                 ] = data_frames['dfNodeLocation']['Longitude'         ]                                                                                                                                                             # node longitude                          [º]
@@ -1246,78 +1246,78 @@ def create_variables(model, optmodel, indlog):
         model.Peaks   = RangeSet(model.Par['pParNumberPowerPeaks']) # number of selected peaks hours
 
     #%% total variables
-    setattr(optmodel, 'vTotalSCost',                       Var(                        within=            Reals, doc='total system                          cost                           [EUR]'))
-    setattr(optmodel, 'vTotalCComponent',                  Var(model.ps ,     within=             Reals, doc='total system component                cost                           [EUR]'))
-    setattr(optmodel, 'vTotalRComponent',                  Var(model.ps ,     within=             Reals, doc='total system component              revenue                          [EUR]'))
+    setattr(optmodel, 'vTotalSCost',                       Var(                        within=            Reals, doc='total system                          cost                           [money]'))
+    setattr(optmodel, 'vTotalCComponent',                  Var(model.ps ,     within=             Reals, doc='total system component                cost                           [money]'))
+    setattr(optmodel, 'vTotalRComponent',                  Var(model.ps ,     within=             Reals, doc='total system component              revenue                          [money]'))
 
     # electricity and hydrogen cost components
-    setattr(optmodel, 'vTotalEleNCost',                    Var(model.ps ,     within=             Reals, doc='total fixed   electricity   network   cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleXCost',                    Var(model.ps ,     within=             Reals, doc='total tax and surcharges electricity  cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleMCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity market     cost                           [EUR]'))
-    setattr(optmodel, 'vTotalHydMCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    market     cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleOCost',                    Var(model.psn,     within=             Reals, doc='total          electricity   oper     cost                           [EUR]'))
-    setattr(optmodel, 'vTotalHydOCost',                    Var(model.psn,     within=             Reals, doc='total          hydrogen      oper     cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleDCost',                    Var(model.psd,     within=             Reals, doc='total electricity    degradation      cost                           [EUR]'))
-    setattr(optmodel, 'vTotalHydDCost',                    Var(model.psd,     within=             Reals, doc='total hydrogen       degradation      cost                           [EUR]'))
+    setattr(optmodel, 'vTotalEleNCost',                    Var(model.ps ,     within=             Reals, doc='total fixed   electricity   network   cost                           [money]'))
+    setattr(optmodel, 'vTotalEleXCost',                    Var(model.ps ,     within=             Reals, doc='total tax and surcharges electricity  cost                           [money]'))
+    setattr(optmodel, 'vTotalEleMCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity market     cost                           [money]'))
+    setattr(optmodel, 'vTotalHydMCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    market     cost                           [money]'))
+    setattr(optmodel, 'vTotalEleOCost',                    Var(model.psn,     within=             Reals, doc='total          electricity   oper     cost                           [money]'))
+    setattr(optmodel, 'vTotalHydOCost',                    Var(model.psn,     within=             Reals, doc='total          hydrogen      oper     cost                           [money]'))
+    setattr(optmodel, 'vTotalEleDCost',                    Var(model.psd,     within=             Reals, doc='total electricity    degradation      cost                           [money]'))
+    setattr(optmodel, 'vTotalHydDCost',                    Var(model.psd,     within=             Reals, doc='total hydrogen       degradation      cost                           [money]'))
 
     # electricity and hydrogen revenue components
-    setattr(optmodel, 'vTotalEleXRev',                     Var(model.ps ,     within=             Reals, doc='total tax             electricity  revenue                           [EUR]'))
-    setattr(optmodel, 'vTotalEleMRev',                     Var(model.psn,     within=             Reals, doc='total variable electricity market  revenue                           [EUR]'))
-    setattr(optmodel, 'vTotalHydMRev',                     Var(model.psn,     within=             Reals, doc='total variable hydrogen    market  revenue                           [EUR]'))
+    setattr(optmodel, 'vTotalEleXRev',                     Var(model.ps ,     within=             Reals, doc='total tax             electricity  revenue                           [money]'))
+    setattr(optmodel, 'vTotalEleMRev',                     Var(model.psn,     within=             Reals, doc='total variable electricity market  revenue                           [money]'))
+    setattr(optmodel, 'vTotalHydMRev',                     Var(model.psn,     within=             Reals, doc='total variable hydrogen    market  revenue                           [money]'))
 
     # electricity network/grid cost such capacity and peak costs
-    setattr(optmodel, 'vTotalElePeakCost',                 Var(model.ps ,     within=             Reals, doc='total electricity peak                cost                           [EUR]'))
-    # setattr(optmodel, 'vTotalHydPeakCost',                 Var(model.ps ,     within=             Reals, doc='total hydrogen    peak                cost  [EUR]'))
-    setattr(optmodel, 'vTotalEleNetUseVarCost',               Var(model.ps ,     within=             Reals, doc='total electricity network usage       cost                           [EUR]'))
-    setattr(optmodel, 'vTotalEleNetUseFixCost',            Var(model.ps ,     within=             Reals, doc='total electricity capacity tariff     cost                           [EUR]'))
+    setattr(optmodel, 'vTotalElePeakCost',                 Var(model.ps ,     within=             Reals, doc='total electricity peak                cost                           [money]'))
+    # setattr(optmodel, 'vTotalHydPeakCost',                 Var(model.ps ,     within=             Reals, doc='total hydrogen    peak                cost  [money]'))
+    setattr(optmodel, 'vTotalEleNetUseVarCost',               Var(model.ps ,     within=             Reals, doc='total electricity network usage       cost                           [money]'))
+    setattr(optmodel, 'vTotalEleNetUseFixCost',            Var(model.ps ,     within=             Reals, doc='total electricity capacity tariff     cost                           [money]'))
 
     # electricity market costs
-    setattr(optmodel, 'vTotalEleMrkDACost',                Var(model.psn,     within=             Reals, doc='total electricity day-ahead market   cost                            [EUR]'))
-    setattr(optmodel, 'vTotalEleMrkPPACost',               Var(model.psn,     within=             Reals, doc='total electricity PPA market         cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleMrkDACost',                Var(model.psn,     within=             Reals, doc='total electricity day-ahead market   cost                            [money]'))
+    setattr(optmodel, 'vTotalEleMrkPPACost',               Var(model.psn,     within=             Reals, doc='total electricity PPA market         cost                            [money]'))
 
     # electricity market revenues
-    setattr(optmodel, 'vTotalEleMrkDARev',                 Var(model.psn,     within=             Reals, doc='total electricity day-ahead market revenue                           [EUR]'))
-    setattr(optmodel, 'vTotalEleMrkPPARev',                Var(model.psn,     within=             Reals, doc='total electricity PPA market       revenue                           [EUR]'))
-    setattr(optmodel, 'vTotalEleMrkFrqRev',                Var(model.psn,     within=             Reals, doc='total electricity frequency market revenue                           [EUR]'))
+    setattr(optmodel, 'vTotalEleMrkDARev',                 Var(model.psn,     within=             Reals, doc='total electricity day-ahead market revenue                           [money]'))
+    setattr(optmodel, 'vTotalEleMrkPPARev',                Var(model.psn,     within=             Reals, doc='total electricity PPA market       revenue                           [money]'))
+    setattr(optmodel, 'vTotalEleMrkFrqRev',                Var(model.psn,     within=             Reals, doc='total electricity frequency market revenue                           [money]'))
     # reserve activation-energy settlement (pOptIndReserveDeliverySettlement): delivered
     # upward energy earns, absorbed downward energy pays, at the day-ahead price (the
     # conservative proxy for the regulation price). Kept as separate named components so a
     # real up/down regulation-price series can replace the proxy without touching constraints.
-    setattr(optmodel, 'vTotalEleActRev',                   Var(model.psn,     within=             Reals, doc='reserve activation energy settlement revenue (upward, at DA price)   [EUR]'))
-    setattr(optmodel, 'vTotalEleActCost',                  Var(model.psn,     within=             Reals, doc='reserve activation energy settlement cost   (downward, at DA price)  [EUR]'))
+    setattr(optmodel, 'vTotalEleActRev',                   Var(model.psn,     within=             Reals, doc='reserve activation energy settlement revenue (upward, at DA price)   [money]'))
+    setattr(optmodel, 'vTotalEleActCost',                  Var(model.psn,     within=             Reals, doc='reserve activation energy settlement cost   (downward, at DA price)  [money]'))
 
     # ancillary services revenues
-    setattr(optmodel, 'vTotalEleFCRDUpRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D up    market revenue                         [EUR]'))
-    setattr(optmodel, 'vTotalEleFCRDDwRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D down  market revenue                         [EUR]'))
-    setattr(optmodel, 'vTotalEleFCRNRev',                  Var(model.psn,     within=             Reals, doc='total electricity FCR-N       market revenue                         [EUR]'))
+    setattr(optmodel, 'vTotalEleFCRDUpRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D up    market revenue                         [money]'))
+    setattr(optmodel, 'vTotalEleFCRDDwRev',                Var(model.psn,     within=             Reals, doc='total electricity FCR-D down  market revenue                         [money]'))
+    setattr(optmodel, 'vTotalEleFCRNRev',                  Var(model.psn,     within=             Reals, doc='total electricity FCR-N       market revenue                         [money]'))
 
     # hydrogen market costs and revenues
-    setattr(optmodel, 'vTotalHydMrkPPACost',               Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market         cost                            [EUR]'))
-    setattr(optmodel, 'vTotalHydMrkPPARev',                Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market       revenue                           [EUR]'))
+    setattr(optmodel, 'vTotalHydMrkPPACost',               Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market         cost                            [money]'))
+    setattr(optmodel, 'vTotalHydMrkPPARev',                Var(model.psn,     within=             Reals, doc='total hydrogen    PPA market       revenue                           [money]'))
 
     # electricity tax costs and revenues
-    setattr(optmodel, 'vTotalEleEnergyTaxCost',                  Var(model.ps ,     within=             Reals, doc='total electricity VAT                cost                            [EUR]'))
-    setattr(optmodel, 'vTotalEleISRev',                    Var(model.ps ,     within=             Reals, doc='total electricity  incentives     revenue                            [EUR]'))
+    setattr(optmodel, 'vTotalEleEnergyTaxCost',                  Var(model.ps ,     within=             Reals, doc='total electricity VAT                cost                            [money]'))
+    setattr(optmodel, 'vTotalEleISRev',                    Var(model.ps ,     within=             Reals, doc='total electricity  incentives     revenue                            [money]'))
 
     # electricity and hydrogen generation costs
-    setattr(optmodel, 'vTotalEleGCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity prod      cost                            [EUR]'))
-    setattr(optmodel, 'vTotalHydGCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    prod      cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleGCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity prod      cost                            [money]'))
+    setattr(optmodel, 'vTotalHydGCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    prod      cost                            [money]'))
 
     # electricity and hydrogen start-up / shut-down costs (per-event, ps-indexed so the
     # objective does not duration-weight them; see eTotalEleSUCost / eTotalHydSUCost)
-    setattr(optmodel, 'vTotalEleSUCost',                   Var(model.ps ,     within=             Reals, doc='total electricity start-up/shut-down cost                            [EUR]'))
-    setattr(optmodel, 'vTotalHydSUCost',                   Var(model.ps ,     within=             Reals, doc='total hydrogen    start-up/shut-down cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleSUCost',                   Var(model.ps ,     within=             Reals, doc='total electricity start-up/shut-down cost                            [money]'))
+    setattr(optmodel, 'vTotalHydSUCost',                   Var(model.ps ,     within=             Reals, doc='total hydrogen    start-up/shut-down cost                            [money]'))
 
     # electricity and hydrogen emission costs
-    setattr(optmodel, 'vTotalEleECost',                    Var(model.psn,     within=             Reals, doc='total electricity   emission         cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleECost',                    Var(model.psn,     within=             Reals, doc='total electricity   emission         cost                            [money]'))
 
     # electricity and hydrogen consumption costs
-    setattr(optmodel, 'vTotalEleCCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity cons      cost                            [EUR]'))
-    setattr(optmodel, 'vTotalHydCCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    cons      cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleCCost',                    Var(model.psn,     within=             Reals, doc='total variable electricity cons      cost                            [money]'))
+    setattr(optmodel, 'vTotalHydCCost',                    Var(model.psn,     within=             Reals, doc='total variable hydrogen    cons      cost                            [money]'))
 
     # electricity and hydrogen reliability costs
-    setattr(optmodel, 'vTotalEleRCost',                    Var(model.psn,     within=             Reals, doc='total system electricity reliability cost                            [EUR]'))
-    setattr(optmodel, 'vTotalHydRCost',                    Var(model.psn,     within=             Reals, doc='total system hydrogen    reliability cost                            [EUR]'))
+    setattr(optmodel, 'vTotalEleRCost',                    Var(model.psn,     within=             Reals, doc='total system electricity reliability cost                            [money]'))
+    setattr(optmodel, 'vTotalHydRCost',                    Var(model.psn,     within=             Reals, doc='total system hydrogen    reliability cost                            [money]'))
 
     setattr(optmodel, 'vEleDemPeakGlobal',                 Var(model.psmer, model.Peaks, within=PositiveReals, doc='electricity peak                                             [kW]'))
     setattr(optmodel, 'vEleHighLoadPeak',                  Var(model.psmer,             within=PositiveReals, doc='electricity high-load peak (hogbelastning)                  [kW]'))
