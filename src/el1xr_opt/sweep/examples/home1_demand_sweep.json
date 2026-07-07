@@ -1,0 +1,12 @@
+{
+  "name": "home1_demand",
+  "base": {},
+  "cells": [
+    {"tag": "p100g100", "params": {"PRICE_SCALE": "1.0", "GEN_SCALE": "1.0"}},
+    {"tag": "p150",     "params": {"PRICE_SCALE": "1.5"}},
+    {"tag": "p050",     "params": {"PRICE_SCALE": "0.5"}},
+    {"tag": "g050",     "params": {"GEN_SCALE": "0.5"}},
+    {"tag": "g150",     "params": {"GEN_SCALE": "1.5"}},
+    {"tag": "d200",     "params": {"DEMAND_SCALE": "2.0"}}
+  ]
+}
