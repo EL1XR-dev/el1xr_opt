@@ -2143,7 +2143,8 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleMinDownTime', Constraint(optmodel.psnegt, rule=eEleMinDownTime, doc='minimum down time [h]'))
 
-    # Minimum up time and down time of an electrolyzer [h]
+    # Minimum up time and down time of an electrolyzer [h]. (hgt = schedulable H2 generators only;
+    # electrolysers are e2h and get their own min-time block below.)
     def eHydMinUpTime(optmodel, p,sc,n,hgt):
         if model.Par['pOptIndBinGenMinTime'] == 1 and model.Par['pHydGenUpTime'][hgt] > 1 and hgt not in model.e2h and model.n.ord(n) > (model.Par['pHydGenUpTime'][hgt] - model.Par['pHydGenUpTimeZero'][hgt]):
             return sum(optmodel.vHydGenStartUp[p,sc,n2,hgt] for n2 in n2_list[int(max(model.n.ord(n)-model.Par['pHydGenUpTime'   ][hgt], max(0,min(model.n.ord(n),(model.Par['pHydGenUpTime'  ][hgt] - model.Par['pHydGenUpTimeZero'  ][hgt])*(  model.Par['pHydInitialUC'][p,sc,hgt]))))):model.n.ord(n)]) <=     optmodel.vHydGenCommitment[p,sc,n,hgt]
@@ -2158,10 +2159,34 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eHydMinDownTime', Constraint(optmodel.psnhgt, rule=eHydMinDownTime, doc='minimum down time [h]'))
 
+    # --- Electrolyser (e2h) production ramp limit ---------------------------------------------------
+    # Physical realism (spec sec 7a): the electrolyser's electricity draw cannot swing arbitrarily fast.
+    # NOTE: minimum up/down time is deliberately NOT applied to e2h -- electrolysers are modelled as free
+    # flexible loads (commitment tied to consumption), so forcing min-time/commitment drives production to
+    # zero (verified 2026-07-09), and physically an electrolyser cycles in seconds-minutes, not hours. The
+    # ramp is the meaningful, LP-preserving lever. Opt-in via build_case ELE_RAMP (RampUp/RampDown +
+    # IndBinGenRamps); default off so cases are byte-unchanged.
+    # RampUp/RampDown are ABSOLUTE rates (kW per hour) -- scaled by the model like the power vars, so
+    # the constraint is factor1-invariant. build_case sets them = fraction x MaxCharge.
+    def eHydMaxRampUpE2H(optmodel, p,sc,n,e2h):
+        if model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pHydGenRampUp'][e2h] and n != model.n.first():
+            return optmodel.vEleTotalCharge[p,sc,n,e2h] - optmodel.vEleTotalCharge[p,sc,model.n.prev(n),e2h] <= model.Par['pHydGenRampUp'][e2h] * model.Par['pDuration'][p,sc,n]
+        return Constraint.Skip
+    optmodel.__setattr__('eHydMaxRampUpE2H', Constraint(optmodel.psne2h, rule=eHydMaxRampUpE2H, doc='e2h max ramp up on consumption [kW/h]'))
+
+    def eHydMaxRampDwE2H(optmodel, p,sc,n,e2h):
+        if model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pHydGenRampDown'][e2h] and n != model.n.first():
+            return optmodel.vEleTotalCharge[p,sc,model.n.prev(n),e2h] - optmodel.vEleTotalCharge[p,sc,n,e2h] <= model.Par['pHydGenRampDown'][e2h] * model.Par['pDuration'][p,sc,n]
+        return Constraint.Skip
+    optmodel.__setattr__('eHydMaxRampDwE2H', Constraint(optmodel.psne2h, rule=eHydMaxRampDwE2H, doc='e2h max ramp down on consumption [kW/h]'))
+
     # print if the constraints object len is greater than 0
     if len(optmodel.eEleMinUpTime) > 0 or len(optmodel.eEleMinDownTime) > 0 or len(optmodel.eHydMinUpTime) > 0 or len(optmodel.eHydMinDownTime) > 0:
         log_time('--- Declaring the minimum up and down time:', StartTime, ind_log=indlog)
         StartTime = time.time() # to compute elapsed time
+    if len(optmodel.eHydMaxRampUpE2H) > 0 or len(optmodel.eHydMaxRampDwE2H) > 0:
+        log_time(f'--- Declaring the electrolyser ramp limits (e2h ramp-up rows: {len(optmodel.eHydMaxRampUpE2H)}):', StartTime, ind_log=indlog)
+        StartTime = time.time()
 
     def eEleMinEnergyStartUp(optmodel, p,sc,n,egs):
         if model.Par['pVarFixedAvailability'][egs][p,sc,n] and egs in model.egv and model.Par['pEleGenMinSoCDepart'][egs] > 0.0:
