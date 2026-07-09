@@ -700,6 +700,7 @@ def create_constraints(model, optmodel, indlog):
                   - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + optmodel.vEleImport[p,sc,n,nd] - optmodel.vEleExport[p,sc,n,nd]
                   + heat_to_power_output(optmodel, _htw_at[nd], p, sc, n) - heat_electricity_load(optmodel, _htp_at[nd], p, sc, n)
                   - sum(model.Par['pHydGenMaxCompressorConsumption'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in _comp_at[nd])
+                  - sum(model.Par['pHydDemMaxCompressorConsumption'][hd] * optmodel.vHydDemand[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd)
                   == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
         else:
             return Constraint.Skip

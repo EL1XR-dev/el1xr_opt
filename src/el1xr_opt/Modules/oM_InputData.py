@@ -291,6 +291,13 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # (eTotalHydRCost), so different sectors can be sold at different prices.
     if 'Price' not in data_frames['dfHydrogenDemand'].columns:
         data_frames['dfHydrogenDemand']['Price'] = 0.0
+    # Per-demand delivery-compression electricity (kWh per kg served), e.g. compressing to the
+    # HRS dispensing pressure. Optional 'MaxCompressorConsumption' column; default 0 leaves existing
+    # cases unchanged. Read into pHydDemMaxCompressorConsumption and drawn in the electricity balance
+    # at the demand's node (a per-quantity intensity, so NOT scaled by factor1 -- mirrors the storage
+    # compressor pHydGenMaxCompressorConsumption).
+    if 'MaxCompressorConsumption' not in data_frames['dfHydrogenDemand'].columns:
+        data_frames['dfHydrogenDemand']['MaxCompressorConsumption'] = 0.0
     HydDemand_ind = data_frames['dfHydrogenDemand'].columns.to_list()
     idx_dem_factoring = ['MaximumPower']
 
