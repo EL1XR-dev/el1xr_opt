@@ -1198,18 +1198,34 @@ def create_constraints(model, optmodel, indlog):
     #    n-1 is backed by the inventory at n, mirroring the rolling form of the electrolyser
     #    constraint; the first level is skipped. With EnduranceFCRD/N defaulting to 0 the
     #    left-hand side is 0, so the constraint is inert for cases that do not set an endurance.
+    # The cascade backing a fuel cell may sit at a HIGHER-pressure node than the fuel-cell inlet,
+    # reachable only by a pressure let-down pipe (e.g. a 500-bar store feeding a 30-bar fuel cell).
+    # So the H2 available to a fuel cell at node nd is the store contents AT nd plus the store
+    # contents at any node feeding nd through a pipe (hin[nd]). For a flat case where the fuel cell
+    # shares the tank's node this adds nothing (no upstream store), so existing cases are unchanged.
+    def _hgs_reachable(nd):
+        seen, out = set(), []
+        for hgs in model.hgs:
+            if (nd, hgs) in model.n2hg and hgs not in seen:
+                seen.add(hgs); out.append(hgs)
+        for (ni, cc) in hin[nd]:
+            for hgs in model.hgs:
+                if (ni, hgs) in model.n2hg and hgs not in seen:
+                    seen.add(hgs); out.append(hgs)
+        return out
+
     def eEleFreqUpEnduranceFuelCell(optmodel, p,sc,n,nd):
         if n == model.n.first():
             return Constraint.Skip
         h2e_at_node = [h2e for h2e in model.h2e if (nd,h2e) in model.n2eg and (model.Par['pEleGenNoFCRD'][h2e] == 0 or model.Par['pEleGenNoFCRN'][h2e] == 0)]
-        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        hgs_at_node = _hgs_reachable(nd)
         if not h2e_at_node:
             return Constraint.Skip
         lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,1),h2e]
                  + (model.Par['pEleGenEnduranceFCRN'][h2e]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,1),h2e]) / model.Par['pEleGenProductionFunction'][h2e] for h2e in h2e_at_node)
         rhs = sum(optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
         return lhs <= rhs
-    optmodel.__setattr__('eEleFreqUpEnduranceFuelCell', Constraint(optmodel.psnnd, rule=eEleFreqUpEnduranceFuelCell, doc='Fuel-cell FCR-up endurance bounded by node hydrogen-store contents'))
+    optmodel.__setattr__('eEleFreqUpEnduranceFuelCell', Constraint(optmodel.psnnd, rule=eEleFreqUpEnduranceFuelCell, doc='Fuel-cell FCR-up endurance bounded by reachable hydrogen-store contents (node + let-down cascade)'))
 
     # C30: the rolling endurance above backs the bid at n-1 with the store contents at n and
     # skips the first level, leaving the last level's bid unbacked. Add a terminal row that
@@ -1219,7 +1235,7 @@ def create_constraints(model, optmodel, indlog):
         if n != model.n.last():
             return Constraint.Skip
         h2e_at_node = [h2e for h2e in model.h2e if (nd,h2e) in model.n2eg and (model.Par['pEleGenNoFCRD'][h2e] == 0 or model.Par['pEleGenNoFCRN'][h2e] == 0)]
-        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        hgs_at_node = _hgs_reachable(nd)
         if not h2e_at_node:
             return Constraint.Skip
         lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e]
