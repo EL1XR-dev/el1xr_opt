@@ -505,6 +505,24 @@ def create_constraints(model, optmodel, indlog):
         for hgs in hgs2n[nd]:
             if model.Par['pHydGenMaxCompressorConsumption'][hgs] > 0:
                 _comp_at[nd].append(hgs)
+    # Standalone compressors (model.hc): a compressor withdraws H2 from its suction node
+    # (InitialNode), injects Efficiency x throughput into its discharge node (FinalNode), and
+    # draws electricity at the suction node -- the electrified low-pressure side where it wires
+    # to the grid. All three maps are empty without a dfHydrogenCompressor input, so the terms
+    # they drive are zero and existing cases are unchanged.
+    # Physical draw lands on the suction node (n-based, eEleBalance); the commercial charge goes
+    # to the compressor's assigned retailer (r-based, eEleRetNodeBalance), exactly like an
+    # electrolyser (physical at n2hg, commercial at r2hg). The two reconcile through the network
+    # and the import == buy coupling, so the retailer need not sit at the suction node.
+    _hcomp_elec_at = defaultdict(list)   # compressors drawing electricity at node nd (suction side)
+    _hcomp_suct_at = defaultdict(list)   # compressors withdrawing H2 from node nd (suction)
+    _hcomp_disc_at = defaultdict(list)   # compressors injecting H2 into  node nd (discharge)
+    _hcomp_at_er   = defaultdict(list)   # compressors whose electricity is billed to retailer er
+    for hc in getattr(model, 'hc', []):
+        _hcomp_elec_at[model.Par['pHydGenNode'         ][hc]].append(hc)
+        _hcomp_suct_at[model.Par['pHydGenNode'         ][hc]].append(hc)
+        _hcomp_disc_at[model.Par['pHydGenDischargeNode'][hc]].append(hc)
+        _hcomp_at_er  [model.Par['pHydGenRetailer'     ][hc]].append(hc)
     # The cross-sector loads belong to the node, but C14 sums every retailer's buy at the
     # node; charge them to a single retailer per node so the sum is not double-counted when
     # two retailers share a node (e.g. an energy community).
@@ -533,12 +551,16 @@ def create_constraints(model, optmodel, indlog):
                  - heat_electricity_load(optmodel, _htp_at[nd], p, sc, n)
                  - sum(model.Par['pHydGenMaxCompressorConsumption'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in _comp_at[nd]))
                 if first else 0.0)
+        # Standalone compressor electricity is billed to its assigned retailer (r-based), like an
+        # electrolyser's charge above -- independent of which retailer is "first" at the node.
+        comp_er = sum(model.Par['pHydGenMaxCompressorConsumption'][hc] * optmodel.vHydCompFlow[p,sc,n,hc] for hc in _hcomp_at_er[er])
         if (sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd])
+                + len(_hcomp_at_er[er])
                 + (len(_htp_at[nd]) + len(_htw_at[nd]) + len(_comp_at[nd]) if first else 0)):
             share = (optmodel.vEleShareIn[p,sc,n,er] - optmodel.vEleShareOut[p,sc,n,er]) if community_on else 0.0
             return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
                     - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
-                    + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] + share + xsec == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
+                    + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] + share + xsec - comp_er == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleRetNodeBalance', Constraint(optmodel.psner, rule=eEleRetNodeBalance, doc='Electricity balance in nodes [kWh]'))
@@ -695,11 +717,12 @@ def create_constraints(model, optmodel, indlog):
     # electrical energy conservation or balance. The cross-sector node maps (_htp_at,
     # _htw_at, _comp_at) are built once before the retail balance above and reused here.
     def eEleBalance(optmodel, p,sc,n,nd):
-        if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]) + sum(1 for ed in ed2n[nd]) + sum(1 for hgs in _comp_at[nd]):
+        if sum(1 for eg in eg2n[nd]) + sum(1 for egs in egs2n[nd]) + sum(1 for nf, cc in lout[nd]) + sum(1 for ni, cc in lin[nd]) + sum(1 for ed in ed2n[nd]) + sum(1 for hgs in _comp_at[nd]) + len(_hcomp_elec_at[nd]):
             return (sum(optmodel.vEleTotalOutput[p,sc,n,eg] for eg in model.eg  if (nd,eg) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (nd,egs) in model.n2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (nd,e2h) in model.n2hg)
                   - sum(optmodel.vEleNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in lout[nd]) + sum(optmodel.vEleNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in lin[nd]) + optmodel.vEleImport[p,sc,n,nd] - optmodel.vEleExport[p,sc,n,nd]
                   + heat_to_power_output(optmodel, _htw_at[nd], p, sc, n) - heat_electricity_load(optmodel, _htp_at[nd], p, sc, n)
                   - sum(model.Par['pHydGenMaxCompressorConsumption'][hgs] * optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in _comp_at[nd])
+                  - sum(model.Par['pHydGenMaxCompressorConsumption'][hc] * optmodel.vHydCompFlow[p,sc,n,hc] for hc in _hcomp_elec_at[nd])
                   - sum(model.Par['pHydDemMaxCompressorConsumption'][hd] * optmodel.vHydDemand[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd)
                   == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (nd,ed) in model.n2ed))
         else:
@@ -708,9 +731,11 @@ def create_constraints(model, optmodel, indlog):
 
     # hydrogen energy conservation or balance
     def eHydBalance(optmodel, p,sc,n,nd):
-        if sum(1 for hg in hg2n[nd]) + sum(1 for hgs in hgs2n[nd]) + sum(1 for nf, cc in hout[nd]) + sum(1 for ni, cc in hin[nd]) + sum(1 for hd in hd2n[nd]):
+        if sum(1 for hg in hg2n[nd]) + sum(1 for hgs in hgs2n[nd]) + sum(1 for nf, cc in hout[nd]) + sum(1 for ni, cc in hin[nd]) + sum(1 for hd in hd2n[nd]) + len(_hcomp_suct_at[nd]) + len(_hcomp_disc_at[nd]):
             return (sum(optmodel.vHydTotalOutput[p,sc,n,hg] for hg in model.hg if (nd,hg) in model.n2hg) - sum(optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in model.hgs if (nd,hgs) in model.n2hg) - sum(optmodel.vHydTotalCharge[p,sc,n,h2e] for h2e in model.h2e if (nd,h2e) in model.n2eg)
-                  - sum(optmodel.vHydNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in hout[nd]) + sum(optmodel.vHydNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in hin[nd]) + optmodel.vHydImport[p,sc,n,nd] - optmodel.vHydExport[p,sc,n,nd] == sum(optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd))
+                  - sum(optmodel.vHydNetFlow[p,sc,n,nd,nf,cc] for (nf,cc) in hout[nd]) + sum(optmodel.vHydNetFlow[p,sc,n,ni,nd,cc] for (ni,cc) in hin[nd]) + optmodel.vHydImport[p,sc,n,nd] - optmodel.vHydExport[p,sc,n,nd]
+                  - sum(optmodel.vHydCompFlow[p,sc,n,hc] for hc in _hcomp_suct_at[nd]) + sum(model.Par['pHydGenEfficiency'][hc] * optmodel.vHydCompFlow[p,sc,n,hc] for hc in _hcomp_disc_at[nd])
+                  == sum(optmodel.vHydDemand[p,sc,n,hd] - optmodel.vHNS[p,sc,n,hd] for hd in model.hd if (nd,hd) in model.n2hd))
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydBalance', Constraint(optmodel.psnnd, rule=eHydBalance, doc='Hydrogen balance in the DA market'))
@@ -1088,22 +1113,27 @@ def create_constraints(model, optmodel, indlog):
 
     # Phase 2 -- FCR-down bounded by the compressor RATE, not just the tank volume. The
     # endurance constraints above limit the extra hydrogen by the empty tank headroom (a
-    # volume limit). A held FCR-down bid, if activated, also has to be COMPRESSED into the
-    # store as it is made: the extra production rate (bid / ProductionFunction) plus the
-    # baseline charge flow must fit through the built compressor throughput at the node.
-    # Only built when a node has both FCR-flagged electrolysers and a compressor-sizing
-    # candidate (model.hgcompc), so cases without compressor sizing are unchanged. Tying the
-    # FCR-down bid to the SIZED compressor rate is the part no reviewed prior work models
-    # (see docs/lit_review_electrolyser_fcr.md).
+    # volume limit). A held FCR-down bid, if activated, also has to be COMPRESSED as it is made:
+    # the extra production rate (bid / ProductionFunction) plus the baseline compression must fit
+    # through the built compressor throughput at the node. Two compressor representations feed the
+    # spare-throughput headroom: (i) the legacy tank-welded compressor (model.hgcompc, throughput =
+    # tank charge vHydTotalCharge), and (ii) the standalone compressor unit (model.hc) whose SUCTION
+    # node is the electrolyser's node (throughput = vHydCompFlow). Both terms are present; a case
+    # uses whichever it defines (existing cases have no hc, the pressure-resolved case has no
+    # hgcompc), so this stays golden-neutral. Tying the FCR-down bid to the SIZED compressor rate is
+    # the part no reviewed prior work models (see docs/lit_review_electrolyser_fcr.md).
     def eEleFreqDownCompressorRate(optmodel, p,sc,n,nd):
         e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
         comp_at_node = [hgs for hgs in model.hgcompc if (nd,hgs) in model.n2hg]
-        if not e2h_at_node or not comp_at_node:
+        comp_std_at_node = [hc for hc in getattr(model, 'hc', []) if model.Par['pHydGenNode'][hc] == nd]
+        if not e2h_at_node or (not comp_at_node and not comp_std_at_node):
             return Constraint.Skip
         lhs = sum((optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]
                  + optmodel.vEleFreqContReserveNorBid       [p,sc,n,e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
-        rhs = sum(model.Par['pHydGenCompressorNameplate'][hgs] * model.factor1 * optmodel.vHydCompInvest[hgs]
-                  - optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in comp_at_node)
+        rhs = (sum(model.Par['pHydGenCompressorNameplate'][hgs] * model.factor1 * optmodel.vHydCompInvest[hgs]
+                   - optmodel.vHydTotalCharge[p,sc,n,hgs] for hgs in comp_at_node)
+               + sum(model.Par['pHydGenMaximumCharge'][hc] * (optmodel.vHydCompBuild[hc] if hc in model.hcc else 1.0)
+                     - optmodel.vHydCompFlow[p,sc,n,hc] for hc in comp_std_at_node))
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownCompressorRate', Constraint(optmodel.psnnd, rule=eEleFreqDownCompressorRate, doc='Electrolyser FCR-down extra production rate bounded by spare node compressor throughput'))
 

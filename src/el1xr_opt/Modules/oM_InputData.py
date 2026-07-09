@@ -542,6 +542,21 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     parameters_dict['pHydRetBuy'               ] = parameters_dict['pHydRetBuy'               ].map(idxDict)
     parameters_dict['pHydRetSell'              ] = parameters_dict['pHydRetSell'              ].map(idxDict)
 
+    # %% Hydrogen compressor asset (standalone converter, defined as a row in the hydrogen
+    # generation table). A compressor row is discriminated by a non-blank DischargeNode column:
+    # it raises hydrogen from its suction node (the row's Node) to that high-pressure discharge
+    # node, charging the cascade, and draws electricity in proportion to its throughput; vehicle
+    # /vessel dispensing is by passive let-down (Rothuizen & Rokni 2014, IJHE 39(1); Argonne
+    # HDSAM). It reuses native generation columns -- MaximumCharge = rated throughput,
+    # MaxCompressorConsumption = specific energy (kWh/kg), FixedInvestmentCost = capex, plus
+    # Node/Retailer/Efficiency/period/FCR flags. When the DischargeNode column is absent (every
+    # existing case), no row is a compressor, model.hc / model.hcc (below) are empty, and cases
+    # build byte-identically. The discharge node is a plain node name, so it is NOT factor1-scaled.
+    if 'pHydGenDischargeNode' not in parameters_dict:
+        parameters_dict['pHydGenDischargeNode'] = pd.Series('', index=parameters_dict['pHydGenProductionFunction'].index, dtype=object)
+    else:
+        parameters_dict['pHydGenDischargeNode'] = parameters_dict['pHydGenDischargeNode'].where(parameters_dict['pHydGenDischargeNode'].notna(), other='')
+
     # %% Getting the branches from the network data
     sEleBr = [(ni,nf) for (ni,nf,cc) in data_frames['dfElectricityNetwork'].index.to_list()]
     sHydBr = [(ni,nf) for (ni,nf,cc) in data_frames['dfHydrogenNetwork'].index.to_list()]
@@ -565,7 +580,29 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.egv  = Set(doc='electricity EV         units ', initialize=[egv    for egv  in           model.eg  if  parameters_dict['pEleGenEV' ]              [egv] ==  1.0])
     model.egc  = Set(doc='electricity candidate  units ', initialize=[egc    for egc  in           model.eg  if  parameters_dict['pEleGenInvestCost']       [egc]  >  0.0])
     model.egsc = Set(doc='electricity storage    units ', initialize=[egsc   for egsc in           model.egs if  parameters_dict['pEleGenInvestCost']      [egsc]  >  0.0])
-    model.hg   = Set(doc='hydrogen generation    units ', initialize=[hgg    for hgg  in           model.hgg if (parameters_dict['pHydGenMaximumPower']     [hgg]  >  0.0 or   parameters_dict['pHydGenMaximumCharge']     [hgg] >  0 ) and parameters_dict['pHydGenInitialPeriod']     [hgg] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pHydGenFinalPeriod'][hgg]  >= parameters_dict['pParEconomicBaseYear']])
+    # A hydrogen generation row is a standalone compressor when its Technology is "Compressor".
+    # Such rows are converters (they move H2 from their suction Node to a high-pressure
+    # DischargeNode), not generators/stores, so they are kept OUT of model.hg -- and therefore out
+    # of every generation/storage constraint -- and handled only through model.hc below. Empty when
+    # no row is tagged Compressor, so hg is the old set and existing cases are unchanged.
+    _base_yr = parameters_dict['pParEconomicBaseYear']
+    _hyd_compressor_names = set(
+        hgg for hgg in model.hgg
+        if str(parameters_dict['pHydGenTechnology'][hgg]).strip() == 'Compressor'
+        and parameters_dict['pHydGenInitialPeriod'][hgg] <= _base_yr
+        and parameters_dict['pHydGenFinalPeriod'  ][hgg] >= _base_yr)
+    # A compressor row must name a valid high-pressure outlet (DischargeNode) and a positive rated
+    # throughput (MaximumCharge), otherwise its flow variable is meaningless; fail loudly rather
+    # than silently mis-wire it.
+    _nd_set = set(model.nd)
+    _comp_misconfig = [hc for hc in _hyd_compressor_names
+                       if parameters_dict['pHydGenDischargeNode'][hc] not in _nd_set
+                       or parameters_dict['pHydGenMaximumCharge'][hc] <= 0.0]
+    if _comp_misconfig:
+        raise ValueError(f"Compressor row(s) {sorted(_comp_misconfig)} tagged Technology='Compressor' need "
+                         f"a valid DischargeNode (an existing node name) and a positive MaximumCharge "
+                         f"(rated throughput, kgH2/h).")
+    model.hg   = Set(doc='hydrogen generation    units ', initialize=[hgg    for hgg  in           model.hgg if (parameters_dict['pHydGenMaximumPower']     [hgg]  >  0.0 or   parameters_dict['pHydGenMaximumCharge']     [hgg] >  0 ) and parameters_dict['pHydGenInitialPeriod']     [hgg] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pHydGenFinalPeriod'][hgg]  >= parameters_dict['pParEconomicBaseYear'] and hgg not in _hyd_compressor_names])
     model.hgt  = Set(doc='hydrogen scheduled     units ', initialize=[hgt    for hgt  in           model.hg  if  parameters_dict['pHydGenConstantVarCost']  [hgt]  >  0.0])
     # Active hydrogen demands are those whose period window covers the base year --
     # the same period test as electricity demand (model.ed) and the generation sets.
@@ -610,6 +647,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.hpn  = Set(doc='all input H2 pipelines       ', initialize=data_frames['dfHydrogenNetwork'].index.to_list())
     model.hpa  = Set(doc='all real H2 pipelines        ', initialize=[hp for hp in model.hpn if parameters_dict['pHydNetTTC'][hp] > 0.0 and parameters_dict['pHydNetTTCBck'][hp] > 0.0 and parameters_dict['pHydNetInitialPeriod'][hp] <= parameters_dict['pParEconomicBaseYear'] and parameters_dict['pHydNetFinalPeriod'][hp] >= parameters_dict['pParEconomicBaseYear']])
     model.hpc  = Set(doc='candidate H2 pipelines       ', initialize=[hp for hp in model.hpa if parameters_dict['pHydNetFixedInvestmentCost'][hp] > 0.0])
+    # Standalone hydrogen compressor units (rows tagged with a DischargeNode, excluded from hg
+    # above). A candidate additionally carries a positive (annualised) InvestCost, sized in
+    # oM_Investment. Both empty for cases with no compressor row, so nothing downstream changes.
+    model.hc  = Set(doc='hydrogen compressor units    ', initialize=sorted(_hyd_compressor_names))
+    model.hcc = Set(doc='hydrogen compressor candidate', initialize=[hc for hc in model.hc if parameters_dict['pHydGenInvestCost'][hc] > 0.0])
 
     model.egnr = model.eg  - model.egr           # non-RES units, they can be committed and also contribute to the operating reserves
     model.ele  = model.ela - model.elc           # existing electric lines (le)
@@ -690,6 +732,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.psnhpn   = [(p, sc, n, ni, nf, cc)     for p, sc, n, ni, nf, cc     in model.psn   * model.hpn ]
     model.psnhpa   = [(p, sc, n, ni, nf, cc)     for p, sc, n, ni, nf, cc     in model.psn   * model.hpa ]
     model.psnhpe   = [(p, sc, n, ni, nf, cc)     for p, sc, n, ni, nf, cc     in model.psn   * model.hpe ]
+    model.psnhc    = [(p, sc, n, hc        )     for p, sc, n, hc             in model.psn   * model.hc  ]
+    model.psnhcc   = [(p, sc, n, hc        )     for p, sc, n, hc             in model.psn   * model.hcc ]
 
     # define AC existing  lines
     model.elea = Set(initialize=model.ele, ordered=False, doc='AC existing  lines and non-switchable lines', filter=lambda model,value: value in model.ele and not parameters_dict['pEleNetType'][value] == 'DC')
@@ -1390,6 +1434,10 @@ def create_variables(model, optmodel, indlog):
 
     setattr(optmodel, 'vEleNetFlow',                       Var(model.psnela,  within=           Reals, doc='electricity net flow                                                    [kW]'))
     setattr(optmodel, 'vHydNetFlow',                       Var(model.psnhpa,  within=           Reals, doc='hydrogen    net flow                                                  [kgH2]'))
+    # Standalone compressor throughput: hydrogen raised from the suction node to the discharge
+    # node, kgH2/h. Non-negative (a compressor is a one-way pressuriser). Bounds are set in the
+    # bound loop below (fixed nameplate for a fixed compressor, invest-linked in oM_Investment).
+    setattr(optmodel, 'vHydCompFlow',                      Var(model.psnhc,   within=NonNegativeReals, doc='hydrogen    compressor throughput                                    [kgH2/h]'))
     setattr(optmodel, 'vEleNetTheta',                      Var(model.psnnd,   within=           Reals, doc='electricity net voltage angle                                          [rad]'))
 
     setattr(optmodel, 'vEleFreqContReserveDisUpwardBid',   Var(model.psnege2h, within=NonNegativeReals, doc='electricity frequency containment reserve upward bid                   [kW]'))
@@ -1680,6 +1728,13 @@ def create_variables(model, optmodel, indlog):
         else:
             optmodel.vHydNetFlow[idx].setlb(std_lower_bound)
             optmodel.vHydNetFlow[idx].setub(std_upper_bound)
+
+    # Compressor throughput is capped at its rated nameplate (the row's MaximumCharge). For a
+    # candidate this fixed cap is the not-yet-built ceiling; oM_Investment tightens it to
+    # MaximumCharge x build fraction so an unbuilt compressor carries zero flow. MaximumCharge is
+    # already factor1-scaled at load, matching vHydNetFlow's factor1-scaled TTC bound.
+    for idx in model.psnhc:
+        optmodel.vHydCompFlow[idx].setub(model.Par['pHydGenMaximumCharge'][idx[-1]])
 
     log_time('--- Setting the bounds for the variables', StartTime, ind_log=indlog)
 

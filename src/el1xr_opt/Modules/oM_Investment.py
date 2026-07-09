@@ -139,7 +139,7 @@ def create_investment(model, optmodel, indlog):
     # money doc-tags read [money] rather than a specific currency for this reason.
     setattr(optmodel, 'vTotalICost', Var(within=NonNegativeReals, doc='total annualized investment cost [money]'))
 
-    if not len(model.egc) and not len(model.hgc) and not len(model.hgcompc):
+    if not len(model.egc) and not len(model.hgc) and not len(model.hgcompc) and not len(model.hcc):
         optmodel.vTotalICost.fix(0.0)
         log_time('--- Declaring the investment layer (no candidate units):', StartTime, ind_log=indlog)
         return model
@@ -150,6 +150,10 @@ def create_investment(model, optmodel, indlog):
     # Compressor build fraction (sized independently of the tank charge port it shares a store
     # with). Empty when no unit carries a CompressorInvestCost, so default cases are unchanged.
     setattr(optmodel, 'vHydCompInvest', Var(model.hgcompc, within=UnitInterval, doc='hydrogen compressor candidate build fraction [0,1]'))
+    # Standalone compressor build fraction (a Technology="Compressor" row in model.hcc, distinct
+    # from the tank-welded vHydCompInvest above). Empty when no compressor row is an investment
+    # candidate, so default cases are unchanged.
+    setattr(optmodel, 'vHydCompBuild', Var(model.hcc, within=UnitInterval, doc='standalone hydrogen compressor candidate build fraction [0,1]'))
 
     # Make the decision binary (all-or-nothing build) for units flagged for it.
     for egc in model.egc:
@@ -169,6 +173,21 @@ def create_investment(model, optmodel, indlog):
         try:
             if model.Par['pHydGenBinaryInvestment'][hgs] == 1:
                 optmodel.vHydCompInvest[hgs].domain = Binary
+        except (KeyError, TypeError):
+            pass
+    # Standalone compressor build uses its own row's BinaryInvestment flag / Lo-Up bounds.
+    for hcc in model.hcc:
+        try:
+            if model.Par['pHydGenBinaryInvestment'][hcc] == 1:
+                optmodel.vHydCompBuild[hcc].domain = Binary
+        except (KeyError, TypeError):
+            pass
+        try:
+            optmodel.vHydCompBuild[hcc].setlb(model.Par['pHydGenInvestmentLo'][hcc])
+        except (KeyError, TypeError):
+            pass
+        try:
+            optmodel.vHydCompBuild[hcc].setub(model.Par['pHydGenInvestmentUp'][hcc])
         except (KeyError, TypeError):
             pass
 
@@ -219,6 +238,7 @@ def create_investment(model, optmodel, indlog):
         _add_symmetry_order(optmodel.vEleGenInvest,  list(model.egc),     'EleGen')
         _add_symmetry_order(optmodel.vHydGenInvest,  list(model.hgc),     'HydGen')
         _add_symmetry_order(optmodel.vHydCompInvest, list(model.hgcompc), 'HydComp')
+        _add_symmetry_order(optmodel.vHydCompBuild,  list(model.hcc),     'HydCompUnit')
 
     # %% Capacity coupling: an unbuilt candidate has zero usable capacity.
     # These are extra caps on top of the existing nameplate bounds, so they are
@@ -229,6 +249,7 @@ def create_investment(model, optmodel, indlog):
     psnhgc  = [(p, sc, n, hgc ) for (p, sc, n) in model.psn for hgc  in model.hgc ]
     psnhgsc = [(p, sc, n, hgsc) for (p, sc, n) in model.psn for hgsc in model.hgsc]
     psnhgcompc = [(p, sc, n, hgs) for (p, sc, n) in model.psn for hgs in model.hgcompc]
+    psnhcc     = [(p, sc, n, hcc) for (p, sc, n) in model.psn for hcc in model.hcc]
     # candidate electrolysers (e2h units that are investment candidates): their
     # design variable is the ELECTRICITY input, so the build decision must cap it.
     e2hc    = [g for g in model.e2h if g in model.hgc]
@@ -287,6 +308,13 @@ def create_investment(model, optmodel, indlog):
     def eHydInvestMaxCompressor(optmodel, p, sc, n, hgcompc):
         return optmodel.vHydTotalCharge[p, sc, n, hgcompc] <= model.Par['pHydGenCompressorNameplate'][hgcompc] * model.factor1 * optmodel.vHydCompInvest[hgcompc]
     optmodel.__setattr__('eHydInvestMaxCompressor', Constraint(psnhgcompc, rule=eHydInvestMaxCompressor, doc='candidate hydrogen compressor throughput limited by build decision'))
+
+    # Candidate STANDALONE compressor (Technology="Compressor"): its throughput is limited by the
+    # BUILT capacity (rated throughput MaximumCharge x build fraction). MaximumCharge is already
+    # factor1-scaled at load, so -- unlike the tank-welded nameplate above -- no extra factor1.
+    def eHydInvestMaxCompFlow(optmodel, p, sc, n, hcc):
+        return optmodel.vHydCompFlow[p, sc, n, hcc] <= model.Par['pHydGenMaximumCharge'][hcc] * optmodel.vHydCompBuild[hcc]
+    optmodel.__setattr__('eHydInvestMaxCompFlow', Constraint(psnhcc, rule=eHydInvestMaxCompFlow, doc='candidate standalone compressor throughput limited by build decision'))
 
     # Compressor build tied to its tank build. A compressor raises the hydrogen to the
     # tank's storage pressure and injects it, so building a compressor only makes sense if
@@ -421,6 +449,7 @@ def create_investment(model, optmodel, indlog):
             sum(model.Par['pEleGenInvestCost'][egc] * optmodel.vEleGenInvest[egc] for egc in model.egc) +
             sum(model.Par['pHydGenInvestCost'][hgc] * optmodel.vHydGenInvest[hgc] for hgc in model.hgc) +
             sum(model.Par['pHydGenCompressorInvestCost'][hgs] * optmodel.vHydCompInvest[hgs] for hgs in model.hgcompc) +
+            sum(model.Par['pHydGenInvestCost'][hcc] * optmodel.vHydCompBuild[hcc] for hcc in model.hcc) +
             conn_term)
     optmodel.__setattr__('eTotalICost', Constraint(rule=eTotalICost, doc='total period-weighted investment cost'))
 
