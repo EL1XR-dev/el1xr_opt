@@ -1062,6 +1062,33 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeHeadroomConvInvest', Constraint(optmodel.psne2h, rule=eEleFreqDownChargeHeadroomConvInvest, doc='FCR downward charge headroom for a candidate electrolyser (build-limited)'))
 
+    # RESERVE RESPONSE SPEED = the paper's technology-resolved FCR-D ramp gate (eq:rampgate),
+    # implemented in code and extended to the downward direction now that the cascade lets the
+    # electrolyser bid down. FCR-D must reach 86% of the bid within 7.5 s, so a stack ramping at
+    # rho_g (fraction of rated consumption per second) can back only (7.5/0.86)*rho_g of its rating
+    # on FCR-D: PEM ~10%/s backs ~87%, alkaline ~2%/s backs ~17%. FCR-N is NOT gated -- its 60 s
+    # window is long enough that the ramp never binds. A battery reaches full power in << 1 s, so
+    # the gate is slack for it. Per-technology rho is env-tunable; default off = golden-neutral.
+    _fcrd_gate_on = os.environ.get('ELE_FCRD_RAMPGATE', '0') == '1'
+    _rho_tech = {'AEL': float(os.environ.get('AEL_FCRD_RAMP_PER_S', '0.02')),
+                 'PEM': float(os.environ.get('PEM_FCRD_RAMP_PER_S', '0.10'))}
+    _act_factor = 7.5 / 0.86   # effective seconds to meet the 86%-within-7.5s FCR-D requirement
+    def _fcrd_cap(p,sc,n,e2h):
+        tech = 'AEL' if 'AEL' in str(e2h) else 'PEM'
+        rated = model.Par['pHydMaxCharge2ndBlock'][e2h][p,sc,n] * (optmodel.vHydGenInvest[e2h] if e2h in model.hgc else 1.0)
+        return _act_factor * _rho_tech[tech] * rated
+    def eEleFCRDRampGateUp(optmodel, p,sc,n,e2h):
+        if not _fcrd_gate_on or model.Par['pHydGenNoFCRD'][e2h] == 1:
+            return Constraint.Skip
+        return optmodel.vEleFreqContReserveDisUpCha[p,sc,n,e2h] <= _fcrd_cap(p,sc,n,e2h)
+    optmodel.__setattr__('eEleFCRDRampGateUp', Constraint(optmodel.psne2h, rule=eEleFCRDRampGateUp, doc='Electrolyser upward FCR-D bounded by per-technology stack ramp within the 7.5s activation window'))
+
+    def eEleFCRDRampGateDown(optmodel, p,sc,n,e2h):
+        if not _fcrd_gate_on or model.Par['pHydGenNoFCRD'][e2h] == 1:
+            return Constraint.Skip
+        return optmodel.vEleFreqContReserveDisDownCha[p,sc,n,e2h] <= _fcrd_cap(p,sc,n,e2h)
+    optmodel.__setattr__('eEleFCRDRampGateDown', Constraint(optmodel.psne2h, rule=eEleFCRDRampGateDown, doc='Electrolyser downward FCR-D bounded by per-technology stack ramp within the 7.5s activation window'))
+
     def eEleFreqUpChargeBoundConv(optmodel, p,sc,n,e2h):
         if ((model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRD'][e2h] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Up'][p,sc,n] > 0 and model.Par['pHydGenNoFCRN'][e2h] == 0)) and model.Par['pHydMaxCharge'][e2h][p,sc,n]:
             return (optmodel.vEleFreqContReserveDisUpCha[p,sc,n,e2h] + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,e2h]) / model.Par['pHydMaxCharge'][e2h][p,sc,n] <= model.Par['pVarFixedAvailability'][e2h][p,sc,n]
@@ -1076,17 +1103,33 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqDownChargeBoundConv', Constraint(optmodel.psne2h, rule=eEleFreqDownChargeBoundConv, doc='FCR downward charge bound for the electrolyser'))
 
-    # Node-level FCR-down endurance: the extra hydrogen the electrolysers at a node would
-    # produce while sustaining a down-bid over the endurance window must fit in the empty
-    # headroom of the hydrogen stores at that node. FCR-up (cutting consumption) needs no
-    # storage, so only the down direction is constrained. A node with FCR-flagged
-    # electrolysers but no hydrogen store has zero headroom (empty right-hand side), so the
-    # constraint forces the endurance-weighted down bids to zero rather than being skipped.
+    # FCR-down endurance: the extra hydrogen the electrolysers at a node would produce while
+    # sustaining a down-bid over the endurance window must fit in the empty headroom of the
+    # hydrogen stores it can reach. The extra H2 is lifted through the compressor into the tank,
+    # so the reachable headroom is the store at nd (flat/tank-welded case) PLUS the store at the
+    # discharge node of any compressor suctioning from nd (the pressure cascade: electrolysers at
+    # 30 bar reaching the 500-bar tank). Under the flat single-node topology the compressor and
+    # tank share the electrolyser's node, so this adds nothing and existing cases are byte-
+    # unchanged; under the pressure-resolved topology it backs the down-bid with the tank the
+    # compressor feeds instead of forcing it to zero. FCR-up (cutting consumption) needs no
+    # storage, so only the down direction is constrained. Mirrors _hgs_reachable (used by the
+    # fuel-cell up-endurance) but in the lift direction rather than the let-down direction.
+    def _hgs_reachable_up(nd):
+        seen, out = set(), []
+        for hgs in model.hgs:
+            if (nd, hgs) in model.n2hg and hgs not in seen:
+                seen.add(hgs); out.append(hgs)
+        for hc in _hcomp_suct_at[nd]:
+            dn = model.Par['pHydGenDischargeNode'][hc]
+            for hgs in model.hgs:
+                if (dn, hgs) in model.n2hg and hgs not in seen:
+                    seen.add(hgs); out.append(hgs)
+        return out
     def eEleFreqDownEnduranceConv(optmodel, p,sc,n,nd):
         if n == model.n.first():
             return Constraint.Skip
         e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
-        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        hgs_at_node = _hgs_reachable_up(nd)
         if not e2h_at_node:
             return Constraint.Skip
         lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),e2h]
@@ -1102,7 +1145,7 @@ def create_constraints(model, optmodel, indlog):
         if n != model.n.last():
             return Constraint.Skip
         e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
-        hgs_at_node = [hgs for hgs in model.hgs if (nd,hgs) in model.n2hg]
+        hgs_at_node = _hgs_reachable_up(nd)
         if not e2h_at_node:
             return Constraint.Skip
         lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]
