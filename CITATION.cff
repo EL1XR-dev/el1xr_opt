@@ -1,8 +1,7 @@
 # This CITATION.cff makes GitHub show a "Cite this repository" widget and lets
 # citation managers read the software metadata. Zenodo reads .zenodo.json (not
 # this file) when it mints the release DOI, so keep the two in sync.
-# TODO before the release: add each author's ORCID (uncomment the orcid lines),
-# and set `version` + `date-released` to the tagged release used in the paper.
+# TODO before the release: set `version` + `date-released` to the tagged release.
 cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
 title: "el1xr_opt: an open-source optimization model for the design and operation of hybrid renewable energy systems"
@@ -19,15 +18,15 @@ authors:
     family-names: Alvarez
     email: erik.alvarez@ri.se
     affiliation: "RISE Research Institutes of Sweden, Gothenburg, Sweden"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add
+    orcid: "https://orcid.org/0000-0003-3862-9747"
   - given-names: "Juan F."
     family-names: Gutierrez-Guerra
     affiliation: "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add
+    orcid: "https://orcid.org/0000-0001-9441-3073"
   - given-names: Andres
     family-names: Ramos
     affiliation: "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add
+    orcid: "https://orcid.org/0000-0002-8871-1872"
 version: "1.0.16"          # TODO: set to the tagged release used in the paper
 date-released: "2026-07-22" # TODO: set to the actual release date (YYYY-MM-DD)
 license: GPL-3.0-or-later

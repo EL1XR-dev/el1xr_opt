@@ -7,15 +7,18 @@
   "creators": [
     {
       "name": "Alvarez, Erik F.",
-      "affiliation": "RISE Research Institutes of Sweden, Gothenburg, Sweden"
+      "affiliation": "RISE Research Institutes of Sweden, Gothenburg, Sweden",
+      "orcid": "0000-0003-3862-9747"
     },
     {
       "name": "Gutierrez-Guerra, Juan F.",
-      "affiliation": "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
+      "affiliation": "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain",
+      "orcid": "0000-0001-9441-3073"
     },
     {
       "name": "Ramos, Andres",
-      "affiliation": "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
+      "affiliation": "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain",
+      "orcid": "0000-0002-8871-1872"
     }
   ],
   "keywords": [
