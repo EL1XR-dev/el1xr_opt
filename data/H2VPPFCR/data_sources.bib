@@ -1,0 +1,261 @@
+% Data sources for the H2VPPFCR case study.
+% Real time series and techno-economic figures used to calibrate the case.
+% Keep in sync with notes/data_sources.md. Merge into the Overleaf bibliography
+% (paper/) when the manuscript cites these.
+
+@online{energycharts_prices,
+  author       = {{Fraunhofer ISE}},
+  title        = {Energy-Charts: Electricity Day-Ahead Prices},
+  organization = {Fraunhofer Institute for Solar Energy Systems ISE},
+  url          = {https://api.energy-charts.info/price?bzn=SE3},
+  note         = {Bidding zone SE3 (Sweden, west coast), hourly day-ahead prices, 6--12 October 2025. Underlying market data from ENTSO-E / Nord Pool},
+  urldate      = {2026-06-16},
+  year         = {2025}
+}
+
+@article{era5_hersbach2020,
+  author    = {Hersbach, Hans and Bell, Bill and Berrisford, Paul and Hirahara, Shoji and Hor{\'a}nyi, Andr{\'a}s and Mu{\~n}oz-Sabater, Joaqu{\'\i}n and others},
+  title     = {The {ERA5} global reanalysis},
+  journal   = {Quarterly Journal of the Royal Meteorological Society},
+  volume    = {146},
+  number    = {730},
+  pages     = {1999--2049},
+  year      = {2020},
+  doi       = {10.1002/qj.3803},
+  note      = {Source of 10\,m/100\,m wind fields for the site-specific wind capacity-factor profile (Copernicus Climate Data Store)}
+}
+
+@article{atlite_hofmann2021,
+  author    = {Hofmann, Fabian and Hampp, Johannes and Neumann, Fabian and Brown, Tom and H{\"o}rsch, Jonas},
+  title     = {atlite: A Lightweight {Python} Package for Calculating Renewable Power Potentials and Time Series},
+  journal   = {Journal of Open Source Software},
+  volume    = {6},
+  number    = {62},
+  pages     = {3294},
+  year      = {2021},
+  doi       = {10.21105/joss.03294},
+  note      = {Converts ERA5 wind fields to a site capacity factor with a Vestas V112 3\,MW power curve at 57.5N, 12.1E (SE3 west coast)}
+}
+
+@online{svk_mimer_fcr,
+  author       = {{Svenska kraftn\"at}},
+  title        = {Mimer: Procured Volumes and Clearing Prices for FCR},
+  organization = {Svenska kraftn\"at (Swedish Transmission System Operator)},
+  url          = {https://mimer.svk.se/PrimaryRegulation/PrimaryRegulationIndex},
+  note         = {National FCR-N, FCR-D up and FCR-D down capacity clearing prices, 7--13 October 2024},
+  urldate      = {2026-06-16},
+  year         = {2024}
+}
+
+@online{ecb_fxref_2024,
+  author       = {{European Central Bank}},
+  title        = {Euro Foreign Exchange Reference Rates},
+  organization = {European Central Bank},
+  url          = {https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html},
+  note         = {2024 annual average reference rates: EUR/SEK = 11.438, EUR/USD = 1.0822},
+  urldate      = {2026-06-16},
+  year         = {2024}
+}
+
+@online{skatteverket_elskatt,
+  author       = {{Skatteverket}},
+  title        = {Skatt p\aa{} el (Energy Tax on Electricity)},
+  organization = {Swedish Tax Agency},
+  url          = {https://www.skatteverket.se/foretag/skatterochavdrag/punktskatter/energiskatter/skattpael.4.15532c7b1442f256bae5e4c.html},
+  note         = {Reduced energy tax for manufacturing industry at the EU minimum of 0.6 \"ore/kWh},
+  urldate      = {2026-06-16},
+  year         = {2024}
+}
+
+@techreport{dea_technology_data,
+  author       = {{Danish Energy Agency}},
+  title        = {Technology Data --- Energy Storage, Renewable Fuels and Electrolysis},
+  institution  = {Danish Energy Agency and Energinet},
+  url          = {https://ens.dk/en/our-services/technology-catalogues},
+  note         = {Per-technology electrolyser data (AEC / PEMEC / SOEC): specific energy, CAPEX (2030), part-load and dynamics; hydrogen storage cost},
+  year         = {2024}
+}
+
+@techreport{iea_ghr_2024,
+  author       = {{International Energy Agency}},
+  title        = {Global Hydrogen Review 2024},
+  institution  = {International Energy Agency},
+  year         = {2024},
+  url          = {https://www.iea.org/reports/global-hydrogen-review-2024},
+  note         = {Electrolyser technology comparison (alkaline / PEM / SOEC): efficiency, cost, flexibility and maturity}
+}
+
+@techreport{icct_hrs_h2cost_2022,
+  author       = {Basma, Hussein and Rodr{\'\i}guez, Felipe},
+  title        = {Cost of Renewable Hydrogen Produced Onsite at Hydrogen Refueling Stations in Europe},
+  institution  = {International Council on Clean Transportation (ICCT)},
+  year         = {2022},
+  url          = {https://theicct.org/publication/fuels-eu-onsite-hydro-cost-feb22/},
+  note         = {Delivered green-H2 cost at heavy-duty refuelling stations; basis for the ~7 EUR/kg 2030 sale price (range ~5--9 EUR/kg)}
+}
+
+@misc{green_h2_cost_2030,
+  author       = {{IEA}},
+  title        = {Global Hydrogen Review: Renewable Hydrogen Production Cost Outlook},
+  organization = {International Energy Agency},
+  year         = {2024},
+  url          = {https://www.iea.org/reports/global-hydrogen-review-2024},
+  note         = {Green-H2 production cost ~5--9 EUR/kg (2024-26) falling toward ~4--5 EUR/kg by 2030}
+}
+
+@techreport{nrel_atb_2024,
+  author       = {{National Renewable Energy Laboratory}},
+  title        = {2024 Annual Technology Baseline: Utility-Scale Battery Storage},
+  institution  = {National Renewable Energy Laboratory (NREL)},
+  url          = {https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage},
+  note         = {Battery round-trip efficiency and 4-hour utility-scale CAPEX},
+  year         = {2024}
+}
+
+% --- Vastra Gotaland / west Sweden regional hydrogen demand (offtakers) ---
+
+@online{portgbg_hrs_2024,
+  author       = {{Port of Gothenburg}},
+  title        = {Hydrogen Refuelling Station for Heavy Traffic Opened at the Port of Gothenburg},
+  organization = {Gothenburg Port Authority},
+  year         = {2024},
+  url          = {https://www.mynewsdesk.com/goteborgs_hamn/pressreleases/hydrogen-refueling-station-for-heavy-traffic-opened-at-the-port-of-gothenburg-3346866},
+  note         = {Heavy-duty HRS, ~1,500 kgH2/day capacity, ~35 trucks/day; opened October 2024. Basis for the road-transport demand sector},
+  urldate      = {2026-06-16}
+}
+
+@online{portgbg_electrolyser,
+  author       = {{Port of Gothenburg}},
+  title        = {Hydrogen Production Facility Planned for the Port of Gothenburg},
+  organization = {Gothenburg Port Authority; Statkraft / HYDS},
+  year         = {2024},
+  url          = {https://sustainableworldports.org/project/port-of-gothenburg-hydrogen-production-facility-and-filling-station/},
+  note         = {Planned 5--10 MW electrolyser, 2--4 tonnes H2/day; sets the realistic VPP scale for the west-coast hydrogen valley},
+  urldate      = {2026-06-16}
+}
+
+@online{preem_vattenfall_lysekil,
+  author       = {{Vattenfall} and {Preem}},
+  title        = {Fossil-free Hydrogen for Biofuels: Electrolysis at the Lysekil Refinery},
+  organization = {Vattenfall; Preem},
+  year         = {2021},
+  url          = {https://group.vattenfall.com/sustainability/climate-transition-plan/industry-decarbonisation/preem},
+  note         = {Planned 50 MW electrolyser at Preem's Lysekil refinery (feasibility to 200--500 MW); large steady refinery/biofuel H2 baseload},
+  urldate      = {2026-06-16}
+}
+
+@online{stenungsund_klimatledande,
+  author       = {{Klimatledande Processindustri (Lindholmen Science Park)}},
+  title        = {The Potential for Hydrogen in Lysekil and the West-Sweden Process Industry},
+  organization = {Klimatledande Processindustri},
+  year         = {2023},
+  url          = {https://klimatledande.lindholmen.se/en/news/potential-hydrogen-lysekil},
+  note         = {West-Sweden chemical/process cluster (Stenungsund: Nouryon, Perstorp, Borealis) fossil-free H2 feedstock demand; ~SEK 10 bn decarbonisation plans},
+  urldate      = {2026-06-16}
+}
+
+@online{fossilfritt_h2strategy,
+  author       = {{Fossilfritt Sverige}},
+  title        = {Hydrogen Strategy for Fossil-Free Competitiveness},
+  organization = {Fossilfritt Sverige},
+  year         = {2021},
+  url          = {https://fossilfrittsverige.se/en/start-english/strategies/hydrogen/},
+  note         = {National context for Swedish industrial + transport hydrogen demand},
+  urldate      = {2026-06-16}
+}
+
+@online{hiwhyv_rise,
+  author       = {{RISE Research Institutes of Sweden}},
+  title        = {High Coast to West Coast Hydrogen Valley (HiWhyV)},
+  organization = {RISE; Clean Hydrogen Partnership},
+  url          = {https://www.ri.se/en/news/major-project-for-hydrogen-production-in-vasternorrland-and-western-sweden},
+  note         = {RISE-coordinated hydrogen valley; renewable hydrogen for shipping and heavy transport on Sweden's coasts},
+  urldate      = {2026-06-16},
+  year         = {2024}
+}
+
+@techreport{liu_ornl_hdv_2022,
+  author      = {Liu, Yuanyuan and others},
+  title       = {Providing Levelized Cost and Waiting Time Inputs for Heavy-Duty Vehicle Hydrogen Refueling Station Planning: A Case Study of the U.S. I-75 Corridor},
+  institution = {Oak Ridge National Laboratory},
+  year        = {2022},
+  note        = {OSTI 1876290; heavy-duty diesel-derived diurnal refuelling profile},
+  url         = {https://www.osti.gov/biblio/1876290}
+}
+
+@techreport{hallenbeck_rice_1997,
+  author      = {Hallenbeck, Mark and Rice, Margaret},
+  title       = {Vehicle Volume Distributions by Classification},
+  institution = {WSDOT/TRAC for FHWA},
+  year        = {1997},
+  note        = {Weekday/weekend truck volume factors},
+  url         = {https://rosap.ntl.bts.gov/view/dot/48834}
+}
+
+@article{kurtz_h2demand_2020,
+  author  = {Kurtz, Jennifer and others},
+  title   = {Predicting demand for hydrogen station fueling},
+  journal = {International Journal of Hydrogen Energy},
+  volume  = {45},
+  number  = {56},
+  year    = {2020},
+  doi     = {10.1016/j.ijhydene.2019.10.014},
+  note    = {Directly-measured (light-duty) H2 station hourly fueling curve}
+}
+
+@article{kirchem_schill_2023,
+  author  = {Kirchem, Dana and Schill, Wolf-Peter},
+  title   = {Power sector effects of green hydrogen production in Germany},
+  journal = {Energy Policy},
+  year    = {2023},
+  doi     = {10.1016/j.enpol.2023.113503},
+  note    = {Flat hourly industrial hydrogen demand assumption (arXiv:2208.07302)}
+}
+
+@online{scb_ipi_2025,
+  author       = {{Statistics Sweden (SCB)}},
+  title        = {Industrial Production Index (industrisemester monthly seasonality)},
+  year         = {2025},
+  url          = {https://www.scb.se},
+  note         = {Swedish July/August industrial-holiday demand trough}
+}
+
+@online{argus_gothenburg_methanol_2023,
+  author       = {{Argus Media}},
+  title        = {First ship-to-ship methanol bunkering at Gothenburg (Stena Germanica)},
+  year         = {2023},
+  url          = {https://www.argusmedia.com/en/news-and-insights/latest-market-news/2412817},
+  note         = {Green-fuel bunkering frequency/duration analogue for maritime H2}
+}
+
+% --- Degradation cost parameters (el1xr M2 electrolyser / M3 battery) ---
+@article{Refaat_2026,
+  title        = {Dynamic degradation-based sizing and energy management of hydrogen-assisted hybrid microgrids},
+  author       = {Refaat, Mohamed M. and Al-Dhaifallah, Mujahed and Ali, Ziad M. and Ismail, Moustafa Magdi and Abdel Aleem, Shady H.E.},
+  journal      = {Energy},
+  volume       = {352},
+  pages        = {140914},
+  year         = {2026},
+  doi          = {10.1016/j.energy.2026.140914},
+  note         = {PEM electrolyser voltage-degradation rates (steady + high-load surcharge, per-cycle) and Li-ion cycle/calendar ageing; basis for the electrolyser throughput cost (~0.076 EUR/kWh) and high-load surcharge (+13 percent on the 2nd block)}
+}
+@article{Ghanaee_2026,
+  title        = {Accurate {MILP}-based battery cycle aging model for day-ahead energy and reserve scheduling in hybrid power plants},
+  author       = {Ghanaee, Elahe and P\'erez-D\'iaz, Juan I. and Fern\'andez-Mu\~noz, Daniel and N\'ajera, Jorge and Blanco, Marcos},
+  journal      = {Journal of Energy Storage},
+  volume       = {155},
+  pages        = {121426},
+  year         = {2026},
+  doi          = {10.1016/j.est.2026.121426},
+  note         = {Battery depth-of-discharge vs cycle-life (Wohler) cost in a reserve-scheduling MILP; basis for the incremental sub-daily battery throughput cost (~0.05 EUR/kWh discharged)}
+}
+@article{Maoulida_2025,
+  title        = {Dynamic electrical degradation of {PEM} electrolyzers under renewable energy intermittency: Mechanisms, diagnostics, and mitigation strategies -- a comprehensive review},
+  author       = {Maoulida, Fahad and Guilbert, Damien and Camara, Mamadou-Ba\"ilo and Dakyo, Brayima},
+  journal      = {Renewable and Sustainable Energy Reviews},
+  volume       = {225},
+  pages        = {116170},
+  year         = {2025},
+  doi          = {10.1016/j.rser.2025.116170},
+  note         = {Dynamic/load-following degradation of PEM stacks under intermittent operation; supports costing the within-on FCR-N modulation (the load-ramp degradation contribution)}
+}

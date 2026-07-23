@@ -1,0 +1,2 @@
+,Node,Buy,Sell,InitialPeriod,FinalPeriod,MaximumEnergyBuy,MinimumEnergyBuy,MaximumEnergySell,MinimumEnergySell,TariffType,BuyingRatio,SellingRatio,Incentive,Fastavgift,Overforingsavgift,PowerTariff,EnergyTax,Paslag,Moms,MaxBuy,MaxSell,EndNightTime,StartNightTime,HighLoadTariff,OverforingHigh
+EleR_01,Node0,Yes,Yes,2020,2050,15000.0,0,15000.0,0,Hourly,1,1,0,28421.91780821918,0.064,33.90684931506849,0.006,0.05,0.0,15000.0,15000.0,6,22,48.865753424657534,0.122

@@ -1,0 +1,46 @@
+# This CITATION.cff makes GitHub show a "Cite this repository" widget and lets
+# citation managers read the software metadata. Zenodo reads .zenodo.json (not
+# this file) when it mints the release DOI, so keep the two in sync.
+# TODO before the release: add each author's ORCID (uncomment the orcid lines),
+# and set `version` + `date-released` to the tagged release used in the paper.
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "el1xr_opt: an open-source optimization model for the design and operation of hybrid renewable energy systems"
+abstract: >-
+  el1xr_opt is an open-source mixed-integer linear optimization model, built in
+  Pyomo, that co-optimizes the sizing (investment) and the operation of hybrid
+  renewable energy systems coupling electricity and hydrogen, with unit
+  commitment, storage, a pressure-resolved hydrogen network, and frequency
+  containment reserve (FCR) provision. It extends the openTEPES modelling
+  framework and ships automatic solver setup.
+type: software
+authors:
+  - given-names: "Erik F."
+    family-names: Alvarez
+    email: erik.alvarez@ri.se
+    affiliation: "RISE Research Institutes of Sweden, Gothenburg, Sweden"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add
+  - given-names: "Juan F."
+    family-names: Gutierrez-Guerra
+    affiliation: "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add
+  - given-names: Andres
+    family-names: Ramos
+    affiliation: "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add
+version: "1.0.16"          # TODO: set to the tagged release used in the paper
+date-released: "2026-07-22" # TODO: set to the actual release date (YYYY-MM-DD)
+license: GPL-3.0-or-later
+repository-code: "https://github.com/EL1XR-dev/el1xr_opt"
+url: "https://el1xr-opt.readthedocs.io/en/latest/"
+keywords:
+  - optimization
+  - mixed-integer linear programming
+  - capacity expansion
+  - unit commitment
+  - hydrogen
+  - electrolyser
+  - battery energy storage
+  - frequency containment reserve
+  - sector coupling
+  - Pyomo

@@ -1,0 +1,2 @@
+,,,,,,,,,,ENSCost,HNSCost,CO2Cost,TimeStep,AnnualDiscountRate,EleReferenceNode,HydReferenceNode,UpReserveActivation,DwReserveActivation,MinRatioDwUp,MaxRatioDwUp,EconomicBaseYear,DemandType,TargetDemand,RampDemand,NumberPowerPeaks,GreenH2Matching,Factor1,MoneyBase,EleConnInvestCost
+Parameters,,,,,,,,,,90.0,150.0,150,1,0,Node0,Node1,0.25,0.3,0,1,2025,Weekly,,120,1,1,0.001,1000.0,77.21331

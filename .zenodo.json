@@ -1,0 +1,50 @@
+{
+  "title": "el1xr_opt: an open-source optimization model for the design and operation of hybrid renewable energy systems",
+  "description": "<p>el1xr_opt is an open-source mixed-integer linear optimization model, built in Pyomo, that co-optimizes the sizing (investment) and the operation of hybrid renewable energy systems coupling electricity and hydrogen. It includes unit commitment, storage dynamics, a pressure-resolved hydrogen network with compression, and frequency containment reserve (FCR) provision with endurance and response-speed constraints. It extends the openTEPES modelling framework and ships automatic solver setup.</p><p>This archived release also bundles the reproducibility dataset for the study &ldquo;Market-driven co-sizing of a hybrid power&ndash;hydrogen virtual power plant for energy and frequency reserve markets&rdquo; (Alvarez, Gutierrez-Guerra, and Ramos) under <code>data/H2VPPFCR/</code>: the 2025 SE3 market series (day-ahead, FCR-N and FCR-D capacity prices, activation duties), the ERA5 site wind, the hydrogen-demand profiles, the techno-economic parameters, the case builder, and the experiment configurations. Every case in the paper regenerates from these inputs against this model version.</p>",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "GPL-3.0-or-later",
+  "creators": [
+    {
+      "name": "Alvarez, Erik F.",
+      "affiliation": "RISE Research Institutes of Sweden, Gothenburg, Sweden"
+    },
+    {
+      "name": "Gutierrez-Guerra, Juan F.",
+      "affiliation": "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
+    },
+    {
+      "name": "Ramos, Andres",
+      "affiliation": "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
+    }
+  ],
+  "keywords": [
+    "optimization",
+    "mixed-integer linear programming",
+    "capacity expansion",
+    "unit commitment",
+    "hydrogen",
+    "electrolyser",
+    "battery energy storage",
+    "frequency containment reserve",
+    "sector coupling",
+    "Pyomo"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/EL1XR-dev/el1xr_opt",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://pypi.org/project/el1xr_opt/",
+      "relation": "isIdenticalTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/IIT-EnergySystemModels/openTEPES",
+      "relation": "isDerivedFrom",
+      "scheme": "url"
+    }
+  ]
+}
