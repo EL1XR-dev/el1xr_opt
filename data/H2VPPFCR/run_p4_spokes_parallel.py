@@ -21,9 +21,10 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+HERE = Path(__file__).resolve().parent
 REPO = Path(__file__).resolve().parents[2]
 PY = sys.executable
-RUN_YEAR = REPO / "experiments" / "h2vpp_fcr" / "run_year.py"
+RUN_YEAR = HERE / "run_year.py"
 LOGDIR = REPO / "results" / "p4_spokes"
 LOGDIR.mkdir(parents=True, exist_ok=True)
 

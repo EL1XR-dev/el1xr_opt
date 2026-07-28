@@ -1,0 +1,35 @@
+{
+  "name": "b1_pemmenu",
+  "variant": "A3",
+  "horizon": "year",
+  "_note": "B1 check (review 2026-07-26): PEM is built at its 9 MW candidate ceiling (PEM_N=6) in every case where it is offered, so the paper's 'the menu is wide enough that the total fleet is interior' does not hold for the PEM sub-menu. Widen the PEM menu and re-solve A3. pem06 is the self-check (= A3, must return -36,859,605 SEK). Cells run in order, so pem14 can be dropped once pem10 answers the question.",
+  "base_env": {
+    "LP": "1",
+    "PRESSURE_NODES": "1",
+    "ENHANCED_PROFILES": "1",
+    "MONEY_BASE": "1000",
+    "PEAK_THRESHOLD_LP": "1",
+    "AEL_N": "6",
+    "PEM_N": "6",
+    "COMPRESSOR_NAMEPLATE_KG": "1000",
+    "WIND_MAX_POWER_KW": "60000",
+    "LINE_TTC_KW": "60000",
+    "ELE_BUY_CAP_KW": "60000",
+    "TIMELIMIT": "7200",
+    "ELE_FCRD_RAMPGATE": "1",
+    "AEL_FCRD_RAMP_PER_S": "0.02",
+    "PEM_FCRD_RAMP_PER_S": "0.10",
+    "METHOD": "2",
+    "CROSSOVER": "0",
+    "SCALEFLAG": "2",
+    "NUMERICFOCUS": "3",
+    "BARHOMOGENEOUS": "1",
+    "CONCURRENT_FALLBACK": "1",
+    "THREADS": "12"
+  },
+  "cells": [
+    {"tag": "pem06", "env": {"PEM_N": "6"}},
+    {"tag": "pem10", "env": {"PEM_N": "10"}},
+    {"tag": "pem14", "env": {"PEM_N": "14"}}
+  ]
+}

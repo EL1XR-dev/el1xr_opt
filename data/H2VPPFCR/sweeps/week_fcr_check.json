@@ -1,0 +1,21 @@
+{
+  "name": "week_fcr_check",
+  "variant": "A3",
+  "horizon": "week",
+  "base_env": {
+    "LP": "1",
+    "TRANSPORT_NET": "1",
+    "MONEY_BASE": "1000",
+    "ELE_3STATE_TIGHT": "1",
+    "ELE_RAMP_CAP": "1",
+    "PEAK_THRESHOLD_LP": "1",
+    "ELE_OPER_SYMBREAK": "1",
+    "RESERVE_DELIVERY": "1",
+    "SOLVER": "highs",
+    "TIMELIMIT": "1800"
+  },
+  "cells": [
+    {"tag": "s10", "env": {"FCR_PRICE_SCALE": "1.0"}},
+    {"tag": "s05", "env": {"FCR_PRICE_SCALE": "0.5"}}
+  ]
+}

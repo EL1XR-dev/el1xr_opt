@@ -1,0 +1,30 @@
+{
+  "name": "fcr",
+  "variant": "A3",
+  "horizon": "year",
+  "base_env": {
+    "LP": "1",
+    "TRANSPORT_NET": "1",
+    "MONEY_BASE": "1000",
+    "ELE_3STATE_TIGHT": "1",
+    "ELE_RAMP_CAP": "1",
+    "PEAK_THRESHOLD_LP": "1",
+    "ELE_OPER_SYMBREAK": "1",
+    "RESERVE_DELIVERY": "1",
+    "METHOD": "2",
+    "CROSSOVER": "0",
+    "SCALEFLAG": "2",
+    "NUMERICFOCUS": "3",
+    "BARHOMOGENEOUS": "1",
+    "CONCURRENT_FALLBACK": "1",
+    "THREADS": "12",
+    "TIMELIMIT": "7200"
+  },
+  "cells": [
+    {"tag": "s10",  "env": {"FCR_PRICE_SCALE": "1.0"}},
+    {"tag": "s075", "env": {"FCR_PRICE_SCALE": "0.75"}},
+    {"tag": "s05",  "env": {"FCR_PRICE_SCALE": "0.5"}},
+    {"tag": "s025", "env": {"FCR_PRICE_SCALE": "0.25"}},
+    {"tag": "s00",  "env": {"FCR_PRICE_SCALE": "0.0"}}
+  ]
+}

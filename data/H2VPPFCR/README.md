@@ -24,9 +24,12 @@ H2VPPFCR/
   build_prices_year.py              # day-ahead + FCR capacity price series -> inputs/real_data/year
   build_wind_se3_year.py            # ERA5 -> site wind capacity factor
   build_kappa_year.py              # Nordic frequency record -> FCR activation duties
+  run_year.py                       # solves one case: builds it, solves it, writes the summary
   run_resp_campaign_parallel.py     # runs the 14 headline cases + the S6-S9 spokes (carries the flags)
   run_resp_figs_parallel.py         # figure-data runs (heatmap, erosion, cycling)
   run_p4_spokes_parallel.py         # extra robustness spokes
+  run_sweep.py                      # runs a sweep spec: one solve per cell
+  sweeps/                           # the sweep specs, one JSON per multi-cell result
   comillas_combined_campaign_eur.cmd  comillas_fcr_erosion_eur.cmd  comillas_heatmap_eur.cmd
   data_sources.md  data_sources.bib # provenance for every techno-economic and market figure
   inputs/
@@ -86,6 +89,40 @@ headline cases are solved as the **linear relaxation** (`LP=1`) with **Gurobi**
 (barrier, `BarHomogeneous=1`, `NumericFocus=3`); the full-year instance is 3.2–5.0
 million rows and solves in tens of minutes each.
 
+## Run the sweeps
+
+Not every result in the paper is a single case. Six are sweeps — the same case solved
+once per cell, with one or two environment knobs changed per cell — and each is defined
+by a spec under `sweeps/`:
+
+```bash
+python run_sweep.py sweeps/m2_gates_year.json              # sequential
+python run_sweep.py sweeps/m3b_h2price_year.json --parallel 3
+```
+
+| Spec | Cells | What it produces in the paper |
+|---|---|---|
+| `m2_gates_year.json` | baseline, gatesoff | the deliverability decomposition behind contribution 1: switching the endurance and ramp gates off leaves the build unchanged and moves the objective by 0.1% |
+| `m4_windcapex_year.json` | wind capex 860 / 1434 EUR/kW | case S10, wind capital cost plus or minus 25% |
+| `m3b_h2price_year.json` | hydrogen price 1.0 to 0.0 | the hydrogen-price sensitivity figure |
+| `b1_pemmenu_year.json` | PEM menu 9 / 15 / 21 MW | case S11, the widened electrolyser menu |
+| `fcr_erosion_year.json` | FCR price 1.0 to 0.0 | the FCR price-erosion figure |
+| `heatmap_month.json` | degradation x hydrogen price | the two-way sensitivity heatmap |
+
+The `m1_foresight_month.json` and `m7a_*.json` specs cover the month-horizon checks
+reported in the text: the cost of committing the reserve bids ahead of the day-ahead
+outcome, and the cost of integer commitment against the linear relaxation.
+
+A spec sets a `base_env` shared by every cell and then one `env` override per cell, so
+the difference between two cells is exactly what the JSON says it is. Cells are solved
+by `run_year.py`, the same script the campaign runners call, so a sweep cell and a
+campaign case are solved identically.
+
+Three cells of `m3b_h2price_year.json` (hydrogen price 0.20, 0.10 and 0.05) hit the time
+limit rather than proving optimality. They sit inside the collapse zone where the
+electrolyser build has already gone to zero and the curve is monotone through them, so
+the paper does not rely on them.
+
 ## Notes
 
 - **Currency.** Regulatory charges are set in SEK; the case is emitted and the
@@ -95,3 +132,9 @@ million rows and solves in tens of minutes each.
   `build_case.py` at the paper's model commit; regenerate it against this release
   tag before relying on byte-identity, since the builder evolves with the model.
 - Build outputs (`oM_Result_*`, `*.lp`, `*.log`, `*.sol`) are git-ignored.
+- **Where results land.** `run_year.py` writes the built case and the results under the
+  repository root by default. Set `H2VPP_OUTBASE` to send both somewhere else.
+- **Conditioning probe.** `CONDITIONING=1` or `KAPPA=1` makes `run_year.py` report the
+  constraint-matrix and variable-bound coefficient ranges. It loads `analysis/conditioning.py`
+  from the paper's companion repository and is off by default, so it is not needed to
+  reproduce any result here.

@@ -1,0 +1,68 @@
+{
+  "name": "m7a_A2_full",
+  "variant": "A2",
+  "horizon": "month",
+  "base_env": {
+    "PRESSURE_NODES": "1",
+    "ENHANCED_PROFILES": "1",
+    "MONEY_BASE": "1000",
+    "PEAK_THRESHOLD_LP": "1",
+    "AEL_N": "6",
+    "PEM_N": "6",
+    "COMPRESSOR_NAMEPLATE_KG": "1000",
+    "WIND_MAX_POWER_KW": "60000",
+    "LINE_TTC_KW": "60000",
+    "ELE_BUY_CAP_KW": "60000",
+    "ELE_FCRD_RAMPGATE": "1",
+    "AEL_FCRD_RAMP_PER_S": "0.02",
+    "PEM_FCRD_RAMP_PER_S": "0.10",
+    "METHOD": "2",
+    "CROSSOVER": "0",
+    "SCALEFLAG": "2",
+    "NUMERICFOCUS": "3",
+    "BARHOMOGENEOUS": "1",
+    "CONCURRENT_FALLBACK": "1",
+    "THREADS": "4",
+    "MIPGAP": "0.01",
+    "FIX_INVEST": "D:/h2vpp_run/results/h2vpp_fcr/m7a_fix/A2.json"
+  },
+  "cells": [
+    {
+      "tag": "lp",
+      "env": {
+        "LP": "1",
+        "TIMELIMIT": "3600"
+      }
+    },
+    {
+      "tag": "milp",
+      "env": {
+        "LP": "0",
+        "ELE_3STATE_TIGHT": "1",
+        "TIMELIMIT": "7200"
+      }
+    },
+    {
+      "tag": "milp_c100",
+      "env": {
+        "LP": "0",
+        "ELE_3STATE_TIGHT": "1",
+        "TIMELIMIT": "3600",
+        "FIX_RESERVE_SPLIT": "D:/h2vpp_run/results/h2vpp_fcr/sweep_m7a_A2_full/sum_lp.json",
+        "FIX_RESERVE_LEVEL": "class",
+        "FIX_RESERVE_SCALE": "1.0"
+      }
+    },
+    {
+      "tag": "milp_c050",
+      "env": {
+        "LP": "0",
+        "ELE_3STATE_TIGHT": "1",
+        "TIMELIMIT": "5400",
+        "FIX_RESERVE_SPLIT": "D:/h2vpp_run/results/h2vpp_fcr/sweep_m7a_A2_full/sum_lp.json",
+        "FIX_RESERVE_LEVEL": "class",
+        "FIX_RESERVE_SCALE": "0.5"
+      }
+    }
+  ]
+}
