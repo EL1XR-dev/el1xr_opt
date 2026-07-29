@@ -4,6 +4,13 @@
 #                   correctness is enforced by running them in CI.
 #  - benchmarks/**  throwaway dev/prototype scripts, not part of the package or
 #                   the test suite, so lint findings there are not worth chasing.
+#  - data/**        case-study bundles: the builder and run scripts that reproduce a
+#                   published result. They are pinned to the paper they belong to and
+#                   several are byte-identical to a copy in the paper's own repository,
+#                   so reformatting them to satisfy a linter would break the thing that
+#                   makes them useful. Same reasoning as benchmarks/**: not part of the
+#                   package, not part of the test suite.
 exclude_paths:
   - 'tests/**'
   - 'benchmarks/**'
+  - 'data/**'
