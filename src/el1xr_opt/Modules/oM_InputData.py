@@ -430,6 +430,19 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         # replace p{net[0:3]}NetInvestmentUp= 0.0 by 1.0
         parameters_dict[f'p{net[0:3]}NetInvestmentUp'] = parameters_dict[f'p{net[0:3]}NetInvestmentUp'].where(parameters_dict[f'p{net[0:3]}NetInvestmentUp'] > 0.0, other=1.0)
 
+        # An upper bound of 0 means "no bound given", not "cannot build", so it is reset to 1.
+        # That is why a case wanting to switch a candidate OFF has to give a tiny positive bound
+        # instead, and a bound of 1e-9 against bounds that otherwise reach 1e4 spans about 13
+        # orders of magnitude -- the widest range in the matrix, on exactly the variant group with
+        # the ragged terminations (notes/model_speed_review_2026-07-04.md, part 2, bounds row).
+        #
+        # Record which candidates arrived with a bound of exactly 0 BEFORE the reset overwrites
+        # it, so the investment layer can fix those variables to zero outright instead. Fixing
+        # removes the column rather than squeezing it, which is both better conditioned and a
+        # truer statement of the intent.
+        _disabled = parameters_dict[f'p{net[0:3]}GenInvestmentUp']
+        model.__setattr__(f'{net[0:3].lower()}_gen_disabled',
+                          list(_disabled.index[_disabled == 0.0]))
         parameters_dict[f'p{net[0:3]}GenInvestmentUp'] = parameters_dict[f'p{net[0:3]}GenInvestmentUp'].where(parameters_dict[f'p{net[0:3]}GenInvestmentUp'] > 0.0, other=1.0)
 
     # minimum up- and downtime converted to an integer number of time steps
@@ -1254,8 +1267,9 @@ def create_variables(model, optmodel, indlog):
     # picks the active segment.
     model.pwl_curve = {}
     model.hpwl      = []
-    model.pwlbp     = list(range(4))   # breakpoint indices 0..3
-    model.pwlseg    = list(range(3))   # segment indices 0..2 (between adjacent breakpoints)
+    _n_bp = int(model.Par.get('pParElectrolyserPWLPoints', 4))   # breakpoints per unit curve
+    model.pwlbp     = list(range(_n_bp))         # breakpoint indices
+    model.pwlseg    = list(range(_n_bp - 1))     # segment indices (between adjacent breakpoints)
     if int(model.Par.get('pOptIndBinElectrolyserPWL', 0)) == 1:
         _anchor_f = [0.10, 0.20, 0.50, 0.85, 1.00]   # load fraction
         # Specific energy / full-load value, by electrolyser technology. Alkaline (AEL)
@@ -1266,6 +1280,29 @@ def create_variables(model, optmodel, indlog):
         # PEM keeps the alkaline shape, so single-technology cases are byte-unchanged.
         _anchor_mult_alk = [1.35, 1.25, 1.08, 0.97, 1.00]   # alkaline (default)
         _anchor_mult_pem = [1.15, 1.10, 1.04, 0.98, 1.00]   # PEM: flatter part-load
+
+        # Corrected alkaline curve (opt-in, pParElectrolyserCurve = "ulleberg"). The default
+        # shape above puts the efficiency optimum at 85% of load, which contradicts the source
+        # it is cited against: Buttler & Spliethoff report that efficiency FALLS as current
+        # density rises. The replacement is derived, not traced -- Ulleberg's (2003) empirical
+        # current-voltage relation plus his Faraday-efficiency term, with a balance-of-plant
+        # load that is mostly independent of how hard the stack is driven, all calibrated to
+        # the DEA "86 AEC 10 MW" 2025 sheet (51.44 kWh/kg at the stack, 56.69 including
+        # balance of plant, 0.8 A/cm2 rated). The optimum then comes out at about half load
+        # rather than being assumed. See analysis/electrolyser_curve.py in the paper repo,
+        # which regenerates these numbers.
+        #
+        # PEM IS NOT CORRECTED HERE. Its reference (Astriani et al. 2024) is paywalled and
+        # awaiting a manual download, so the published PEM shape is resampled onto the new
+        # breakpoint grid unchanged. It carries the same optimum-near-full-load problem as the
+        # old alkaline curve; do not read the PEM curve as verified.
+        _anchor_f_ull = [0.20, 0.28, 0.36, 0.44, 0.52, 0.60, 0.68, 0.76, 0.84, 0.92, 1.00]
+        _anchor_mult_ull = [1.0501, 0.9800, 0.9515, 0.9411, 0.9400,
+                            0.9443, 0.9521, 0.9621, 0.9737, 0.9864, 1.0000]
+        if str(model.Par.get('pParElectrolyserCurve', '')).lower() == 'ulleberg':
+            _anchor_mult_pem = [float(np.interp(x, _anchor_f, _anchor_mult_pem))
+                                for x in _anchor_f_ull]
+            _anchor_f, _anchor_mult_alk = _anchor_f_ull, _anchor_mult_ull
         for g in model.e2h:
             pf   = float(model.Par['pHydGenProductionFunction'][g])
             pmax = max(float(model.Par['pHydMaxCharge'][g][idx]) for idx in model.psn)
@@ -1278,7 +1315,14 @@ def create_variables(model, optmodel, indlog):
             _tech = str(model.Par['pHydGenTechnology'].get(g, '')).upper()
             _anchor_mult = _anchor_mult_pem if 'PEM' in _tech else _anchor_mult_alk
             fmin  = max(min(pmin / pmax, 1.0), 0.0)
-            fracs = [fmin + (1.0 - fmin) * t for t in (0.0, 0.4, 0.75, 1.0)]
+            # Breakpoints across the unit's productive range. Four points cannot resolve an
+            # optimum that sits in the interior, so the count is a parameter; the spacing below
+            # reproduces the original four exactly when pParElectrolyserPWLPoints is 4.
+            if _n_bp == 4:
+                _ts = (0.0, 0.4, 0.75, 1.0)
+            else:
+                _ts = [k / (_n_bp - 1) for k in range(_n_bp)]
+            fracs = [fmin + (1.0 - fmin) * t for t in _ts]
             model.pwl_curve[g] = [(f * pmax, (f * pmax) / (pf * float(np.interp(f, _anchor_f, _anchor_mult)))) for f in fracs]
             model.hpwl.append(g)
 

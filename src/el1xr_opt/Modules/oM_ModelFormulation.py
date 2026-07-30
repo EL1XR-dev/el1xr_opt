@@ -36,7 +36,12 @@ def create_objective_function(model, optmodel, indlog):
         # the heat operating cost is already period-discounted (oM_HeatSector) and is
         # zero when the case has no heat sector.
         heat_cost = getattr(optmodel, 'HeatOperatingCost', 0.0)
-        return (optmodel.vTotalSCost == optmodel.vTotalICost + heat_cost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
+        # When the period weight has been divided out of eTotalICost for conditioning
+        # (pParNormalisePeriodWeight = 1), vTotalICost holds the UNweighted investment cost and
+        # the weight is reapplied here, once, instead of on every capex coefficient. The default
+        # is 1.0, which leaves this row exactly as it was.
+        _icost_w = getattr(optmodel, '_icost_period_weight', 1.0)
+        return (optmodel.vTotalSCost == _icost_w * optmodel.vTotalICost + heat_cost + sum(optmodel.Par['pDiscountFactor'][idx[0]] * (optmodel.vTotalCComponent[idx] - optmodel.vTotalRComponent[idx]) for idx in model.ps))
     optmodel.__setattr__('eTotalTCost', Constraint(rule=eTotalTCost, doc='Total system cost [money]'))
 
     # Cost / revenue components of the objective, summed from a registry so a new

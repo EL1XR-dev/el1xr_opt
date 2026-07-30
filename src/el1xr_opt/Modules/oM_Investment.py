@@ -155,6 +155,26 @@ def create_investment(model, optmodel, indlog):
     # candidate, so default cases are unchanged.
     setattr(optmodel, 'vHydCompBuild', Var(model.hcc, within=UnitInterval, doc='standalone hydrogen compressor candidate build fraction [0,1]'))
 
+    # Conditioning (opt-in, pParFixDisabledCandidates = 1). A case switches a candidate off by
+    # giving it a tiny positive upper bound, because an upper bound of exactly 0 is read as "no
+    # bound given" and reset to 1 (oM_InputData). A bound of 1e-9 against bounds that elsewhere
+    # reach 1e4 spans about 13 orders of magnitude and is the widest range in the matrix.
+    #
+    # With this flag on, a candidate whose upper bound arrived as exactly 0 is FIXED to zero
+    # instead. Presolve then removes the column outright rather than carrying a variable squeezed
+    # into [0, 1e-9]. The build is zero either way, so the effect on the solution is nil, but
+    # "cannot be built" is stated rather than approximated.
+    #
+    # NOT YET VERIFIED BY A SOLVE, for the same reason as the period-weight flag above: this is an
+    # algebraic argument. A/B one case per affected variant group (A1, A2, D1, D2 are the ones that
+    # disable candidates) and confirm the objective matches to solver tolerance.
+    if int(model.Par.get('pParFixDisabledCandidates', 0)) == 1:
+        for _var, _attr, _set in (('vEleGenInvest', 'ele_gen_disabled', model.egc),
+                                  ('vHydGenInvest', 'hyd_gen_disabled', model.hgc)):
+            for _g in getattr(model, _attr, []):
+                if _g in _set:
+                    getattr(optmodel, _var)[_g].fix(0.0)
+
     # Make the decision binary (all-or-nothing build) for units flagged for it.
     for egc in model.egc:
         try:
@@ -441,11 +461,36 @@ def create_investment(model, optmodel, indlog):
     # trade-off is consistent for any modeled horizon.
     period_weight = sum(model.Par['pDiscountFactor'][p] for p in model.p)
 
+    # Conditioning (opt-in, pParNormalisePeriodWeight = 1). Written as above, every capex
+    # coefficient in this row carries the period weight, which for a year horizon pushes the
+    # largest of them to about 4.4e3 and makes this row the widest in the matrix
+    # (notes/model_speed_review_2026-07-04.md, part 2, family eTotalICost).
+    #
+    # The weight is a single constant multiplying the whole bracket, so it can be divided out of
+    # the row and reapplied once, where the investment cost enters the objective. The feasible set
+    # and the optimum are unchanged -- this is a pure rescaling of one equality -- but the capex
+    # coefficients drop by the size of the weight, which the review measured at 1.5 to 1.7 orders
+    # of magnitude.
+    #
+    # NOT YET VERIFIED BY A SOLVE. Exactness is an algebraic argument, not a measurement. Before a
+    # campaign uses this, run one A3 year case with the flag off and one with it on and confirm the
+    # objective matches to solver tolerance. Local solves are not an option for this project, so
+    # the check belongs on Comillas alongside the rerun.
+    #
+    # DO NOT COMBINE WITH THE DECOMPOSITION. vTotalICost is a complicating variable
+    # (oM_Decomposition.py:85), so with this flag on it would carry the unweighted cost while the
+    # master problem still expects the weighted one. The decomposition is used in no campaign, and
+    # this flag is off by default, so the two never meet today -- but they must not be turned on
+    # together without reworking the coupling.
+    _normalise_pw = int(model.Par.get('pParNormalisePeriodWeight', 0)) == 1
+    _row_weight = 1.0 if _normalise_pw else period_weight
+    optmodel._icost_period_weight = period_weight if _normalise_pw else 1.0
+
     def eTotalICost(optmodel):
         # Grid-connection capex (annualized, per invested kW of connection capacity); 0 when the
         # feature is off. Recurs each period like the asset capex, so it is period-weighted too.
         conn_term = (conn_cost * optmodel.vEleConnCap) if getattr(optmodel, '_conn_active', False) else 0.0
-        return optmodel.vTotalICost == period_weight * (
+        return optmodel.vTotalICost == _row_weight * (
             sum(model.Par['pEleGenInvestCost'][egc] * optmodel.vEleGenInvest[egc] for egc in model.egc) +
             sum(model.Par['pHydGenInvestCost'][hgc] * optmodel.vHydGenInvest[hgc] for hgc in model.hgc) +
             sum(model.Par['pHydGenCompressorInvestCost'][hgs] * optmodel.vHydCompInvest[hgs] for hgs in model.hgcompc) +
