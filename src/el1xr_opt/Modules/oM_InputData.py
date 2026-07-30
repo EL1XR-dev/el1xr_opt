@@ -1292,17 +1292,41 @@ def create_variables(model, optmodel, indlog):
         # rather than being assumed. See analysis/electrolyser_curve.py in the paper repo,
         # which regenerates these numbers.
         #
-        # PEM IS NOT CORRECTED HERE. Its reference (Astriani et al. 2024) is paywalled and
-        # awaiting a manual download, so the published PEM shape is resampled onto the new
-        # breakpoint grid unchanged. It carries the same optimum-near-full-load problem as the
-        # old alkaline curve; do not read the PEM curve as verified.
-        _anchor_f_ull = [0.20, 0.28, 0.36, 0.44, 0.52, 0.60, 0.68, 0.76, 0.84, 0.92, 1.00]
-        _anchor_mult_ull = [1.0501, 0.9800, 0.9515, 0.9411, 0.9400,
-                            0.9443, 0.9521, 0.9621, 0.9737, 0.9864, 1.0000]
-        if str(model.Par.get('pParElectrolyserCurve', '')).lower() == 'ulleberg':
-            _anchor_mult_pem = [float(np.interp(x, _anchor_f, _anchor_mult_pem))
-                                for x in _anchor_f_ull]
-            _anchor_f, _anchor_mult_alk = _anchor_f_ull, _anchor_mult_ull
+        # PEM is derived by the same construction, calibrated to DEA's PEMEC sheet, but it is
+        # PROVISIONAL: Astriani et al. 2024 is paywalled and unread and would refine the
+        # parameters. Do not read the PEM curve as verified.
+        #
+        # EACH TECHNOLOGY CARRIES ITS OWN LOAD GRID. This matters and was got wrong once: a
+        # single shared grid starting at the alkaline minimum load (0.20) silently CLAMPED the
+        # PEM curve below that, because np.interp holds the end value. PEM's minimum load is
+        # 0.05, so three of seven geometric breakpoints fell in the clamped region and PEM lost
+        # its low-load penalty entirely -- which flatters PEM, the technology under test.
+        #
+        # Balance-of-plant share variants. The derived curves have one constant that no
+        # catalogue pins down: the fraction of balance-of-plant power that is independent of
+        # load. It is 0.70 in "ulleberg", and it moves the alkaline optimum from 41% of load at
+        # 0.5 to 56% at 0.9, so it is a sensitivity rather than a detail. Regenerate any of
+        # these with analysis/electrolyser_curve.py in the paper repo.
+        _ULL = {
+            'ulleberg':       # BOP fixed share 0.70
+                ([0.2000, 0.2615, 0.3420, 0.4472, 0.5848, 0.7647, 1.0000],
+                 [1.0501, 0.9911, 0.9559, 0.9407, 0.9432, 0.9627, 1.0000],
+                 [0.0500, 0.0824, 0.1357, 0.2236, 0.3684, 0.6070, 1.0000],
+                 [2.2279, 1.6415, 1.2973, 1.1032, 1.0055, 0.9752, 1.0000]),
+            'ulleberg_bop50':
+                ([0.2000, 0.2615, 0.3420, 0.4472, 0.5848, 0.7647, 1.0000],
+                 [0.9754, 0.9385, 0.9202, 0.9177, 0.9300, 0.9570, 1.0000],
+                 [0.0500, 0.0824, 0.1357, 0.2236, 0.3684, 0.6070, 1.0000],
+                 [1.8080, 1.3953, 1.1565, 1.0264, 0.9676, 0.9608, 1.0000]),
+            'ulleberg_bop90':
+                ([0.2000, 0.2615, 0.3420, 0.4472, 0.5848, 0.7647, 1.0000],
+                 [1.1249, 1.0436, 0.9916, 0.9636, 0.9563, 0.9684, 1.0000],
+                 [0.0500, 0.0824, 0.1357, 0.2236, 0.3684, 0.6070, 1.0000],
+                 [2.6478, 1.8877, 1.4380, 1.1799, 1.0434, 0.9895, 1.0000]),
+        }
+        _anchor_f_pem, _curve_name = _anchor_f, str(model.Par.get('pParElectrolyserCurve', '')).lower()
+        if _curve_name in _ULL:
+            _anchor_f, _anchor_mult_alk, _anchor_f_pem, _anchor_mult_pem = _ULL[_curve_name]
         for g in model.e2h:
             pf   = float(model.Par['pHydGenProductionFunction'][g])
             pmax = max(float(model.Par['pHydMaxCharge'][g][idx]) for idx in model.psn)
@@ -1313,7 +1337,9 @@ def create_variables(model, optmodel, indlog):
             if pf <= 0.0 or pmax <= 0.0:
                 continue
             _tech = str(model.Par['pHydGenTechnology'].get(g, '')).upper()
-            _anchor_mult = _anchor_mult_pem if 'PEM' in _tech else _anchor_mult_alk
+            _is_pem = 'PEM' in _tech
+            _anchor_mult = _anchor_mult_pem if _is_pem else _anchor_mult_alk
+            _anchor_x = _anchor_f_pem if _is_pem else _anchor_f
             fmin  = max(min(pmin / pmax, 1.0), 0.0)
             # Breakpoints across the unit's productive range. Four points cannot resolve an
             # optimum that sits in the interior, so the count is a parameter; the spacing below
@@ -1340,7 +1366,7 @@ def create_variables(model, optmodel, indlog):
                 fracs = [fmin + (1.0 - fmin) * t for t in (0.0, 0.4, 0.75, 1.0)]
             else:
                 fracs = [fmin + (1.0 - fmin) * k / (_n_bp - 1) for k in range(_n_bp)]
-            model.pwl_curve[g] = [(f * pmax, (f * pmax) / (pf * float(np.interp(f, _anchor_f, _anchor_mult)))) for f in fracs]
+            model.pwl_curve[g] = [(f * pmax, (f * pmax) / (pf * float(np.interp(f, _anchor_x, _anchor_mult)))) for f in fracs]
             model.hpwl.append(g)
 
     # model.Peaks   = Set(initialize=[ i for i in range(1,4,1)]) # number of selected peaks hours
