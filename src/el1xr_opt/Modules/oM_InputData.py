@@ -430,6 +430,19 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         # replace p{net[0:3]}NetInvestmentUp= 0.0 by 1.0
         parameters_dict[f'p{net[0:3]}NetInvestmentUp'] = parameters_dict[f'p{net[0:3]}NetInvestmentUp'].where(parameters_dict[f'p{net[0:3]}NetInvestmentUp'] > 0.0, other=1.0)
 
+        # An upper bound of 0 means "no bound given", not "cannot build", so it is reset to 1.
+        # That is why a case wanting to switch a candidate OFF has to give a tiny positive bound
+        # instead, and a bound of 1e-9 against bounds that otherwise reach 1e4 spans about 13
+        # orders of magnitude -- the widest range in the matrix, on exactly the variant group with
+        # the ragged terminations (notes/model_speed_review_2026-07-04.md, part 2, bounds row).
+        #
+        # Record which candidates arrived with a bound of exactly 0 BEFORE the reset overwrites
+        # it, so the investment layer can fix those variables to zero outright instead. Fixing
+        # removes the column rather than squeezing it, which is both better conditioned and a
+        # truer statement of the intent.
+        _disabled = parameters_dict[f'p{net[0:3]}GenInvestmentUp']
+        model.__setattr__(f'{net[0:3].lower()}_gen_disabled',
+                          list(_disabled.index[_disabled == 0.0]))
         parameters_dict[f'p{net[0:3]}GenInvestmentUp'] = parameters_dict[f'p{net[0:3]}GenInvestmentUp'].where(parameters_dict[f'p{net[0:3]}GenInvestmentUp'] > 0.0, other=1.0)
 
     # minimum up- and downtime converted to an integer number of time steps
