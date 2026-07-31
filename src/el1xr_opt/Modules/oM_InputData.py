@@ -1334,17 +1334,28 @@ def create_variables(model, optmodel, indlog):
             # under the operating floor that paper states for alkaline. Specific consumption at
             # 20% load rises 25% and the optimum moves from 49% to 61% of load.
             #
-            # PEM: the SHAPE from Astriani et al. 2024 (IJHE 79:1331), the reviewer's own PEM
-            # citation, carried onto DEA's LEVEL. DEA's 60.54 kWh/kg at full load is 7.6% more
-            # conservative than Astriani's own 56.3, so this is the steeper shape on the higher
-            # level -- conservative on both axes. Astriani's curve is monotone, with no interior
-            # optimum, which is a genuine disagreement with Baumhof's alkaline curve and with
-            # Buttler & Spliethoff; that disagreement belongs in the text, not hidden in a fit.
+            # PEM: the SAME construction as alkaline -- stack voltage, then Faraday, then balance
+            # of plant, calibrated to DEA -- with the crossover physics that actually applies to a
+            # solid membrane. Permeation is set by the membrane and the pressure difference and is
+            # roughly independent of current, so the lost current is a constant i_x and
+            # eta_F = 1 - i_x/i. Alkaline's porous diaphragm follows i^2/(f1 + i^2) instead. Using
+            # ONE formula for both would look consistent and be wrong: the two technologies lose
+            # hydrogen by different mechanisms.
+            #
+            # i_x is 1% of rated, i.e. 99% Faraday at rated, the standard PEM figure. It is
+            # validated rather than fitted: it puts 20% load at 71.7 kWh/kg against Astriani's
+            # 69.4, so it is conservative against the reviewer's own PEM reference, and the whole
+            # 20-100% span sits inside Buttler & Spliethoff's 55.6-72.3 kWh/kg range for PEMEL.
+            #
+            # Worth recording: Astriani's own curve is monotone with no interior optimum, which
+            # disagrees with Baumhof's alkaline curve and with Buttler & Spliethoff. Both curves
+            # here have an interior optimum because both are built from the same physics. That
+            # disagreement belongs in the paper's text, not hidden inside a fit.
             'ulleberg_conservative':
                 ([0.2000, 0.2615, 0.3420, 0.4472, 0.5848, 0.7647, 1.0000],
                  [1.3162, 1.1341, 1.0326, 0.9807, 0.9625, 0.9700, 1.0000],
                  [0.0500, 0.0824, 0.1357, 0.2236, 0.3684, 0.6070, 1.0000],
-                 [7.9480, 2.6903, 1.5739, 1.1747, 1.0351, 1.0029, 1.0000]),
+                 [2.7570, 1.8496, 1.3864, 1.1433, 1.0232, 0.9816, 1.0000]),
         }
         _anchor_f_pem, _curve_name = _anchor_f, str(model.Par.get('pParElectrolyserCurve', '')).lower()
         if _curve_name in _ULL:
