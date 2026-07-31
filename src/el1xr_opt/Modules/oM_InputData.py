@@ -1347,6 +1347,18 @@ def create_variables(model, optmodel, indlog):
             # 69.4, so it is conservative against the reviewer's own PEM reference, and the whole
             # 20-100% span sits inside Buttler & Spliethoff's 55.6-72.3 kWh/kg range for PEMEL.
             #
+            # Measurement backs the form. Yodwong et al. 2020 (Energies 13:4792) tested a 50 cm2
+            # PEM cell at 1, 5 and 10 bar and fitted eta_F = a (i/A)^b + c with all three
+            # parameters free. The fit returned b = -1 and c = 1 at every pressure, which is
+            # 1 - i_x/i exactly, and reproduces their table to 1e-4. The exponent could have gone
+            # anywhere and went to -1, so constant crossover is what their data says.
+            #
+            # Their magnitude also says ours is the pessimistic end. |a| rises linearly with
+            # pressure and extrapolates to 21 A/m2 at the 30 bar this case runs at, against the
+            # 280 A/m2 assumed here. We charge PEM roughly thirteen times the crossover loss they
+            # measured, so the low-load penalty is an upper bound on theirs. It stays there
+            # because their cell is a bench unit and 30 bar is beyond the pressures they tested.
+            #
             # Worth recording: Astriani's own curve is monotone with no interior optimum, which
             # disagrees with Baumhof's alkaline curve and with Buttler & Spliethoff. Both curves
             # here have an interior optimum because both are built from the same physics. That
