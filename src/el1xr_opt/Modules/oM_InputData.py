@@ -1323,6 +1323,28 @@ def create_variables(model, optmodel, indlog):
                  [1.1249, 1.0436, 0.9916, 0.9636, 0.9563, 0.9684, 1.0000],
                  [0.0500, 0.0824, 0.1357, 0.2236, 0.3684, 0.6070, 1.0000],
                  [2.6478, 1.8877, 1.4380, 1.1799, 1.0434, 0.9895, 1.0000]),
+            # The CONSERVATIVE set, built against the two references the reviewer raised. Both
+            # technologies take the steeper of the defensible options, so neither flatters the
+            # part-load operation this model is used to argue for.
+            #
+            # Alkaline: Faraday efficiency from Sanchez et al. 2018 (IJHE 43:20332), which is the
+            # paper Baumhof's own curve depends on, rather than Ulleberg's. Ulleberg's f1 puts the
+            # knee at 0.016 A/cm2 against a rated 0.8, so his term never engages and the curve runs
+            # below the thermoneutral limit at low load. Sanchez's knee at 0.085 A/cm2 sits just
+            # under the operating floor that paper states for alkaline. Specific consumption at
+            # 20% load rises 25% and the optimum moves from 49% to 61% of load.
+            #
+            # PEM: the SHAPE from Astriani et al. 2024 (IJHE 79:1331), the reviewer's own PEM
+            # citation, carried onto DEA's LEVEL. DEA's 60.54 kWh/kg at full load is 7.6% more
+            # conservative than Astriani's own 56.3, so this is the steeper shape on the higher
+            # level -- conservative on both axes. Astriani's curve is monotone, with no interior
+            # optimum, which is a genuine disagreement with Baumhof's alkaline curve and with
+            # Buttler & Spliethoff; that disagreement belongs in the text, not hidden in a fit.
+            'ulleberg_conservative':
+                ([0.2000, 0.2615, 0.3420, 0.4472, 0.5848, 0.7647, 1.0000],
+                 [1.3162, 1.1341, 1.0326, 0.9807, 0.9625, 0.9700, 1.0000],
+                 [0.0500, 0.0824, 0.1357, 0.2236, 0.3684, 0.6070, 1.0000],
+                 [7.9480, 2.6903, 1.5739, 1.1747, 1.0351, 1.0029, 1.0000]),
         }
         _anchor_f_pem, _curve_name = _anchor_f, str(model.Par.get('pParElectrolyserCurve', '')).lower()
         if _curve_name in _ULL:
