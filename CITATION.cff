@@ -12,10 +12,10 @@
 # a paper snapshot too.
 cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
-title: 'Model and data to reproduce "Market-driven co-sizing of a hybrid power–hydrogen virtual power plant for energy and frequency reserve markets" (el1xr_opt v1.0.1-h2vppfcr)'
+title: 'Model and data for "Market-driven co-sizing of a hybrid power-and-hydrogen virtual power plant for energy and frequency reserve markets"'
 abstract: >-
   This release freezes the optimisation model and the case-study data used in the
-  study "Market-driven co-sizing of a hybrid power–hydrogen virtual power plant
+  study "Market-driven co-sizing of a hybrid power-and-hydrogen virtual power plant
   for energy and frequency reserve markets" (Alvarez, Gutierrez-Guerra, and
   Ramos), so that every result in the paper can be reproduced from a fixed model
   version. The model, el1xr_opt, is an open-source mixed-integer linear
