@@ -1,17 +1,29 @@
 # This CITATION.cff makes GitHub show a "Cite this repository" widget and lets
 # citation managers read the software metadata. Zenodo reads .zenodo.json (not
 # this file) when it mints the release DOI, so keep the two in sync.
-# TODO before the release: set `version` + `date-released` to the tagged release.
+#
+# Both files currently describe the paper archive: release v1.0.1-h2vppfcr, which
+# freezes the model and the case-study data used in the Frontiers hydrogen VPP
+# paper (Zenodo DOI 10.5281/zenodo.21865130). Before the next ordinary software
+# release, put the generic el1xr_opt title, abstract and version back, or that
+# release will be labelled as a paper snapshot too.
 cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
-title: "el1xr_opt: an open-source optimization model for the design and operation of hybrid renewable energy systems"
+title: 'Model and data to reproduce "Market-driven co-sizing of a hybrid power–hydrogen virtual power plant for energy and frequency reserve markets" (el1xr_opt v1.0.1-h2vppfcr)'
 abstract: >-
-  el1xr_opt is an open-source mixed-integer linear optimization model, built in
-  Pyomo, that co-optimizes the sizing (investment) and the operation of hybrid
-  renewable energy systems coupling electricity and hydrogen, with unit
-  commitment, storage, a pressure-resolved hydrogen network, and frequency
-  containment reserve (FCR) provision. It extends the openTEPES modelling
-  framework and ships automatic solver setup.
+  This release freezes the optimisation model and the case-study data used in the
+  study "Market-driven co-sizing of a hybrid power–hydrogen virtual power plant
+  for energy and frequency reserve markets" (Alvarez, Gutierrez-Guerra, and
+  Ramos), so that every result in the paper can be reproduced from a fixed model
+  version. The model, el1xr_opt, is an open-source mixed-integer linear
+  optimization model, built in Pyomo, that co-optimizes the sizing (investment)
+  and the operation of hybrid renewable energy systems coupling electricity and
+  hydrogen, with unit commitment, storage, a pressure-resolved hydrogen network,
+  and frequency containment reserve (FCR) provision. It extends the openTEPES
+  modelling framework and ships automatic solver setup. The case-study data sit
+  under data/H2VPPFCR/: the 2025 SE3 market series, the site wind, the
+  hydrogen-demand profiles, the techno-economic parameters, the case builder, and
+  the experiment configurations.
 type: software
 authors:
   - given-names: "Erik F."
@@ -27,10 +39,11 @@ authors:
     family-names: Ramos
     affiliation: "Institute for Research in Technology (IIT), Comillas Pontifical University, Madrid, Spain"
     orcid: "https://orcid.org/0000-0002-8871-1872"
-version: "1.0.16"          # TODO: set to the tagged release used in the paper
-date-released: "2026-07-22" # TODO: set to the actual release date (YYYY-MM-DD)
+version: "1.0.1-h2vppfcr"
+date-released: "2026-08-10"
 license: GPL-3.0-or-later
 repository-code: "https://github.com/EL1XR-dev/el1xr_opt"
+doi: "10.5281/zenodo.21865130"
 url: "https://el1xr-opt.readthedocs.io/en/latest/"
 keywords:
   - optimization
