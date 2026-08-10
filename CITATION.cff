@@ -2,11 +2,14 @@
 # citation managers read the software metadata. Zenodo reads .zenodo.json (not
 # this file) when it mints the release DOI, so keep the two in sync.
 #
-# Both files currently describe the paper archive: release v1.0.1-h2vppfcr, which
-# freezes the model and the case-study data used in the Frontiers hydrogen VPP
-# paper (Zenodo DOI 10.5281/zenodo.21865130). Before the next ordinary software
-# release, put the generic el1xr_opt title, abstract and version back, or that
-# release will be labelled as a paper snapshot too.
+# Both files currently describe the paper archive, which freezes the model and the
+# case-study data used in the Frontiers hydrogen VPP paper. The archive has two
+# versions on Zenodo: 10.5281/zenodo.21865130 is the GitHub release of tag
+# v1.0.1-h2vppfcr, and 10.5281/zenodo.21867045 is the trimmed model-and-data
+# upload the paper cites. The doi below is the concept DOI, which resolves to
+# whichever is newest. Before the next ordinary software release, put the generic
+# el1xr_opt title, abstract and version back, or that release will be labelled as
+# a paper snapshot too.
 cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
 title: 'Model and data to reproduce "Market-driven co-sizing of a hybrid power–hydrogen virtual power plant for energy and frequency reserve markets" (el1xr_opt v1.0.1-h2vppfcr)'
@@ -43,7 +46,7 @@ version: "1.0.1-h2vppfcr"
 date-released: "2026-08-10"
 license: GPL-3.0-or-later
 repository-code: "https://github.com/EL1XR-dev/el1xr_opt"
-doi: "10.5281/zenodo.21865130"
+doi: "10.5281/zenodo.21865129"
 url: "https://el1xr-opt.readthedocs.io/en/latest/"
 keywords:
   - optimization
