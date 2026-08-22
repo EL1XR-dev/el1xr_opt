@@ -75,6 +75,19 @@ FEATURES = [
             doc="gate storage FCR reserve on each leg by its charge/discharge mode binary so "
                 "a battery cannot bid reserve from both legs at once (exact when the mode binary "
                 "is enforced); closes the simultaneous-charge+discharge FCR loophole"),
+    Feature("reserve_conn_headroom", "IndReserveConnHeadroom", 0, makes_integer=False,
+            doc="hold the grid connection open for a FULL call on the contracted reserve, not just "
+                "the realised activation duty: import plus the un-activated remainder of every "
+                "downward bid, and export plus the un-activated remainder of every upward bid, must "
+                "each fit the invested connection capacity. Without it a plant can sell upward "
+                "reserve it could not physically push through its own connection"),
+    Feature("stor_fcr_leg_built", "IndStorFCRLegBuilt", 0, makes_integer=False,
+            doc="the leg-exclusive FCR gate written against BUILT capacity instead of nameplate: "
+                "leg reserve <= Pmax*x - Pmax*(1 - mode). IndStorFCRLegExclusive gates by "
+                "nameplate x mode, which is right for a fixed fleet but vacuous when the build is "
+                "a continuous fraction (an 8 MW candidate built at 0.16 still gets an 8 MW gate). "
+                "Valid for the MILP: at mode=1 it reduces to the built rating, at mode=0 it forces "
+                "zero. Under the relaxation it cuts fractional-mode points, which is the point"),
     Feature("electrolyser_pwl_relax", "IndElectrolyserPWLRelax", 0, makes_integer=False,
             doc="drop the electrolyser PWL segment binaries + SOS2 adjacency, keeping the free "
                 "convex combination of breakpoints; exact for a concave H2 curve when H2 is valued "

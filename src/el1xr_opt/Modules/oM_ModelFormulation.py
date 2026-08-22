@@ -177,14 +177,27 @@ def create_objective_function_components(model, optmodel, indlog):
         # exact for the single-retailer case, documented caveat for multi-retailer).
         _n_er = max(len(model.er), 1)
 
+        # Define the activated energy once (coefficients are the activation duties alone, the
+        # smallest of which is 1.25e-04), then settle it at the price and reference it in the
+        # delivery identity. Writing price x kappa straight into the settlement rows put a
+        # product of two small data items into the matrix and dropped its coefficient floor to
+        # ~1e-08; see the note on vEleActUpEnergy in oM_InputData.
+        def eEleActUpEnergy(optmodel, p,sc,n):
+            return optmodel.vEleActUpEnergy[p,sc,n] == _act_up(optmodel, p,sc,n)
+        optmodel.__setattr__('eEleActUpEnergy', Constraint(optmodel.psn, rule=eEleActUpEnergy, doc='Site activated upward reserve energy [kW]'))
+
+        def eEleActDnEnergy(optmodel, p,sc,n):
+            return optmodel.vEleActDnEnergy[p,sc,n] == _act_dn(optmodel, p,sc,n)
+        optmodel.__setattr__('eEleActDnEnergy', Constraint(optmodel.psn, rule=eEleActDnEnergy, doc='Site activated downward reserve energy [kW]'))
+
         def eEleActUpRevenue(optmodel, p,sc,n):
             _p_sell = sum(model.Par['pVarEnergyPrice'][er][p,sc,n] * model.Par['pEleRetSellingRatio'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / _n_er
-            return optmodel.vTotalEleActRev[p,sc,n] == _p_sell * _act_up(optmodel, p,sc,n)
+            return optmodel.vTotalEleActRev[p,sc,n] == _p_sell * optmodel.vEleActUpEnergy[p,sc,n]
         optmodel.__setattr__('eEleActUpRevenue', Constraint(optmodel.psn, rule=eEleActUpRevenue, doc='Upward reserve activation energy settled at the DA price [money]'))
 
         def eEleActDownCost(optmodel, p,sc,n):
             _p_buy = sum(model.Par['pVarEnergyCost'][er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] * (1 + model.Par['pEleRetMoms'][er]) for er in model.er) / _n_er
-            return optmodel.vTotalEleActCost[p,sc,n] == _p_buy * _act_dn(optmodel, p,sc,n)
+            return optmodel.vTotalEleActCost[p,sc,n] == _p_buy * optmodel.vEleActDnEnergy[p,sc,n]
         optmodel.__setattr__('eEleActDownCost', Constraint(optmodel.psn, rule=eEleActDownCost, doc='Downward reserve activation energy settled at the DA price [money]'))
 
         # Delivery identity: the metered exchange equals the baseline position shifted by the
@@ -194,7 +207,7 @@ def create_objective_function_components(model, optmodel, indlog):
         def eEleActivationDelivery(optmodel, p,sc,n):
             return sum(optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] for er in model.er) == \
                    sum(optmodel.vEleBuyBase[p,sc,n,er] - optmodel.vEleSellBase[p,sc,n,er] for er in model.er) \
-                   + _act_dn(optmodel, p,sc,n) - _act_up(optmodel, p,sc,n)
+                   + optmodel.vEleActDnEnergy[p,sc,n] - optmodel.vEleActUpEnergy[p,sc,n]
         optmodel.__setattr__('eEleActivationDelivery', Constraint(optmodel.psn, rule=eEleActivationDelivery, doc='Metered exchange = baseline position + net activated reserve energy [kW]'))
 
     def eEleMarketFrequencyRevenue(optmodel, p,sc,n):
@@ -952,6 +965,31 @@ def create_constraints(model, optmodel, indlog):
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorFCRChargeLeg', Constraint(optmodel.psnegs, rule=eEleStorFCRChargeLeg, doc='leg-exclusive FCR: charge-leg reserve only when charging'))
+
+    # Built-capacity form of the leg gate (feature IndStorFCRLegBuilt). See the feature note:
+    # IndStorFCRLegExclusive gates by NAMEPLATE times the mode variable, which is slack by orders
+    # of magnitude once the build is a continuous fraction, so it does not bind in a co-sizing run.
+    # This form gates by the built rating instead, Pmax*x - Pmax*(1 - mode), which is valid for the
+    # MILP (mode=1 -> built rating; mode=0 -> zero) and cuts fractional-mode points otherwise.
+    def eEleStorFCRDischargeLegBuilt(optmodel, p,sc,n,egs):
+        if model.Par['pOptIndStorFCRLegBuilt'] == 1 and model.Par['pEleMaxPower'][egs][p,sc,n] > 1e-5 and _stor_fcr_active(p,sc,n,egs):
+            _pm = model.Par['pEleMaxPower'][egs][p,sc,n]
+            return (optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]
+                    + optmodel.vEleFreqContReserveNorUpDis[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownDis[p,sc,n,egs]
+                    ) <= _pm * optmodel.vEleGenInvest[egs] - _pm * (1 - optmodel.vEleStorDischarge[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorFCRDischargeLegBuilt', Constraint(optmodel.psnegs, rule=eEleStorFCRDischargeLegBuilt, doc='leg-exclusive FCR against built capacity: discharge leg'))
+
+    def eEleStorFCRChargeLegBuilt(optmodel, p,sc,n,egs):
+        if model.Par['pOptIndStorFCRLegBuilt'] == 1 and model.Par['pEleMaxCharge'][egs][p,sc,n] > 1e-5 and _stor_fcr_active(p,sc,n,egs):
+            _cm = model.Par['pEleMaxCharge'][egs][p,sc,n]
+            return (optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]
+                    + optmodel.vEleFreqContReserveNorUpCha[p,sc,n,egs] + optmodel.vEleFreqContReserveNorDownCha[p,sc,n,egs]
+                    ) <= _cm * optmodel.vEleGenInvest[egs] - _cm * (1 - optmodel.vEleStorCharge[p,sc,n,egs])
+        else:
+            return Constraint.Skip
+    optmodel.__setattr__('eEleStorFCRChargeLegBuilt', Constraint(optmodel.psnegs, rule=eEleStorFCRChargeLegBuilt, doc='leg-exclusive FCR against built capacity: charge leg'))
 
     def eEleFreqDownDischargeBound(optmodel, p,sc,n,egs):
         if (model.Par['pOperatingReserveRequire_FCRD_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egs] == 0) or (model.Par['pOperatingReserveRequire_FCRN_Down'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRN'][egs] == 0):

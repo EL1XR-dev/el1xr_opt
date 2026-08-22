@@ -1482,6 +1482,19 @@ def create_variables(model, optmodel, indlog):
     # upward energy earns, absorbed downward energy pays, at the day-ahead price (the
     # conservative proxy for the regulation price). Kept as separate named components so a
     # real up/down regulation-price series can replace the proxy without touching constraints.
+    # Activated reserve ENERGY, held as its own variable rather than re-expanded inside every
+    # constraint that needs it. Two reasons, both measured on the year-scale A3 (2026-08-19):
+    #   1. Numerics. Settling revenue directly as price x sum(kappa x bid) puts a PRODUCT of two
+    #      small data items into the constraint matrix. The smallest scaled day-ahead price is
+    #      1.1e-04 and the smallest non-zero activation duty 1.25e-04, so the product reaches
+    #      ~1e-08 and the matrix coefficient range widened from [1e-04, 6e+04] to [4e-08, 6e+04].
+    #      Splitting it leaves kappa in one row and the price in the other, both ~1e-04.
+    #   2. Sparsity. The same sum over every reserve provider was written out in the two
+    #      settlement rows and again in the delivery identity. Defining it once turns roughly
+    #      51 entries per row into 51 once plus a handful of references.
+    # Exact by construction: this is an algebraic substitution, not a modelling change.
+    setattr(optmodel, 'vEleActUpEnergy',                   Var(model.psn,     within=NonNegativeReals, doc='site activated upward reserve energy   (kappa-weighted)              [kW]'))
+    setattr(optmodel, 'vEleActDnEnergy',                   Var(model.psn,     within=NonNegativeReals, doc='site activated downward reserve energy (kappa-weighted)              [kW]'))
     setattr(optmodel, 'vTotalEleActRev',                   Var(model.psn,     within=             Reals, doc='reserve activation energy settlement revenue (upward, at DA price)   [money]'))
     setattr(optmodel, 'vTotalEleActCost',                  Var(model.psn,     within=             Reals, doc='reserve activation energy settlement cost   (downward, at DA price)  [money]'))
 
@@ -1755,6 +1768,8 @@ def create_variables(model, optmodel, indlog):
         for idx in model.psn:
             optmodel.vTotalEleActRev [idx].fix(0.0)
             optmodel.vTotalEleActCost[idx].fix(0.0)
+            optmodel.vEleActUpEnergy [idx].fix(0.0)
+            optmodel.vEleActDnEnergy [idx].fix(0.0)
 
     for idx in model.psned:
         if model.Par['pEleDemFlexible'][idx[-1]] == 0.0:

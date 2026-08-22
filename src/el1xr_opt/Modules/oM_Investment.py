@@ -422,6 +422,41 @@ def create_investment(model, optmodel, indlog):
             return optmodel.vEleExport[p, sc, n, nd] <= optmodel.vEleConnCap
         optmodel.__setattr__('eEleConnExport', Constraint(psn_conn, rule=eEleConnExport, doc='grid export bounded by the invested connection capacity'))
 
+        # Full-activation connection headroom (feature IndReserveConnHeadroom). The two bounds
+        # above hold only for the position that is actually metered, which carries the REALISED
+        # activation duty kappa. A contracted bid can be called in full, so the connection must
+        # also fit the position that a 100% call would produce. The realised part is already in
+        # vEleImport/vEleExport (each asset's output carries its kappa terms), so what is added
+        # here is the un-activated remainder (1 - kappa) of every contracted bid. Upward products
+        # (FCR-D up and the upward half of FCR-N) push the site towards export; downward products
+        # push it towards import. Off by default: without it a plant can sell upward reserve it
+        # could not physically push through its own connection.
+        if int(model.Par.get('pOptIndReserveConnHeadroom', 0)) == 1:
+            # bids of units that may not provide a product are fixed to zero in oM_InputData,
+            # so unfiltered sums over the provider classes are exact (same argument as the
+            # site-level activation helpers in oM_ModelFormulation).
+            _prov = list(model.egt) + list(model.egs) + list(model.e2h) + list(model.h2e)
+
+            def _full_up(p, sc, n):
+                _kd = model.Par['pOperatingReserveActivation_FCRD_Up'][p, sc, n]
+                _kn = model.Par['pOperatingReserveActivation_FCRN_Up'][p, sc, n]
+                return sum((1.0 - _kd) * optmodel.vEleFreqContReserveDisUpwardBid[p, sc, n, g]
+                         + (1.0 - _kn) * optmodel.vEleFreqContReserveNorBid[p, sc, n, g] for g in _prov)
+
+            def _full_dn(p, sc, n):
+                _kd = model.Par['pOperatingReserveActivation_FCRD_Down'][p, sc, n]
+                _kn = model.Par['pOperatingReserveActivation_FCRN_Down'][p, sc, n]
+                return sum((1.0 - _kd) * optmodel.vEleFreqContReserveDisDownwardBid[p, sc, n, g]
+                         + (1.0 - _kn) * optmodel.vEleFreqContReserveNorBid[p, sc, n, g] for g in _prov)
+
+            def eEleConnExportFullAct(optmodel, p, sc, n, nd):
+                return optmodel.vEleExport[p, sc, n, nd] + _full_up(p, sc, n) <= optmodel.vEleConnCap
+            optmodel.__setattr__('eEleConnExportFullAct', Constraint(psn_conn, rule=eEleConnExportFullAct, doc='export under a full upward call bounded by the invested connection capacity'))
+
+            def eEleConnImportFullAct(optmodel, p, sc, n, nd):
+                return optmodel.vEleImport[p, sc, n, nd] + _full_dn(p, sc, n) <= optmodel.vEleConnCap
+            optmodel.__setattr__('eEleConnImportFullAct', Constraint(psn_conn, rule=eEleConnImportFullAct, doc='import under a full downward call bounded by the invested connection capacity'))
+
         # Reserve delivery/settlement option: the BASELINE day-ahead position must also fit the
         # invested connection (a position beyond deliverable capacity cannot be scheduled). This
         # is what stops a down-activation bid from being "delivered" by scheduling a baseline
