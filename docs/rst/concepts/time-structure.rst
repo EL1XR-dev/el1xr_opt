@@ -112,14 +112,26 @@ The limits of a flow declared at a lower resolution than the load levels follow 
   block, so energy moves between the hours of a block. On the H2VPP test case, a solar unit
   declared at 2 h costs less under ``Mean`` than at hourly resolution for that reason.
 
+Constraints at their own resolution
+-----------------------------------
+
+A constraint is written per load level. For a declared unit, a row whose variables are all
+block variables (or have no time index) repeats the row at the start of the block: the same
+variables, coefficients, constant and bounds. Such rows are dropped when the model is built, so
+the constraint holds once per block, at the highest common resolution of its variables
+(Algorithm 1). Rows that also involve a variable per load level, such as the second-block output
+or a start-up, differ from level to level and stay. The solution and the cost do not change. The
+dual of the row that remains is the shadow price of the whole block; a dropped row has no dual
+in the results.
+
 Status
 ------
 
-The timeline, the calendar and the declarations of output, charge, commitment and reserve bids,
-with one variable per block, are in place. Constraints are still written per load level, so a
-limit on a declared flow is repeated on the levels of its block. Next, each constraint is
-written at its own resolution (Algorithms 1 and 2), which removes the repeated rows. Cases with
-mixed resolutions, and ramps and unit commitment on blocks of unequal length, follow.
+The timeline, the calendar, the declarations of output, charge, commitment and reserve bids with
+one variable per block, and the removal of repeated rows are in place. Next comes an opt-in
+resolution for storage inventories, with the storage balance written per block at the lowest
+common resolution (Algorithm 2). That one changes results, as energy may move within a block.
+Cases with mixed resolutions, and ramps and unit commitment on blocks of unequal length, follow.
 
 References
 ----------

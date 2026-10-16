@@ -249,3 +249,33 @@ def test_block_variables_reproduce_hand_tied_electrolyser(tmp_path, deterministi
     for name in ELY_TIES:
         n_blocks = sum(1 for idx in getattr(blocks, f"{name}_blk") if idx[3] == "AEL_01")
         assert n_blocks == len(blocks.n) // 2, name
+
+
+# --- constraints at their own resolution: repeated rows ----------------------------------------
+
+def test_nothing_is_dropped_without_declarations(tmp_path):
+    m = build_model(str(_case(tmp_path)), CASE, DATE)
+    assert all(c.active for c in m.component_data_objects(pyo.Constraint))
+
+
+@pytest.mark.solve
+def test_repeated_rows_are_dropped_without_changing_the_cost(tmp_path, deterministic_highs, monkeypatch):
+    """Rows of a declared unit that repeat the row at the start of its block are dropped. The
+    cost is the same as with every row kept, and each dropped row holds only block variables
+    and variables without a time index."""
+    from el1xr_opt.Modules import oM_Sequence
+    from pyomo.core.expr.visitor import identify_variables
+    rows = lambda m: sum(1 for _ in m.component_data_objects(pyo.Constraint, active=True))
+    # rawresults="True" also writes every constraint dual to CSV, dropped rows included
+    dropped = routine(dir=str(_case(tmp_path / "d", BESS_2H)), case=CASE, solver="highs", date=DATE,
+                      rawresults="True", plots="False", indlog="False", duckdbresults="False")
+    monkeypatch.setattr(oM_Sequence, "drop_repeated_rows", lambda *a, **k: 0)
+    kept = _solve(_case(tmp_path / "k", BESS_2H))
+    assert _cost(dropped) == pytest.approx(_cost(kept), rel=1e-9)
+    assert dropped.repeated_rows_dropped == 72
+    assert rows(kept) - rows(dropped) == 72
+    for con in dropped.component_data_objects(pyo.Constraint):
+        if not con.active:
+            for v in identify_variables(con.body, include_fixed=True):
+                time_indexed = isinstance(v.index(), tuple) and len(v.index()) >= 3
+                assert v.parent_component().name.endswith("_blk") or not time_indexed, (con.name, v.name)
