@@ -41,7 +41,9 @@ import time
 
 import numpy as np
 from pyomo.core.base.reference import Reference
-from pyomo.environ import Var
+from pyomo.environ import Constraint, Var, value
+from pyomo.repn import generate_standard_repn
+from pyomo.core.expr.visitor import identify_variables
 
 from .oM_Time import from_spec
 from .utils.oM_Utils import log_time
@@ -194,3 +196,65 @@ def alias_block_variables(model, optmodel, indlog):
         setattr(optmodel, f'{name}_blk', raw)
         setattr(optmodel, name, Reference({idx: raw[target[idx]] for idx in full}, ctype=Var))
     log_time('--- Declaring the per-flow block variables:', start_time, ind_log=indlog)
+
+
+def _row_key(con):
+    """A comparable form of one linear constraint row, or None when the row is not linear.
+
+    The key holds every variable of the row, fixed ones included: a fixed variable may be freed
+    later (the solve fixes and frees binaries to read duals), so two rows that differ only in a
+    fixed variable are not the same row.
+    """
+    repn = generate_standard_repn(con.body, compute_values=True)
+    if repn.nonlinear_expr is not None or repn.quadratic_vars:
+        return None
+    coefs = {}
+    for v, c in zip(repn.linear_vars, repn.linear_coefs):
+        coefs[id(v)] = coefs.get(id(v), 0.0) + float(c)
+    every_var = frozenset(id(v) for v in identify_variables(con.body, include_fixed=True))
+    lb = None if con.lower is None else float(value(con.lower))
+    ub = None if con.upper is None else float(value(con.upper))
+    return float(repn.constant), frozenset(coefs.items()), every_var, lb, ub
+
+
+def drop_repeated_rows(model, optmodel, indlog):
+    """Write each constraint of a declared unit at its own resolution (Gao et al., Algorithm 1).
+
+    A constraint row indexed by (period, scenario, level, unit) for a declared unit is compared
+    with the row of the same unit at the start of each of the unit's blocks. When it has the same
+    variables, coefficients, constant and bounds, it says nothing new and is deactivated: the row
+    that remains holds for the whole block, and its dual is the shadow price of the block. Rows
+    that also involve a variable per load level differ from level to level and stay. The solution
+    and the cost do not change.
+    """
+    if not getattr(model, 'block_start', None):
+        return 0
+    start_time = time.time()
+    firsts = {}                                     # unit -> list of {level: first level}
+    for (sector, unit, flow), first in model.block_start.items():
+        firsts.setdefault(unit, []).append(first)
+    dropped = 0
+    for con in optmodel.component_objects(Constraint, active=True, descend_into=True):
+        if not con.is_indexed():
+            continue
+        for idx in list(con.keys()):
+            if not (isinstance(idx, tuple) and len(idx) == 4 and idx[3] in firsts):
+                continue
+            row = con[idx]
+            if not row.active:
+                continue
+            p, sc, n, g = idx
+            starts = {first[n] for first in firsts[g] if n in first and first[n] != n}
+            key = None
+            for n0 in starts:
+                ref = (p, sc, n0, g)
+                if ref not in con or not con[ref].active:
+                    continue
+                key = _row_key(row) if key is None else key
+                if key is not None and key == _row_key(con[ref]):
+                    row.deactivate()
+                    dropped += 1
+                    break
+    model.repeated_rows_dropped = dropped
+    log_time(f'--- Dropping {dropped} constraint rows repeated within a block:', start_time, ind_log=indlog)
+    return dropped

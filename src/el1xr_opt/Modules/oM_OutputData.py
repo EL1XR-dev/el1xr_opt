@@ -244,7 +244,8 @@ def _write_constraint_to_csv(path, con, con_name, case_name, model):
         writer.writerow(['Name', 'Index', 'Value', 'Lower Bound', 'Upper Bound'])
         if con.is_indexed():
             for index in con:
-                writer.writerow([con_name, index, model.dual[con[index]], 
+                # a row dropped as repeated within a block has no dual (oM_TimeBlocks)
+                writer.writerow([con_name, index, model.dual.get(con[index]),
                                str(con[index].lb), str(con[index].ub)])
         else:
             writer.writerow([con_name, 'NA', model.dual[con], str(con.lb), str(con.ub)])
