@@ -786,6 +786,26 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleFreqContReserveNor', Constraint(optmodel.psn, rule=eEleFreqContReserveNor, doc='Frequency containment reserve - normal'))
 
+    # FCR is sold in blocks of ReserveBlockHours (1 h in the Nordic market). When a load level
+    # is shorter than a block, each bid equals the bid of the previous level in the same block.
+    # Blocks start at the first load level, which is the start of the calendar year.
+    _llh, _rbh = model.Par['pParLoadLevelHours'], model.Par['pParReserveBlockHours']
+    if _llh < _rbh:
+        def _block(n):
+            return int(round((optmodel.n.ord(n) - 1) * _llh, 9) // _rbh)
+
+        def _same_block_as_prev(n):
+            return optmodel.n.ord(n) > 1 and _block(n) == _block(optmodel.n.prev(n))
+
+        for _name in ('vEleFreqContReserveDisUpwardBid', 'vEleFreqContReserveDisDownwardBid', 'vEleFreqContReserveNorBid'):
+            _var = getattr(optmodel, _name)
+
+            def eEleReserveBlock(optmodel, p, sc, n, g, _var=_var):
+                if _same_block_as_prev(n):
+                    return _var[p, sc, n, g] == _var[p, sc, optmodel.n.prev(n), g]
+                return Constraint.Skip
+            optmodel.__setattr__(f'e{_name[1:]}Block', Constraint(model.psnege2h, rule=eEleReserveBlock, doc=f'{_name} constant within each reserve block'))
+
     # The relation between the upward and downward bids and the provision of FCR-D reserves from an electric generator is defined as follows:
     def eEleRelationFreqDisUpBid2Gen(optmodel, p,sc,n,egt):
         if model.Par['pOperatingReserveRequire_FCRD_Up'][p,sc,n] > 0 and  model.Par['pEleGenNoFCRD'][egt] == 0:
@@ -2368,7 +2388,8 @@ def create_constraints(model, optmodel, indlog):
         buy_day = _ret_factor(er, 'PeakDayBuyFactor', d_buy_day)
         add_night = _ret_factor(er, 'PeakNightAddend', d_add_night)
         add_day = _ret_factor(er, 'PeakDayAddend', d_add_day)
-        hour = optmodel.n.ord(n) % 24
+        # clock hour of the level; with hourly levels this is ord(n) % 24 as before
+        hour = int((optmodel.n.ord(n) - 1) * model.Par['pParLoadLevelHours'] + 1) % 24
         is_night = (hour >= model.Par['pEleRetStartNightTime'][er]
                     or hour <= model.Par['pEleRetEndNightTime'][er])
         buy_factor = buy_night if is_night else buy_day

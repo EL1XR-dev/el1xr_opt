@@ -123,11 +123,26 @@ def create_green_hydrogen(model, optmodel, indlog):
             # makes no hydrogen, so it is excluded from the matched quantity -- EU 2023/1184
             # Art. 6 matches the renewable electricity provided *for hydrogen production*.
             # The standby auxiliary load is taken to be grid-powered.
+            # The delegated act matches per clock hour. With load levels shorter than one
+            # hour, the energy is summed over the levels of each hour, and the constraint
+            # sits on the last level of the hour.
+            hour_levels = {}
+            for n, h in model.n2h:
+                hour_levels.setdefault(h, []).append(n)
+            n2h = dict(model.n2h.data())
+
             def eGreenH2Matching(optmodel, p, sc, n):
-                productive = sum(optmodel.vEleTotalCharge[p, sc, n, e2h]
-                                 - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p, sc, n, e2h]
-                                 for e2h in model.e2h)
-                return productive <= sum(optmodel.vEleResToE2h[p, sc, n, g] for g in pool)
+                if model.Par['pParLoadLevelHours'] >= 1.0:
+                    levels, weight = [n], {n: 1.0}
+                else:
+                    levels = hour_levels[n2h[n]]
+                    if n != levels[-1]:
+                        return Constraint.Skip
+                    weight = {n2: model.Par['pDuration'][p, sc, n2] for n2 in levels}
+                productive = sum(weight[n2] * (optmodel.vEleTotalCharge[p, sc, n2, e2h]
+                                 - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p, sc, n2, e2h])
+                                 for n2 in levels for e2h in model.e2h)
+                return productive <= sum(weight[n2] * optmodel.vEleResToE2h[p, sc, n2, g] for n2 in levels for g in pool)
             optmodel.__setattr__('eGreenH2Matching', Constraint(model.psn, rule=eGreenH2Matching, doc='hourly renewable temporal matching of the productive electrolyser draw'))
 
             # NOTE (no-double-count vs. electricity sales). With (a)+(b) only, an allocation

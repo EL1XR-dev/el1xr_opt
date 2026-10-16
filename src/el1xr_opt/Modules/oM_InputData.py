@@ -206,6 +206,22 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     _cur = parameters_dict.get('pParCurrency', 'SEK')
     parameters_dict['pParCurrency'] = _cur.strip() if isinstance(_cur, str) and _cur.strip() else 'SEK'
 
+    # Length of one load level in hours (optional dfParameter columns, default 1 h).
+    # LoadLevelHours = 0.25 gives a 15-minute model. Inputs given in hours (minimum up and
+    # down times, storage cycles) are converted to load levels with it. ReserveBlockHours is
+    # the length of an FCR product: the bids stay constant within each block (default 1 h,
+    # which adds no constraint when the levels are hourly).
+    for _col, _default in (('pParLoadLevelHours', 1.0), ('pParReserveBlockHours', 1.0)):
+        _val = parameters_dict.get(_col, _default)
+        parameters_dict[_col] = float(_val) if pd.notna(_val) and float(_val) > 0 else _default
+    _llh = parameters_dict['pParLoadLevelHours']
+    if abs(round(1 / _llh) - 1 / _llh) > 1e-9 and _llh < 1:
+        raise ValueError(f'LoadLevelHours = {_llh} must divide one hour (e.g. 0.25, 0.5, 1)')
+    _dur = data_frames['dfDuration']['Duration']
+    _dur = _dur[_dur > 0]
+    if len(_dur) and not np.allclose(_dur, _llh):
+        print(f'   Warning: non-zero load level durations ({_dur.min()}..{_dur.max()} h) differ from LoadLevelHours = {_llh}')
+
     parameters_dict['pDuration'       ] = data_frames['dfDuration']['Duration'] * parameters_dict['pParTimeStep']
     # N2T hoglasttid mask (per load level, 0/1): weekdays 06-22 in the winter months, set by
     # build_case from the real calendar. Drives the hogbelastningsavgift peak and the time-of-use
@@ -446,7 +462,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict[f'p{net[0:3]}GenInvestmentUp'] = parameters_dict[f'p{net[0:3]}GenInvestmentUp'].where(parameters_dict[f'p{net[0:3]}GenInvestmentUp'] > 0.0, other=1.0)
 
     # minimum up- and downtime converted to an integer number of time steps
-    parameters_dict['pEleNetSwOnTime' ] = round(parameters_dict['pEleNetSwOnTime' ] / parameters_dict['pParTimeStep']).astype('int')
+    parameters_dict['pEleNetSwOnTime' ] = round(parameters_dict['pEleNetSwOnTime' ] / (parameters_dict['pParTimeStep'] * _llh)).astype('int')
+    parameters_dict['pEleNetSwOffTime'] = round(parameters_dict['pEleNetSwOffTime'] / _llh).astype('int')
 
     log_time('--- Transforming the dataframes:', start_time, ind_log=indlog)
     start_time = time.time()
@@ -836,8 +853,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     idx_n = pd.Index(n_list, name='n')
     pDate = pd.DataFrame(index=idx_n)
 
-    # Vectorized DateTime for each n (no loops over p, sc)
-    pDate['DateTime'] = start_dt + pd.to_timedelta(np.arange(len(idx_n)), unit='h')
+    # Vectorized DateTime for each n (no loops over p, sc); each level lasts LoadLevelHours
+    pDate['DateTime'] = start_dt + pd.to_timedelta(np.arange(len(idx_n)) * parameters_dict['pParLoadLevelHours'], unit='h')
 
     # Components
     pDate['Month'] = pDate['DateTime'].dt.month.astype(int)
@@ -855,6 +872,9 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     model.hoy = Set(initialize=sorted(pDate['HourOfYear'].unique()))
     model.doy = Set(initialize=sorted(pDate['Day'].unique()))
     model.moy = Set(initialize=sorted(pDate['Month'].unique()))
+
+    # n -> clock hour of the year (one level per hour unless LoadLevelHours < 1)
+    model.n2h = Set(dimen=2, initialize=[(n, h) for n, h in zip(pDate.index, pDate['HourOfYear'])])
 
     # n -> month/day
     model.n2m = Set(dimen=2, initialize=[(n, m) for n, m in zip(pDate.index, pDate['Month'])])
@@ -943,30 +963,36 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
 
     # minimum up- and downtime and maximum shift time converted to an integer number of time steps
     for idx in ['Up', 'Down']:
-        parameters_dict[f'pEleGen{idx}Time'] = round(parameters_dict[f'pEleGen{idx}Time'] / parameters_dict['pParTimeStep']).astype('int')
+        parameters_dict[f'pEleGen{idx}Time'] = round(parameters_dict[f'pEleGen{idx}Time'] / (parameters_dict['pParTimeStep'] * _llh)).astype('int')
+        if _llh != 1.0:
+            # the hydrogen times and the initial times are not converted by pParTimeStep;
+            # they only change with the load level length
+            parameters_dict[f'pEleGen{idx}TimeZero'] = round(parameters_dict[f'pEleGen{idx}TimeZero'].fillna(0) / _llh).astype('int')
+            parameters_dict[f'pHydGen{idx}Time'    ] = round(parameters_dict[f'pHydGen{idx}Time'    ].fillna(0) / _llh).astype('int')
+            parameters_dict[f'pHydGen{idx}TimeZero'] = round(parameters_dict[f'pHydGen{idx}TimeZero'].fillna(0) / _llh).astype('int')
 
     # %% definition of the time-steps leap to observe the stored energy at an ESS
     idxCycle            = dict()
-    idxCycle[0        ] = 8736
-    idxCycle[0.0      ] = 8736
+    idxCycle[0        ] = round(8736 / _llh)
+    idxCycle[0.0      ] = round(8736 / _llh)
     idxCycle['Hourly' ] = 1
     idxCycle['Daily'  ] = 1
-    idxCycle['Weekly' ] = round(24  / parameters_dict['pParTimeStep'])
-    idxCycle['Monthly'] = round(168 / parameters_dict['pParTimeStep'])
-    idxCycle['Yearly' ] = round(168 / parameters_dict['pParTimeStep'])
+    idxCycle['Weekly' ] = round(24  / (parameters_dict['pParTimeStep'] * _llh))
+    idxCycle['Monthly'] = round(168 / (parameters_dict['pParTimeStep'] * _llh))
+    idxCycle['Yearly' ] = round(168 / (parameters_dict['pParTimeStep'] * _llh))
 
     idxOutflows            = dict()
-    idxOutflows[0        ] = 8736
-    idxOutflows[0.0      ] = 8736
+    idxOutflows[0        ] = round(8736 / _llh)
+    idxOutflows[0.0      ] = round(8736 / _llh)
     idxOutflows['Hourly' ] =    1
-    idxOutflows['Daily'  ] = round(24   / parameters_dict['pParTimeStep'])
-    idxOutflows['Weekly' ] = round(168  / parameters_dict['pParTimeStep'])
-    idxOutflows['Monthly'] = round(672  / parameters_dict['pParTimeStep'])
-    idxOutflows['Yearly' ] = round(8736 / parameters_dict['pParTimeStep'])
+    idxOutflows['Daily'  ] = round(24   / (parameters_dict['pParTimeStep'] * _llh))
+    idxOutflows['Weekly' ] = round(168  / (parameters_dict['pParTimeStep'] * _llh))
+    idxOutflows['Monthly'] = round(672  / (parameters_dict['pParTimeStep'] * _llh))
+    idxOutflows['Yearly' ] = round(8736 / (parameters_dict['pParTimeStep'] * _llh))
 
     for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector}CycleTimeStep'   ] = parameters_dict[f'p{sector}GenStorageType' ].map(idxCycle                                                                                                                                                            ).fillna(8736).astype('int')
-        parameters_dict[f'p{sector}OutflowsTimeStep'] = parameters_dict[f'p{sector}GenOutflowsType'].map(idxOutflows).where(parameters_dict['pVarMinOutflows'][dict_sector[sector]].sum() + parameters_dict['pVarMaxOutflows'][dict_sector[sector]].sum() > 0.0, other = 8736).fillna(8736).astype('int')
+        parameters_dict[f'p{sector}CycleTimeStep'   ] = parameters_dict[f'p{sector}GenStorageType' ].map(idxCycle                                                                                                                                                            ).fillna(round(8736 / _llh)).astype('int')
+        parameters_dict[f'p{sector}OutflowsTimeStep'] = parameters_dict[f'p{sector}GenOutflowsType'].map(idxOutflows).where(parameters_dict['pVarMinOutflows'][dict_sector[sector]].sum() + parameters_dict['pVarMaxOutflows'][dict_sector[sector]].sum() > 0.0, other = round(8736 / _llh)).fillna(round(8736 / _llh)).astype('int')
         parameters_dict[f'p{sector}CycleTimeStep'   ] = pd.concat([parameters_dict[f'p{sector}CycleTimeStep'], parameters_dict[f'p{sector}OutflowsTimeStep']], axis=1).min(axis=1)
 
     # mapping the string pParDemandType using the idxCycle dictionary
@@ -2137,13 +2163,13 @@ def create_variables(model, optmodel, indlog):
                 # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(168/model.Par['pParTimeStep']) == 0:
                 #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                 #     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744/model.Par['pParTimeStep']) == 0:
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744/(model.Par['pParTimeStep'] * model.Par['pParLoadLevelHours'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736/(model.Par['pParTimeStep'] * model.Par['pParLoadLevelHours'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/(model.Par['pParTimeStep'] * model.Par['pParLoadLevelHours'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
 

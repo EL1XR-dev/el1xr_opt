@@ -712,6 +712,8 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
     invcost = {("e", g): float(full.Par['pEleGenInvestCost'][g]) for g in egc}
     invcost.update({("h", g): float(full.Par['pHydGenInvestCost'][g]) for g in hgc})
     inv_names = list(invcost)
+    if float(full.Par['pParLoadLevelHours']) != 1.0:
+        raise NotImplementedError("temporal Benders assumes hourly load levels (LoadLevelHours = 1)")
     for g in egs:
         if int(full.Par['pEleCycleTimeStep'][g]) != 1:
             raise NotImplementedError("temporal MVP assumes hourly storage (cycle=1)")
