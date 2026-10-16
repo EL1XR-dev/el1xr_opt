@@ -71,12 +71,12 @@
   \draw[muted, dashed, line width=0.4pt] (-116,-50.5) -- (250,-50.5);
   \node[anchor=west, sub] at (-116,-53) {Constraint resolutions, derived from the variables involved};
 
-  % instantaneous: finest common of day-ahead and FCR (Algorithm 1)
-  \node[lab] at (-3,\yinst-\rowh/2) {Reserve headroom\\[-1pt]\footnotesize\color{muted}instantaneous: finest common};
+  % instantaneous: highest common resolution of day-ahead and FCR (Algorithm 1)
+  \node[lab] at (-3,\yinst-\rowh/2) {Reserve headroom\\[-1pt]\footnotesize\color{muted}instantaneous: highest common};
   \foreach \s in {0,15,...,225} {\filldraw[fill=greyfill, draw=violetdraw, dashed, line width=0.5pt] (\s,\yinst) rectangle ++(15,-\rowh);}
 
-  % accumulating: coarsest common of FCR and tank (Algorithm 2)
-  \node[lab] at (-3,\yacc-\rowh/2) {Tank energy balance\\[-1pt]\footnotesize\color{muted}accumulating: coarsest common};
+  % accumulating: lowest common resolution of electrolyser output and tank (Algorithm 2)
+  \node[lab] at (-3,\yacc-\rowh/2) {Tank energy balance\\[-1pt]\footnotesize\color{muted}accumulating: lowest common};
   \foreach \s in {0,120} {\filldraw[fill=violetfill, draw=violetdraw, dashed, line width=0.5pt] (\s,\yacc) rectangle ++(120,-\rowh);}
 
   % overlap: day-ahead block 00:15-00:30 inside FCR hour 00:00-01:00
@@ -88,9 +88,9 @@
 
   % rule legend
   \node[anchor=north west, font=\footnotesize, align=left, text width=118mm] at (-116,-77)
-    {\textbf{Instantaneous} constraints (power balances, capacity and headroom limits) use the finest
+    {\textbf{Instantaneous} constraints (power balances, capacity and headroom limits) use the highest
      common resolution of their variables, so no energy can move inside a block.
-     \textbf{Accumulating} constraints (storage, conversion, energy budgets) may use the coarsest,
+     \textbf{Accumulating} constraints (storage, conversion, energy budgets) may use the lowest,
      each variable weighted by its overlap. Parameters are resampled to the constraint: a rate by its
      mean, an amount by its share. The highlighted day-ahead block lies 15 min inside the first
      FCR hour: that overlap $\ell$ is its weight in hourly constraints.};

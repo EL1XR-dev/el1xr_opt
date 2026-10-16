@@ -10,8 +10,8 @@
 # Method: Gao, Gazzani, Tejada-Arango, Soares Siqueira, Wang, Gibescu, Morales-Espana, "Fully
 # flexible temporal resolution for energy system optimization", Applied Energy 396 (2025) 126267.
 # Every variable, parameter and constraint series may have its own resolution. A variable is a rate,
-# constant within its block. A constraint on instantaneous values uses the finest common resolution
-# of its variables (their Algorithm 1); a constraint on accumulated values may use the coarsest
+# constant within its block. A constraint on instantaneous values uses the highest common resolution
+# of its variables (their Algorithm 1); a constraint on accumulated values may use the lowest
 # (Algorithm 2). Variables enter a constraint weighted by their overlap with its blocks (Algorithm 3).
 #
 # This module knows nothing about Pyomo. Block positions are 0-based base units, and a block covers
