@@ -16,6 +16,7 @@ from   itertools         import product
 from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegativeIntegers, NonNegativeReals, Reals, PositiveReals, RangeSet
 from   pyomo.dataportal  import DataPortal
 from  .oM_InputSource     import resolve_source, df_to_set_values
+from  .oM_Time            import Timeline, RepPeriod, from_lengths
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 # Unit-scale conversion factor (audit C38). 1.0 by default (byte-unchanged goldens). A true unit
@@ -825,19 +826,24 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # Assuming model.n is ordered like ['t0001', 't0002', ..., 'tNNNN']
     n_list = list(model.n)
 
-    # Reference position of DateModel in the year
-    hour_of_day = DateModel.hour
-    day_of_year = DateModel.timetuple().tm_yday
-    hour_of_year = (day_of_year - 1) * 24 + hour_of_day
-
-    start_dt = DateModel - pd.Timedelta(hours=(hour_of_year))
+    # The timeline (oM_Time) counts 1-min base units from 1 January 00:00 of the model year. The
+    # input load levels are hourly. An active level is a block that starts after the previous
+    # active level, so it also covers the inactive levels that TimeStep merges into it. Every
+    # level is labelled with the start of its block.
+    start_dt = pd.Timestamp(DateModel.year, 1, 1)
+    level_minutes = 60
+    position = {nn: i for i, nn in enumerate(model.nn)}
+    block_ends = np.array([position[n] + 1 for n in n_list], dtype=np.int64) * level_minutes
+    block_lengths = np.diff(np.concatenate([[0], block_ends]))
+    model.timeline = Timeline([RepPeriod('horizon', start_dt, int(block_ends[-1]) if len(n_list) else 0)])
+    model.time_res = {'level': from_lengths(model.timeline, 'horizon', block_lengths, 'level')} if len(n_list) else {}
 
     # Index only by n
     idx_n = pd.Index(n_list, name='n')
     pDate = pd.DataFrame(index=idx_n)
 
-    # Vectorized DateTime for each n (no loops over p, sc)
-    pDate['DateTime'] = start_dt + pd.to_timedelta(np.arange(len(idx_n)), unit='h')
+    # DateTime of each level = start of its block
+    pDate['DateTime'] = model.timeline.timestamps('horizon', block_ends - block_lengths) if len(n_list) else pd.DatetimeIndex([])
 
     # Components
     pDate['Month'] = pDate['DateTime'].dt.month.astype(int)
