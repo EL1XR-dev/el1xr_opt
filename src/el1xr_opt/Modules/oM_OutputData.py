@@ -161,8 +161,8 @@ def save_chart(chart, path, filename, embed_options=None):
     filepath = os.path.join(path, filename)
     chart.save(filepath, embed_options=embed_options)
 
-def create_and_save_duration_curve(series_data, index_tuples, value_col_name, Date, hour_of_year,
-                                   path, csv_filename, html_filename, title, y_label):
+def create_and_save_duration_curve(series_data, index_tuples, value_col_name, Date,
+                                   path, csv_filename, html_filename, title, y_label, level_time=None):
     """
     Create and save a duration curve with both CSV and HTML outputs.
     
@@ -171,7 +171,7 @@ def create_and_save_duration_curve(series_data, index_tuples, value_col_name, Da
         index_tuples: Index tuples (e.g., from model.psn)
         value_col_name (str): Name for the value column  
         Date: Starting date
-        hour_of_year (str): Hour of year reference
+        level_time (pd.Series): start time of each load level, from the timeline
         path (str): Output directory
         csv_filename (str): CSV filename
         html_filename (str): HTML filename
@@ -187,7 +187,7 @@ def create_and_save_duration_curve(series_data, index_tuples, value_col_name, Da
     
     # Add date column
     df['Date'] = df.index.get_level_values(2).map(
-        lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))
+        lambda x: level_time[x]
     ).strftime('%Y-%m-%d %H:%M:%S')
     
     # Reset index and rename
@@ -332,7 +332,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     # hour = Date.hour
     # minute = Date.minute
 
-    hour_of_year = f't{((Date.timetuple().tm_yday-1) * 24 + Date.timetuple().tm_hour):04d}'
+    level_time = model.Par['pDate']['DateTime']   # start of each load level, from the timeline
 
     _path = os.path.join(DirName, CaseName)
     StartTime = time.time()
@@ -346,7 +346,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         Output_vEleDemand  ['Type'] = 'ShiftedDemand'
         # concatenate the results
         Output_vDemand = pd.concat([Output_VarMaxDemand, Output_vEleDemand], axis=0).set_index(['level_0', 'level_1', 'level_2', 'level_3', 'Type'], inplace=False)
-        Output_vDemand['Date'] = Output_vDemand.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+        Output_vDemand['Date'] = Output_vDemand.index.get_level_values(2).map(lambda x: level_time[x]).strftime('%Y-%m-%d %H:%M:%S')
         Output_vDemand = Output_vDemand.reset_index().rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Demand'}, inplace=False)
         save_to_csv(Output_vDemand, _path, f'oM_Result_00_rElectricityDemand_{CaseName}.csv')
 
@@ -470,7 +470,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     def compute_date(x):
         try:
             if isinstance(x, str) and x.startswith('t'):
-                return Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))
+                return level_time[x]
             else: return pd.NaT
         except Exception: return pd.NaT
 
@@ -615,7 +615,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     OutputResults = OutputResults.groupby(['Period', 'Scenario', 'LoadLevel', 'Node', 'Component'])[['MWh']].sum()
 
     # select the third level of the index and create a new column date using the Date as an initial date
-    OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+    OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: level_time[x]).strftime('%Y-%m-%d %H:%M:%S')
 
     Output_EleBalance = OutputResults.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Node', 'Component', 'Date'], axis=0).reset_index().rename(columns={0: 'MWh'}, inplace=False)
     # scaling the results to KWh
@@ -679,7 +679,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     Output_EleCost = pd.Series(data=[(model.Par['pVarEnergyCost'] [er][p,sc,n] * model.Par['pEleRetBuyingRatio'][er] + model.Par['pEleRetOverforingsavgift'][er] + model.Par['pEleRetPaslag'][er] + model.Par['pEleRetEnergyTax'][er]) for p,sc,n,er in model.psner], index=pd.Index(model.psner)).to_frame(name='SEK/kWh').reset_index()
     Output_EleCost = Output_EleCost.rename(columns={'level_0': 'Period', 'level_1': 'Scenario', 'level_2': 'LoadLevel', 'level_3': 'Component'}, inplace=False).set_index(['Period', 'Scenario', 'LoadLevel', 'Component'], inplace=False)
     # select the third level of the index and create a new column date using the Date as a initial date
-    Output_EleCost['Date'] = Output_EleCost.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+    Output_EleCost['Date'] = Output_EleCost.index.get_level_values(2).map(lambda x: level_time[x]).strftime('%Y-%m-%d %H:%M:%S')
     Output_EleCost = Output_EleCost.reset_index().groupby(['Period', 'Scenario', 'LoadLevel', 'Date'])[['SEK/kWh']].sum().reset_index()
     Output_EleCost['Type'] ='ElectricityCost'
 
@@ -751,7 +751,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     sPSNEGS = [(p, sc, n, egs) for p, sc, n, egs in model.ps * model.negs if (p, egs) in model.pegs]
     if sPSNEGS:
         OutputResults1     = pd.Series(data=[ optmodel.vEleInventory[p,sc,n,egs]() for p,sc,n,egs in sPSNEGS], index=pd.Index(sPSNEGS)).to_frame(name='SOC').reset_index().pivot_table(index=['level_0','level_1','level_2'], columns='level_3', values='SOC', aggfunc='sum')
-        OutputResults1['Date'] = OutputResults1.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+        OutputResults1['Date'] = OutputResults1.index.get_level_values(2).map(lambda x: level_time[x]).strftime('%Y-%m-%d %H:%M:%S')
         Output_EleSOE = OutputResults1.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Date'], axis=0).stack().reset_index().rename(columns={'level_3': 'Component', 0: 'SOE'}, inplace=False)
         Output_EleSOE['SOE'] *= (1/model.factor1)
         save_to_csv(Output_EleSOE, _path, f'oM_Result_05_rEleStateOfEnergy_{CaseName}.csv')
@@ -770,7 +770,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
     if len(model.egv):
         # Base chart of VarFixedAvailability with the primary y-axis
         Output_FixedAvailability = model.Par['pVarFixedAvailability'].loc[model.psn]
-        Output_FixedAvailability['Date'] = Output_FixedAvailability.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+        Output_FixedAvailability['Date'] = Output_FixedAvailability.index.get_level_values(2).map(lambda x: level_time[x]).strftime('%Y-%m-%d %H:%M:%S')
         Output_FixedAvailability = Output_FixedAvailability.set_index('Date', append=True).rename_axis(['Period', 'Scenario', 'LoadLevel', 'Date'], axis=0).stack().reset_index().rename(columns={'level_4': 'Component', 0: 'FixedAvailability'}, inplace=False)
         save_to_csv(Output_FixedAvailability, _path, f'oM_Result_06_rFixedAvailability_{CaseName}.csv')
 
@@ -1058,7 +1058,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
             OutputResults = pd.concat([OutputResults1a, OutputResults2a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults7a, OutputResults8a, OutputResults3, OutputResults15, OutputResults9, OutputResults10, OutputResults11], axis=1)
     else:
         OutputResults = pd.concat([OutputResults1a, OutputResults4, OutputResults6, OutputResults7, OutputResults8, OutputResults9, OutputResults10, OutputResults11], axis=1)
-    OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: Date + pd.Timedelta(hours=(int(x[1:]) - int(hour_of_year[1:])))).strftime('%Y-%m-%d %H:%M:%S')
+    OutputResults['Date'] = OutputResults.index.get_level_values(2).map(lambda x: level_time[x]).strftime('%Y-%m-%d %H:%M:%S')
     OutputResults = OutputResults.set_index('Date', append=True)
     OutputResults.index.names = [None, None, None, None]
     OutputResults.columns.names = [None, None]
@@ -1508,7 +1508,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         index_tuples=model.psn,
         value_col_name='NetCharge',
         Date=Date,
-        hour_of_year=hour_of_year,
+        level_time=level_time,
         path=_path,
         csv_filename=f'oM_Result_10_rDurationCurve_NetCharge_{CaseName}.csv',
         html_filename=f'oM_Plot_rDurationCurve_NetCharge_{CaseName}.html',
@@ -1526,7 +1526,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         index_tuples=model.psn,
         value_col_name='TotalOutput',
         Date=Date,
-        hour_of_year=hour_of_year,
+        level_time=level_time,
         path=_path,
         csv_filename=f'oM_Result_11_rDurationCurve_TotalOutput_{CaseName}.csv',
         html_filename=f'oM_Plot_rDurationCurve_TotalOutput_{CaseName}.html',
@@ -1544,7 +1544,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         index_tuples=model.psn,
         value_col_name='Demand',
         Date=Date,
-        hour_of_year=hour_of_year,
+        level_time=level_time,
         path=_path,
         csv_filename=f'oM_Result_12_rDurationCurve_Demand_{CaseName}.csv',
         html_filename=f'oM_Plot_rDurationCurve_Demand_{CaseName}.html',
@@ -1562,7 +1562,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         index_tuples=model.psn,
         value_col_name='Buy',
         Date=Date,
-        hour_of_year=hour_of_year,
+        level_time=level_time,
         path=_path,
         csv_filename=f'oM_Result_13_rDurationCurve_EleBuy_{CaseName}.csv',
         html_filename=f'oM_Plot_rDurationCurve_EleBuy_{CaseName}.html',
@@ -1580,7 +1580,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
         index_tuples=model.psn,
         value_col_name='Sell',
         Date=Date,
-        hour_of_year=hour_of_year,
+        level_time=level_time,
         path=_path,
         csv_filename=f'oM_Result_14_rDurationCurve_EleSell_{CaseName}.csv',
         html_filename=f'oM_Plot_rDurationCurve_EleSell_{CaseName}.html',

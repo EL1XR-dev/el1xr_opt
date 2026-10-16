@@ -2368,9 +2368,10 @@ def create_constraints(model, optmodel, indlog):
         buy_day = _ret_factor(er, 'PeakDayBuyFactor', d_buy_day)
         add_night = _ret_factor(er, 'PeakNightAddend', d_add_night)
         add_day = _ret_factor(er, 'PeakDayAddend', d_add_day)
-        hour = optmodel.n.ord(n) % 24
+        # clock hour at the start of the level; night runs from StartNightTime to EndNightTime
+        hour = model.Par['pDate'].at[n, 'Hour']
         is_night = (hour >= model.Par['pEleRetStartNightTime'][er]
-                    or hour <= model.Par['pEleRetEndNightTime'][er])
+                    or hour < model.Par['pEleRetEndNightTime'][er])
         buy_factor = buy_night if is_night else buy_day
         addend = add_night if is_night else add_day
         base = optmodel.vEleImport[p, sc, n, model.Par['pEleRetNode'][er]]
