@@ -19,7 +19,8 @@ import pyomo.environ as pyo
 import pytest
 
 from el1xr_opt.Modules.oM_CsvToDuckDB import csv_case_to_duckdb
-from el1xr_opt.Modules.oM_Sequence import build_structure, routine
+from el1xr_opt.Modules.oM_ProblemSolving import solving_model
+from el1xr_opt.Modules.oM_Sequence import build_model, build_structure, routine
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CASE = "Home1"
@@ -37,7 +38,7 @@ def _case(dst, resolution=None, rule=None, curtailable=False):
     dur.iloc[48:, col] = np.nan
     dur.to_csv(path)
     if resolution is not None:
-        pd.DataFrame.from_dict(resolution, orient="index", columns=["Output", "Charge"]).to_csv(folder / f"oM_Data_Resolution_{CASE}.csv")
+        pd.DataFrame.from_dict(resolution, orient="index").to_csv(folder / f"oM_Data_Resolution_{CASE}.csv")
     if curtailable:
         path = folder / f"oM_Data_VarMinGeneration_{CASE}.csv"
         vmin = pd.read_csv(path, index_col=[0, 1, 2])
@@ -56,7 +57,7 @@ def _solve(d):
                    rawresults="False", plots="False", indlog="False", duckdbresults="False")
 
 
-SOLAR_2H = {"Solar_01": {"Output": "uniform 2h", "Charge": None}}
+SOLAR_2H = {"Solar_01": {"Output": "uniform 2h"}}
 
 
 def _solar(m):
@@ -94,13 +95,13 @@ def test_declaration_is_read_from_duckdb_too(tmp_path):
 
 
 def test_block_off_the_level_boundaries_is_refused(tmp_path):
-    d = _case(tmp_path, {"Solar_01": {"Output": "uniform 90min", "Charge": None}})
+    d = _case(tmp_path, {"Solar_01": {"Output": "uniform 90min"}})
     with pytest.raises(ValueError, match="load level boundaries"):
         build_structure(str(d), CASE, DATE)
 
 
 def test_charge_of_a_unit_that_cannot_charge_is_refused(tmp_path):
-    d = _case(tmp_path, {"Solar_01": {"Output": None, "Charge": "uniform 2h"}})
+    d = _case(tmp_path, {"Solar_01": {"Charge": "uniform 2h"}})
     with pytest.raises(ValueError, match="no charge flow"):
         build_structure(str(d), CASE, DATE)
 
@@ -135,26 +136,66 @@ def deterministic_highs_module():
         yield
 
 
+def _solve_tied(d, case, ties, blocks=2):
+    """Reference result: the case at the resolution of the load levels, with equality
+    constraints added by hand that hold each listed variable of each listed unit constant over
+    blocks of ``blocks`` levels. Independent of oM_TimeBlocks."""
+    m = build_model(str(d), case, DATE)
+    lv = list(m.n)
+    rows = []
+    for name, units in ties.items():
+        var = getattr(m, name)
+        for p, sc in m.ps:
+            for k, n in enumerate(lv):
+                for g in units:
+                    if k % blocks and (p, sc, n, g) in var:
+                        rows.append(var[p, sc, n, g] == var[p, sc, lv[k - k % blocks], g])
+    m.hand_ties = pyo.ConstraintList()
+    for r in rows:
+        m.hand_ties.add(r)
+    return solving_model(str(d), case, "highs", m, 0, "False")
+
+
+def _cost(m):
+    return float(pyo.value(m.eTotalSCost))
+
+
+SOLAR_TIES = {"vEleTotalOutput": ["Solar_01"]}
+BESS_2H = {"BESS_01": {"Output": "uniform 2h", "Charge": "uniform 2h"}}
+BESS_TIES = {"vEleTotalOutput": ["BESS_01"], "vEleTotalCharge": ["BESS_01"]}
+
+
 @pytest.fixture(scope="module")
 def solved(tmp_path_factory, deterministic_highs_module):
     base = tmp_path_factory.mktemp("blocks")
     out = {}
     for label, res, rule in (("hourly", None, None), ("level", SOLAR_2H, None), ("mean", SOLAR_2H, "Mean")):
         out[label] = _solve(_case(base / label, res, rule, curtailable=True))
+    out["solar_tied"] = _solve_tied(_case(base / "solar_tied", curtailable=True), CASE, SOLAR_TIES)
+    out["bess"] = _solve(_case(base / "bess", BESS_2H))
+    out["bess_tied"] = _solve_tied(_case(base / "bess_tied"), CASE, BESS_TIES)
     return out
 
 
 @pytest.mark.solve
-def test_level_rule_holds_output_below_the_lowest_availability(solved):
+def test_block_variables_reproduce_hand_tied_solar(solved):
+    """One variable per block gives the cost of the hourly model with the same values tied by
+    hand, and the model has one output variable per block for the declared unit."""
     m = solved["level"]
+    assert _cost(m) == pytest.approx(_cost(solved["solar_tied"]), rel=1e-9)
+    assert sum(1 for idx in m.vEleTotalOutput_blk if idx[3] == "Solar_01") == 24
     out, avail = _solar(m)
     pairs = out.reshape(-1, 2)
     assert np.allclose(pairs[:, 0], pairs[:, 1])                       # constant within 2 h
     assert np.all(pairs[:, 0] <= avail.reshape(-1, 2).min(axis=1) + 1e-9)
-    assert len(m.eEleOutputBlock_Solar_01) == 24
-    # a unit at a lower resolution can only cost more
-    cost = lambda k: float(pyo.value(solved[k].eTotalSCost))
-    assert cost("level") >= cost("hourly") - 1e-9
+    assert _cost(m) >= _cost(solved["hourly"]) - 1e-9                  # lower resolution, higher cost
+
+
+@pytest.mark.solve
+def test_block_variables_reproduce_hand_tied_storage(solved):
+    assert _cost(solved["bess"]) == pytest.approx(_cost(solved["bess_tied"]), rel=1e-9)
+    m = solved["bess"]
+    assert sum(1 for idx in m.vEleTotalCharge_blk if idx[3] == "BESS_01") == 24
 
 
 @pytest.mark.solve
@@ -173,6 +214,38 @@ def test_mean_rule_holds_output_below_the_block_mean(solved):
     # Mean allows all that Level allows, so it costs no more. It is not a restriction of the
     # hourly model, though: it spreads a block's energy evenly over the block, which moves
     # energy between its hours, and on this case it costs less than the hourly model.
-    cost = lambda k: float(pyo.value(solved[k].eTotalSCost))
-    assert cost("mean") <= cost("level") + 1e-9
-    assert cost("mean") < cost("hourly")
+    assert _cost(m) <= _cost(solved["level"]) + 1e-9
+    assert _cost(m) < _cost(solved["hourly"])
+
+
+# --- electrolyser: charge, commitment and FCR bids --------------------------------------------
+
+ELY = "ElectrolyserFCR"
+ELY_2H = {"AEL_01": {"Charge": "uniform 2h", "Commitment": "uniform 2h", "Reserve": "uniform 2h"}}
+ELY_TIES = {"vEleTotalCharge": ["AEL_01"], "vHydGenCommitment": ["AEL_01"], "vHydGenStandBy": ["AEL_01"],
+            "vEleFreqContReserveDisUpwardBid": ["AEL_01"], "vEleFreqContReserveDisDownwardBid": ["AEL_01"],
+            "vEleFreqContReserveNorBid": ["AEL_01"]}
+
+
+def _electrolyser_case(dst, resolution=None):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("make_sizing_cases", os.path.join(REPO, "data", "sizing", "make_sizing_cases.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.OUT_ROOT = str(dst)
+    os.makedirs(dst, exist_ok=True)
+    folder = mod.build_case(ELY, mod.CASES[ELY])
+    if resolution is not None:
+        pd.DataFrame.from_dict(resolution, orient="index").to_csv(os.path.join(folder, f"oM_Data_Resolution_{ELY}.csv"))
+    return dst
+
+
+@pytest.mark.solve
+def test_block_variables_reproduce_hand_tied_electrolyser(tmp_path, deterministic_highs):
+    blocks = routine(dir=str(_electrolyser_case(tmp_path / "blk", ELY_2H)), case=ELY, solver="highs", date=DATE,
+                     rawresults="False", plots="False", indlog="False", duckdbresults="False")
+    tied = _solve_tied(_electrolyser_case(tmp_path / "tied"), ELY, ELY_TIES)
+    assert _cost(blocks) == pytest.approx(_cost(tied), rel=1e-9)
+    for name in ELY_TIES:
+        n_blocks = sum(1 for idx in getattr(blocks, f"{name}_blk") if idx[3] == "AEL_01")
+        assert n_blocks == len(blocks.n) // 2, name
