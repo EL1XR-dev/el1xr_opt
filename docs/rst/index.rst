@@ -61,6 +61,7 @@ Index
    :numbered:
    :caption: Concepts
 
+   concepts/time-structure
    concepts/sets
    concepts/parameters
    concepts/variables

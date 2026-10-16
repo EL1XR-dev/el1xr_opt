@@ -67,6 +67,23 @@ exactly.
 
 ----
 
+⏱ Time structure
+-----------------
+
+Each asset and flow can have its own time resolution on one timeline counted in 1-minute base
+units, following Gao et al., *Applied Energy* 396 (2025) 126267. Constraints on instantaneous
+values (power balances, capacity limits) use the finest resolution of their variables; constraints
+on accumulated values (storage, conversion, energy budgets) may use the coarsest. Representative
+periods each have their own timeline and weight. See the `time structure page
+<https://el1xr-opt.readthedocs.io/en/latest/concepts/time-structure.html>`_ for details.
+
+.. image:: https://raw.githubusercontent.com/EL1XR-dev/el1xr_opt/refs/heads/main/docs/img/el1xr_opt_time_structure.svg
+   :width: 760
+   :align: center
+   :alt: One timeline on a 1-minute ruler with 15-minute, 1-hour and 2-hour resolutions per asset and flow, the constraint resolutions derived from them, and representative periods
+
+----
+
 📂 Structure
 ------------
 
