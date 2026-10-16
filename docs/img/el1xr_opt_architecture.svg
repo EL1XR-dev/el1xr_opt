@@ -43,11 +43,12 @@
   <line x1="470" y1="147" x2="470" y2="159" class="flow"/>
 
   <!-- Layer 3: data -->
-  <text x="30" y="272" class="lyr">DATA</text>
-  <rect x="150" y="248" width="640" height="56" class="box" fill="#e7f6ea" stroke="#16a34a"/>
-  <text x="470" y="271" text-anchor="middle" class="tb">oM_InputData  -  build Pyomo Sets and Params</text>
-  <text x="470" y="290" text-anchor="middle" class="ts">data_processing  ·  create_variables</text>
-  <line x1="470" y1="224" x2="470" y2="246" class="flow"/>
+  <text x="30" y="279" class="lyr">DATA</text>
+  <rect x="150" y="242" width="640" height="66" class="box" fill="#e7f6ea" stroke="#16a34a"/>
+  <text x="470" y="263" text-anchor="middle" class="tb">oM_InputData  -  build Pyomo Sets and Params</text>
+  <text x="470" y="280" text-anchor="middle" class="ts">data_processing  ·  create_variables</text>
+  <text x="470" y="297" text-anchor="middle" class="ts">oM_Time  -  timeline in 1-min base units, resolutions, calendar</text>
+  <line x1="470" y1="224" x2="470" y2="240" class="flow"/>
 
   <!-- Layer 4: model -->
   <text x="30" y="372" class="lyr">MODEL</text>
@@ -65,7 +66,7 @@
   <text x="574" y="413" text-anchor="middle" class="t">oM_Features  -  problem class + cost/revenue registry</text>
   <text x="470" y="444" text-anchor="middle" class="ts">carriers: Electricity · Hydrogen · Heat   |   class: LP · MILP · QP · SOCP · MISOCP · NLP</text>
   <text x="470" y="460" text-anchor="middle" class="ts">the problem class chooses the solver (and, in future, the build library)</text>
-  <line x1="470" y1="304" x2="470" y2="318" class="flow"/>
+  <line x1="470" y1="308" x2="470" y2="318" class="flow"/>
 
   <!-- Layer 5: solve -->
   <text x="30" y="520" class="lyr">SOLVE</text>
