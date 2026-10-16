@@ -17,7 +17,7 @@ from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegati
 from   pyomo.dataportal  import DataPortal
 from  .oM_InputSource     import resolve_source, df_to_set_values
 from  .oM_Time            import Timeline, RepPeriod, from_lengths
-from  .oM_TimeBlocks      import read_declarations, apply_capacity_rule
+from  .oM_TimeBlocks      import read_declarations, apply_capacity_rule, alias_block_variables
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 # Unit-scale conversion factor (audit C38). 1.0 by default (byte-unchanged goldens). A true unit
@@ -1718,6 +1718,9 @@ def create_variables(model, optmodel, indlog):
         setattr(optmodel, 'vHydNetCommit',                 Var(model.psnela,  within=Binary,       initialize=0, doc='network binary operation              '))
 
     log_time('--- Defining the binary variables', StartTime, ind_log=indlog)
+
+    # a flow declared at a lower resolution gets one variable per block (oM_TimeBlocks)
+    alias_block_variables(model, optmodel, indlog)
 
     # Precompute the bounds
     # psn

@@ -75,25 +75,38 @@ Declaring a resolution
 ----------------------
 
 A case declares resolutions in an optional table, ``oM_Data_Resolution_<case>.csv``, one row per
-unit, with columns ``Output`` and ``Charge``:
+unit, with up to four columns:
 
 .. code-block:: text
 
-   ,Output,Charge
-   Solar_01,uniform 2h,
-   BESS_01,,uniform 1h
+   ,Output,Charge,Commitment,Reserve
+   Solar_01,uniform 2h,,,
+   BESS_01,,uniform 1h,,
+   AEL_01,,uniform 2h,uniform 2h,uniform 1h
+
+- ``Output``: the total output of the unit.
+- ``Charge``: the total charge (the electricity drawn by a store or an electrolyser, the hydrogen
+  drawn by a hydrogen store or a fuel cell).
+- ``Commitment``: the commitment, and the standby state of an electrolyser. Start-ups and
+  shut-downs stay per load level.
+- ``Reserve``: the FCR-D up, FCR-D down and FCR-N bids, the market product.
 
 A blank cell keeps the resolution of the load levels, and a case without the table is unchanged.
-Every block of a declared resolution must start on a load level boundary. The value of a declared
-flow is constant within each of its blocks.
+Every block of a declared resolution must start on a load level boundary.
+
+A declared flow has one variable per block. Its variable component keeps its name and its index
+over every load level, as a reference whose entries all point to the variable of their block, so
+every constraint and every result reads it per load level as before. The second-block output
+stays per load level, because the total output is the second block plus the activated reserve,
+and the activation changes every level.
 
 The limits of a flow declared at a lower resolution than the load levels follow the Parameter
 ``BlockLimit``:
 
 - ``Level`` (default): the flow stays within its lower and upper limits at every level of the
-  block, so a 2-h constant output stays below the lowest availability inside the 2 h. A
-  must-take profile that changes inside a block cannot be met, and the case is refused when it
-  is read, naming the unit and the block.
+  block, so a 2-h constant output stays below the lowest availability inside the 2 h. The limits
+  are set to the tightest value inside the block. A must-take profile that changes inside a
+  block cannot be met, and the case is refused when it is read, naming the unit and the block.
 - ``Mean``: both limits are replaced by their duration-weighted mean over the block, as in
   [Gao2025]_. Each block delivers at most its available energy, but spread evenly over the
   block, so energy moves between the hours of a block. On the H2VPP test case, a solar unit
@@ -102,12 +115,11 @@ The limits of a flow declared at a lower resolution than the load levels follow 
 Status
 ------
 
-The timeline, the calendar and the per-flow declarations for the output and the charge of each
-unit are in place. A declared flow keeps one variable per load level, and the values inside a
-block are held equal, so every constraint written per load level stays correct. Next, the
-variables of a flow at a lower resolution are defined on its blocks only, and each constraint is written on its
-own resolution (Algorithms 1 and 2), which removes the repeated rows. Cases with mixed resolutions
-and ramps and unit commitment on blocks of unequal length follow.
+The timeline, the calendar and the declarations of output, charge, commitment and reserve bids,
+with one variable per block, are in place. Constraints are still written per load level, so a
+limit on a declared flow is repeated on the levels of its block. Next, each constraint is
+written at its own resolution (Algorithms 1 and 2), which removes the repeated rows. Cases with
+mixed resolutions, and ramps and unit commitment on blocks of unequal length, follow.
 
 References
 ----------
