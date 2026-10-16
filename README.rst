@@ -72,8 +72,8 @@ exactly.
 
 Each asset and flow can have its own time resolution on one timeline counted in 1-minute base
 units, following Gao et al., *Applied Energy* 396 (2025) 126267. Constraints on instantaneous
-values (power balances, capacity limits) use the finest resolution of their variables; constraints
-on accumulated values (storage, conversion, energy budgets) may use the coarsest. Representative
+values (power balances, capacity limits) use the highest resolution of their variables; constraints
+on accumulated values (storage, conversion, energy budgets) may use the lowest. Representative
 periods each have their own timeline and weight. See the `time structure page
 <https://el1xr-opt.readthedocs.io/en/latest/concepts/time-structure.html>`_ for details.
 

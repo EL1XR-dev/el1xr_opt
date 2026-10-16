@@ -17,6 +17,7 @@ from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegati
 from   pyomo.dataportal  import DataPortal
 from  .oM_InputSource     import resolve_source, df_to_set_values
 from  .oM_Time            import Timeline, RepPeriod, from_lengths
+from  .oM_TimeBlocks      import read_declarations, apply_capacity_rule
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 # Unit-scale conversion factor (audit C38). 1.0 by default (byte-unchanged goldens). A true unit
@@ -837,6 +838,8 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     block_lengths = np.diff(np.concatenate([[0], block_ends]))
     model.timeline = Timeline([RepPeriod('horizon', start_dt, int(block_ends[-1]) if len(n_list) else 0)])
     model.time_res = {'level': from_lengths(model.timeline, 'horizon', block_lengths, 'level')} if len(n_list) else {}
+    # resolutions declared per asset and flow (optional table oM_Data_Resolution)
+    read_declarations(model, data_frames, parameters_dict)
 
     # Index only by n
     idx_n = pd.Index(n_list, name='n')
@@ -1038,6 +1041,9 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     _apply_mask_and_set_zero(parameters_dict, 'pVarMinDemand'     , model.ed, pEleEpsilon)
     _apply_mask_and_set_zero(parameters_dict, 'pVarMaxDemand'     , model.hd, pHydEpsilon)
     _apply_mask_and_set_zero(parameters_dict, 'pVarMinDemand'     , model.hd, pHydEpsilon)
+
+    # limits of a flow declared at a lower resolution, under BlockLimit = Mean (no change under Level)
+    apply_capacity_rule(model, parameters_dict)
 
     for idx in model.reserves_prefixes:
         parameters_dict[f'pOperatingReservePrice_{idx}'     ][parameters_dict[f'pOperatingReservePrice_{idx}'     ] < pEleEpsilon] = 0.0

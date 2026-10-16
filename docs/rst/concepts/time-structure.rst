@@ -9,7 +9,7 @@ hydrogen store tracked every two hours and daily demand limits at the same time.
 .. figure:: /../img/el1xr_opt_time_structure.svg
    :width: 100%
    :align: center
-   :alt: One timeline on a 1-minute ruler; day-ahead energy in 15-minute blocks, FCR-N bid and electrolyser output in 1-hour blocks, hydrogen tank level in 2-hour blocks; reserve headroom at the finest common resolution and the tank balance at the coarsest; three representative periods with their weights.
+   :alt: One timeline on a 1-minute ruler; day-ahead energy in 15-minute blocks, FCR-N bid and electrolyser output in 1-hour blocks, hydrogen tank level in 2-hour blocks; reserve headroom at the highest common resolution and the tank balance at the lowest; three representative periods with their weights.
 
    Panel (a): one timeline, a resolution for each asset and flow, and the constraint resolutions
    derived from them. Panel (b): representative periods, each with its own timeline and weight.
@@ -44,8 +44,9 @@ A constraint takes its resolution from the variables it involves.
 
 - **Instantaneous** constraints (power balances, capacity and headroom limits) use the finest
   common resolution: a new block starts whenever a block of any involved variable starts
-  (Algorithm 1 of [Gao2025]_). A coarser constraint would let energy move inside a block.
-- **Accumulating** constraints (storage, conversion, energy budgets) may use the coarsest common
+  (Algorithm 1 of [Gao2025]_). A constraint at a lower resolution would let energy move inside a
+  block.
+- **Accumulating** constraints (storage, conversion, energy budgets) may use the lowest common
   resolution: each block runs to the latest end among the variable blocks that hold its start
   (Algorithm 2). Each variable enters weighted by its overlap with the constraint block, in base
   units (Algorithm 3).
@@ -62,20 +63,51 @@ The time structure lives in :mod:`el1xr_opt.Modules.oM_Time`, which has no Pyomo
 - ``Timeline``, ``RepPeriod`` and ``Resolution`` hold the base unit, the periods and the blocks;
 - ``uniform``, ``calendar``, ``from_lengths`` and ``from_spec`` build resolutions;
 - ``overlap`` returns the overlap of every pair of blocks of two resolutions;
-- ``finest_common`` and ``coarsest_common`` implement Algorithms 1 and 2;
+- ``finest_common`` and ``coarsest_common`` implement Algorithms 1 and 2 (the highest and the
+  lowest common resolution);
 - ``resample`` maps a series between resolutions.
 
 ``data_processing`` builds the timeline (``model.timeline``) and the resolution of the load levels
 (``model.time_res['level']``). The calendar of the model (day, month, clock hour of each level)
 is read from them, so merging hours with ``TimeStep`` keeps the dates right.
 
+Declaring a resolution
+----------------------
+
+A case declares resolutions in an optional table, ``oM_Data_Resolution_<case>.csv``, one row per
+unit, with columns ``Output`` and ``Charge``:
+
+.. code-block:: text
+
+   ,Output,Charge
+   Solar_01,uniform 2h,
+   BESS_01,,uniform 1h
+
+A blank cell keeps the resolution of the load levels, and a case without the table is unchanged.
+Every block of a declared resolution must start on a load level boundary. The value of a declared
+flow is constant within each of its blocks.
+
+The limits of a flow declared at a lower resolution than the load levels follow the Parameter
+``BlockLimit``:
+
+- ``Level`` (default): the flow stays within its lower and upper limits at every level of the
+  block, so a 2-h constant output stays below the lowest availability inside the 2 h. A
+  must-take profile that changes inside a block cannot be met, and the case is refused when it
+  is read, naming the unit and the block.
+- ``Mean``: both limits are replaced by their duration-weighted mean over the block, as in
+  [Gao2025]_. Each block delivers at most its available energy, but spread evenly over the
+  block, so energy moves between the hours of a block. On the H2VPP test case, a solar unit
+  declared at 2 h costs less under ``Mean`` than at hourly resolution for that reason.
+
 Status
 ------
 
-The timeline and the calendar are in place. Every variable and constraint still lives on the
-load levels, so present cases solve as before. The constraint families move onto the overlap form
-one group at a time, followed by cases with mixed resolutions and by ramps and unit commitment on
-blocks of unequal length.
+The timeline, the calendar and the per-flow declarations for the output and the charge of each
+unit are in place. A declared flow keeps one variable per load level, and the values inside a
+block are held equal, so every constraint written per load level stays correct. Next, the
+variables of a flow at a lower resolution are defined on its blocks only, and each constraint is written on its
+own resolution (Algorithms 1 and 2), which removes the repeated rows. Cases with mixed resolutions
+and ramps and unit commitment on blocks of unequal length follow.
 
 References
 ----------
