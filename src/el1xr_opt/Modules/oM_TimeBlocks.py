@@ -38,6 +38,14 @@
 #   Mean:            both limits are replaced by their duration-weighted mean over the block, as
 #                    in Gao et al., Applied Energy 396 (2025) 126267.
 #
+# A time series may also be given at its own resolution, in an optional table
+# oM_Data_SeriesResolution_<case>.csv: one row per data file (its stem, such as
+# OperatingReservePrice) with a column Resolution. The rows of a declared file are the blocks of
+# that resolution, in order, for each period and scenario. When the case is read, the file is
+# resampled onto the load levels: each value holds over the levels of its block, and a series
+# finer than the load levels is averaged over each level, weighted by duration. Every series the
+# model reads is a rate (a price, a power or a per-unit profile).
+#
 # A declared inventory is the stored energy at the end of each of its blocks. The storage balance
 # is written once per block: the inventory at the end of a block is the inventory at the end of
 # the previous block plus the net charge over the block (Gao et al., Algorithm 2). The storage
@@ -54,7 +62,9 @@ from pyomo.environ import Constraint, Var, value
 from pyomo.repn import generate_standard_repn
 from pyomo.core.expr.visitor import identify_variables
 
-from .oM_Time import from_spec
+import pandas as pd
+
+from .oM_Time import RepPeriod, Timeline, from_spec, resample, uniform
 from .utils.oM_Utils import log_time
 
 FLOWS = ('Output', 'Charge', 'Commitment', 'Reserve', 'Inventory')
@@ -88,6 +98,56 @@ def _flow_vars(model, sector, unit, flow):
     if flow == 'Charge':
         return ['vEleTotalCharge'] if unit in model.eh else ['vHydTotalCharge']
     return FLOW_VARS[(sector, flow)]
+
+
+def level_minutes(value):
+    """The Parameter LoadLevelMinutes as a whole number of minutes (60 when it is blank)."""
+    if value is None or value == '' or value != value:
+        return 60
+    if float(value) <= 0 or float(value) != int(float(value)):
+        raise ValueError(f'LoadLevelMinutes must be a positive whole number of minutes, got {value!r}')
+    return int(float(value))
+
+
+def resample_series(data_frames, levels, start, minutes):
+    """Resample every time series declared in oM_Data_SeriesResolution onto the load levels.
+
+    levels are the names of all load levels of the case, each ``minutes`` long, from ``start``.
+    The declared tables in data_frames are replaced by tables indexed by (period, scenario,
+    level). Returns the stems of the resampled files.
+    """
+    table = data_frames.get('dfSeriesResolution')
+    if table is None or table.empty or 'Resolution' not in table.columns:
+        return []
+    timeline = Timeline([RepPeriod('input', start, len(levels) * minutes)])
+    target = uniform(timeline, 'input', minutes, 'load levels')
+    done = []
+    for stem, spec in table['Resolution'].items():
+        if not isinstance(spec, str) or not spec.strip():
+            continue
+        key = f'df{stem}'
+        if key not in data_frames:
+            raise ValueError(f'SeriesResolution: there is no data file oM_Data_{stem}')
+        if stem == 'Duration':
+            raise ValueError('SeriesResolution: the Duration file defines the load levels and cannot be resampled')
+        series = data_frames[key]
+        if series.index.nlevels != 3:
+            raise ValueError(f'SeriesResolution: oM_Data_{stem} is not a time series')
+        res = from_spec(timeline, 'input', spec, name=stem)
+        parts = []
+        for (p, sc), group in series.groupby(level=[0, 1], sort=False):
+            if len(group) != res.size:
+                raise ValueError(f'SeriesResolution: oM_Data_{stem} has {len(group)} rows for {p}, {sc}, '
+                                 f'but {spec!r} has {res.size} blocks over the {len(levels)} load levels')
+            try:
+                values = {c: resample(group[c].to_numpy(dtype=float), res, target, 'rate') for c in group.columns}
+            except ValueError as err:
+                raise ValueError(f'SeriesResolution: oM_Data_{stem} holds a value that is not a number ({err})')
+            index = pd.MultiIndex.from_tuples([(p, sc, n) for n in levels], names=series.index.names)
+            parts.append(pd.DataFrame(values, index=index, columns=group.columns))
+        data_frames[key] = pd.concat(parts)
+        done.append(stem)
+    return done
 
 
 def read_declarations(model, data_frames, parameters_dict):
