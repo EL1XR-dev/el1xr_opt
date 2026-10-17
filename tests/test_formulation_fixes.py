@@ -1490,3 +1490,28 @@ def test_fuel_cell_fcr_builds_and_binds(tmp_path):
         stored = sum(model.vHydInventory[p, sc, n, hgs]() for hgs in hgs_node)
         assert burned <= stored + 1e-4, \
             f"up endurance violated at {n}: burns {burned} kgH2 but only {stored} stored"
+
+
+@pytest.mark.solve
+def test_retail_balance_carries_the_activated_reserve_energy(tmp_path, deterministic_highs):
+    """The retailer balance counts each unit's total output and charge, as the physical balance
+    does. The meter is tied to both (C14), so an activated battery FCR-N bid with a non-zero net
+    duty must reach it. Before, the retailer balance counted the scheduled output only, and the
+    case below was infeasible."""
+    sys.path.insert(0, os.path.dirname(__file__))
+    from test_time_blocks import CASE, DATE, _case
+    d = _case(tmp_path)
+    path = d / CASE / f"oM_Data_ElectricityGeneration_{CASE}.csv"
+    gen = pd.read_csv(path, index_col=0)
+    gen.loc["BESS_01", "NoFCRD"] = "No"
+    gen.to_csv(path)
+    m = build_model(str(d), CASE, DATE)
+    p, sc = list(m.ps)[0]
+    i = (p, sc, "t0003", "BESS_01")
+    kappa = m.Par["pOperatingReserveActivation_FCRN_Up"][i[:3]] - m.Par["pOperatingReserveActivation_FCRN_Down"][i[:3]]
+    assert kappa > 0.1                               # a non-zero net duty at this hour
+    m.vEleFreqContReserveNorUpDis[i].fix(0.01)
+    m.vEleFreqContReserveNorDownDis[i].fix(0.0)
+    res = pyo.SolverFactory("appsi_highs").solve(m)
+    assert res.solver.termination_condition == pyo.TerminationCondition.optimal
+    assert m.vEleTotalOutput[i]() - m.vEleTotalOutput2ndBlock[i]() == pytest.approx(0.01 * kappa, abs=1e-9)
