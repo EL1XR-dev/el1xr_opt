@@ -28,6 +28,22 @@ def _on_index(df, value_col):
 import sys
 SKIP_SPOT = "--fcr-only" in sys.argv
 
+# --- spot at 15 min (ENTSO-E, SE3) ---
+# SDAC moved to 15-min prices on 1 October 2025. This file covers the last 2184 hours of IDX,
+# from 2025-10-01T00:00Z, with four rows per hour. build_case.py reads it with H2VPP_SPOT=15min.
+if "--spot-15min" in sys.argv:
+    print("fetching SE3 spot at 15 min, Oct-Dec 2025 ...", flush=True)
+    q_idx = pd.date_range("2025-10-01T00:00:00Z", IDX[-1] + pd.Timedelta(minutes=45), freq="15min")
+    spot = fetch_day_ahead("SE3", "2025-10-01", "2025-12-31", resolution="PT15M")
+    s = spot.assign(datetime_utc=pd.to_datetime(spot["datetime_utc"], utc=True)).set_index("datetime_utc")["price_eur_mwh"]
+    s = s[~s.index.duplicated(keep="first")].sort_index().reindex(q_idx)
+    if s.isna().any():
+        raise SystemExit(f"the fetched spot misses {int(s.isna().sum())} quarter hours")
+    pd.DataFrame({"datetime_utc": [t.strftime("%Y-%m-%dT%H:%M:%SZ") for t in q_idx],
+                  "price_eur_mwh": s.to_numpy()}).to_csv(OUT / "spot_se3_15min.csv", index=False)
+    print(f"  spot 15 min: {len(q_idx)} rows  mean={s.mean():.1f}  min={s.min():.1f}  max={s.max():.1f} EUR/MWh", flush=True)
+    sys.exit()
+
 # --- spot (ENTSO-E, SE3) ---
 if not SKIP_SPOT:
     print("fetching SE3 spot 2025 ...", flush=True)

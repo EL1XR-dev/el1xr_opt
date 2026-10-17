@@ -363,7 +363,9 @@ def create_objective_function_components(model, optmodel, indlog):
                                                    sum(model.Par['pHydGenDegradationCost2ndBlock'][e2h] * optmodel.vEleTotalCharge2ndBlock[p,sc,n,e2h] for e2h in model.e2h) +
                                                    # M2b: cycling-degradation cost on |delta productive consumption| (the FCR-modulation stress
                                                    # the throughput term misses); active only when a unit carries RampDegradationCost > 0.
-                                                   (sum(model.Par['pHydGenRampDegradationCost'][e2h] * optmodel.vHydGenRampAbs[p,sc,n,e2h] for e2h in model.e2h) if getattr(model, '_ramp_deg_active', False) and n != model.n.first() else 0) -
+                                                   # The cost is per kW of change, not per hour, so it is divided by the duration that
+                                                   # weighs this row in the objective; a change costs the same at any load level length.
+                                                   (sum(model.Par['pHydGenRampDegradationCost'][e2h] * optmodel.vHydGenRampAbs[p,sc,n,e2h] for e2h in model.e2h) / model.Par['pDuration'][p,sc,n] if getattr(model, '_ramp_deg_active', False) and n != model.n.first() else 0) -
                                                    # Byproduct valorisation CREDIT (O2 to aquaculture + waste heat to district heating, per the
                                                    # HiWhyV valley) per kgH2 produced -- a revenue, so SUBTRACTED from the generation cost.
                                                    # Zero by default (pHydGenByproductCredit defaults to 0), so other cases are unchanged.

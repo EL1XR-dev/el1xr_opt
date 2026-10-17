@@ -67,6 +67,21 @@ HORIZON_HOURS = N_LOADLEVELS
 # offset to model a different window (e.g. 24*180 to start in summer).
 HORIZON_START_HOUR = int(os.environ.get("H2VPP_START_HOUR", "0"))
 
+# --- load level length -----------------------------------------------------
+# H2VPP_SPOT=15min reads the SE3 day-ahead prices at 15 min (spot_se3_15min.csv). They start on
+# 2025-10-01, hour 6552 of the year, so the horizon must start there or later. At hourly levels
+# the 15-min prices are declared `uniform 15min` and averaged over each hour when the case is read.
+# H2VPP_LEVEL_MINUTES=15 splits each hour into four load levels and reads the 15-min prices. The
+# other series stay hourly and are declared `uniform 1h`, and the FCR bids of every unit stay
+# hourly (Reserve = `uniform 1h`), as the FCR market clears per hour.
+LEVEL_MINUTES = int(os.environ.get("H2VPP_LEVEL_MINUTES", "60"))
+if LEVEL_MINUTES not in (15, 60):
+    raise SystemExit(f"H2VPP_LEVEL_MINUTES must be 15 or 60, got {LEVEL_MINUTES}")
+SPOT = os.environ.get("H2VPP_SPOT", "15min" if LEVEL_MINUTES == 15 else "hourly").lower()
+if SPOT not in ("hourly", "15min"):
+    raise SystemExit(f"H2VPP_SPOT must be hourly or 15min, got {SPOT!r}")
+SPOT_15MIN_START_HOUR = 6552
+
 # --- annualisation ---------------------------------------------------------
 # Investment enters the objective as a FULL ANNUAL charge
 # (FixedInvestmentCost x FixedChargeRate, period-weighted), while operating cost is
@@ -1844,6 +1859,8 @@ def build():
 
     _apply_variant(OUT_DIR)
     _apply_currency(OUT_DIR)
+    if SPOT == "15min" or LEVEL_MINUTES != 60:
+        _apply_level_minutes(OUT_DIR)
     _check_conditioning(OUT_DIR)
     tag = f" [VARIANT={VARIANT}]" if VARIANT else ""
     cur = "" if CURRENCY == "SEK" else f" [currency={CURRENCY}]"
@@ -1852,6 +1869,72 @@ def build():
     except ValueError:
         _rel = OUT_DIR
     print(f"built {CASE} -> {_rel}{tag}{cur} (mode={DEMAND_MODE})")
+
+
+def _spot_15min():
+    """SE3 day-ahead spot price at 15 min in the model currency per kWh, four values per hour."""
+    s = pd.read_csv(REAL_DATA / "spot_se3_15min.csv")["price_eur_mwh"].to_numpy()
+    first = 4 * (HORIZON_START_HOUR - SPOT_15MIN_START_HOUR)
+    if first < 0 or first + 4 * N_LOADLEVELS > len(s):
+        raise SystemExit(f"H2VPP_SPOT=15min needs a horizon from hour {SPOT_15MIN_START_HOUR} "
+                         f"(2025-10-01) to the end of the year; H2VPP_START_HOUR is {HORIZON_START_HOUR}")
+    return s[first:first + 4 * N_LOADLEVELS] / 1000.0 * EUR_SEK / CURRENCY_DIV
+
+
+def _apply_level_minutes(out_dir):
+    """Write the 15-min spot and, at 15-min levels, split every hour into four load levels.
+
+    A final pass over the written case, after the currency pass, so the spot written here is
+    converted once. The spot columns get four rows per hour. At 15-min levels the Duration file
+    is split too, and every other time series keeps its hourly rows and is declared `uniform 1h`
+    in oM_Data_SeriesResolution. The FCR bids of every unit that can bid are declared hourly in
+    oM_Data_Resolution.
+    """
+    k = 60 // LEVEL_MINUTES
+    path = lambda kind, stem: out_dir / f"oM_{kind}_{stem}_{CASE}.csv"
+    ll = pd.read_csv(path("Dict", "LoadLevel"))
+    hours = ll.iloc[:, 0].astype(str).tolist()
+    quarters = {h: [f"q{4 * i + j + 1:05d}" for j in range(4)] for i, h in enumerate(hours)}
+    if k > 1:
+        pd.DataFrame({ll.columns[0]: [q for h in hours for q in quarters[h]]}).to_csv(path("Dict", "LoadLevel"), index=False)
+    spot = _spot_15min() if SPOT == "15min" else None
+
+    declared = {}
+    for f in sorted(out_dir.glob(f"oM_Data_*_{CASE}.csv")):
+        stem = f.name[len("oM_Data_"):-len(f"_{CASE}.csv")]
+        df = pd.read_csv(f, header=None, dtype=str, keep_default_na=False)
+        head, body = df.iloc[[0]], df.iloc[1:]
+        if not len(body) or body.shape[1] < 3 or not body.iloc[:, 2].isin(hours).all():
+            continue                                    # not a time series
+        is_spot = spot is not None and stem in ("VarEnergyCost", "VarEnergyPrice")
+        if not is_spot and stem != "Duration":
+            if k > 1:
+                declared[stem] = "uniform 1h"
+            continue
+        if not is_spot and k == 1:
+            continue
+        rows = body.loc[body.index.repeat(4)].copy()
+        rows.iloc[:, 2] = [q for h in body.iloc[:, 2] for q in quarters[h]]
+        if is_spot:
+            rows.iloc[:, head.iloc[0].tolist().index(ELE_RETAILER)] = np.tile(spot, len(body) // len(hours))
+            if k == 1:
+                declared[stem] = "uniform 15min"
+        pd.concat([head, rows]).to_csv(f, header=False, index=False)
+    if declared:
+        pd.DataFrame({"Resolution": declared}).to_csv(path("Data", "SeriesResolution"))
+    if k == 1:
+        return
+
+    par = pd.read_csv(path("Data", "Parameter"), index_col=0)
+    par["LoadLevelMinutes"] = LEVEL_MINUTES
+    par.to_csv(path("Data", "Parameter"))
+    num = lambda df, c: pd.to_numeric(df[c], errors="coerce").fillna(0.0) if c in df.columns else 0.0
+    ele = pd.read_csv(path("Data", "ElectricityGeneration"), index_col=0)
+    hyd = pd.read_csv(path("Data", "HydrogenGeneration"), index_col=0)
+    bidders = (ele.index[(num(ele, "MaximumPower") > 0) | (num(ele, "MaximumCharge") > 0)].tolist()
+               + hyd.index[(num(hyd, "ProductionFunction") > 0)
+                           & ((num(hyd, "MaximumPower") > 0) | (num(hyd, "MaximumCharge") > 0))].tolist())
+    pd.DataFrame({"Reserve": "uniform 1h"}, index=bidders).to_csv(path("Data", "Resolution"))
 
 
 def _check_conditioning(out_dir):
