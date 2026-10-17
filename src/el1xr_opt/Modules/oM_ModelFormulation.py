@@ -12,6 +12,7 @@ from   pyomo.environ     import Constraint, Objective, minimize
 from   collections       import defaultdict
 from  .utils.oM_Utils    import log_time
 from  .oM_HeatSector     import heat_electricity_load, heat_to_power_output
+from  .oM_TimeBlocks     import ramp_hours
 
 def create_objective_function(model, optmodel, indlog):
     # this function declares constraints
@@ -2103,9 +2104,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampUpOutput(optmodel, p,sc,n,egt):
         if model.Par['pEleGenRampUp'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampUp'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
-                return (- max(model.Par['pEleInitialOutput'][p,sc,egt] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                               + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
+                return (- max(model.Par['pEleInitialOutput'][p,sc,egt] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                               + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / ramp_hours(model,p,sc,'Ele',egt,'Output')[n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisDownGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisDownGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisUpGen[p,sc,n,egt]) / ramp_hours(model,p,sc,'Ele',egt,'Output')[n] / model.Par['pEleGenRampUp'][egt] <=   optmodel.vEleGenCommitment[p,sc,n,egt] - optmodel.vEleGenStartUp[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampUpOutput', Constraint(optmodel.psnegt, rule=eEleMaxRampUpOutput, doc='maximum ramp up   [p.u.]'))
@@ -2113,9 +2114,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampDwOutput(optmodel, p,sc,n,egt):
         if model.Par['pEleGenRampDown'][egt] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleGenRampDown'][egt] < model.Par['pEleMaxPower2ndBlock'][egt][p,sc,n]:
             if n == model.n.first():
-                return (- max(model.Par['pEleInitialOutput'][p,sc,egt] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                             + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
+                return (- max(model.Par['pEleInitialOutput'][p,sc,egt] - model.Par['pEleMinPower'][egt][p,sc,n],0.0)                                             + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / ramp_hours(model,p,sc,'Ele',egt,'Output')[n] / model.Par['pEleGenRampDown'][egt] >= - model.Par['pEleInitialUC'][p,sc,egt]                 + optmodel.vEleGenShutDown[p,sc,n,egt]
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisUpGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egt] >= - optmodel.vEleGenCommitment[p,sc,model.n.prev(n),egt] + optmodel.vEleGenShutDown[p,sc,n,egt]
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egt] - optmodel.vEleFreqContReserveDisUpGen[p,sc,model.n.prev(n),egt] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] + optmodel.vEleFreqContReserveDisDownGen[p,sc,n,egt]) / ramp_hours(model,p,sc,'Ele',egt,'Output')[n] / model.Par['pEleGenRampDown'][egt] >= - optmodel.vEleGenCommitment[p,sc,model.n.prev(n),egt] + optmodel.vEleGenShutDown[p,sc,n,egt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampDwOutput', Constraint(optmodel.psnegt, rule=eEleMaxRampDwOutput, doc='maximum ramp down [p.u.]'))
@@ -2129,9 +2130,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampUpCharge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampUp'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                                                                                                  optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
+                return (                                                                                                                                  optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Charge')[n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
             else:
-                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
+                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Charge')[n] / model.Par['pEleGenRampUp'][egs] >= - 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampUpCharge', Constraint(optmodel.psnegs, rule=eEleMaxRampUpCharge, doc='maximum ramp up   charge [p.u.]'))
@@ -2139,9 +2140,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampDwCharge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampDown'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxCharge2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                                                                                              + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] <=   1.0
+                return (                                                                                                                              + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Charge')[n] / model.Par['pEleGenRampDown'][egs] <=   1.0
             else:
-                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] <=   1.0
+                return (- optmodel.vEleTotalCharge2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisUpCha[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownCha[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Charge')[n] / model.Par['pEleGenRampDown'][egs] <=   1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampDwCharge', Constraint(optmodel.psnegs, rule=eEleMaxRampDwCharge, doc='maximum ramp down charge [p.u.]'))
@@ -2149,9 +2150,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampUpDischarge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampUp'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                                                                                                  optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] <=   1.0
+                return (                                                                                                                                  optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Output')[n] / model.Par['pEleGenRampUp'][egs] <=   1.0
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampUp'][egs] <=   1.0
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisDownDis[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisUpDis[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Output')[n] / model.Par['pEleGenRampUp'][egs] <=   1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampUpDischarge', Constraint(optmodel.psnegs, rule=eEleMaxRampUpDischarge, doc='maximum ramp up   discharge [p.u.]'))
@@ -2159,9 +2160,9 @@ def create_constraints(model, optmodel, indlog):
     def eEleMaxRampDwDischarge(optmodel, p,sc,n,egs):
         if model.Par['pEleGenRampDown'][egs] and model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pEleMaxPower2ndBlock'][egs][p,sc,n]:
             if n == model.n.first():
-                return (                                                                                                                                optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
+                return (                                                                                                                                optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Output')[n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
             else:
-                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisUpDis[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / model.Par['pDuration'][p,sc,n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
+                return (- optmodel.vEleTotalOutput2ndBlock[p,sc,model.n.prev(n),egs] - optmodel.vEleFreqContReserveDisUpDis[p,sc,model.n.prev(n),egs] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] + optmodel.vEleFreqContReserveDisDownDis[p,sc,n,egs]) / ramp_hours(model,p,sc,'Ele',egs,'Output')[n] / model.Par['pEleGenRampDown'][egs] >= - 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleMaxRampDwDischarge', Constraint(optmodel.psnegs, rule=eEleMaxRampDwDischarge, doc='maximum ramp down discharge [p.u.]'))
@@ -2175,9 +2176,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydMaxRampUpOutput(optmodel, p,sc,n,hgt):
         if model.Par['pHydGenRampUp'][hgt] > 0 and model.Par['pOptIndBinGenRamps'] == 1 and hgt not in model.e2h:
             if n == model.n.first():
-                return (                                                               optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampUp'][hgt] <=   optmodel.vHydGenCommitment[p,sc,n,hgt] - optmodel.vHydGenStartUp[p,sc,n,hgt]
+                return (                                                               optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / ramp_hours(model,p,sc,'Hyd',hgt,'Output')[n] / model.Par['pHydGenRampUp'][hgt] <=   optmodel.vHydGenCommitment[p,sc,n,hgt] - optmodel.vHydGenStartUp[p,sc,n,hgt]
             else:
-                return (- optmodel.vHydTotalOutput2ndBlock[p,sc,model.n.prev(n),hgt] + optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampUp'][hgt] <=   optmodel.vHydGenCommitment[p,sc,n,hgt] - optmodel.vHydGenStartUp[p,sc,n,hgt]
+                return (- optmodel.vHydTotalOutput2ndBlock[p,sc,model.n.prev(n),hgt] + optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / ramp_hours(model,p,sc,'Hyd',hgt,'Output')[n] / model.Par['pHydGenRampUp'][hgt] <=   optmodel.vHydGenCommitment[p,sc,n,hgt] - optmodel.vHydGenStartUp[p,sc,n,hgt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampUpOutput', Constraint(optmodel.psnhgt, rule=eHydMaxRampUpOutput, doc='maximum ramp up   output [p.u.]'))
@@ -2185,9 +2186,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydMaxRampDwOutput(optmodel, p,sc,n,hgt):
         if model.Par['pHydGenRampDown'][hgt] > 0 and model.Par['pOptIndBinGenRamps'] == 1 and hgt not in model.e2h:
             if n == model.n.first():
-                return (                                                               optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampDown'][hgt] >= - model.Par['pHydInitialUC'][p,sc,hgt]                 + optmodel.vHydGenShutDown[p,sc,n,hgt]
+                return (                                                               optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / ramp_hours(model,p,sc,'Hyd',hgt,'Output')[n] / model.Par['pHydGenRampDown'][hgt] >= - model.Par['pHydInitialUC'][p,sc,hgt]                 + optmodel.vHydGenShutDown[p,sc,n,hgt]
             else:
-                return (- optmodel.vHydTotalOutput2ndBlock[p,sc,model.n.prev(n),hgt] + optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampDown'][hgt] >= - optmodel.vHydGenCommitment[p,sc,model.n.prev(n),hgt] + optmodel.vHydGenShutDown[p,sc,n,hgt]
+                return (- optmodel.vHydTotalOutput2ndBlock[p,sc,model.n.prev(n),hgt] + optmodel.vHydTotalOutput2ndBlock[p,sc,n,hgt]) / ramp_hours(model,p,sc,'Hyd',hgt,'Output')[n] / model.Par['pHydGenRampDown'][hgt] >= - optmodel.vHydGenCommitment[p,sc,model.n.prev(n),hgt] + optmodel.vHydGenShutDown[p,sc,n,hgt]
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampDwOutput', Constraint(optmodel.psnhgt, rule=eHydMaxRampDwOutput, doc='maximum ramp down output [p.u.]'))
@@ -2208,9 +2209,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydMaxRampUpCharge(optmodel, p,sc,n,hgs):
         if model.Par['pHydGenRampUp'][hgs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
             if n == model.n.first():
-                return (                                                               optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampUp'][hgs] >= - 1.0
+                return (                                                               optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Charge')[n] / model.Par['pHydGenRampUp'][hgs] >= - 1.0
             else:
-                return (- optmodel.vHydTotalCharge2ndBlock[p,sc,model.n.prev(n),hgs] + optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampUp'][hgs] >= - 1.0
+                return (- optmodel.vHydTotalCharge2ndBlock[p,sc,model.n.prev(n),hgs] + optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Charge')[n] / model.Par['pHydGenRampUp'][hgs] >= - 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampUpCharge', Constraint(optmodel.psnhgs, rule=eHydMaxRampUpCharge, doc='maximum ramp up   charge [p.u.]'))
@@ -2218,9 +2219,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydMaxRampDwCharge(optmodel, p,sc,n,hgs):
         if model.Par['pHydGenRampDown'][hgs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
             if n == model.n.first():
-                return (                                                               optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampDown'][hgs] <=   1.0
+                return (                                                               optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Charge')[n] / model.Par['pHydGenRampDown'][hgs] <=   1.0
             else:
-                return (- optmodel.vHydTotalCharge2ndBlock[p,sc,model.n.prev(n),hgs] + optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampDown'][hgs] <=   1.0
+                return (- optmodel.vHydTotalCharge2ndBlock[p,sc,model.n.prev(n),hgs] + optmodel.vHydTotalCharge2ndBlock[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Charge')[n] / model.Par['pHydGenRampDown'][hgs] <=   1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampDwCharge', Constraint(optmodel.psnhgs, rule=eHydMaxRampDwCharge, doc='maximum ramp down charge [p.u.]'))
@@ -2260,9 +2261,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydMaxRampUpOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydGenRampUp'][hgs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
             if n == model.n.first():
-                return (                                                          optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampUp'][hgs] <=   1.0
+                return (                                                          optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Outflows')[n] / model.Par['pHydGenRampUp'][hgs] <=   1.0
             else:
-                return (- optmodel.vHydEnergyOutflows[p,sc,model.n.prev(n),hgs] + optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampUp'][hgs] <=   1.0
+                return (- optmodel.vHydEnergyOutflows[p,sc,model.n.prev(n),hgs] + optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Outflows')[n] / model.Par['pHydGenRampUp'][hgs] <=   1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampUpOutflows', Constraint(optmodel.psnhgs, rule=eHydMaxRampUpOutflows, doc='maximum ramp up   outflows [p.u.]'))
@@ -2270,9 +2271,9 @@ def create_constraints(model, optmodel, indlog):
     def eHydMaxRampDwOutflows(optmodel, p,sc,n,hgs):
         if model.Par['pHydGenRampDown'][hgs] > 0 and model.Par['pOptIndBinGenRamps'] == 1:
             if n == model.n.first():
-                return (                                                          optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampDown'][hgs] >= - 1.0
+                return (                                                          optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Outflows')[n] / model.Par['pHydGenRampDown'][hgs] >= - 1.0
             else:
-                return (- optmodel.vHydEnergyOutflows[p,sc,model.n.prev(n),hgs] + optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / model.Par['pDuration'][p,sc,n] / model.Par['pHydGenRampDown'][hgs] >= - 1.0
+                return (- optmodel.vHydEnergyOutflows[p,sc,model.n.prev(n),hgs] + optmodel.vHydEnergyOutflows[p,sc,n,hgs]) / ramp_hours(model,p,sc,'Hyd',hgs,'Outflows')[n] / model.Par['pHydGenRampDown'][hgs] >= - 1.0
         else:
             return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampDwOutflows', Constraint(optmodel.psnhgs, rule=eHydMaxRampDwOutflows, doc='maximum ramp down outflows [p.u.]'))
@@ -2324,13 +2325,13 @@ def create_constraints(model, optmodel, indlog):
     # the constraint is factor1-invariant. build_case sets them = fraction x MaxCharge.
     def eHydMaxRampUpE2H(optmodel, p,sc,n,e2h):
         if model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pHydGenRampUp'][e2h] and n != model.n.first():
-            return optmodel.vEleTotalCharge[p,sc,n,e2h] - optmodel.vEleTotalCharge[p,sc,model.n.prev(n),e2h] <= model.Par['pHydGenRampUp'][e2h] * model.Par['pDuration'][p,sc,n]
+            return optmodel.vEleTotalCharge[p,sc,n,e2h] - optmodel.vEleTotalCharge[p,sc,model.n.prev(n),e2h] <= model.Par['pHydGenRampUp'][e2h] * ramp_hours(model,p,sc,'Hyd',e2h,'Charge')[n]
         return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampUpE2H', Constraint(optmodel.psne2h, rule=eHydMaxRampUpE2H, doc='e2h max ramp up on consumption [kW/h]'))
 
     def eHydMaxRampDwE2H(optmodel, p,sc,n,e2h):
         if model.Par['pOptIndBinGenRamps'] == 1 and model.Par['pHydGenRampDown'][e2h] and n != model.n.first():
-            return optmodel.vEleTotalCharge[p,sc,model.n.prev(n),e2h] - optmodel.vEleTotalCharge[p,sc,n,e2h] <= model.Par['pHydGenRampDown'][e2h] * model.Par['pDuration'][p,sc,n]
+            return optmodel.vEleTotalCharge[p,sc,model.n.prev(n),e2h] - optmodel.vEleTotalCharge[p,sc,n,e2h] <= model.Par['pHydGenRampDown'][e2h] * ramp_hours(model,p,sc,'Hyd',e2h,'Charge')[n]
         return Constraint.Skip
     optmodel.__setattr__('eHydMaxRampDwE2H', Constraint(optmodel.psne2h, rule=eHydMaxRampDwE2H, doc='e2h max ramp down on consumption [kW/h]'))
 

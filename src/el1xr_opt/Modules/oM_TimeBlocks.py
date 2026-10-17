@@ -53,6 +53,13 @@
 # so the store may go beyond its limits between two block ends, and the cost can be lower than
 # with an inventory per load level. This replaces the cycle set by StorageType, which must then
 # be one load level (StorageType Hourly or Daily).
+#
+# A ramp limit bounds the change of a rate between two consecutive blocks by the ramp rate times
+# the time between the block midpoints, (l1 + l2) / 2 (Gao et al.). For a declared output or charge
+# this applies at the first level of each block, with the lengths of the block and of the one
+# before it. Inside a block the declared flow does not change, and the row bounds the change of the
+# other terms (the activated reserve) over one level. With load levels of equal length and no
+# declaration this is the rule of one level's duration.
 
 import time
 
@@ -269,6 +276,31 @@ def apply_capacity_rule(model, parameters_dict):
                 upper.loc[members, unit] = new_hi
                 if unit in lower.columns:
                     lower.loc[members, unit] = new_lo
+
+
+def ramp_hours(model, p, sc, sector, unit, flow):
+    """Hours a ramp row spans at each load level, for the given flow of a unit: {level: hours}.
+
+    At the first level of a block, the time between the midpoints of the previous block and this
+    one; at the other levels of a block and at the first load level, the duration of the level.
+    A flow that is not declared has one block per level.
+    """
+    cache = model.__dict__.setdefault('_ramp_hours', {})
+    key = (p, sc, sector, unit, flow)
+    if key not in cache:
+        dur = model.Par['pDuration']
+        first = getattr(model, 'block_start', {}).get((sector, unit, flow))
+        blocks = {}
+        for n in model.n:
+            blocks.setdefault(first[n] if first else n, []).append(n)
+        length = {b: sum(float(dur[p, sc, n]) for n in levels) for b, levels in blocks.items()}
+        hours, prev = {}, None
+        for b, levels in blocks.items():
+            for i, n in enumerate(levels):
+                hours[n] = (length[prev] + length[b]) / 2 if i == 0 and prev is not None else float(dur[p, sc, n])
+            prev = b
+        cache[key] = hours
+    return cache[key]
 
 
 def alias_block_variables(model, optmodel, indlog):

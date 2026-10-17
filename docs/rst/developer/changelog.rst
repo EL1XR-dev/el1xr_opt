@@ -59,6 +59,8 @@ Fixed
 Changed
 ~~~~~~~
 
+- Ramps between blocks. A ramp limit bounds the change of a rate between two blocks by the ramp rate times the time between the block midpoints, (l1 + l2) / 2, as in Gao et al. (2025). For an output or charge declared in ``oM_Data_Resolution`` this applies at the first level of each block; before, a change between two declared blocks was allowed the ramp of one load level only. With levels of equal length and no declaration the rule is unchanged. On H2VPP (48 h) at quarter hours, with the EVs and the battery declared ``uniform 1h``, the cost is 360.087456, the cost of the hourly case, instead of 362.753016. Tests in ``tests/test_load_level_minutes.py``.
+
 - FCR endurance looks back one hour at any load level length. The inventory at the end of a level backs the FCR bid of the level one hour earlier (a new parameter, ``pParEnduranceLag``, the number of levels in one hour, at least one). Before, the rules looked back one level, so at quarter hours a bid was backed by the inventory 15 min after its level instead of an hour. The bids of the last hour are backed by the last inventory. At hourly levels the rules are unchanged; at quarter hours they look back four levels. This applies to the battery (``eEleStorageEndurance*``), electrolyser (``eEleFreqDownEnduranceConv*``) and fuel-cell (``eEleFreqUpEnduranceFuelCell*``) endurance. Test in ``tests/test_paper_case_15min.py``.
 
 - ``ShiftedSteps``, the demand shift window, is read in hours like the other time counts, not in load levels. The two are the same at hourly levels with ``TimeStep = 1``, which is every shipped case.

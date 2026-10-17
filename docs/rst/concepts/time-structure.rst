@@ -205,13 +205,37 @@ place of free ones, and with blocks that follow the calendar or have unequal len
 with a declared inventory needs a cycle of one load level (``StorageType`` Hourly or Daily); a
 case that sets both is refused.
 
+Ramps between blocks
+--------------------
+
+A ramp limit bounds the change of a rate between two consecutive blocks by the ramp rate times
+the time between the two block midpoints, (l1 + l2) / 2 [Gao2025]_. For an output or charge
+declared at a resolution, this applies at the first level of each of its blocks, with the
+lengths of that block and the one before. Inside a block the declared flow does not change, and
+the row bounds the change of the activated reserve over one level. A flow that is not declared
+has one block per load level, so with levels of equal length the rule is the ramp over one
+level, as before.
+
+On H2VPP (48 h, shipped ramp limits) the case at 192 quarter-hour levels costs 360.864824 when
+the EVs and the battery may change their output every quarter hour, as each quarter allows a
+quarter of an hour of ramp. With their output and charge declared ``uniform 1h`` it costs
+360.087456, the cost of the hourly case: a change between two hourly blocks is allowed the ramp
+of one hour. Without the midpoint rule the declared case cost 362.753016, because the change of
+an hour had to happen within one quarter.
+
+Minimum up and down times count load levels converted from hours, and start-ups, shut-downs and
+the standby transitions of an electrolyser compare a level with the one before. With a declared
+commitment the commitment does not change inside a block, so these rules act at block
+boundaries, and a minimum up time spans the blocks that cover it.
+
 Status
 ------
 
 The timeline, the calendar, load levels of any length in minutes, the declarations of output,
 charge, commitment, reserve bids and inventory with one variable per block, the storage balance
-per block, time series at their own resolution and the removal of repeated rows are in place.
-Next come ramps and unit commitment on blocks of unequal length.
+per block, time series at their own resolution, the removal of repeated rows and ramps between
+blocks are in place. Representative periods, where a load level stands for several hours, come
+later.
 
 References
 ----------
