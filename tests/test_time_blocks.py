@@ -160,6 +160,12 @@ def _cost(m):
     return float(pyo.value(m.eTotalSCost))
 
 
+# Two equivalent models built in different ways reach the same optimum only within the solver's
+# feasibility tolerances (1e-7 in HiGHS), so their costs can differ by a few 1e-8 relative from
+# one machine to another. Costs that should be equal are compared to this relative tolerance.
+SAME = 1e-7
+
+
 SOLAR_TIES = {"vEleTotalOutput": ["Solar_01"]}
 BESS_2H = {"BESS_01": {"Output": "uniform 2h", "Charge": "uniform 2h"}}
 BESS_TIES = {"vEleTotalOutput": ["BESS_01"], "vEleTotalCharge": ["BESS_01"]}
@@ -182,7 +188,7 @@ def test_block_variables_reproduce_hand_tied_solar(solved):
     """One variable per block gives the cost of the hourly model with the same values tied by
     hand, and the model has one output variable per block for the declared unit."""
     m = solved["level"]
-    assert _cost(m) == pytest.approx(_cost(solved["solar_tied"]), rel=1e-9)
+    assert _cost(m) == pytest.approx(_cost(solved["solar_tied"]), rel=SAME)
     assert sum(1 for idx in m.vEleTotalOutput_blk if idx[3] == "Solar_01") == 24
     out, avail = _solar(m)
     pairs = out.reshape(-1, 2)
@@ -193,7 +199,7 @@ def test_block_variables_reproduce_hand_tied_solar(solved):
 
 @pytest.mark.solve
 def test_block_variables_reproduce_hand_tied_storage(solved):
-    assert _cost(solved["bess"]) == pytest.approx(_cost(solved["bess_tied"]), rel=1e-9)
+    assert _cost(solved["bess"]) == pytest.approx(_cost(solved["bess_tied"]), rel=SAME)
     m = solved["bess"]
     assert sum(1 for idx in m.vEleTotalCharge_blk if idx[3] == "BESS_01") == 24
 
@@ -245,7 +251,7 @@ def test_block_variables_reproduce_hand_tied_electrolyser(tmp_path, deterministi
     blocks = routine(dir=str(_electrolyser_case(tmp_path / "blk", ELY_2H)), case=ELY, solver="highs", date=DATE,
                      rawresults="False", plots="False", indlog="False", duckdbresults="False")
     tied = _solve_tied(_electrolyser_case(tmp_path / "tied"), ELY, ELY_TIES)
-    assert _cost(blocks) == pytest.approx(_cost(tied), rel=1e-9)
+    assert _cost(blocks) == pytest.approx(_cost(tied), rel=SAME)
     for name in ELY_TIES:
         n_blocks = sum(1 for idx in getattr(blocks, f"{name}_blk") if idx[3] == "AEL_01")
         assert n_blocks == len(blocks.n) // 2, name
@@ -271,7 +277,7 @@ def test_repeated_rows_are_dropped_without_changing_the_cost(tmp_path, determini
                       rawresults="True", plots="False", indlog="False", duckdbresults="False")
     monkeypatch.setattr(oM_Sequence, "drop_repeated_rows", lambda *a, **k: 0)
     kept = _solve(_case(tmp_path / "k", BESS_2H))
-    assert _cost(dropped) == pytest.approx(_cost(kept), rel=1e-9)
+    assert _cost(dropped) == pytest.approx(_cost(kept), rel=SAME)
     assert dropped.repeated_rows_dropped == 72
     assert rows(kept) - rows(dropped) == 72
     for con in dropped.component_data_objects(pyo.Constraint):
