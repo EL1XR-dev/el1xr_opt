@@ -154,3 +154,37 @@ def test_ramp_limits_bind_harder_at_quarter_hours(tmp_path, deterministic_highs)
     hourly = _cost(_solve(_case(tmp_path / "h")))
     quarter = _cost(_solve(_quarter_case(tmp_path / "q")))
     assert quarter > hourly + 1e-3
+
+
+# --- ramps between blocks ---------------------------------------------------------------------
+
+RAMPED = [f"EV_{i:02d}" for i in range(1, 11)] + ["BESS_01"]
+
+
+def _declare_hourly(folder):
+    """Declare the output and charge of every ramp-limited unit at 1 h."""
+    pd.DataFrame({"Output": "uniform 1h", "Charge": "uniform 1h"}, index=RAMPED).to_csv(
+        folder / f"oM_Data_Resolution_{CASE}.csv")
+
+
+def test_a_ramp_spans_the_time_between_block_midpoints(tmp_path):
+    """At the first level of an hourly block the ramp spans (1 h + 1 h) / 2; inside the block, and
+    for a flow that is not declared, one quarter-hour level."""
+    from el1xr_opt.Modules.oM_TimeBlocks import ramp_hours
+    d = _quarter_case(tmp_path)
+    _declare_hourly(d / CASE)
+    m = build_structure(str(d), CASE, DATE)
+    p, sc = list(m.ps)[0]
+    lv = list(m.n)
+    declared = ramp_hours(m, p, sc, "Ele", "BESS_01", "Output")
+    assert [declared[n] for n in lv[:9]] == [0.25, 0.25, 0.25, 0.25, 1.0, 0.25, 0.25, 0.25, 1.0]
+    assert set(ramp_hours(m, p, sc, "Ele", "BESS_01", "Inventory").values()) == {0.25}
+
+
+@pytest.mark.solve
+def test_hourly_flows_at_quarter_hours_reproduce_the_hourly_ramps(tmp_path, deterministic_highs):
+    """With the ramp-limited units declared at 1 h, the quarter-hour case is the hourly case with
+    the shipped ramp limits: a change between two hourly blocks is allowed the ramp of one hour."""
+    hourly = _cost(_solve(_case(tmp_path / "h")))
+    quarter = _cost(_solve(_quarter_case(tmp_path / "q", _declare_hourly)))
+    assert quarter == pytest.approx(hourly, rel=SAME)
