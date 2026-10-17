@@ -7,7 +7,7 @@
 # Resolutions declared per asset and flow, on top of the timeline of oM_Time.
 #
 # A case may carry an optional table oM_Data_Resolution_<case>.csv, one row per unit, with columns
-# Output, Charge, Commitment and Reserve holding a resolution specification such as 'uniform 2h'
+# Output, Charge, Commitment, Reserve and Inventory holding a resolution specification such as 'uniform 2h'
 # or 'calendar day'. A blank cell keeps the resolution of the load levels. The value of a declared
 # flow is constant within each of its blocks.
 #
@@ -24,6 +24,7 @@
 #               vHydTotalCharge for a hydrogen store or a fuel cell
 #   Commitment  commitment, and the standby state of an electrolyser
 #   Reserve     the FCR-D up, FCR-D down and FCR-N bids
+#   Inventory   the inventory of an electricity or hydrogen store (vEleInventory, vHydInventory)
 # The second-block output stays per level: the total output is the second block plus the
 # activated reserve, and the activation changes every level. Start-ups, shut-downs and inventories
 # stay per level as well.
@@ -36,6 +37,14 @@
 #                    when the case is read.
 #   Mean:            both limits are replaced by their duration-weighted mean over the block, as
 #                    in Gao et al., Applied Energy 396 (2025) 126267.
+#
+# A declared inventory is the stored energy at the end of each of its blocks. The storage balance
+# is written once per block: the inventory at the end of a block is the inventory at the end of
+# the previous block plus the net charge over the block (Gao et al., Algorithm 2). The storage
+# limits are those of the last level of the block. Inside a block the inventory is not tracked,
+# so the store may go beyond its limits between two block ends, and the cost can be lower than
+# with an inventory per load level. This replaces the cycle set by StorageType, which must then
+# be one load level (StorageType Hourly or Daily).
 
 import time
 
@@ -48,7 +57,7 @@ from pyomo.core.expr.visitor import identify_variables
 from .oM_Time import from_spec
 from .utils.oM_Utils import log_time
 
-FLOWS = ('Output', 'Charge', 'Commitment', 'Reserve')
+FLOWS = ('Output', 'Charge', 'Commitment', 'Reserve', 'Inventory')
 _BIDS = ['vEleFreqContReserveDisUpwardBid', 'vEleFreqContReserveDisDownwardBid', 'vEleFreqContReserveNorBid']
 FLOW_VARS = {
     ('Ele', 'Output'): ['vEleTotalOutput'],
@@ -57,8 +66,11 @@ FLOW_VARS = {
     ('Hyd', 'Commitment'): ['vHydGenCommitment', 'vHydGenStandBy'],
     ('Ele', 'Reserve'): _BIDS,
     ('Hyd', 'Reserve'): _BIDS,
+    ('Ele', 'Inventory'): ['vEleInventory'],
+    ('Hyd', 'Inventory'): ['vHydInventory'],
 }
-_LIMITS = {'Output': ('MinPower', 'MaxPower'), 'Charge': ('MinCharge', 'MaxCharge')}
+_LIMITS = {'Output': ('MinPower', 'MaxPower'), 'Charge': ('MinCharge', 'MaxCharge'),
+           'Inventory': ('MinStorage', 'MaxStorage')}
 CAPACITY_RULES = ('Level', 'Mean')
 
 
@@ -67,7 +79,8 @@ def _units_with(model, sector, flow):
     return {('Ele', 'Output'): model.eg, ('Hyd', 'Output'): model.hg,
             ('Ele', 'Charge'): model.eh | model.he, ('Hyd', 'Charge'): model.eh | model.he,
             ('Ele', 'Commitment'): model.egt, ('Hyd', 'Commitment'): model.hg,
-            ('Ele', 'Reserve'): model.ege2h, ('Hyd', 'Reserve'): model.ege2h}[(sector, flow)]
+            ('Ele', 'Reserve'): model.ege2h, ('Hyd', 'Reserve'): model.ege2h,
+            ('Ele', 'Inventory'): model.egs, ('Hyd', 'Inventory'): model.hgs}[(sector, flow)]
 
 
 def _flow_vars(model, sector, unit, flow):
@@ -81,10 +94,13 @@ def read_declarations(model, data_frames, parameters_dict):
     """Build the resolution of every declared flow and the first level of each of its blocks.
 
     Sets model.flow_res {(sector, unit, flow): Resolution} and model.block_start
-    {(sector, unit, flow): {level: first level of its block}}. Units outside the base year are
-    skipped, as the rest of the model skips them.
+    {(sector, unit, flow): {level: first level of its block}}. For an inventory, which is read at
+    the end of its block, the map gives the last level of the block instead, and
+    model.inventory_blocks {unit: {last level: (last level of the previous block or None, levels
+    of the block)}} gives the levels each storage balance sums over. Units outside the base year
+    are skipped, as the rest of the model skips them.
     """
-    model.flow_res, model.block_start = {}, {}
+    model.flow_res, model.block_start, model.inventory_blocks = {}, {}, {}
 
     rule = parameters_dict.get('pParBlockLimit', 'Level')
     rule = rule.strip().capitalize() if isinstance(rule, str) and rule.strip() else 'Level'
@@ -123,6 +139,15 @@ def read_declarations(model, data_frames, parameters_dict):
                 first[n] = block_first[b]
             key = (sector, unit, flow)
             model.flow_res[key] = res
+            if flow == 'Inventory':
+                members = {}
+                for n, n0 in first.items():
+                    members.setdefault(n0, []).append(n)
+                last = {n: members[n0][-1] for n, n0 in first.items()}
+                ends = [levels[-1] for levels in members.values()]
+                model.inventory_blocks[unit] = {levels[-1]: (ends[i - 1] if i else None, levels)
+                                                for i, levels in enumerate(members.values())}
+                first = last
             model.block_start[key] = first
 
 
@@ -133,11 +158,28 @@ def apply_capacity_rule(model, parameters_dict):
            (highest lower limit, lowest upper limit). A block whose highest lower limit exceeds its
            lowest upper limit (a must-take profile that changes inside the block) is refused.
     Mean:  both limits become their duration-weighted mean over the block.
+
+    The storage limits of a declared inventory become those of the last level of each block,
+    whatever BlockLimit is: the inventory is the stored energy at that level. A declared
+    inventory also needs a storage cycle of one load level.
     """
     rule = parameters_dict['pParBlockLimit']
     dur = parameters_dict['pDuration']
     for (sector, unit, flow), first in model.block_start.items():
         if flow not in _LIMITS:
+            continue
+        if flow == 'Inventory':
+            cycle = int(parameters_dict[f'p{sector}CycleTimeStep'][unit])
+            if cycle != 1:
+                raise ValueError(f'{unit} inventory has a resolution and a storage cycle of {cycle} load levels '
+                                 f'(StorageType {parameters_dict[f"p{sector}GenStorageType"][unit]}). Use one of '
+                                 f'the two: the resolution needs StorageType Hourly or Daily.')
+            for name in _LIMITS[flow]:
+                limit = parameters_dict[f'p{sector}{name}']
+                if unit in limit.columns:
+                    for p, sc in model.ps:
+                        for n, n_end in first.items():
+                            limit.loc[(p, sc, n), unit] = limit.loc[(p, sc, n_end), unit]
             continue
         lower_name, upper_name = _LIMITS[flow]
         lower = parameters_dict[f'p{sector}{lower_name}']

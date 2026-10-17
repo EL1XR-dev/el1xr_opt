@@ -75,14 +75,14 @@ Declaring a resolution
 ----------------------
 
 A case declares resolutions in an optional table, ``oM_Data_Resolution_<case>.csv``, one row per
-unit, with up to four columns:
+unit, with up to five columns:
 
 .. code-block:: text
 
-   ,Output,Charge,Commitment,Reserve
-   Solar_01,uniform 2h,,,
-   BESS_01,,uniform 1h,,
-   AEL_01,,uniform 2h,uniform 2h,uniform 1h
+   ,Output,Charge,Commitment,Reserve,Inventory
+   Solar_01,uniform 2h,,,,
+   BESS_01,,uniform 1h,,,uniform 4h
+   AEL_01,,uniform 2h,uniform 2h,uniform 1h,
 
 - ``Output``: the total output of the unit.
 - ``Charge``: the total charge (the electricity drawn by a store or an electrolyser, the hydrogen
@@ -90,6 +90,7 @@ unit, with up to four columns:
 - ``Commitment``: the commitment, and the standby state of an electrolyser. Start-ups and
   shut-downs stay per load level.
 - ``Reserve``: the FCR-D up, FCR-D down and FCR-N bids, the market product.
+- ``Inventory``: the inventory of an electricity or hydrogen store (see `Inventory per block`_).
 
 A blank cell keeps the resolution of the load levels, and a case without the table is unchanged.
 Every block of a declared resolution must start on a load level boundary.
@@ -124,14 +125,44 @@ or a start-up, differ from level to level and stay. The solution and the cost do
 dual of the row that remains is the shadow price of the whole block; a dropped row has no dual
 in the results.
 
+Inventory per block
+-------------------
+
+A declared inventory is the stored energy at the end of each of its blocks. The storage balance
+is written once per block, at its last load level: the inventory at the end of the previous
+block (or the initial inventory) plus the net charge over every level of the block
+(Algorithm 2). The storage limits are those of the last level of the block, whatever
+``BlockLimit`` is. Other constraints that read the inventory per load level, such as the energy
+behind a reserve bid, read the value at the end of the block.
+
+The inventory is not tracked inside a block, so this one changes results: the store may go above
+or below its limits between two block ends. For a store without reserve bids the cost can only
+fall. With reserve bids it can also rise, because the energy behind the bid of each level is
+read from the inventory at the end of the block. On H2VPP (48 h, battery shrunk to 2 kWh so its
+limits bind, no reserve bids):
+
+==================  ===========  ============
+Inventory           Cost         Balance rows
+==================  ===========  ============
+per load level      369.715453   48
+``uniform 2h``      369.714675   24
+``calendar day``    369.711677   2
+==================  ===========  ============
+
+The older ``StorageType`` of a store (Hourly, Daily, Weekly, Monthly, Yearly) writes the balance
+every k load levels and leaves the inventory in between free. A calendar-day inventory gives the
+same cost as ``StorageType = Weekly`` on hourly levels, with one inventory variable per block in
+place of free ones, and with blocks that follow the calendar or have unequal lengths. A store
+with a declared inventory needs a cycle of one load level (``StorageType`` Hourly or Daily); a
+case that sets both is refused.
+
 Status
 ------
 
-The timeline, the calendar, the declarations of output, charge, commitment and reserve bids with
-one variable per block, and the removal of repeated rows are in place. Next comes an opt-in
-resolution for storage inventories, with the storage balance written per block at the lowest
-common resolution (Algorithm 2). That one changes results, as energy may move within a block.
-Cases with mixed resolutions, and ramps and unit commitment on blocks of unequal length, follow.
+The timeline, the calendar, the declarations of output, charge, commitment, reserve bids and
+inventory with one variable per block, the storage balance per block and the removal of repeated
+rows are in place. Cases with mixed resolutions, and ramps and unit commitment on blocks of
+unequal length, follow.
 
 References
 ----------
