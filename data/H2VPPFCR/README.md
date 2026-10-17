@@ -68,6 +68,26 @@ Rebuild the model case from the series (full year = 8736 hours = 52 weeks):
 H2VPP_HORIZON=year H2VPP_CURRENCY=EUR python build_case.py   # writes inputs/H2VPPFCR/oM_Data_*.csv
 ```
 
+## 15-min load levels
+
+The SE3 day-ahead prices are at 15 min since 1 October 2025 (hour 6552 of the 2025 index).
+`python build_prices_year.py --spot-15min` writes them to `inputs/real_data/year/spot_se3_15min.csv`.
+Two switches of `build_case.py` use them, for a horizon that starts on 1 October or later:
+
+- `H2VPP_SPOT=15min` reads the 15-min prices. At hourly levels they are declared `uniform 15min`
+  in `oM_Data_SeriesResolution` and averaged over each hour when the case is read.
+- `H2VPP_LEVEL_MINUTES=15` splits each hour into four load levels and reads the 15-min prices. The
+  other series stay hourly and are declared `uniform 1h`. The FCR bids of every unit stay hourly
+  (`Reserve = uniform 1h` in `oM_Data_Resolution`), as the FCR market clears per hour.
+
+```bash
+H2VPP_HORIZON=week H2VPP_START_HOUR=6552 H2VPP_LEVEL_MINUTES=15 python build_case.py
+```
+
+The hourly spot in `spot_se3.csv` was fetched as the first quarter of each hour, not the hourly
+mean. From 1 October 2025 the two differ, by 5.8 EUR/MWh on average and up to 132.6 EUR/MWh. A
+comparison of hourly and 15-min levels should use `H2VPP_SPOT=15min` at both.
+
 ## Run the campaign
 
 The paper's fourteen headline cases (A1, A2, A3, B0, B1, B2, C2, D1, D2, S1–S5)

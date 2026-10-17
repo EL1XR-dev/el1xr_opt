@@ -421,6 +421,9 @@ f1 = float(m.factor1)
 mb = float(os.environ.get("MONEY_BASE", "1.0"))
 val = lambda v: float(pyo.value(v))
 phys = lambda x: x / f1
+# hours of a load level (period, scenario, level, ...): the per-level rates below are weighted by it,
+# so the totals are energies and bid-hours at any load level length.
+hours = lambda i: float(m.Par['pDuration'][i[0], i[1], i[2]])
 cost = None
 if have_sol:
     try:
@@ -441,13 +444,13 @@ if cost is not None:
         summary["peak_cost_SEK"] = sum(val(m.vTotalElePeakCost[i]) for i in m.vTotalElePeakCost) * mb
     except Exception:
         summary["peak_cost_SEK"] = None
-    summary["HNS_total_kgH2"] = phys(sum(val(m.vHNS[i]) for i in m.vHNS))
+    summary["HNS_total_kgH2"] = phys(sum(val(m.vHNS[i]) * hours(i) for i in m.vHNS))
     # How the hydrogen demand is actually met: served on-site vs bought from the import
     # backstop. With elastic (price-responsive) demand, unmet demand is FOREGONE (not HNS),
     # so a near-zero HNS can still hide a hydrogen business that produced nothing -- these
     # two totals make that visible.
-    summary["H2_demand_served_kgH2"] = phys(sum(val(m.vHydDemand[i]) for i in m.vHydDemand))
-    summary["H2_import_buy_kgH2"] = phys(sum(val(m.vHydBuy[i]) for i in m.vHydBuy))
+    summary["H2_demand_served_kgH2"] = phys(sum(val(m.vHydDemand[i]) * hours(i) for i in m.vHydDemand))
+    summary["H2_import_buy_kgH2"] = phys(sum(val(m.vHydBuy[i]) * hours(i) for i in m.vHydBuy))
     summary["ele_build"] = {u: val(m.vEleGenInvest[u]) for u in m.egc}
     summary["hyd_build"] = {u: val(m.vHydGenInvest[u]) for u in m.hgc}
     summary["comp_build"] = {u: val(m.vHydCompInvest[u]) for u in m.hgcompc}
@@ -478,7 +481,7 @@ if cost is not None:
         by_asset = {}
         for idx in comp:
             asset = idx[-1]
-            by_asset[asset] = by_asset.get(asset, 0.0) + val(comp[idx])
+            by_asset[asset] = by_asset.get(asset, 0.0) + val(comp[idx]) * hours(idx)
         fcr[label] = by_asset
     summary["fcr_sum_by_asset"] = fcr
 
@@ -493,7 +496,7 @@ if cost is not None:
                 up_cha = val(m.vEleFreqContReserveDisUpCha[pp, ss, nn, egs]) + val(m.vEleFreqContReserveNorUpCha[pp, ss, nn, egs])
                 up_dis = val(m.vEleFreqContReserveDisUpDis[pp, ss, nn, egs]) + val(m.vEleFreqContReserveNorUpDis[pp, ss, nn, egs])
                 if up_cha > 1e-3 and up_dis > 1e-3:
-                    cnt += 1
+                    cnt += hours((pp, ss, nn))
             dual[egs] = cnt
         summary["fcr_dual_leg_hours"] = dual
     except Exception:
