@@ -1010,34 +1010,40 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
     optmodel.__setattr__('eEleInflowsCharge', Constraint(optmodel.psnegs, rule=eEleInflowsCharge, doc='Energy inflows to charge bound'))
 
+    # Endurance: the store backs the bid of a level with its inventory one hour after that level
+    # ends, so the rows look back pParEnduranceLag levels (one at hourly levels, four at quarter
+    # hours). The bids of the last levels, which have no inventory an hour later, are backed by
+    # the last inventory in the *End rows below.
+    lag = model.Par['pParEnduranceLag']
+    n_count = len(model.n)
+
     def eEleStorageEnduranceUp(optmodel, p,sc,n,egs):
-        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n != model.n.first():
-            return optmodel.vEleInventory[p,sc,n,egs] >= (1/model.Par['pEleGenEfficiency_discharge'][egs]) * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,1),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,1),egs])
+        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and model.n.ord(n) > lag:
+            return optmodel.vEleInventory[p,sc,n,egs] >= (1/model.Par['pEleGenEfficiency_discharge'][egs]) * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,lag),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,lag),egs])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceUp', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUp, doc='Storage endurance for FCR-D and FCR-N upward'))
 
     def eEleStorageEnduranceDown(optmodel, p,sc,n,egs):
-        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n != model.n.first():
-            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 * (optmodel.vEleGenInvest[egs] if egs in model.egsc else 1.0) - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,1),egs])
+        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and model.n.ord(n) > lag:
+            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 * (optmodel.vEleGenInvest[egs] if egs in model.egsc else 1.0) - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,lag),egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,model.n.prev(n,lag),egs])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceDown', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDown, doc='Storage endurance for FCR-D and FCR-N downward'))
 
-    # C30: the two rolling endurance constraints above back the bid at n-1 with the inventory
-    # at n and skip the first level, so the bid at the LAST level has no energy backing. Add a
-    # terminal row that backs the last level's bid with the last level's inventory (the
-    # inventory one period ahead does not exist), so end-of-horizon bids are not free.
+    # C30: the rolling rows above leave the bids of the last pParEnduranceLag levels unbacked
+    # (there is no inventory an hour after them). These rows back each of them with the last
+    # inventory, so end-of-horizon bids are not free. At hourly levels this is the last level.
     def eEleStorageEnduranceUpEnd(optmodel, p,sc,n,egs):
-        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n == model.n.last():
-            return optmodel.vEleInventory[p,sc,n,egs] >= (1/model.Par['pEleGenEfficiency_discharge'][egs]) * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
+        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and model.n.ord(n) > n_count - lag:
+            return optmodel.vEleInventory[p,sc,model.n.last(),egs] >= (1/model.Par['pEleGenEfficiency_discharge'][egs]) * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceUpEnd', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceUpEnd, doc='Storage endurance for the terminal-level FCR-D/N upward bid (C30)'))
 
     def eEleStorageEnduranceDownEnd(optmodel, p,sc,n,egs):
-        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and n == model.n.last():
-            return model.Par['pEleMaxStorage'][egs][p,sc,n] * model.factor1 * (optmodel.vEleGenInvest[egs] if egs in model.egsc else 1.0) - optmodel.vEleInventory[p,sc,n,egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
+        if (model.Par['pEleGenNoFCRD'][egs] == 0 or model.Par['pEleGenNoFCRN'][egs] == 0) and model.Par['pEleMaxStorage'][egs][p,sc,n] and model.n.ord(n) > n_count - lag:
+            return model.Par['pEleMaxStorage'][egs][p,sc,model.n.last()] * model.factor1 * (optmodel.vEleGenInvest[egs] if egs in model.egsc else 1.0) - optmodel.vEleInventory[p,sc,model.n.last(),egs] >= model.Par['pEleGenEfficiency_charge'][egs] * ((model.Par['pEleGenEnduranceFCRD'][egs]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,egs] + (model.Par['pEleGenEnduranceFCRN'][egs]/60) * optmodel.vEleFreqContReserveNorBid[p,sc,n,egs])
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleStorageEnduranceDownEnd', Constraint(optmodel.psnegs, rule=eEleStorageEnduranceDownEnd, doc='Storage endurance for the terminal-level FCR-D/N downward bid (C30)'))
@@ -1171,23 +1177,22 @@ def create_constraints(model, optmodel, indlog):
                     seen.add(hgs); out.append(hgs)
         return out
     def eEleFreqDownEnduranceConv(optmodel, p,sc,n,nd):
-        if n == model.n.first():
+        if model.n.ord(n) <= lag:
             return Constraint.Skip
         e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
         hgs_at_node = _hgs_reachable_up(nd)
         if not e2h_at_node:
             return Constraint.Skip
-        lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,1),e2h]
-                 + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,1),e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
+        lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,model.n.prev(n,lag),e2h]
+                 + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,lag),e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
         rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] * model.factor1 * (optmodel.vHydGenInvest[hgs] if hgs in model.hgc else 1.0) - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownEnduranceConv', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConv, doc='Electrolyser FCR-down endurance bounded by node hydrogen-store headroom'))
 
-    # C30: the rolling conv-endurance above backs the bid at n-1 with the store headroom at n
-    # and skips the first level, leaving the last level's bid unbacked. Back it with the
-    # terminal-level store headroom (mirrors eEleStorageEnduranceDownEnd for the e2h node).
+    # C30: the rolling conv-endurance above leaves the bids of the last pParEnduranceLag levels
+    # unbacked. Back each with the last store headroom (mirrors eEleStorageEnduranceDownEnd).
     def eEleFreqDownEnduranceConvEnd(optmodel, p,sc,n,nd):
-        if n != model.n.last():
+        if model.n.ord(n) <= n_count - lag:
             return Constraint.Skip
         e2h_at_node = [e2h for e2h in model.e2h if (nd,e2h) in model.n2hg and (model.Par['pHydGenNoFCRD'][e2h] == 0 or model.Par['pHydGenNoFCRN'][e2h] == 0)]
         hgs_at_node = _hgs_reachable_up(nd)
@@ -1195,7 +1200,8 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
         lhs = sum(((model.Par['pHydGenEnduranceFCRD'][e2h]/60) * optmodel.vEleFreqContReserveDisDownwardBid[p,sc,n,e2h]
                  + (model.Par['pHydGenEnduranceFCRN'][e2h]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,n,e2h]) / model.Par['pHydGenProductionFunction'][e2h] for e2h in e2h_at_node)
-        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,n] * model.factor1 * (optmodel.vHydGenInvest[hgs] if hgs in model.hgc else 1.0) - optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        last = model.n.last()
+        rhs = sum(model.Par['pHydMaxStorage'][hgs][p,sc,last] * model.factor1 * (optmodel.vHydGenInvest[hgs] if hgs in model.hgc else 1.0) - optmodel.vHydInventory[p,sc,last,hgs] for hgs in hgs_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqDownEnduranceConvEnd', Constraint(optmodel.psnnd, rule=eEleFreqDownEnduranceConvEnd, doc='Electrolyser FCR-down endurance for the terminal load level (C30)'))
 
@@ -1303,24 +1309,22 @@ def create_constraints(model, optmodel, indlog):
         return out
 
     def eEleFreqUpEnduranceFuelCell(optmodel, p,sc,n,nd):
-        if n == model.n.first():
+        if model.n.ord(n) <= lag:
             return Constraint.Skip
         h2e_at_node = [h2e for h2e in model.h2e if (nd,h2e) in model.n2eg and (model.Par['pEleGenNoFCRD'][h2e] == 0 or model.Par['pEleGenNoFCRN'][h2e] == 0)]
         hgs_at_node = _hgs_reachable(nd)
         if not h2e_at_node:
             return Constraint.Skip
-        lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,1),h2e]
-                 + (model.Par['pEleGenEnduranceFCRN'][h2e]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,1),h2e]) / model.Par['pEleGenProductionFunction'][h2e] for h2e in h2e_at_node)
+        lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,model.n.prev(n,lag),h2e]
+                 + (model.Par['pEleGenEnduranceFCRN'][h2e]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,model.n.prev(n,lag),h2e]) / model.Par['pEleGenProductionFunction'][h2e] for h2e in h2e_at_node)
         rhs = sum(optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqUpEnduranceFuelCell', Constraint(optmodel.psnnd, rule=eEleFreqUpEnduranceFuelCell, doc='Fuel-cell FCR-up endurance bounded by reachable hydrogen-store contents (node + let-down cascade)'))
 
-    # C30: the rolling endurance above backs the bid at n-1 with the store contents at n and
-    # skips the first level, leaving the last level's bid unbacked. Add a terminal row that
-    # backs the last level's bid with the last level's store contents (mirrors
-    # eEleFreqDownEnduranceConvEnd for the fuel-cell node).
+    # C30: the rolling endurance above leaves the bids of the last pParEnduranceLag levels
+    # unbacked. Back each with the last store contents (mirrors eEleFreqDownEnduranceConvEnd).
     def eEleFreqUpEnduranceFuelCellEnd(optmodel, p,sc,n,nd):
-        if n != model.n.last():
+        if model.n.ord(n) <= n_count - lag:
             return Constraint.Skip
         h2e_at_node = [h2e for h2e in model.h2e if (nd,h2e) in model.n2eg and (model.Par['pEleGenNoFCRD'][h2e] == 0 or model.Par['pEleGenNoFCRN'][h2e] == 0)]
         hgs_at_node = _hgs_reachable(nd)
@@ -1328,7 +1332,7 @@ def create_constraints(model, optmodel, indlog):
             return Constraint.Skip
         lhs = sum(((model.Par['pEleGenEnduranceFCRD'][h2e]/60) * optmodel.vEleFreqContReserveDisUpwardBid[p,sc,n,h2e]
                  + (model.Par['pEleGenEnduranceFCRN'][h2e]/60) * optmodel.vEleFreqContReserveNorBid       [p,sc,n,h2e]) / model.Par['pEleGenProductionFunction'][h2e] for h2e in h2e_at_node)
-        rhs = sum(optmodel.vHydInventory[p,sc,n,hgs] for hgs in hgs_at_node)
+        rhs = sum(optmodel.vHydInventory[p,sc,model.n.last(),hgs] for hgs in hgs_at_node)
         return lhs <= rhs
     optmodel.__setattr__('eEleFreqUpEnduranceFuelCellEnd', Constraint(optmodel.psnnd, rule=eEleFreqUpEnduranceFuelCellEnd, doc='Fuel-cell FCR-up endurance for the terminal load level (C30)'))
 

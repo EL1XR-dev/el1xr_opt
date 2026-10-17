@@ -223,6 +223,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         """A time in hours as a number of load levels, TimeStep included (not rounded)."""
         return hours / (level_hours * parameters_dict['pParTimeStep'])
 
+    # FCR endurance: the store backs a bid with its inventory one hour after the bid's level
+    # ends, a lag of one level at hourly levels and of four at quarter hours (never below one).
+    parameters_dict['pParEnduranceLag'] = max(1, round(hours_to_levels(1)))
+
     parameters_dict['pDuration'       ] = data_frames['dfDuration']['Duration'] * parameters_dict['pParTimeStep']
     if level_hours != 1:
         parameters_dict['pDuration'] = parameters_dict['pDuration'] * level_hours

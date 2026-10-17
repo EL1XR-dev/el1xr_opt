@@ -244,9 +244,13 @@ Storage endurance for FCR-D and FCR-N
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Endurance constraints make sure a storage unit holds enough energy (for upward
 reserve) or enough free capacity (for downward reserve) to sustain its reserve bid
-for the required duration. The reserve bid of the previous time step
-(:math:`\timeindex-\ptimestep`) is used, with the endurance requirements
-:math:`\pelegenendurancefcrd` and :math:`\pelegenendurancefcrn` given in minutes.
+for the required duration. The inventory at the end of a load level backs the reserve bid
+of the level one hour earlier (:math:`\timeindex-\ptimestep`, where :math:`\ptimestep` is
+the number of load levels in one hour, at least one: one at hourly levels, four at quarter
+hours). The bids of the last :math:`\ptimestep` levels, which have no level an hour later,
+are backed by the last inventory («``eEleStorageEnduranceUpEnd``»,
+«``eEleStorageEnduranceDownEnd``»). The endurance requirements
+:math:`\pelegenendurancefcrd` and :math:`\pelegenendurancefcrn` are given in minutes.
 The upward and downward endurance are defined by («``eEleStorageEnduranceUp``», «``eEleStorageEnduranceDown``»):
 
 .. math::
@@ -338,7 +342,7 @@ hydrogen it produces over the endurance window has to go somewhere: it must fit 
 free headroom of the hydrogen storage units at the same bus. The electrolyser
 (provider) and the storage (absorber) are different units coupled through the hydrogen
 bus balance, so the endurance constraint is written per bus, summing the eligible
-electrolysers' bids of the previous time step -- converted to hydrogen through the
+electrolysers' bids of the level one hour earlier, as for storage -- converted to hydrogen through the
 production function -- against the total free storage headroom at that bus
 («``eEleFreqDownEnduranceConv``»). A bus with no hydrogen storage has zero headroom,
 which correctly forbids downward provision there. Upward provision cuts consumption

@@ -110,3 +110,29 @@ def test_a_ramp_costs_the_same_at_any_level_length(tmp_path, monkeypatch):
     assert quarter.keys() == hourly.keys()
     for k, c in hourly.items():
         assert quarter[k] == pytest.approx(c, rel=1e-12), k
+
+
+def test_endurance_looks_back_one_hour_at_any_level_length(tmp_path, monkeypatch):
+    """The inventory at the end of a level backs the FCR bid of the level one hour earlier:
+    one level back at hourly levels, four at quarter hours. The bids of the last hour are backed
+    by the last inventory."""
+    from pyomo.core.expr.visitor import identify_variables
+    from el1xr_opt.Modules.oM_Sequence import build_model
+
+    def check(m, lag):
+        assert m.Par["pParEnduranceLag"] == lag
+        lv = list(m.n)
+        rows = {idx[2]: m.eEleStorageEnduranceUp[idx] for idx in m.eEleStorageEnduranceUp if idx[3] == "BESS_2h"}
+        assert sorted(rows, key=lv.index) == lv[lag:]
+        n = lv[10]
+        names = {v.name for v in identify_variables(rows[n].body)}
+        assert f"vEleInventory[period1,sc01,{n},BESS_2h]" in names
+        bid = m.vEleFreqContReserveDisUpwardBid["period1", "sc01", lv[10 - lag], "BESS_2h"]
+        assert bid.name in names                  # at 15 min, the variable of the bid's hour
+        end = {idx[2]: m.eEleStorageEnduranceUpEnd[idx] for idx in m.eEleStorageEnduranceUpEnd if idx[3] == "BESS_2h"}
+        assert sorted(end, key=lv.index) == lv[-lag:]
+        for row in end.values():
+            assert f"vEleInventory[period1,sc01,{lv[-1]},BESS_2h]" in {v.name for v in identify_variables(row.body)}
+
+    check(build_model(str(_build(tmp_path / "h", monkeypatch, 60)), CASE, DATE), 1)
+    check(build_model(str(_build(tmp_path / "q", monkeypatch, 15)), CASE, DATE), 4)

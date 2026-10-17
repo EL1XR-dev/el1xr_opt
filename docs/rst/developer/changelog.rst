@@ -59,6 +59,8 @@ Fixed
 Changed
 ~~~~~~~
 
+- FCR endurance looks back one hour at any load level length. The inventory at the end of a level backs the FCR bid of the level one hour earlier (a new parameter, ``pParEnduranceLag``, the number of levels in one hour, at least one). Before, the rules looked back one level, so at quarter hours a bid was backed by the inventory 15 min after its level instead of an hour. The bids of the last hour are backed by the last inventory. At hourly levels the rules are unchanged; at quarter hours they look back four levels. This applies to the battery (``eEleStorageEndurance*``), electrolyser (``eEleFreqDownEnduranceConv*``) and fuel-cell (``eEleFreqUpEnduranceFuelCell*``) endurance. Test in ``tests/test_paper_case_15min.py``.
+
 - ``ShiftedSteps``, the demand shift window, is read in hours like the other time counts, not in load levels. The two are the same at hourly levels with ``TimeStep = 1``, which is every shipped case.
 - Time-resolution wording follows the field: the docs, the README, the module comments and the time structure figure say *highest* and *lowest* common resolution (as Gao et al. do), not *finest* and *coarsest*. The functions ``finest_common`` and ``coarsest_common`` keep their names.
 - **One time-label convention: the start of the period.** Load level ``t0001`` is the hour 00:00-01:00 and is now labelled 00:00 everywhere, as day-ahead and balancing market data are. Before, the internal calendar used the start, while the result files and the night-hour rule of the network tariff used the end (01:00).
