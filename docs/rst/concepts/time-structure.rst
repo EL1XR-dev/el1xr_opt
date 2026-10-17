@@ -71,6 +71,30 @@ The time structure lives in :mod:`el1xr_opt.Modules.oM_Time`, which has no Pyomo
 (``model.time_res['level']``). The calendar of the model (day, month, clock hour of each level)
 is read from them, so merging hours with ``TimeStep`` keeps the dates right.
 
+Load level length
+-----------------
+
+The Parameter ``LoadLevelMinutes`` sets the length of a load level, 60 minutes by default. A
+case at quarter hours has ``LoadLevelMinutes = 15`` and four load levels per hour, and every
+time series is given per quarter hour. The duration of a level (``pDuration``) stays in hours,
+so it is 0.25 at quarter hours, and every cost and energy balance follows.
+
+Every time given in hours is converted to a number of load levels: minimum up and down times
+and the time already served at the start, storage and outflow cycles, network switching times
+and the demand shift window ``ShiftedSteps``. A minimum up time of 3 h is 12 load levels at
+quarter hours.
+
+Two rules are set per clock hour, whatever the level length. The peak of a network tariff is
+taken on the hourly mean of the import, as Swedish network tariffs are, and the renewable
+matching of an electrolyser compares the energy of each hour. Both are written at the first
+level of each hour. With hourly levels they are the rules as before.
+
+A ramp limit is a rate in kW per hour, applied over the duration of each level. An hourly model
+lets a unit move by a whole hour of ramp between two levels; at quarter hours the same rate
+allows a quarter of that per level. On H2VPP (48 h) the shipped EV ramp limits bind at quarter
+hours and not at hourly levels, so the quarter-hour case with the same hourly data costs more:
+360.864824 against 360.087456. Without the storage ramp limits the two cases cost the same.
+
 Declaring a resolution
 ----------------------
 
@@ -159,10 +183,11 @@ case that sets both is refused.
 Status
 ------
 
-The timeline, the calendar, the declarations of output, charge, commitment, reserve bids and
-inventory with one variable per block, the storage balance per block and the removal of repeated
-rows are in place. Cases with mixed resolutions, and ramps and unit commitment on blocks of
-unequal length, follow.
+The timeline, the calendar, load levels of any length in minutes, the declarations of output,
+charge, commitment, reserve bids and inventory with one variable per block, the storage balance
+per block and the removal of repeated rows are in place. Next come time series given at their
+own resolution and resampled onto the load levels, then ramps and unit commitment on blocks of
+unequal length.
 
 References
 ----------

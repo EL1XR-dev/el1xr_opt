@@ -208,7 +208,22 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     _cur = parameters_dict.get('pParCurrency', 'SEK')
     parameters_dict['pParCurrency'] = _cur.strip() if isinstance(_cur, str) and _cur.strip() else 'SEK'
 
+    # Length of a load level in minutes (Parameter LoadLevelMinutes, default 60). pDuration is in
+    # hours, and every input given in hours (up and down times, storage cycles, demand shift
+    # windows) is converted to a number of load levels with hours_to_levels.
+    _llm = parameters_dict.get('pParLoadLevelMinutes', 60)
+    _llm = 60 if _llm != _llm or _llm in ('', None) else _llm
+    if float(_llm) <= 0 or float(_llm) != int(float(_llm)):
+        raise ValueError(f'LoadLevelMinutes must be a positive whole number of minutes, got {_llm!r}')
+    parameters_dict['pParLoadLevelMinutes'] = int(float(_llm))
+    level_hours = parameters_dict['pParLoadLevelMinutes'] / 60
+    def hours_to_levels(hours):
+        """A time in hours as a number of load levels, TimeStep included (not rounded)."""
+        return hours / (level_hours * parameters_dict['pParTimeStep'])
+
     parameters_dict['pDuration'       ] = data_frames['dfDuration']['Duration'] * parameters_dict['pParTimeStep']
+    if level_hours != 1:
+        parameters_dict['pDuration'] = parameters_dict['pDuration'] * level_hours
     # N2T hoglasttid mask (per load level, 0/1): weekdays 06-22 in the winter months, set by
     # build_case from the real calendar. Drives the hogbelastningsavgift peak and the time-of-use
     # transfer fee. Absent in older cases -> all zero (no high-load charge / flat transfer).
@@ -335,6 +350,10 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         else:
             parameters_dict[_s_col] = pd.Series(_s_def, index=parameters_dict['pHydDemFlexible'].index)
     parameters_dict['pHydDemShiftedSteps'] = parameters_dict['pHydDemShiftedSteps'].astype(int)
+    # ShiftedSteps is given in hours and used as a number of load levels
+    for _s_col in ('pEleDemShiftedSteps', 'pHydDemShiftedSteps'):
+        if _s_col in parameters_dict:
+            parameters_dict[_s_col] = round(hours_to_levels(parameters_dict[_s_col].fillna(0))).astype(int)
 
     # Per-step buy/sell caps (MaxBuy/MaxSell) are optional retail columns. When a
     # retail file omits them, default the cap to 0.0, read as "no cap" by the
@@ -448,7 +467,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict[f'p{net[0:3]}GenInvestmentUp'] = parameters_dict[f'p{net[0:3]}GenInvestmentUp'].where(parameters_dict[f'p{net[0:3]}GenInvestmentUp'] > 0.0, other=1.0)
 
     # minimum up- and downtime converted to an integer number of time steps
-    parameters_dict['pEleNetSwOnTime' ] = round(parameters_dict['pEleNetSwOnTime' ] / parameters_dict['pParTimeStep']).astype('int')
+    parameters_dict['pEleNetSwOnTime' ] = round(hours_to_levels(parameters_dict['pEleNetSwOnTime' ])).astype('int')
 
     log_time('--- Transforming the dataframes:', start_time, ind_log=indlog)
     start_time = time.time()
@@ -828,11 +847,11 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     n_list = list(model.n)
 
     # The timeline (oM_Time) counts 1-min base units from 1 January 00:00 of the model year. The
-    # input load levels are hourly. An active level is a block that starts after the previous
-    # active level, so it also covers the inactive levels that TimeStep merges into it. Every
-    # level is labelled with the start of its block.
+    # input load levels are LoadLevelMinutes long (60 by default). An active level is a block that
+    # starts after the previous active level, so it also covers the inactive levels that TimeStep
+    # merges into it. Every level is labelled with the start of its block.
     start_dt = pd.Timestamp(DateModel.year, 1, 1)
-    level_minutes = 60
+    level_minutes = parameters_dict['pParLoadLevelMinutes']
     position = {nn: i for i, nn in enumerate(model.nn)}
     block_ends = np.array([position[n] + 1 for n in n_list], dtype=np.int64) * level_minutes
     block_lengths = np.diff(np.concatenate([[0], block_ends]))
@@ -873,6 +892,16 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # day -> month (unique pairs)
     d2m_pairs = list(dict.fromkeys(zip(pDate['Day'], pDate['Month'])))
     model.d2m = Set(dimen=2, initialize=d2m_pairs)
+
+    # clock hours: {first level of the hour: levels of the hour}. Rules set per hour (peak tariffs,
+    # hourly matching) read the levels of an hour together. With hourly levels each hour holds one.
+    model.hour_levels = {}
+    first, last_hour = None, None
+    for n, hour in zip(pDate.index, pDate['DateTime'].dt.floor('h')):
+        if hour != last_hour:
+            first, last_hour = n, hour
+            model.hour_levels[first] = []
+        model.hour_levels[first].append(n)
 
     log_time('--- Defining the fundamental time sets:', start_time, ind_log=indlog)
     start_time = time.time()
@@ -950,32 +979,37 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     for sector in ['Ele', 'Hyd']:
         parameters_dict[f'p{sector}InitialInventory'] = pd.DataFrame([parameters_dict[f'p{sector}GenInitialStorage'] * model.factor1] * len(parameters_dict[f'p{sector}MinStorage'].index), index=parameters_dict[f'p{sector}MinStorage'].index, columns=parameters_dict[f'p{sector}GenInitialStorage'].index)
 
-    # minimum up- and downtime and maximum shift time converted to an integer number of time steps
-    for idx in ['Up', 'Down']:
-        parameters_dict[f'pEleGen{idx}Time'] = round(parameters_dict[f'pEleGen{idx}Time'] / parameters_dict['pParTimeStep']).astype('int')
+    # minimum up- and downtime, and the time already served at the start, converted to an integer
+    # number of load levels
+    for sector in ['Ele', 'Hyd']:
+        for idx in ['UpTime', 'DownTime', 'UpTimeZero', 'DownTimeZero']:
+            if f'p{sector}Gen{idx}' in parameters_dict:
+                parameters_dict[f'p{sector}Gen{idx}'] = round(hours_to_levels(parameters_dict[f'p{sector}Gen{idx}'])).astype('int')
 
     # %% definition of the time-steps leap to observe the stored energy at an ESS
     idxCycle            = dict()
-    idxCycle[0        ] = 8736
-    idxCycle[0.0      ] = 8736
+    # (in load levels; 'Hourly' and 'Daily' mean every load level)
+    no_cycle = round(8736 / level_hours)
+    idxCycle[0        ] = no_cycle
+    idxCycle[0.0      ] = no_cycle
     idxCycle['Hourly' ] = 1
     idxCycle['Daily'  ] = 1
-    idxCycle['Weekly' ] = round(24  / parameters_dict['pParTimeStep'])
-    idxCycle['Monthly'] = round(168 / parameters_dict['pParTimeStep'])
-    idxCycle['Yearly' ] = round(168 / parameters_dict['pParTimeStep'])
+    idxCycle['Weekly' ] = round(hours_to_levels(24 ))
+    idxCycle['Monthly'] = round(hours_to_levels(168))
+    idxCycle['Yearly' ] = round(hours_to_levels(168))
 
     idxOutflows            = dict()
-    idxOutflows[0        ] = 8736
-    idxOutflows[0.0      ] = 8736
+    idxOutflows[0        ] = no_cycle
+    idxOutflows[0.0      ] = no_cycle
     idxOutflows['Hourly' ] =    1
-    idxOutflows['Daily'  ] = round(24   / parameters_dict['pParTimeStep'])
-    idxOutflows['Weekly' ] = round(168  / parameters_dict['pParTimeStep'])
-    idxOutflows['Monthly'] = round(672  / parameters_dict['pParTimeStep'])
-    idxOutflows['Yearly' ] = round(8736 / parameters_dict['pParTimeStep'])
+    idxOutflows['Daily'  ] = round(hours_to_levels(24  ))
+    idxOutflows['Weekly' ] = round(hours_to_levels(168 ))
+    idxOutflows['Monthly'] = round(hours_to_levels(672 ))
+    idxOutflows['Yearly' ] = round(hours_to_levels(8736))
 
     for sector in ['Ele', 'Hyd']:
-        parameters_dict[f'p{sector}CycleTimeStep'   ] = parameters_dict[f'p{sector}GenStorageType' ].map(idxCycle                                                                                                                                                            ).fillna(8736).astype('int')
-        parameters_dict[f'p{sector}OutflowsTimeStep'] = parameters_dict[f'p{sector}GenOutflowsType'].map(idxOutflows).where(parameters_dict['pVarMinOutflows'][dict_sector[sector]].sum() + parameters_dict['pVarMaxOutflows'][dict_sector[sector]].sum() > 0.0, other = 8736).fillna(8736).astype('int')
+        parameters_dict[f'p{sector}CycleTimeStep'   ] = parameters_dict[f'p{sector}GenStorageType' ].map(idxCycle                                                                                                                                                            ).fillna(no_cycle).astype('int')
+        parameters_dict[f'p{sector}OutflowsTimeStep'] = parameters_dict[f'p{sector}GenOutflowsType'].map(idxOutflows).where(parameters_dict['pVarMinOutflows'][dict_sector[sector]].sum() + parameters_dict['pVarMaxOutflows'][dict_sector[sector]].sum() > 0.0, other = no_cycle).fillna(no_cycle).astype('int')
         parameters_dict[f'p{sector}CycleTimeStep'   ] = pd.concat([parameters_dict[f'p{sector}CycleTimeStep'], parameters_dict[f'p{sector}OutflowsTimeStep']], axis=1).min(axis=1)
 
     # mapping the string pParDemandType using the idxCycle dictionary
@@ -2152,13 +2186,13 @@ def create_variables(model, optmodel, indlog):
                 # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(168/model.Par['pParTimeStep']) == 0:
                 #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                 #     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744/model.Par['pParTimeStep']) == 0:
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744 / (model.Par['pParLoadLevelMinutes'] / 60 * model.Par['pParTimeStep'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736 / (model.Par['pParLoadLevelMinutes'] / 60 * model.Par['pParTimeStep'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736/model.Par['pParTimeStep']) == 0:
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Monthly' and model.n.ord(idx[-2]) % int(8736 / (model.Par['pParLoadLevelMinutes'] / 60 * model.Par['pParTimeStep'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
 
