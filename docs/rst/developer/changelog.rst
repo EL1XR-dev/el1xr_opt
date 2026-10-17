@@ -14,6 +14,7 @@ Unreleased
 Fixed
 ~~~~~
 
+- **Activated reserve energy could not reach the meter.** The retailer balance ``eEleRetNodeBalance`` counted the scheduled output and charge of a battery or a thermal generator, while the physical balance ``eEleBalance`` counts the totals, which include the activated reserve energy. Since the audit C14 fix both balances are tied to the meter (``eEleImportBuyLink``, ``eEleExportSellLink``). So any FCR activation of such a unit with a non-zero net duty was infeasible, and the model held the battery's FCR bids to levels where it was not. The retailer balance now counts each unit of the retailer once, with its total output and charge, as the physical balance does. This also counts a unit that is in neither the RES, thermal nor storage set (a fuel cell), and counts a battery with a constant cost once rather than twice. The validation and sizing goldens are unchanged. On Home1 with battery FCR the cost falls from 340.825556 to 339.462884. Guarded by ``tests/test_formulation_fixes.py::test_retail_balance_carries_the_activated_reserve_energy``.
 - Formulation bugs found in the model audit (``tests/test_formulation_fixes.py`` guards each):
 
   - **Hydrogen O&M cost sign.** ``eTotalHydGCost`` subtracted the O&M variable cost where the electricity analogue adds it, so the model was effectively paid to run hydrogen generators. Now added.

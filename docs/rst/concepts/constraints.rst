@@ -471,11 +471,9 @@ and storage, its market purchases and sales, and the demand it serves
 
 .. math::
    \begin{aligned}
-   &\sum_{\genindex \in \nGER} \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
-   + \sum_{\genindex \in \nGET} \left( \velecommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} \peleminproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} + \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
-   + \sum_{\storageindex \in \nEES} \velesecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \\
-   &- \sum_{\storageindex \in \nEES} \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
-   - \sum_{\genindex \in \nGHE} \velesecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   &\sum_{\genindex \in \nGE} \veletotaloutput_{\periodindex,\scenarioindex,\timeindex,\genindex}
+   - \sum_{\storageindex \in \nEES} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   - \sum_{\genindex \in \nGHE} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\genindex}
    + \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} - \velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} \\
    &= \sum_{\demandindex \in \nDE} \left( \veledemand_{\periodindex,\scenarioindex,\timeindex,\demandindex} - \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex} \right)
    \quad \forall \periodindex,\scenarioindex,\timeindex,\eltraderindex \in \nRE
@@ -484,6 +482,9 @@ and storage, its market purchases and sales, and the demand it serves
 where every sum is restricted to the generators, storage units, electrolysers and
 demands assigned to retailer :math:`\eltraderindex` (the retailer-to-asset mappings
 :math:`\nREGE`, :math:`\nREDE`, and the retailer-to-hydrogen-generator mapping).
+Each unit counts once, with its total output and consumption, as in the electricity
+balance. The totals include the activated reserve energy, which must cross the meter: the
+grid import and export are tied to the retail buy and sell (audit C14).
 
 Hydrogen Balance
 ~~~~~~~~~~~~~~~~

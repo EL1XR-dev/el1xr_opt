@@ -423,6 +423,13 @@ pump / compressor consumes, so `import == buy` is consistent and the heat pump r
 by PV surplus or priced import). Byte-unchanged for every shipped/sizing golden (none carry
 heat or compression, so the added terms are zero); the heat-pump electricity is now correctly
 priced. Guarded by `tests/test_heat_sector.py::test_heat_case_runs_through_build_model`.**
+**— SECOND FOLLOW-UP (C14 activation gap, October 2026): the retail balance counted the
+scheduled output and charge of batteries and thermal units (`vEleTotalOutput2ndBlock`,
+`vEleTotalCharge2ndBlock`, commitment times minimum), while `eEleBalance` counts the totals,
+which carry the FCR activation. With both tied to the meter, any battery or generator
+activation with a non-zero net duty was infeasible. The retail balance now counts each unit of
+the retailer once with `vEleTotalOutput` and `vEleTotalCharge`, as `eEleBalance` does. Guarded by
+`tests/test_formulation_fixes.py::test_retail_balance_carries_the_activated_reserve_energy`.**
 
 C15. **Duration weighting is inconsistent for several money terms.** (a) The
 volumetric grid fee (`eTotalEleNetUseVarCost`, :79), energy tax (:146) and incentive

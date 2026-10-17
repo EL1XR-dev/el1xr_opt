@@ -579,8 +579,12 @@ def create_constraints(model, optmodel, indlog):
                 + len(_hcomp_at_er[er])
                 + (len(_htp_at[nd]) + len(_htw_at[nd]) + len(_comp_at[nd]) if first else 0)):
             share = (optmodel.vEleShareIn[p,sc,n,er] - optmodel.vEleShareOut[p,sc,n,er]) if community_on else 0.0
-            return (sum(optmodel.vEleTotalOutput[p,sc,n,egr] for egr in model.egr  if (er,egr) in model.r2eg) + sum(optmodel.vEleGenCommitment[p,sc,n,egt] * model.Par['pEleMinPower'][egt][p,sc,n] + optmodel.vEleTotalOutput2ndBlock[p,sc,n,egt] for egt in model.egt if (er,egt) in model.r2eg) + sum(optmodel.vEleTotalOutput2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg)
-                    - sum(optmodel.vEleTotalCharge2ndBlock[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
+            # Each unit of the retailer counts once, with its total output and charge, as in
+            # eEleBalance. The meter is tied to both balances (eEleImportBuyLink), so the totals
+            # must match: they hold the activated reserve energy, and a fuel cell is in neither
+            # the RES, thermal nor storage set.
+            return (sum(optmodel.vEleTotalOutput[p,sc,n,eg] for eg in model.eg if (er,eg) in model.r2eg)
+                    - sum(optmodel.vEleTotalCharge[p,sc,n,egs] for egs in model.egs if (er,egs) in model.r2eg) - sum(optmodel.vEleTotalCharge[p,sc,n,e2h] for e2h in model.e2h if (er,e2h) in model.r2hg)
                     + optmodel.vEleBuy[p,sc,n,er] - optmodel.vEleSell[p,sc,n,er] + share + xsec - comp_er == sum(optmodel.vEleDemand[p,sc,n,ed] - optmodel.vENS[p,sc,n,ed] for ed in model.ed if (er,ed) in model.r2ed))
         else:
             return Constraint.Skip
