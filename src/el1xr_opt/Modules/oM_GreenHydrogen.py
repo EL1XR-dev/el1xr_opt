@@ -123,11 +123,20 @@ def create_green_hydrogen(model, optmodel, indlog):
             # makes no hydrogen, so it is excluded from the matched quantity -- EU 2023/1184
             # Art. 6 matches the renewable electricity provided *for hydrogen production*.
             # The standby auxiliary load is taken to be grid-powered.
+            # The matching period is the clock hour: with load levels shorter than an hour, the
+            # energy of the levels of each hour is matched together, at the first level of the hour.
             def eGreenH2Matching(optmodel, p, sc, n):
-                productive = sum(optmodel.vEleTotalCharge[p, sc, n, e2h]
-                                 - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p, sc, n, e2h]
-                                 for e2h in model.e2h)
-                return productive <= sum(optmodel.vEleResToE2h[p, sc, n, g] for g in pool)
+                levels = model.hour_levels.get(n)
+                if levels is None:
+                    return Constraint.Skip
+                productive = lambda n2: sum(optmodel.vEleTotalCharge[p, sc, n2, e2h]
+                                            - model.Par['pHydGenStandByPower'][e2h] * optmodel.vHydGenStandBy[p, sc, n2, e2h]
+                                            for e2h in model.e2h)
+                allocated = lambda n2: sum(optmodel.vEleResToE2h[p, sc, n2, g] for g in pool)
+                if len(levels) == 1:
+                    return productive(n) <= allocated(n)
+                return (sum(model.Par['pDuration'][p, sc, n2] * productive(n2) for n2 in levels)
+                        <= sum(model.Par['pDuration'][p, sc, n2] * allocated(n2) for n2 in levels))
             optmodel.__setattr__('eGreenH2Matching', Constraint(model.psn, rule=eGreenH2Matching, doc='hourly renewable temporal matching of the productive electrolyser draw'))
 
             # NOTE (no-double-count vs. electricity sales). With (a)+(b) only, an allocation

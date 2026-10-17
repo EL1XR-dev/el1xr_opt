@@ -32,6 +32,10 @@ These parameters define the temporal structure and general constants for the mod
      - Duration of each time step
      - h
      - ``pDuration``
+   * - -
+     - Length of a load level (Parameter ``LoadLevelMinutes``, default 60)
+     - min
+     - ``pParLoadLevelMinutes``
    * - :math:`\pfactorone`
      - A utility conversion factor (e.g., 1,000)
      - -
@@ -398,8 +402,8 @@ Parameters related to energy demand.
      - -
      - ``pEleDemFlexPercent``
    * - :math:`\peledemshiftedsteps`
-     - Number of time steps over which demand may be shifted
-     - -
+     - Length of the window over which demand may be shifted
+     - h
      - ``pEleDemShiftedSteps``
 
 EV Specific

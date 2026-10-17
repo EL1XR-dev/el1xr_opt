@@ -82,7 +82,7 @@ def create_objective_function_components(model, optmodel, indlog):
             if model.Par['pOptIndPeakThresholdLP'] == 1 and model.Par['pEleRetTariffType'][er] == 'Hourly':
                 # CVaR/threshold form: sum_m [ t_m + (1/N) sum_{n in m} s_n ]
                 return (sum(optmodel.vElePeakThreshold[p,sc,m,er] for m in model.moy)
-                        + sum(optmodel.vElePeakSlack[p,sc,n,er] for n in model.n) / N)
+                        + sum(optmodel.vElePeakSlack[p,sc,n,er] for n in model.n if n in model.hour_levels) / N)
             # legacy big-M selection form: (1/N) sum_{m,peak} ranked peak values
             return sum(optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] for peak in model.Peaks for m in model.moy) / N
         # N2T hogbelastningsavgift (second demand charge), folded into the peak-cost component:
@@ -2376,7 +2376,7 @@ def create_constraints(model, optmodel, indlog):
         except (KeyError, TypeError, ValueError):
             return default
 
-    def _adjusted_import(optmodel, p, sc, n, er):
+    def _adjusted_import_level(optmodel, p, sc, n, er):
         is_daily = model.Par['pEleRetTariffType'][er] == 'Daily'
         d_buy_night, d_buy_day, d_add_night, d_add_day = (
             (0.5, 1.0, 2.0, 5.0) if is_daily else (1.0, 1.0, 1.0, 1.0))
@@ -2395,10 +2395,24 @@ def create_constraints(model, optmodel, indlog):
                          for ed in model.ed if (er, ed) in model.r2ed) > 0
         return (buy_factor * base) if has_demand else (buy_factor * (base + addend * model.factor1))   # addend is a kW quantity -> scale by factor1 (audit C38)
 
+    # The peaks are set on the hourly mean of the import, as Swedish network tariffs are. The
+    # rules are written at the first level of each clock hour and read the duration-weighted
+    # mean over the levels of the hour; at the other levels they are skipped (None).
+    def _adjusted_import(optmodel, p, sc, n, er):
+        levels = model.hour_levels.get(n)
+        if levels is None:
+            return None
+        if len(levels) == 1:
+            return _adjusted_import_level(optmodel, p, sc, n, er)
+        dur = [model.Par['pDuration'][p, sc, n2] for n2 in levels]
+        return sum(d * _adjusted_import_level(optmodel, p, sc, n2, er) for d, n2 in zip(dur, levels)) / sum(dur)
+
     def eElePeakHourValue(optmodel, p,sc,n,er,m,peak):
         # Check applicability
         if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             # Peak-hour logic
             if peak == optmodel.Peaks.first():
                 return optmodel.vEleDemPeakGlobal[p, sc, m, er, peak] >= adjusted_buy
@@ -2411,6 +2425,8 @@ def create_constraints(model, optmodel, indlog):
     def eElePeakHourInd_C1(optmodel, p,sc,n,er,m,peak):
         if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -2420,6 +2436,8 @@ def create_constraints(model, optmodel, indlog):
     def eElePeakHourInd_C2(optmodel, p,sc,n,er,m,peak):
         if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             # Peak-hour logic
             return optmodel.vEleDemPeakGlobal[p,sc,m,er,peak] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakGlobalInd[p,sc,n,er,peak])
         else:
@@ -2428,7 +2446,7 @@ def create_constraints(model, optmodel, indlog):
 
     def eElePeakNumberMonths(optmodel, m,peak):
         if model.Par['pOptIndPeakThresholdLP'] == 0 and model.Par['pParNumberPowerPeaks'] > 0 and sum(model.Par['pEleRetPowerTariff'][er] for er in model.er if model.Par['pEleRetTariffType'][er] == 'Hourly') > 0:
-            return sum(optmodel.vElePeakGlobalInd[p,sc,n,er,peak] for p,sc,n,er in model.psner if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m) == 1
+            return sum(optmodel.vElePeakGlobalInd[p,sc,n,er,peak] for p,sc,n,er in model.psner if model.Par['pEleRetPowerTariff'][er] and (n,m) in model.n2m and n in model.hour_levels) == 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eElePeakNumberMonths', Constraint(optmodel.moy, optmodel.Peaks, rule=eElePeakNumberMonths, doc='peak number of months'))
@@ -2445,6 +2463,8 @@ def create_constraints(model, optmodel, indlog):
     def eElePeakThreshold(optmodel, p,sc,n,er,m):
         if model.Par['pOptIndPeakThresholdLP'] == 1 and model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             return optmodel.vElePeakSlack[p,sc,n,er] >= adjusted_buy - optmodel.vElePeakThreshold[p,sc,m,er]
         else:
             return Constraint.Skip
@@ -2463,6 +2483,8 @@ def create_constraints(model, optmodel, indlog):
                 and model.Par['pEleRetTariffType'][er] == 'Hourly' and (n,m) in optmodel.n2m
                 and model.Par['pEleHighLoadHour'][p,sc,n] > 0.5):
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             return optmodel.vEleHighLoadPeak[p,sc,m,er] >= adjusted_buy
         else:
             return Constraint.Skip
@@ -2481,6 +2503,8 @@ def create_constraints(model, optmodel, indlog):
         # Check applicability
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p, sc, d, er] >= adjusted_buy
         else:
@@ -2490,7 +2514,7 @@ def create_constraints(model, optmodel, indlog):
     # restrict to only one daily peak per day
     def eEleDailyPeakNumber(optmodel, p,sc,d,er):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily':
-            return sum(optmodel.vElePeakDayInd[p,sc,d,n,er] for n in model.n if (n,d) in optmodel.n2d) == 1
+            return sum(optmodel.vElePeakDayInd[p,sc,d,n,er] for n in model.n if (n,d) in optmodel.n2d and n in model.hour_levels) == 1
         else:
             return Constraint.Skip
     optmodel.__setattr__('eEleDailyPeakNumber', Constraint(optmodel.psder, rule=eEleDailyPeakNumber, doc='daily peak number'))
@@ -2499,6 +2523,8 @@ def create_constraints(model, optmodel, indlog):
     def eEleDailyPeakInd_C1(optmodel, p,sc,d,n,er):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] >= adjusted_buy - model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
@@ -2508,6 +2534,8 @@ def create_constraints(model, optmodel, indlog):
     def eEleDailyPeakInd_C2(optmodel, p,sc,d,n,er):
         if model.Par['pParNumberPowerPeaks'] > 0 and model.Par['pEleRetPowerTariff'][er] and model.Par['pEleRetTariffType'][er] == 'Daily' and (n,d) in optmodel.n2d:
             adjusted_buy = _adjusted_import(optmodel, p, sc, n, er)
+            if adjusted_buy is None:
+                return Constraint.Skip
             # Peak-hour logic
             return optmodel.vEleDemPeakDay[p,sc,d,er] <= adjusted_buy + model.Par['pEleRetMaximumEnergySell'][er] * (1 - optmodel.vElePeakDayInd[p,sc,d,n,er])
         else:
