@@ -13,20 +13,32 @@ from el1xr_opt.Modules.oM_Sequence import build_model, build_structure
 from test_time_blocks import CASE, DATE, SAME, _case, _cost, _solve
 
 
-def _to_quarters(folder, k=4):
-    """Split every load level of the case in ``folder`` into k levels, repeating each series."""
+def _to_quarters(folder, k=4, keep=()):
+    """Split every load level of the case in ``folder`` into k levels, repeating each series.
+
+    The series named in ``keep`` (data file stems, or "all" for every series but Duration) stay
+    hourly and are declared ``uniform 1h`` in oM_Data_SeriesResolution instead.
+    """
     path = folder / f"oM_Dict_LoadLevel_{CASE}.csv"
     levels = pd.read_csv(path).iloc[:, 0].tolist()
     new = {n: [f"t{i * k + j + 1:05d}" for j in range(k)] for i, n in enumerate(levels)}
     pd.DataFrame({"LoadLevel": [q for n in levels for q in new[n]]}).to_csv(path, index=False)
-    for f in folder.glob(f"oM_Data_*_{CASE}.csv"):
+    kept = []
+    for f in sorted(folder.glob(f"oM_Data_*_{CASE}.csv")):
         df = pd.read_csv(f, header=None, dtype=str, keep_default_na=False)
         body = df.iloc[1:]
         if len(body) and body.shape[1] >= 3 and body.iloc[:, 2].isin(levels).all():
+            stem = f.name[len("oM_Data_"):-len(f"_{CASE}.csv")]
+            if stem != "Duration" and (keep == "all" or stem in keep):
+                kept.append(stem)
+                continue
             rows = body.loc[body.index.repeat(k)].copy()
             rows.iloc[:, 2] = [q for n in body.iloc[:, 2] for q in new[n]]
             pd.concat([df.iloc[[0]], rows]).to_csv(f, header=False, index=False)
     _set_parameter(folder, "LoadLevelMinutes", 60 // k)
+    if kept:
+        pd.DataFrame({"Resolution": "uniform 1h"}, index=kept).to_csv(folder / f"oM_Data_SeriesResolution_{CASE}.csv")
+    return kept
 
 
 def _set_parameter(folder, name, value):
@@ -51,11 +63,11 @@ def _no_storage_ramps(folder):
     gen.to_csv(path)
 
 
-def _quarter_case(dst, edit=None):
+def _quarter_case(dst, edit=None, keep=()):
     d = _case(dst)
     if edit is not None:
         edit(d / CASE)
-    _to_quarters(d / CASE)
+    _to_quarters(d / CASE, keep=keep)
     return d
 
 

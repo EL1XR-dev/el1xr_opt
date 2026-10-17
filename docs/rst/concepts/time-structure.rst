@@ -95,6 +95,31 @@ allows a quarter of that per level. On H2VPP (48 h) the shipped EV ramp limits b
 hours and not at hourly levels, so the quarter-hour case with the same hourly data costs more:
 360.864824 against 360.087456. Without the storage ramp limits the two cases cost the same.
 
+Series at their own resolution
+------------------------------
+
+A time series may be given at its own resolution instead of the resolution of the load levels.
+An optional table, ``oM_Data_SeriesResolution_<case>.csv``, has one row per data file (its stem)
+and a column ``Resolution``:
+
+.. code-block:: text
+
+   ,Resolution
+   OperatingReservePrice,uniform 1h
+   VarEnergyCost,uniform 15min
+
+The rows of a declared file are the blocks of that resolution, in order, for each period and
+scenario; their labels are not read. When the case is read, the file is resampled onto the load
+levels. A series coarser than the load levels holds each value over the levels of its block, so
+an hourly FCR price in a quarter-hour case is repeated over the four quarters. A series finer
+than the load levels is averaged over each level, weighted by duration. Every series the model
+reads is a rate (a price, a power or a per-unit profile), so this is the right rule for each of
+them. The ``Duration`` file defines the load levels and cannot be declared.
+
+On H2VPP (48 h, ramp limits of the stores off) the case at 192 quarter-hour levels costs
+360.087456 whether its 28 time series are repeated four times by hand or kept hourly and
+declared ``uniform 1h``, the same as the hourly case.
+
 Declaring a resolution
 ----------------------
 
@@ -185,9 +210,8 @@ Status
 
 The timeline, the calendar, load levels of any length in minutes, the declarations of output,
 charge, commitment, reserve bids and inventory with one variable per block, the storage balance
-per block and the removal of repeated rows are in place. Next come time series given at their
-own resolution and resampled onto the load levels, then ramps and unit commitment on blocks of
-unequal length.
+per block, time series at their own resolution and the removal of repeated rows are in place.
+Next come ramps and unit commitment on blocks of unequal length.
 
 References
 ----------

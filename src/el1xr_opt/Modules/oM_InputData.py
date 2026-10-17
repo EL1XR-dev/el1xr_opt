@@ -17,7 +17,7 @@ from   pyomo.environ     import Set, Param, Var, Binary, UnitInterval, NonNegati
 from   pyomo.dataportal  import DataPortal
 from  .oM_InputSource     import resolve_source, df_to_set_values
 from  .oM_Time            import Timeline, RepPeriod, from_lengths
-from  .oM_TimeBlocks      import read_declarations, apply_capacity_rule, alias_block_variables
+from  .oM_TimeBlocks      import read_declarations, apply_capacity_rule, alias_block_variables, resample_series, level_minutes as read_level_minutes
 from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_init, _psmdn_init, _cartesian_4_psd, _cartesian_4_psm, _extend_psdn_filtered, _apply_mask_and_set_zero
 
 # Unit-scale conversion factor (audit C38). 1.0 by default (byte-unchanged goldens). A true unit
@@ -71,6 +71,12 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     for df in data_frames.values():
         numeric_cols = df.select_dtypes(include='number').columns
         df[numeric_cols] = df[numeric_cols].fillna(0.0)
+
+    # time series given at their own resolution (optional table oM_Data_SeriesResolution)
+    _llm = data_frames['dfParameter']['LoadLevelMinutes'].iloc[0] if 'LoadLevelMinutes' in data_frames['dfParameter'].columns else None
+    resampled = resample_series(data_frames, list(model.nn), pd.Timestamp(DateModel.year, 1, 1), read_level_minutes(_llm))
+    if resampled:
+        print(f'   Time series resampled onto the load levels: {", ".join(resampled)}')
 
     # Define prefixes and suffixes
     model.reserves_prefixes     = ['FCRD_Up', 'FCRD_Down','FCRN_Up','FCRN_Down']
@@ -211,11 +217,7 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # Length of a load level in minutes (Parameter LoadLevelMinutes, default 60). pDuration is in
     # hours, and every input given in hours (up and down times, storage cycles, demand shift
     # windows) is converted to a number of load levels with hours_to_levels.
-    _llm = parameters_dict.get('pParLoadLevelMinutes', 60)
-    _llm = 60 if _llm != _llm or _llm in ('', None) else _llm
-    if float(_llm) <= 0 or float(_llm) != int(float(_llm)):
-        raise ValueError(f'LoadLevelMinutes must be a positive whole number of minutes, got {_llm!r}')
-    parameters_dict['pParLoadLevelMinutes'] = int(float(_llm))
+    parameters_dict['pParLoadLevelMinutes'] = read_level_minutes(parameters_dict.get('pParLoadLevelMinutes'))
     level_hours = parameters_dict['pParLoadLevelMinutes'] / 60
     def hours_to_levels(hours):
         """A time in hours as a number of load levels, TimeStep included (not rounded)."""
