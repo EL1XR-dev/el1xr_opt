@@ -285,3 +285,80 @@ def test_repeated_rows_are_dropped_without_changing_the_cost(tmp_path, determini
             for v in identify_variables(con.body, include_fixed=True):
                 time_indexed = isinstance(v.index(), tuple) and len(v.index()) >= 3
                 assert v.parent_component().name.endswith("_blk") or not time_indexed, (con.name, v.name)
+
+
+# --- inventory per block: one storage balance per block ----------------------------------------
+
+def _small_bess(d, storage_type=None):
+    """Shrink BESS_01 to 2 kWh (1 kWh initially), so its storage limits bind."""
+    path = d / CASE / f"oM_Data_ElectricityGeneration_{CASE}.csv"
+    gen = pd.read_csv(path, index_col=0)
+    gen.loc["BESS_01", ["MaximumStorage", "InitialStorage"]] = [2.0, 1.0]
+    if storage_type is not None:
+        gen.loc["BESS_01", "StorageType"] = storage_type
+    gen.to_csv(path)
+    return d
+
+
+def _balance_rows(m, unit="BESS_01"):
+    return sum(1 for idx in m.eEleInventory if idx[3] == unit and m.eEleInventory[idx].active)
+
+
+def test_inventory_maps_levels_to_block_ends(tmp_path):
+    m = build_structure(str(_case(tmp_path, {"BESS_01": {"Inventory": "uniform 4h"}})), CASE, DATE)
+    lv = list(m.n)
+    end = m.block_start[("Ele", "BESS_01", "Inventory")]
+    assert [end[n] for n in lv[:5]] == [lv[3]] * 4 + [lv[7]]
+    blocks = m.inventory_blocks["BESS_01"]
+    assert list(blocks)[:2] == [lv[3], lv[7]]
+    assert blocks[lv[3]] == (None, lv[0:4])
+    assert blocks[lv[7]] == (lv[3], lv[4:8])
+
+
+def test_inventory_of_a_unit_without_storage_is_refused(tmp_path):
+    d = _case(tmp_path, {"Solar_01": {"Inventory": "uniform 2h"}})
+    with pytest.raises(ValueError, match="no inventory flow"):
+        build_structure(str(d), CASE, DATE)
+
+
+def test_inventory_with_a_storage_cycle_is_refused(tmp_path):
+    d = _small_bess(_case(tmp_path, {"BESS_01": {"Inventory": "uniform 2h"}}), storage_type="Weekly")
+    with pytest.raises(ValueError, match="storage cycle of 24 load levels"):
+        build_structure(str(d), CASE, DATE)
+
+
+@pytest.fixture(scope="module")
+def inventory(tmp_path_factory, deterministic_highs_module):
+    base = tmp_path_factory.mktemp("inventory")
+    out = {"hourly": _solve(_small_bess(_case(base / "hourly"))),
+           "weekly": _solve(_small_bess(_case(base / "weekly"), storage_type="Weekly"))}
+    for label, spec in (("1h", "uniform 1h"), ("2h", "uniform 2h"), ("day", "calendar day")):
+        out[label] = _solve(_small_bess(_case(base / label, {"BESS_01": {"Inventory": spec}})))
+    return out
+
+
+@pytest.mark.solve
+def test_inventory_at_the_load_level_resolution_changes_nothing(inventory):
+    assert _cost(inventory["1h"]) == pytest.approx(_cost(inventory["hourly"]), rel=SAME)
+    assert _balance_rows(inventory["1h"]) == 48
+
+
+@pytest.mark.solve
+def test_daily_inventory_matches_the_daily_storage_cycle(inventory):
+    """A calendar-day inventory gives the cost of StorageType Weekly, which writes the balance
+    every 24 load levels. Independent of oM_TimeBlocks."""
+    assert _cost(inventory["day"]) == pytest.approx(_cost(inventory["weekly"]), rel=SAME)
+    assert _balance_rows(inventory["day"]) == _balance_rows(inventory["weekly"]) == 2
+
+
+@pytest.mark.solve
+def test_inventory_per_block_relaxes_the_storage_limits(inventory):
+    """The inventory is not tracked inside a block, so the cost falls as the blocks grow."""
+    m = inventory["2h"]
+    assert _balance_rows(m) == 24
+    assert sum(1 for idx in m.vEleInventory_blk if idx[3] == "BESS_01") == 24
+    p, sc = list(m.ps)[0]
+    inv = np.array([m.vEleInventory[p, sc, n, "BESS_01"].value for n in m.n]).reshape(-1, 2)
+    assert np.allclose(inv[:, 0], inv[:, 1])
+    assert _cost(inventory["hourly"]) - 1e-9 >= _cost(m) >= _cost(inventory["day"]) - 1e-9
+    assert _cost(m) < _cost(inventory["hourly"]) - 1e-6

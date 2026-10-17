@@ -1381,10 +1381,18 @@ def create_constraints(model, optmodel, indlog):
     # ESS energy inventory (only for load levels multiple of 1, 24, 168 h depending on the ESS storage type) [GWh]
     def eEleInventory(optmodel, p,sc,n,egs):
         if model.Par['pEleMaxCharge'][egs][p,sc,n] + model.Par['pEleMaxPower'][egs][p,sc,n] and (n,egs) in model.negs:
+            net = lambda n2: model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs])
+            if egs in getattr(model, 'inventory_blocks', {}):
+                # declared inventory: one balance per block, at its last level
+                if n not in model.inventory_blocks[egs]:
+                    return Constraint.Skip
+                prev, levels = model.inventory_blocks[egs][n]
+                start = model.Par['pEleInitialInventory'][egs][p,sc,n] if prev is None else optmodel.vEleInventory[p,sc,prev,egs]
+                return start + sum(net(n2) for n2 in levels) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
             if   model.n.ord(n) == model.Par['pEleCycleTimeStep'][egs]:
-                return model.Par['pEleInitialInventory'][egs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs]) for n2 in n2_list[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
+                return model.Par['pEleInitialInventory'][egs][p,sc,n]                                       + sum(net(n2) for n2 in n2_list[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
             elif model.n.ord(n) >  model.Par['pEleCycleTimeStep'][egs]:
-                return optmodel.vEleInventory[p,sc,model.n.prev(n,model.Par['pEleCycleTimeStep'][egs]),egs] + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vEleEnergyInflows[p,sc,n2,egs] - optmodel.vEleEnergyOutflows[p,sc,n2,egs] - (optmodel.vEleTotalOutput[p,sc,n2,egs] * (1/(model.Par['pEleGenEfficiency_discharge'][egs]))) + (model.Par['pEleGenEfficiency_charge'][egs]) * optmodel.vEleTotalCharge[p,sc,n2,egs]) for n2 in n2_list[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
+                return optmodel.vEleInventory[p,sc,model.n.prev(n,model.Par['pEleCycleTimeStep'][egs]),egs] + sum(net(n2) for n2 in n2_list[model.n.ord(n) - model.Par['pEleCycleTimeStep'][egs]:model.n.ord(n)]) == optmodel.vEleInventory[p,sc,n,egs] + optmodel.vEleSpillage[p,sc,n,egs]
             else:
                 return Constraint.Skip
         else:
@@ -1393,10 +1401,18 @@ def create_constraints(model, optmodel, indlog):
 
     def eHydInventory(optmodel, p,sc,n,hgs):
         if model.Par['pHydMaxCharge'][hgs][p,sc,n] + model.Par['pHydMaxPower'][hgs][p,sc,n] and (n,hgs) in model.nhgs:
+            net = lambda n2: model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs])
+            if hgs in getattr(model, 'inventory_blocks', {}):
+                # declared inventory: one balance per block, at its last level
+                if n not in model.inventory_blocks[hgs]:
+                    return Constraint.Skip
+                prev, levels = model.inventory_blocks[hgs][n]
+                start = model.Par['pHydInitialInventory'][hgs][p,sc,n] if prev is None else optmodel.vHydInventory[p,sc,prev,hgs]
+                return start + sum(net(n2) for n2 in levels) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
             if   model.n.ord(n) == model.Par['pHydCycleTimeStep'][hgs]:
-                return model.Par['pHydInitialInventory'][hgs][p,sc,n]                                       + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
+                return model.Par['pHydInitialInventory'][hgs][p,sc,n]                                       + sum(net(n2) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
             elif model.n.ord(n) >  model.Par['pHydCycleTimeStep'][hgs]:
-                return optmodel.vHydInventory[p,sc,model.n.prev(n,model.Par['pHydCycleTimeStep'][hgs]),hgs] + sum(model.Par['pDuration'][p,sc,n2] * (optmodel.vHydEnergyInflows[p,sc,n2,hgs] - optmodel.vHydEnergyOutflows[p,sc,n2,hgs] - optmodel.vHydTotalOutput[p,sc,n2,hgs] + model.Par['pHydGenEfficiency'][hgs] * optmodel.vHydTotalCharge[p,sc,n2,hgs]) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
+                return optmodel.vHydInventory[p,sc,model.n.prev(n,model.Par['pHydCycleTimeStep'][hgs]),hgs] + sum(net(n2) for n2 in n2_list[model.n.ord(n) - model.Par['pHydCycleTimeStep'][hgs]:model.n.ord(n)]) == optmodel.vHydInventory[p,sc,n,hgs] + optmodel.vHydSpillage[p,sc,n,hgs]
             else:
                 return Constraint.Skip
         else:
