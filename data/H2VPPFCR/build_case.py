@@ -1916,7 +1916,7 @@ def _apply_level_minutes(out_dir):
         rows = body.loc[body.index.repeat(4)].copy()
         rows.iloc[:, 2] = [q for h in body.iloc[:, 2] for q in quarters[h]]
         if is_spot:
-            rows.iloc[:, head.iloc[0].tolist().index(ELE_RETAILER)] = np.tile(spot, len(body) // len(hours))
+            rows.iloc[:, head.iloc[0].tolist().index(ELE_RETAILER)] = [repr(float(v)) for v in np.tile(spot, len(body) // len(hours))]
             if k == 1:
                 declared[stem] = "uniform 15min"
         pd.concat([head, rows]).to_csv(f, header=False, index=False)
