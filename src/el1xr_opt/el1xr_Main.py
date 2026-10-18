@@ -100,5 +100,15 @@ def main():
     return model
 
 
+def cli():
+    """Entry point of ``el1xr-run`` and ``python -m el1xr_opt``: run main() and exit with 0.
+
+    main() returns the model for Python callers; passed to SystemExit, the model would make
+    every successful run exit with code 1. A failed run raises, and exits with 1.
+    """
+    main()
+    return 0
+
+
 if __name__ == '__main__':
     model = main()
