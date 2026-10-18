@@ -14,6 +14,7 @@ Unreleased
 Fixed
 ~~~~~
 
+- **Market figure label.** The two labels of ``Market_interaction.png`` read *Sport price*; they now read *Spot price*.
 - **Docs build without the heavy libraries.** ``conf.py`` imported ``el1xr_opt`` before the autodoc mocks were active. The import failed part way and left a half-loaded package, so a later autodoc import of ``oM_InputData`` hit a circular import. It did not show on CI, but it failed a local build with only the docs requirements. The half-loaded modules are now dropped, and the option-indicator table loads ``oM_Features.py`` on its own.
 - **The command line exits with 0 after a successful run.** ``el1xr-run`` and ``python -m el1xr_opt`` passed the model returned by ``main()`` to ``SystemExit``, so every finished run exited with code 1, and a script or CI step could not tell it from a failure. A new ``cli()`` runs ``main()`` and returns 0; a failed run still raises and exits with 1. ``main()`` still returns the model for Python callers.
 - **``data/Home1`` runs again.** The copy of Home1 in ``data/`` was an older version of the case in the package: it had no ``VarFixedAvailability`` file and one ``FCRN`` reserve column instead of ``FCRN_Up`` and ``FCRN_Down``, so ``--dir data --case Home1`` stopped with a ``KeyError``. Its files now match the package's Home1, which solves to optimal (4713.8 SEK), and a test keeps the two in step. The Quickstart now gives the real defaults of the command line: ``--dir`` is the package folder, ``--indlog`` is ``True``, and an argument left out is asked for.
