@@ -205,6 +205,13 @@ place of free ones, and with blocks that follow the calendar or have unequal len
 with a declared inventory needs a cycle of one load level (``StorageType`` Hourly or Daily); a
 case that sets both is refused.
 
+A store with ``StorageType = Hourly`` is set back to its initial inventory every
+``StorageResetHours`` (Parameter, default 744 h), when that inventory lies within the store's
+limits. With hourly levels the inventory is fixed at levels 744, 1488 and so on, counted from
+the start of the horizon; at quarter hours at levels 2976, 5952 and so on. A store whose cycle is
+longer than a month, such as a hydrogen tank, needs ``StorageResetHours = 0``, which turns the
+reset off. A Weekly or Monthly store is fixed at 8736 h, and a Daily store has no reset.
+
 Ramps between blocks
 --------------------
 

@@ -227,6 +227,14 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     # ends, a lag of one level at hourly levels and of four at quarter hours (never below one).
     parameters_dict['pParEnduranceLag'] = max(1, round(hours_to_levels(1)))
 
+    # A store with StorageType Hourly is set back to its initial inventory every
+    # StorageResetHours (Parameter, default 744 h); 0 turns the reset off.
+    _rh = pd.to_numeric(parameters_dict.get('pParStorageResetHours', 744.0), errors='coerce')
+    _rh = 744.0 if pd.isna(_rh) else float(_rh)
+    if _rh < 0 or (_rh > 0 and int(hours_to_levels(_rh)) < 1):
+        raise ValueError(f"StorageResetHours must be 0 or at least one load level, got {_rh}")
+    parameters_dict['pParStorageResetHours'] = _rh
+
     parameters_dict['pDuration'       ] = data_frames['dfDuration']['Duration'] * parameters_dict['pParTimeStep']
     if level_hours != 1:
         parameters_dict['pDuration'] = parameters_dict['pDuration'] * level_hours
@@ -2192,7 +2200,8 @@ def create_variables(model, optmodel, indlog):
                 # if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(168/model.Par['pParTimeStep']) == 0:
                 #     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                 #     nFixedVariables += 1
-                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and model.n.ord(idx[-2]) % int(744 / (model.Par['pParLoadLevelMinutes'] / 60 * model.Par['pParTimeStep'])) == 0:
+                reset_hours = model.Par['pParStorageResetHours']
+                if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Hourly' and reset_hours > 0 and model.n.ord(idx[-2]) % int(reset_hours / (model.Par['pParLoadLevelMinutes'] / 60 * model.Par['pParTimeStep'])) == 0:
                     optmodel.__getattribute__(f'v{model.EnergyPrefix[idx[-1]]}Inventory')[idx].fix(model.Par[f'p{model.EnergyPrefix[idx[-1]]}InitialInventory'][idx[-1]][idx[:(len(idx)-1)]])
                     nFixedVariables += 1
                 if model.Par[f'p{model.EnergyPrefix[idx[-1]]}GenStorageType'][idx[-1]] == 'Weekly' and model.n.ord(idx[-2]) % int(8736 / (model.Par['pParLoadLevelMinutes'] / 60 * model.Par['pParTimeStep'])) == 0:

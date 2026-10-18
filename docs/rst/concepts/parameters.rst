@@ -36,6 +36,10 @@ These parameters define the temporal structure and general constants for the mod
      - Length of a load level (Parameter ``LoadLevelMinutes``, default 60)
      - min
      - ``pParLoadLevelMinutes``
+   * - -
+     - Time between resets of an Hourly store to its initial inventory (Parameter ``StorageResetHours``, default 744; 0 = no reset)
+     - h
+     - ``pParStorageResetHours``
    * - :math:`\pfactorone`
      - A utility conversion factor (e.g., 1,000)
      - -
