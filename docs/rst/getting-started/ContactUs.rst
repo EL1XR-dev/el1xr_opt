@@ -1,4 +1,4 @@
-Contact Us
+Contact us
 ==========
 
 `Erik Alvarez <https://erikfilias.github.io/>`_

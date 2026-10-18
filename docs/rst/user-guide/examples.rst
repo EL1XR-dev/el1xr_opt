@@ -38,7 +38,7 @@ Case studies in ``data/``
      - Content
    * - ``data/H2VPP/Home1``
      - A small hydrogen virtual-power-plant case: ten EVs, a battery, ten solar units, an
-       electrolyser and a hydrogen store, with candidate units for sizing. It solves in about
+       electrolyser and a hydrogen store, with candidate units for sizing. Its solve takes about
        one second, and many solve tests use it. See ``data/H2VPP/README.md``.
    * - ``data/sizing``
      - Small variants of H2VPP (battery sizing, electrolyser, hydrogen tank, compressor,

@@ -187,3 +187,5 @@ docs/paper_related_work_novelty_draft.md
 
 # Option-flag table written by docs/rst/conf.py at every build
 docs/rst/concepts/flags.inc
+docs/rst/concepts/solvers.inc
+docs/rst/concepts/network_modes.inc

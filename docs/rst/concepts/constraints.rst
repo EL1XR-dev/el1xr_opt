@@ -32,7 +32,7 @@ the headroom of each unit, in the reserve constraints below.
      edge  [color="#666666", arrowsize=0.6];
 
      emkt  [label="Electricity market, via a retailer\neEleRetNodeBalance", fillcolor="#fff3e0", color="#ef6c00"];
-     gen   [label="Generators, solar, wind", fillcolor="#e3f2fd", color="#1565c0"];
+     gen   [label="Generating units, solar, wind", fillcolor="#e3f2fd", color="#1565c0"];
      bess  [label="Batteries, EVs\neEleInventory", fillcolor="#e3f2fd", color="#1565c0"];
      line  [label="Lines to other nodes\neKirchhoff2ndLaw", fillcolor="#e3f2fd", color="#1565c0"];
      edem  [label="Electricity demand", fillcolor="#e3f2fd", color="#1565c0"];
@@ -68,15 +68,15 @@ the headroom of each unit, in the reserve constraints below.
      {rank=same; hbal; tbal;}
    }
 
-Market and Commercial Constraints
-------------------------------------
-These constraints model the rules for interacting with external markets. The figure shows the payments between an end user and the network operator (fees and the peak tariff), the retailer or market (energy at the spot price, flexibility services) and the state (energy tax, tax reduction on export, VAT).
+Market and commercial constraints
+---------------------------------
+These constraints model the rules for interacting with external markets. The figure shows the payments between an end user and the network operator (fees and the peak tariff), the retailer or market (energy at the day-ahead price, flexibility services) and the state (energy tax, tax reduction on export, VAT).
 
 .. image:: /../img/Market_interaction.png
    :scale: 30%
    :align: center
 
-Day-ahead Electricity Market Participation
+Day-ahead electricity market participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Participation in the day-ahead electricity market is modeled through constraints ensuring that energy bought or sold doesn't exceed predefined limits for each time step and retailer.
@@ -116,7 +116,7 @@ The composition of electricity sold to the market is defined by («``eEleSellCom
    ``eEleSellComposition`` is currently disabled in the model (commented out in
    ``oM_ModelFormulation.py``). The relation above documents its intended form.
 
-Day-ahead Hydrogen Market Participation
+Day-ahead hydrogen market participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Participation in the day-ahead hydrogen market ensures that the amount of energy bought or sold does not exceed predefined limits for each time step and retailer.
 
@@ -146,7 +146,7 @@ The composition of hydrogen sold to the market is defined by («``eHydSellCompos
    \sum_{\busindex \in \nB, (\busindex,\hydtraderindex) \in \nBH} \vhydexport_{\periodindex,\scenarioindex,\timeindex,\busindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\hydtraderindex
 
-Reserve Electricity Market Participation
+Reserve electricity market participation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Frequency containment reserves in normal operation (FCR-N)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -238,7 +238,14 @@ And for an electric ESS («``eEleRelationFreqDisUpBid2Stor``», «``eEleRelation
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES, \pgennofcrd_{\storageindex}=0
 
 Combined headroom for FCR-D and FCR-N provision from an electric ESS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. figure:: /../img/concept_fcr_headroom.svg
+   :width: 95%
+   :align: center
+   :alt: A battery discharging at 3 of 5 kW, with its up reserve above and down reserve below the operating point, and its stored energy and free room backing the bids.
+
+   Illustration with made-up numbers. (a) A battery discharging at 3 kW of its 5 kW can offer up reserve up to the remaining 2 kW and down reserve up to the 3 kW it discharges; the charging leg works the same way from the charge side. (b) The stored energy must back the up bids, and the free room the down bids, for the endurance time.
+
 The headroom constraints limit the **sum** of the FCR-D and FCR-N provision in each
 direction and operating mode to the remaining capacity. The upward headroom is
 defined by («``eEleFreqUpDischargeHeadroom``», «``eEleFreqUpChargeHeadroom``»):
@@ -273,7 +280,7 @@ and the downward headroom by («``eEleFreqDownDischargeHeadroom``», «``eEleFre
    for FCR-D (:math:`\pgennofcrd=0`) or FCR-N (:math:`\pgennofcrn=0`).
 
 Availability bounds for FCR-D and FCR-N provision from an electric ESS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The total provision in each mode, as a fraction of the unit capacity, is limited by
 the time-varying availability. The upward bounds are («``eEleFreqUpDischargeBound``», «``eEleFreqUpChargeBound``»):
 
@@ -296,7 +303,7 @@ and the downward bounds are («``eEleFreqDownDischargeBound``», «``eEleFreqDow
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 Storage endurance for FCR-D and FCR-N
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Endurance constraints make sure a storage unit holds enough energy (for upward
 reserve) or enough free capacity (for downward reserve) to sustain its reserve bid
 for the required duration. The inventory at the end of a load level backs the reserve bid
@@ -323,11 +330,9 @@ The upward and downward endurance are defined by («``eEleStorageEnduranceUp``»
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 .. note::
-   An earlier activation-based version of the headroom constraints (named
-   ``eEleFreqDis...Headroom``) appeared here; those constraint names are not present
-   in the current code. The constraints above match the implemented
-   ``eEleFreq...Headroom`` family, which bound the combined FCR-D and FCR-N
-   provision. Please review the formulation against ``oM_ModelFormulation.py``.
+   For a candidate unit, the maximum discharge and the maximum charge in the upward
+   discharge and downward charge headroom are multiplied by its build fraction
+   (``vEleGenInvest``), so an unbuilt unit offers no reserve.
 
 FCR provision from an electrolyser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -397,8 +402,8 @@ hydrogen it produces over the endurance window has to go somewhere: it must fit 
 free headroom of the hydrogen storage units at the same bus. The electrolyser
 (provider) and the storage (absorber) are different units coupled through the hydrogen
 bus balance, so the endurance constraint is written per bus, summing the eligible
-electrolysers' bids of the level one hour earlier, as for storage -- converted to hydrogen through the
-production function -- against the total free storage headroom at that bus
+electrolysers' bids of the level one hour earlier, as for storage (converted to hydrogen through the
+production function) against the total free storage headroom at that bus
 («``eEleFreqDownEnduranceConv``»). A bus with no hydrogen storage has zero headroom,
 which correctly forbids downward provision there. Upward provision cuts consumption
 and needs no storage backing, so only the downward direction is constrained. The
@@ -419,11 +424,18 @@ The eligible electrolysers' bids also enter the FCR requirement caps above and e
 the same FCR-D and FCR-N revenues as the other providers (see the
 :doc:`objective function <objective-function>`).
 
-Peak Power Calculation
-~~~~~~~~~~~~~~~~~~~~~~~
+Peak power calculation
+~~~~~~~~~~~~~~~~~~~~~~
 A set of constraints identify the highest power peaks within a billing period for tariff calculations, supporting both 'Hourly' and 'Daily' tariff types.
 
-Hourly Tariff Constraints
+.. figure:: /../img/concept_peak_tariff.svg
+   :width: 95%
+   :align: center
+   :alt: A month of hourly grid import with its three largest values marked and their mean drawn as a line.
+
+   Illustration with made-up numbers, for an Hourly tariff with ``NumberPowerPeaks = 3``. The three largest hourly imports of the month are found, and their mean times the power tariff is the month's peak charge.
+
+Hourly tariff constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 For retailers with 'Hourly' tariffs, the following constraints identify the peak consumption hours within each month.
 
@@ -474,7 +486,7 @@ The number of peak hours selected per month is constrained by («``eElePeakNumbe
    \sum_{\periodindex,\scenarioindex,\timeindex} \vpeakind_{\periodindex,\scenarioindex,\timeindex,\eltraderindex,\peakindex} = 1
    \quad \forall \monthindex,\eltraderindex,\peakindex
 
-Daily Tariff Constraints
+Daily tariff constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 For retailers with 'Daily' tariffs, the constraints first identify the daily peak and then select the highest peaks from those daily values.
 
@@ -497,11 +509,11 @@ The global peak is then selected from the daily peaks («``eEleGlobalPeakValue``
 
 Finally, the number of daily peaks selected per month is constrained by («``eElePeakNumberDays``»), and the peaks are ordered from highest to lowest by («``eEleMonthPeakOrder``»).
 
-Energy Balance and Conversion
---------------------------------
+Energy balance and conversion
+-----------------------------
 These are the most fundamental constraints, ensuring that at every node (:math:`\busindexa`) and at every timestep (:math:`\timeindex`), energy supply equals energy demand.
 
-Electricity Balance
+Electricity balance
 ~~~~~~~~~~~~~~~~~~~
 The electricity balance at each node is enforced by («``eEleBalance``»):
 
@@ -518,8 +530,8 @@ The electricity balance at each node is enforced by («``eEleBalance``»):
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
    \end{aligned}
 
-Electricity Retailer Balance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Electricity retailer balance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 At each retailer connection point, the balance links the retailer's own generators
 and storage, its market purchases and sales, and the demand it serves
 («``eEleRetNodeBalance``»):
@@ -541,7 +553,7 @@ Each unit counts once, with its total output and consumption, as in the electric
 balance. The totals include the activated reserve energy, which must cross the meter: the
 grid import and export are tied to the retail buy and sell (audit C14).
 
-Hydrogen Balance
+Hydrogen balance
 ~~~~~~~~~~~~~~~~
 The hydrogen balance at each node is enforced by («``eHydBalance``»):
 
@@ -558,7 +570,7 @@ The hydrogen balance at each node is enforced by («``eHydBalance``»):
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
    \end{aligned}
 
-Energy Conversion
+Energy conversion
 ~~~~~~~~~~~~~~~~~
 Energy conversion between electricity and hydrogen is modeled by the following constraints.
 
@@ -581,10 +593,10 @@ For a unit without standby capability the standby state is fixed to zero and the
 equation reduces to the plain conversion
 :math:`\vhydproduction = \veleconsumption / \phydprodfunction`.
 
-Green-Hydrogen Matching (RFNBO)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Renewable-hydrogen matching (RFNBO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 On with ``pParGreenH2Matching``. In each load level the electrolysers' *productive*
-draw -- the total charge minus the standby draw, which makes no hydrogen -- must be
+draw (the total charge minus the standby draw, which makes no hydrogen) must be
 matched by renewable electricity allocated to them («``eGreenH2Matching``»). The
 standby auxiliary load is excluded from the matched quantity, following EU 2023/1184
 Art. 6 (it is taken to be grid-powered):
@@ -595,6 +607,13 @@ Art. 6 (it is taken to be grid-powered):
    - \phydgenstandbypower_{\genindex} \vhydgenstandby_{\periodindex,\scenarioindex,\timeindex,\genindex} \right)
    \leq \sum_{\genindex \in \mathcal{G}^{PPA}} \veleresalloc_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex
+
+.. figure:: /../img/concept_green_h2_matching.svg
+   :width: 95%
+   :align: center
+   :alt: Over a day, the electrolyser's productive draw stays within the PPA renewable output; the standby draw in the evening is not matched.
+
+   Illustration with made-up numbers. Each hour, the electrolysers' productive draw must be covered by renewable output allocated to them. The standby draw, which makes no hydrogen, is left out. At load levels shorter than an hour, the energy of each clock hour is compared.
 
 The matching pool :math:`\mathcal{G}^{PPA}` is the PPA-flagged renewables
 (``pEleGenPPA``), so the matching carries an additionality meaning; if no unit is
@@ -613,11 +632,11 @@ the matching is equivalent to the aggregate bound. The PPA settlement itself
 (``eEleMarketPPACost``) is a cost term, documented on the
 :doc:`objective-function` page.
 
-Asset Operational Constraints
---------------------------------
+Asset operational constraints
+-----------------------------
 These constraints model the physical limitations of generation and storage assets.
 
-Output and Charge Limits
+Output and charge limits
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The total output of a committed electricity unit is defined by («``eEleTotalOutput``»):
 
@@ -724,6 +743,27 @@ on/off/standby scheduling of Qiu et al. (2022) [#qiu2022]_:
   standby draw :math:`\phydgenstandbypower` and produces no hydrogen.
 * **OFF**: consumes nothing; restarting from off is a cold start.
 
+.. graphviz::
+   :align: center
+   :alt: The three states of an electrolyser and the moves between them: a cold start from off costs, a warm start from standby is free, and off cannot go straight to standby.
+
+   digraph states {
+     graph [rankdir=LR, nodesep=0.5, ranksep=1.0, fontname="Helvetica"];
+     node  [shape=ellipse, style=filled, fontname="Helvetica", fontsize=11, width=1.2];
+     edge  [fontname="Helvetica", fontsize=9, color="#555555", arrowsize=0.7];
+     OFF     [fillcolor="#eeeeee", color="#616161", label="OFF\nno draw"];
+     STANDBY [fillcolor="#fff3e0", color="#ef6c00", label="STANDBY\nwarm, fixed draw,\nno hydrogen"];
+     ON      [fillcolor="#c8e6c9", color="#2e7d32", label="ON\nmin. to max. charge,\nmakes hydrogen"];
+     OFF -> ON [label="cold start:\nstart-up cost\n(eHydElectrolyserColdStart)", color="#c62828", fontcolor="#c62828"];
+     ON -> OFF [label="stop"];
+     ON -> STANDBY [label="idle, stay warm"];
+     STANDBY -> ON [label="warm start: free", color="#2e7d32", fontcolor="#2e7d32"];
+     STANDBY -> OFF [label="stop"];
+     ON -> ON; STANDBY -> STANDBY; OFF -> OFF;
+   }
+
+OFF cannot move straight to STANDBY: standby is reachable only from ON or STANDBY.
+
 ON and STANDBY are mutually exclusive, and OFF is the remainder
 («``eHydElectrolyserStandBy``»):
 
@@ -735,7 +775,7 @@ ON and STANDBY are mutually exclusive, and OFF is the remainder
 Standby is only reachable when the stack is already warm: the unit can be in standby at
 :math:`\timeindex` only if it was on or in standby at :math:`\timeindex-\ptimestep`.
 Without this the model could enter standby directly from off, pay one period of the
-standby draw to count as «warm», and then start for free — dodging the cold-start cost.
+standby draw to count as «warm», and then start for free, so avoiding the cold-start cost.
 At the first load level the previous state is the initial condition
 (:math:`\phydinitialuc`, :math:`\phydinitialstandby`)
 («``eHydElectrolyserStandByTransition``»):
@@ -748,7 +788,7 @@ At the first load level the previous state is the initial condition
 
 Only a cold start (OFF :math:`\rightarrow` ON) incurs the start-up cost; a warm start
 from STANDBY is free, since the stack is already warm. This is what makes standby
-worth choosing through a short idle period — paying the small standby draw to dodge
+worth choosing through a short idle period: the unit pays the small standby draw to avoid
 the cold-start cost («``eHydElectrolyserColdStart``»):
 
 .. math::
@@ -790,7 +830,7 @@ is real electricity demand but produces no hydrogen.
    electrolyser as a flexible load bounded only by its operating range (no ramp or
    minimum up/down-time limit).
 
-Ramping Limits
+Ramping limits
 ~~~~~~~~~~~~~~
 A series of constraints limit how quickly the output or charging rate of an asset can change. For example, ``eEleMaxRampUpOutput`` restricts the increase in a generator's output between consecutive timesteps.
 
@@ -831,9 +871,25 @@ Maximum ramp-up and ramp-down for a hydrogen unit («``eHydMaxRampUpOutput``», 
    \ge -\vhydcommitbin_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\genindex} + \vhydshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in \nHGT
 
-Unit Commitment Logic
+Unit commitment logic
 ~~~~~~~~~~~~~~~~~~~~~
 For dispatchable assets, these constraints model the on/off decisions.
+
+.. graphviz::
+   :align: center
+   :alt: The on and off states of a committable unit, with start-up and shut-down, and the minimum up and down times.
+
+   digraph uc {
+     graph [rankdir=LR, nodesep=0.5, ranksep=1.4, fontname="Helvetica"];
+     node  [shape=ellipse, style=filled, fontname="Helvetica", fontsize=11, width=1.3];
+     edge  [fontname="Helvetica", fontsize=9, color="#555555", arrowsize=0.7];
+     OFF [fillcolor="#eeeeee", color="#616161", label="OFF\nu = 0"];
+     ON  [fillcolor="#c8e6c9", color="#2e7d32", label="ON\nu = 1\nmin. to max. output"];
+     OFF -> ON [label="start-up: su = 1\n(start-up cost)"];
+     ON -> OFF [label="shut-down: sd = 1\n(shut-down cost)"];
+     ON -> ON [label="stays on at least the minimum\nup time (IndBinGenMinTime)"];
+     OFF -> OFF [label="stays off at least the minimum\ndown time (IndBinGenMinTime)"];
+   }
 
 Logical relation between commitment, startup, and shutdown status of an electricity unit («``eEleCommitmentStartupShutdown``»):
 
@@ -899,7 +955,7 @@ Minimum up-time and down-time for a hydrogen unit («``eHydMinUpTime``», «``eH
 
     :math:`hsf_{\periodindex,\scenarioindex,\timeindex,\genindex} \leq huc_{\periodindex,\scenarioindex,\timeindex,\genindex} \quad \forall nhz`
 
-Second Block Constraints
+Second block constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~
 These constraints define the operational limits for the second block of generation and storage units, including reserve provision.
 
@@ -944,28 +1000,27 @@ Maximum and minimum hydrogen output of the second block for a hydrogen ESS («``
 
 .. math::
    \frac{\vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxprodsecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
-   \le \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \le \vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
 .. math::
    \vhydsecondblockproduction_{\periodindex,\scenarioindex,\timeindex,\storageindex} \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
-.. note::
-   In the code the hydrogen ESS output is bounded by the charging-mode binary
-   (:math:`\vhydstorchargebin`), while the electricity equivalent
-   (``eEleMaxESSOutput2ndBlock``) uses the discharging-mode binary. Likewise the
-   hydrogen ESS charge (``eMaxHydESSCharge2ndBlock``) is bounded by the
-   discharging-mode binary. The charge/discharge binaries appear swapped relative
-   to the electricity formulation — verify this is intended.
-
-Energy Storage Dynamics
---------------------------
+Energy storage dynamics
+-----------------------
 These constraints specifically model the behavior of energy storage systems.
 
-Inventory Balance (State-of-Charge)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Inventory balance (state-of-charge)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electricity and ``eHydInventory`` for hydrogen, tracks the stored energy level over time.
+
+.. figure:: /../img/concept_storage_balance.svg
+   :width: 95%
+   :align: center
+   :alt: Charge and discharge bars over 24 hours and the stored energy rising and falling between its minimum and maximum.
+
+   Illustration with made-up numbers. At each load level the stored energy changes by the charge times its efficiency, minus the discharge divided by its efficiency, and stays between the minimum and maximum.
 
 State-of-Charge balance for electricity storage systems:
 
@@ -999,7 +1054,7 @@ State-of-Charge balance for hydrogen storage systems:
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS
    \end{aligned}
 
-Charge/Discharge Incompatibility
+Charge/discharge incompatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The constraints prevent a storage unit from charging and discharging in the same timestep, using binary variables.
 
@@ -1039,7 +1094,7 @@ Hydrogen Storage Incompatibility («``eHydChargingDecision``», «``eHydDischarg
    \le \pfixavail_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nHGS
 
-Depth of Discharge (DoD) Constraints
+Depth of discharge (DoD) constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 These constraints model the degradation of electricity storage systems based on their Depth of Discharge (DoD).
 
@@ -1084,7 +1139,7 @@ Upper bounds for each DoD segment are defined by («``eEleInventoryDoDS1Upper``�
    \pdodsb_{\storageindex} \pmaxstorage_{\storageindex}
    \quad \forall \periodindex,\scenarioindex,\text{doy},\storageindex \in \nEES
 
-The third segment is capped by the day's total depth of discharge rather than a fixed
+The third segment is capped by the day's total depth of discharge, not by a fixed
 fraction («``eEleInventoryDoDS3Upper``»):
 
 .. math::
@@ -1101,7 +1156,7 @@ fraction («``eEleInventoryDoDS3Upper``»):
    bounds (with the matching lower bounds) remains commented out in
    ``oM_ModelFormulation.py``.
 
-Energy Inflows and Outflows
+Energy inflows and outflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Energy inflows and outflows are constrained by the ESS commitment decision and physical limits.
 
@@ -1175,7 +1230,7 @@ Incompatibility between charge and outflows for an electricity ESS is defined by
    (commented out in ``oM_ModelFormulation.py``). The relation above documents
    the intended behaviour.
 
-Operation Ramping Constraints
+Operation ramping constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 These constraints limit the rate of change in charging and discharging power for ESS.
 
@@ -1217,7 +1272,7 @@ Maximum ramp-up and ramp-down for the outflows of a hydrogen ESS («``eHydMaxRam
    \ge -1
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
-Second Block and Reserve Constraints
+Second block and reserve constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 These constraints define the operational limits for the second block of ESS, including reserve provision.
 
@@ -1233,11 +1288,11 @@ Maximum and minimum charge of the second block for an electricity ESS («``eEleM
    \ge 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
-Maximum and minimum charge of the second block for a hydrogen ESS («``eMaxHydESSCharge2ndBlock``», «``eHydMinESSCharge2ndBlock``»). As noted above, the bounding mode binary is swapped relative to the electricity case:
+Maximum and minimum charge of the second block for a hydrogen ESS («``eMaxHydESSCharge2ndBlock``», «``eHydMinESSCharge2ndBlock``»), bounded by the charging-mode binary as for electricity:
 
 .. math::
    \frac{\vhydsecondblockconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}}{\phydmaxchargesecondblock_{\periodindex,\scenarioindex,\timeindex,\storageindex}}
-   \le \vhydstordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
+   \le \vhydstorchargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEHS
 
 .. math::
@@ -1257,21 +1312,37 @@ Reserve provision from an ESS is constrained by its charging and discharging sta
    \le \velestordischargebin_{\periodindex,\scenarioindex,\timeindex,\storageindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
-Network Constraints
-----------------------
+Network constraints
+-------------------
 These constraints model the physics and limits of the energy transmission and distribution networks.
 
-DC Power Flow
+DC power flow
 ~~~~~~~~~~~~~
 For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model, relating the power flow on a line to the voltage angles at its connecting nodes.
+
+.. graphviz::
+   :align: center
+   :alt: Three nodes joined by lines; the flow on a line is the angle difference between its nodes divided by its reactance, within its capacity; the reference node has angle zero.
+
+   graph dcflow {
+     graph [layout=neato, start=3, fontname="Helvetica"];
+     node  [shape=circle, style=filled, fontname="Helvetica", fontsize=10, fillcolor="#e3f2fd", color="#1565c0", width=0.95, fixedsize=true];
+     edge  [color="#1565c0", fontname="Helvetica", fontsize=9, len=2.2];
+     n1 [label="Node 1\nreference\nθ1 = 0", fillcolor="#bbdefb"];
+     n2 [label="Node 2\nθ2"];
+     n3 [label="Node 3\nθ3"];
+     n1 -- n2 [label="flow = (θ1 − θ2) / reactance\n|flow| ≤ capacity"];
+     n1 -- n3;
+     n3 -- n2;
+   }
 
 .. math::
    \frac{\vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}}{\pnettc_{\busindexa,\busindexb,\circuitindex}} -
    \frac{(\vtheta_{\periodindex,\scenarioindex,\timeindex,\busindexa} - \vtheta_{\periodindex,\scenarioindex,\timeindex,\busindexb})}{\pnetreactance_{\busindexa,\busindexb,\circuitindex} \cdot \pnettc_{\busindexa,\busindexb,\circuitindex}} \cdot 0.1 = 0
    \quad \forall \periodindex,\scenarioindex,\timeindex,(\busindexa,\busindexb,\circuitindex) \in \nELA
 
-Demand-Side and Reliability Constraints
-------------------------------------------
+Demand-side and reliability constraints
+---------------------------------------
 *   **Ramping Limits**: Constraints such as ``eHydMaxRampUpDemand`` and ``eHydMaxRampDwDemand`` limit the rate of change in hydrogen demand, preventing abrupt fluctuations that could destabilize the system.
 *   ``eEleDemandShiftBalance``: Ensures that for flexible loads, the total energy consumed is conserved, even if the timing of consumption is shifted.
 *   **Unserved Energy**: The model allows for unserved energy through slack variables (``vENS``, ``vHNS``). The high penalty cost in the objective function acts as a soft constraint to meet demand.
@@ -1285,7 +1356,7 @@ Demand-Side and Reliability Constraints
 
     :math:`\frac{- \vhyddemand_{\periodindex,\scenarioindex,\timeindex-\ptimestep,\demandindex} \!+\! \vhyddemand_{\periodindex,\scenarioindex,\timeindex,\demandindex}}{\ptimestepduration_{\periodindex,\scenarioindex,\timeindex} \prampdwrate_{\demandindex}} \geq \!-\! 1 \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex|\demandindex \in \nDH`
 
-Demand Shifting Balance
+Demand shifting balance
 ~~~~~~~~~~~~~~~~~~~~~~~
 Flexible electricity demand shifting balance («``eEleDemandShiftBalance``»)
 
@@ -1298,8 +1369,8 @@ If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedstep
    \pmaxdemand_{\periodindex,\scenarioindex,\timeindex ',\demandindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex
 
-Share of Flexible Demand
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Share of flexible demand
+~~~~~~~~~~~~~~~~~~~~~~~~
 Flexible electricity demand share of total demand («``eEleDemandShifted``»)
 
 If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedsteps_{\demandindex} > 0.0`:
@@ -1310,8 +1381,8 @@ If :math:`\peledemflexible_{\demandindex} == 1.0` and :math:`\peledemshiftedstep
    \veledemflex_{\periodindex,\scenarioindex,\timeindex,\demandindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\demandindex
 
-Electric Vehicle (EV) Modeling
----------------------------------
+Electric vehicle (EV) modeling
+------------------------------
 Electric vehicles are modeled as a special class of mobile energy storage, identified by the ``model.egv`` set (a subset of ``model.egs``). They are subject to standard storage dynamics but with unique constraints that reflect their dual role as both a transportation tool and a potential grid asset.
 
 **Key Modeling Concepts:**
@@ -1350,8 +1421,8 @@ Electric vehicles are modeled as a special class of mobile energy storage, ident
     Since EV charging (``vEleTotalCharge``) increases the total load at a node, the model will naturally schedule it during hours when the combination of volumetric and potential capacity costs is lowest. This interaction between the nodal balance, the cost components, and the objective function creates an economically rational "smart charging" behavior.
 
 
-Bounds on Variables
------------------------
+Bounds on variables
+-------------------
 To ensure numerical stability and solver efficiency, bounds are placed on key decision variables. For example, the state-of-charge variables for storage units are bounded between zero and their maximum capacity.
 
 .. math::

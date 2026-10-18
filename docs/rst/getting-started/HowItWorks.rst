@@ -1,14 +1,14 @@
-How el1xr_opt works
-===================
+Overview of el1xr_opt
+=====================
 
 This page explains what the model represents and what happens when it runs, before the
 equations. The rest of the documentation goes into detail: the :doc:`../user-guide/data-and-io`
 page for the inputs, and the Concepts pages for the formulation.
 
-What the model decides
+Decisions of the model
 ----------------------
 
-el1xr_opt finds the cheapest way to run an energy system over a set of time steps, called
+el1xr_opt finds the cheapest way to operate an energy system over a set of time steps, called
 load levels. For each load level it decides:
 
 - how much electricity or hydrogen to buy from or sell to the market, through a retailer;
@@ -42,14 +42,14 @@ At every node and load level, the energy that arrives must equal the energy that
 These balances, one per energy carrier, tie the whole model together; the
 :doc:`../concepts/constraints` page starts with a map of them.
 
-One run, step by step
----------------------
+From case to results, step by step
+----------------------------------
 
-A run reads a case, builds the optimisation model in Pyomo, solves it and writes the results.
+el1xr_opt reads a case, builds the optimisation model in Pyomo, solves it and writes the results.
 
 .. graphviz::
    :align: center
-   :alt: The steps of one run, from the case files to the results.
+   :alt: The steps from the case files to the results.
 
    digraph run {
      graph [rankdir=TB, nodesep=0.3, ranksep=0.25, fontname="Helvetica"];
@@ -57,7 +57,7 @@ A run reads a case, builds the optimisation model in Pyomo, solves it and writes
             fontname="Helvetica", fontsize=11, width=5.0];
      edge  [color="#4a6fa5", arrowsize=0.7];
      case   [label="Case: a folder of CSV files or one .duckdb file", fillcolor="#e8f5e9", color="#2e7d32"];
-     load   [label="el1xr-run or load_case(): gather the run options"];
+     load   [label="el1xr-run or load_case(): gather the options"];
      data   [label="data_processing: read the tables, build the sets and parameters"];
      vars   [label="create_variables: one variable per decision and load level"];
      layers [label="optional layers: community, investment, heat sector"];
@@ -87,7 +87,7 @@ The steps follow ``build_model`` and ``routine`` in ``oM_Sequence``:
 The modules
 -----------
 
-The same run, seen by module: from the input files, through the model formulation and the
+The same steps, seen by module: from the input files, through the model formulation and the
 solver, to the results.
 
 .. figure:: /../img/el1xr_opt_architecture.svg
@@ -97,11 +97,11 @@ solver, to the results.
 
    The modules of el1xr_opt, from a CSV case folder or a ``.duckdb`` file to the results.
 
-Where to go next
-----------------
+Further reading
+---------------
 
-- To run a first case: :doc:`Quickstart`, then :doc:`../user-guide/examples`.
-- To build your own case: :doc:`../user-guide/data-and-io`.
+- To solve a first case: :doc:`Quickstart`, then :doc:`../user-guide/examples`.
+- To build a new case: :doc:`../user-guide/data-and-io`.
 - To read the formulation: :doc:`../concepts/constraints` and
   :doc:`../concepts/objective-function`.
 - To contribute: :doc:`../developer/contributing`.

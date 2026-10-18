@@ -1,6 +1,6 @@
 .. _future_developments:
 
-Future Developments
+Future developments
 ===================
 
 This section outlines potential future enhancements to the optimisation model, based on a number of identified challenges and opportunities for more detailed modelling. These items represent a roadmap for increasing the model's accuracy and applicability to real-world scenarios.
@@ -10,18 +10,18 @@ This section outlines potential future enhancements to the optimisation model, b
    Several items once on this roadmap are **now implemented** and documented elsewhere:
    the :doc:`heat-sector`, the :doc:`community` sharing layer, the modular
    feature/cost-registry architecture (:doc:`features-and-modes`), the physical
-   electricity PPA and RFNBO matching (green hydrogen), and the depth-of-discharge
-   degradation scaffolding. What remains genuinely future is, for example, district
+   electricity PPA and RFNBO matching (renewable hydrogen), and the depth-of-discharge
+   degradation scaffolding. The items still to come include, for example, district
    heating with a heat network, virtual/CfD PPAs, and the ``arc`` (block-angular)
    balance that would underpin a Dantzig-Wolfe decomposition. Treat the list below as
    indicative and cross-check against the changelog.
 
-To-Do List
+To-do list
 ----------
 
 The following is a list of key areas for future development, divided into modelling enhancements and computational/structural improvements.
 
-Modelling Enhancements
+Modelling enhancements
 ----------------------
 
 This category includes improvements that add new features, constraints, or more detailed representations of physical or financial systems to the model.
@@ -172,7 +172,7 @@ This category includes improvements that add new features, constraints, or more 
         .. math::
            C_{BESS\_deg,t} = c_{cycle} \cdot (P_{chg,t} + P_{dis,t}) + c_{calendar}
 
-    *   **Advanced Model (depth-of-discharge scaffolding -- done)**: *Depth of Discharge (DoD) Penalization* recognizes that deeper discharge cycles cause more stress than shallow ones. The piecewise scaffolding for this is in the code today: the daily DoD is computed by ``eEleInventoryDoD``, split across segments by ``eEleInventoryDoDSegments``, bounded per segment by ``eEleInventoryDoDS1Upper`` / ``eEleInventoryDoDS2Upper`` / ``eEleInventoryDoDS3Upper`` (all in ``oM_ModelFormulation.py``), and priced into the objective through ``vTotalEleDCost`` (``eTotalEleDCost``).
+    *   **Advanced Model (depth-of-discharge scaffolding, done)**: *Depth of Discharge (DoD) Penalization* recognizes that deeper discharge cycles cause more stress than shallow ones. The piecewise scaffolding for this is in the code today: the daily DoD is computed by ``eEleInventoryDoD``, split across segments by ``eEleInventoryDoDSegments``, bounded per segment by ``eEleInventoryDoDS1Upper`` / ``eEleInventoryDoDS2Upper`` / ``eEleInventoryDoDS3Upper`` (all in ``oM_ModelFormulation.py``), and priced into the objective through ``vTotalEleDCost`` (``eTotalEleDCost``).
 
         *   **Prototype Equation**: The total degradation cost is the sum of costs incurred in different SOC segments, each with a different penalty.
 
@@ -198,7 +198,7 @@ This category includes improvements that add new features, constraints, or more 
         *   Add new parameters to `oM_InputData.py` for degradation cost factors (e.g., :math:`pBESS_{cycle\_cost}`, :math:`pHyd_{op\_cost}`).
         *   Add these new cost components to the objective function in `oM_ModelFormulation.py`, linking them to existing variables for power dispatch and commitment status.
 
-Computational and Structural Enhancements
+Computational and structural enhancements
 -----------------------------------------
 
 This category focuses on improvements to the underlying code structure and mathematical formulation to enhance computational efficiency, scalability, and maintainability.
@@ -244,7 +244,7 @@ This category focuses on improvements to the underlying code structure and mathe
     *   **Benefits**:
 
         *   **Modularity**: Makes it easy to add, remove, or swap different implementations of a component (e.g., a simple BESS model vs. an advanced one with degradation).
-        *   **Readability**: The main model becomes a cleaner composition of these blocks, rather than a long list of constraints.
+        *   **Readability**: The main model becomes a cleaner composition of these blocks, instead of a long list of constraints.
         *   **Scalability**: Simplifies the management of models with many individual assets of the same type (e.g., multiple battery units).
     *   **Potential Integration**:
 

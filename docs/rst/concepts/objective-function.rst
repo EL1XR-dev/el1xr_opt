@@ -1,11 +1,44 @@
-Objective Function
+Objective function
 ==================
 The core purpose of the optimization model is to minimize the total system cost over a specified time horizon. This is achieved through an objective function that aggregates all relevant operational expenditures, as well as penalties for undesirable outcomes like unmet demand.
 
 The main objective function is defined by the Pyomo constraint «``eTotalSCost``», which minimizes the variable «``vTotalSCost``» (:math:`\alpha`).
 
-Total System Cost
+Total system cost
 -----------------
+The objective at a glance:
+
+.. graphviz::
+   :align: center
+   :alt: The terms of the objective: investment, heat-sector operation, and the discounted costs minus revenues of each period and scenario, with the cost and revenue variables.
+
+   digraph objective {
+     graph [rankdir=LR, nodesep=0.1, ranksep=0.35, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888", margin="0.1,0.04"];
+     edge  [color="#888888", arrowhead=none];
+     obj  [label="Objective\nvTotalSCost", fillcolor="#e1bee7", color="#6a1b9a", fontsize=11];
+     inv  [label="Investment\nvTotalICost"];
+     heat [label="Heat-sector operation"];
+     op   [label="Σ periods: discount factor ×\nΣ scenarios: (costs − revenues)"];
+     C    [label="Costs", fillcolor="#ffcdd2", color="#c62828"];
+     R    [label="Revenues", fillcolor="#c8e6c9", color="#2e7d32"];
+     net  [label="Network: peak tariff, transfer fee,\nfixed fee  (vTotalEleNCost)"];
+     tax  [label="Energy tax  (vTotalEleXCost)"];
+     su   [label="Start-ups  (vTotalEleSUCost, vTotalHydSUCost)"];
+     mkt  [label="Market purchases: day-ahead, PPA, reserve activation\n(activation with IndReserveDeliverySettlement)  (vTotalEleMCost, vTotalHydMCost)"];
+     om   [label="Operation: production, emissions,\nconsumption, energy not served  (vTotalEleOCost, vTotalHydOCost)"];
+     deg  [label="Degradation  (vTotalEleDCost, vTotalHydDCost)"];
+     inc  [label="Export incentive  (vTotalEleXRev)"];
+     sale [label="Electricity sales: day-ahead, PPA, FCR-D up,\nFCR-D down, FCR-N, reserve activation  (vTotalEleMRev)"];
+     hsale[label="Hydrogen sales and PPA  (vTotalHydMRev)"];
+     obj -> {inv heat op};
+     op -> {C R};
+     C -> {net tax su mkt om deg};
+     R -> {inc sale hsale};
+   }
+
+The sections below define each term.
+
 The total system cost is the sum of all discounted costs across every period (:math:`\periodindex`) and scenario (:math:`\scenarioindex`) in the model horizon. The objective function can be expressed conceptually as:
 
 Total system cost («``eTotalSCost``»)
@@ -60,7 +93,7 @@ assets (continuous in :math:`[0,1]`, or binary when all-or-nothing investment is
 
 The total cost is broken down into several components, each represented by a specific variable. The model seeks to find the optimal trade-off between these costs.
 
-Electricity Grid Usage
+Electricity grid usage
 ----------------------
 This component models capacity-based and tariffs, and considers the power peak penalization cost. The formulation is defined by «``eNetGridUsageCost``».
 
@@ -69,8 +102,8 @@ This component models capacity-based and tariffs, and considers the power peak p
 
    C^{grid,e}_{\periodindex,\scenarioindex} = \elepeakdemandcost_{\periodindex,\scenarioindex} + \elenetvarusecost_{\periodindex,\scenarioindex} + \elenetfixusecost_{\periodindex,\scenarioindex}
 
-Peak Power Cost
-~~~~~~~~~~~~~~~~
+Peak power cost
+~~~~~~~~~~~~~~~
 This cost subcomponent is determined by the highest power peak registered during a specific billing period (e.g., a month). This incents the model to "shave" demand peaks to reduce costs.
 
 The formulation is defined by «``eTotalElePeakCost``».
@@ -80,7 +113,7 @@ The formulation is defined by «``eTotalElePeakCost``».
 
     \elepeakdemandcost_{\periodindex,\scenarioindex} = \frac{1}{|\nKE|} \sum_{\traderindex \in \nRE} \ppeakdemandtariff_{\traderindex} \pfactorone \sum_{\monthindex \in \nM} \sum_{\peakindex \in \nKE} \velepeakdemand_{\periodindex,\scenarioindex,\monthindex,\traderindex,\peakindex} (1 + \pelemarketmoms_{\traderindex})
 
-Variable Network Usage Cost
+Variable network usage cost
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This cost subcomponent captures the expenses associated with using the electricity distribution or transmission network. It is the per-kWh transfer fee on the energy **imported** at the retailer's node over the billing period.
 The formulation is defined by «``eTotalEleNetUseVarCost``».
@@ -92,7 +125,7 @@ The formulation is defined by «``eTotalEleNetUseVarCost``».
 
 where :math:`\veleimport_{\periodindex,\scenarioindex,\timeindex,\traderindex}` is the grid import at the retailer's node (the metered network use), not the market-buy volume.
 
-Fixed Network Usage Cost
+Fixed network usage cost
 ~~~~~~~~~~~~~~~~~~~~~~~~
 This cost subcomponent represents fixed charges based on the capacity of the connection to the electricity network. It is usually a monthly fee that depends on the contracted capacity.
 The formulation is defined by «``eTotalEleNetUseFixCost``».
@@ -108,7 +141,7 @@ Market
 ------
 This represents the costs and revenues in the electricity and hydrogen markets.
 
-Electricity Market Costs
+Electricity market costs
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eEleMarketCost``».
 
@@ -124,7 +157,7 @@ The formulation is defined by «``eEleMarketCost``».
 
    \elemarketcostDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} (\pelebuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketbuyingratio_{\traderindex} + \pelemarketpassthrough_{\traderindex}) \velemarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
 
-Electricity Market Revenues
+Electricity market revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eEleMarketRevenue``».
 
@@ -140,7 +173,7 @@ The formulation is defined by «``eEleMarketRevenue``».
 
    \elemarketrevenueDA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRE} \pelesellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \pelemarketsellingratio_{\traderindex} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex} (1 + \pelemarketmoms_{\traderindex})
 
-Hydrogen Market Costs
+Hydrogen market costs
 ~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eHydMarketCost``».
 
@@ -156,8 +189,8 @@ The formulation is defined by «``eHydMarketCost``».
 
    \hydmarketcostPPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} \phydbuyprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \vhydmarketbuy_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
-Hydrogen Market Revenues
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Hydrogen market revenues
+~~~~~~~~~~~~~~~~~~~~~~~~
 The formulation is defined by «``eHydMarketRevenue``».
 
 .. math::
@@ -172,7 +205,7 @@ The formulation is defined by «``eHydMarketRevenue``».
 
    \hydmarketrevenuePPA_{\periodindex,\scenarioindex,\timeindex} = \sum_{\traderindex \in \nRH} \phydsellprice_{\periodindex,\scenarioindex,\timeindex,\traderindex} \cdot \vhydmarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
-Electricity Grid Services
+Electricity grid services
 -------------------------
 This component captures revenues from providing ancillary services to the electricity grid, such as frequency regulation, spinning reserves, and voltage support.
 The total revenue from ancillary services (:math:`\elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex}`) is defined by the constraint «``eEleMarketFrequencyRevenue``».
@@ -182,8 +215,8 @@ The total revenue from ancillary services (:math:`\elemarketrevenueancillary_{\p
 
    \elemarketrevenueancillary_{\periodindex,\scenarioindex,\timeindex} = \freqcontdisturbrevenue_{\periodindex,\scenarioindex,\timeindex} + \freqcontnormalrevenue_{\periodindex,\scenarioindex,\timeindex}
 
-Frequency Containment Reserve for Disturbance (FCR-D)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Frequency containment reserve for disturbance (FCR-D)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This revenue subcomponent is earned by bidding upward and downward frequency
 containment reserves for disturbances. The upward and downward parts are defined
 by «``eEleMarketFCRDUpRevenue``» and «``eEleMarketFCRDDwRevenue``», and their sum is:
@@ -197,8 +230,8 @@ The sum runs over the electricity units and the electrolysers (:math:`\nGHE`), s
 an eligible electrolyser earns the same FCR revenues by modulating its consumption
 (see the FCR provision from an electrolyser section in :doc:`constraints`).
 
-Frequency Containment Reserve for Normal operation (FCR-N)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Frequency containment reserve for normal operation (FCR-N)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This revenue subcomponent is earned by bidding frequency containment reserve for
 normal operation, defined by «``eEleMarketFCRNRevenue``». FCR-N is a symmetric
 product, so the price is the average of the upward and downward FCR-N prices:
@@ -216,11 +249,11 @@ where :math:`\pelefcrnprice` is the average of the upward and downward FCR-N pri
    current model. Confirm this is intended before relying on the ancillary revenue
    figures.
 
-Taxes and Pass-Throughs
+Taxes and pass-throughs
 -----------------------
 This component accounts for various taxes, surcharges, pass-through costs and incentives associated with electricity market transactions. These can include:
 
-Tax Costs
+Tax costs
 ~~~~~~~~~
 The total electricity tax cost is the energy tax («``eEleTaxCost``»), whose value is set by the energy-tax constraint («``eEleTaxEnergyCost``»):
 
@@ -229,7 +262,7 @@ The total electricity tax cost is the energy tax («``eEleTaxCost``»), whose va
 
    C^{tax,e}_{p,s} = \sum_{r \in \mathcal{R}^{e}} \left( \pelemarketenergytax_{\traderindex} \pfactorone (1 + \pelemarketmoms_{\traderindex}) \sum_{\timeindex \in \mathcal{T}} \veleimport_{p,s,n,r} \right)
 
-Incentives and Certificate Revenues
+Incentives and certificate revenues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The total electricity tax revenue («``eEleTaxRevenue``») is the incentive/certificate revenue, defined by «``eEleTaxISRevenue``»:
 
@@ -238,7 +271,7 @@ The total electricity tax revenue («``eEleTaxRevenue``») is the incentive/cert
 
    \elemarketrevenuetax_{\periodindex,\scenarioindex} = \sum_{\traderindex \in \nRE} \pelemarketcertrevenue_{\traderindex} \pfactorone \sum_{\timeindex \in \nT} \velemarketsell_{\periodindex,\scenarioindex,\timeindex,\traderindex}
 
-Operation and Maintenance
+Operation and maintenance
 -------------------------
 This is the operational cost of running the generation and production assets. It typically includes:
 
@@ -261,7 +294,7 @@ The cost is defined by ``eEleOpMaintCost`` for electricity and ``eHydOpMaintCost
 Generation
 ~~~~~~~~~~
 
-Electricity Generation Costs
+Electricity generation costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalEleGCost``».
 
@@ -274,7 +307,7 @@ The formulation is defined by «``eTotalEleGCost``».
    &+ \sum_{\genindex \in \nGENR} (\pfixedcost_{\genindex} \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pstartupcost_{\genindex} \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pshutdowncost_{\genindex} \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex})
    \end{align}
 
-Hydrogen Generation Costs
+Hydrogen generation costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydGCost``».
 
@@ -287,7 +320,7 @@ The formulation is defined by «``eTotalHydGCost``».
    &+ \sum_{\genindex \in \nGH} (\pfixedcost_{\genindex} \vcommitbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pstartupcost_{\genindex} \vstartupbin_{\periodindex,\scenarioindex,\timeindex,\genindex} + \pshutdowncost_{\genindex} \vshutdownbin_{\periodindex,\scenarioindex,\timeindex,\genindex})
    \end{align}
 
-Emission Costs
+Emission costs
 ~~~~~~~~~~~~~~
 This component captures the cost of carbon emissions from fossil-fueled generators. It is calculated by multiplying the CO2 emission rate of each generator by its output and the carbon price (:math:`\pcarbonprice_{\genindex}`).
 The formulation is defined by «``eTotalECost``».
@@ -302,7 +335,7 @@ Consumption
 ~~~~~~~~~~~
 This represents the costs associated with operating energy consumers within the system, most notably the cost of power used to charge energy storage devices.
 
-Electricity Consumption Costs
+Electricity consumption costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalEleCCost``».
 
@@ -311,7 +344,7 @@ The formulation is defined by «``eTotalEleCCost``».
 
    \eleconsumptioncost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\storageindex \in \nEE} \pvariablecost_{\storageindex} \veleconsumption_{\periodindex,\scenarioindex,\timeindex,\storageindex}
 
-Hydrogen Consumption Costs
+Hydrogen consumption costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydCCost``».
 
@@ -331,7 +364,7 @@ This is a penalty cost applied to any energy demand that cannot be met. It is ca
    is applied once by the operating-cost aggregation in :eq:`eq:TotalCComponent`, so it
    does not appear again here.
 
-Electricity Energy-not-served Costs
+Electricity energy-not-served costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalEleRCost``».
 
@@ -340,7 +373,7 @@ The formulation is defined by «``eTotalEleRCost``».
 
    \eleunservedenergycost_{\periodindex,\scenarioindex,\timeindex} = \sum_{\demandindex \in \nDE} \ploadsheddingcost_{\demandindex} \veleloadshed_{\periodindex,\scenarioindex,\timeindex,\demandindex}
 
-Hydrogen Energy-not-served Costs
+Hydrogen energy-not-served costs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The formulation is defined by «``eTotalHydRCost``».
 

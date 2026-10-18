@@ -40,7 +40,8 @@ except Exception:
     release = _m.group(1) if _m else ''
 version = '.'.join(release.split('.')[:2])
 
-# The option-flag table on the features page is written from the code at every build
+
+# The option-indicator table on the features page is written from the code at every build
 def _write_flag_table():
     out = pathlib.Path(__file__).parent / 'concepts' / 'flags.inc'
     # Load oM_Features.py on its own: importing it through the package would run el1xr_opt's
@@ -54,13 +55,30 @@ def _write_flag_table():
         _spec.loader.exec_module(_mod)
         FEATURES = _mod.FEATURES
     except Exception as exc:
-        out.write_text(f'.. note:: The flag table could not be built: {exc}\n')
+        out.write_text(f'.. note:: The option-indicator table could not be built: {exc}\n')
         return
     rows = ['.. list-table::', '   :widths: 30 10 60', '   :header-rows: 1', '',
-            '   * - Flag', '     - Default', '     - Effect']
+            '   * - Indicator', '     - Default', '     - Effect']
     for f in FEATURES:
         rows += [f'   * - ``{f.flag}``', f'     - {f.default}', f'     - {f.doc}']
     out.write_text('\n'.join(rows) + '\n')
+
+    # which solver handles which problem class, and the network modes
+    try:
+        classes = ['LP', 'MILP', 'QP', 'MIQP', 'SOCP', 'MISOCP', 'NLP', 'SDP']
+        rows = ['.. list-table::', '   :header-rows: 1', '', '   * - Solver'] + [f'     - {c}' for c in classes]
+        for solver, caps in _mod.SOLVER_CAPABILITIES.items():
+            rows += [f'   * - {solver}'] + [f'     - {"yes" if c in caps else ""}' for c in classes]
+        (out.parent / 'solvers.inc').write_text('\n'.join(rows) + '\n')
+        rows = ['.. list-table::', '   :widths: 20 12 18 50', '   :header-rows: 1', '',
+                '   * - Mode', '     - Class', '     - Where', '     - What it is']
+        for name, mode in _mod.NETWORK_MODES.items():
+            where = 'in the model' if mode['in_core'] else 'separate analysis'
+            rows += [f'   * - ``{name}``', f"     - {mode['problem_class']}", f'     - {where}', f"     - {mode['doc']}"]
+        (out.parent / 'network_modes.inc').write_text('\n'.join(rows) + '\n')
+    except Exception as exc:
+        for name in ('solvers.inc', 'network_modes.inc'):
+            (out.parent / name).write_text(f'.. note:: This table could not be built: {exc}\n')
 
 
 _write_flag_table()

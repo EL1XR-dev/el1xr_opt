@@ -51,7 +51,7 @@ The optimization model is built upon a series of indexed sets that define its di
 
 The core sets are defined in the ``model`` object and are accessible throughout the formulation scripts (e.g., in ``oM_ModelFormulation.py``).
 
-Temporal Hierarchy
+Temporal hierarchy
 ------------------
 
 The model uses a nested temporal structure to represent time, from long-term planning periods down to hourly operational timesteps.
@@ -102,7 +102,7 @@ Indices
      - Combination of period, scenario, and time step
      - :code:`model.psn`
 
-Spatial Representation
+Spatial representation
 ----------------------
 
 The spatial dimension defines the physical layout and regional aggregation of the energy system.
@@ -121,7 +121,7 @@ Sets
      - Node or bus bar in the network
      - :code:`model.nd`
    * - :math:`\nLE`
-     - Electricity arcs -- all input lines (from node, to node, circuit)
+     - Electricity arcs: all input lines (from node, to node, circuit)
      - :code:`model.eln`
    * - :math:`\nLE'`
      - Electricity lines actually modelled (the subset of ``eln`` that passes the
@@ -208,12 +208,60 @@ Indices
      - Zone or region in the network
      - :code:`zn`
 
-Technology and Asset Sets
+Unit sets at a glance
+---------------------
+
+Each unit of a case falls into one or more sets, chosen by the columns of its unit table. The
+figure shows the main sets and the rule that puts a unit in each; the tables below list them all.
+
+.. graphviz::
+   :align: center
+   :alt: The electricity, hydrogen and compressor unit sets, with the rule for each subset, and the unions the constraints use.
+
+   digraph sets {
+     graph [rankdir=LR, nodesep=0.1, ranksep=0.4, fontname="Helvetica", fontsize=10, newrank=true];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888", margin="0.1,0.04"];
+     edge  [color="#888888", arrowhead=none];
+     subgraph cluster_e {
+       label="Electricity units"; color="#1565c0"; fontcolor="#1565c0"; style=rounded;
+       eg   [label="eg\nall electricity units", fillcolor="#bbdefb", color="#1565c0"];
+       egr  [label="egr  renewables (RES = 1)"];
+       egnr [label="egnr  all but renewables"];
+       egt  [label="egt  thermal (constant cost > 0)"];
+       egs  [label="egs  stores (ESS = 1, or EV)"];
+       egv  [label="egv  EVs"];
+       egc  [label="egc  candidates (investment cost > 0)"];
+       h2e  [label="h2e  fuel cells (production function > 0)"];
+       eg -> {egr egnr egt egs egc h2e}; egs -> egv;
+     }
+     subgraph cluster_h {
+       label="Hydrogen units"; color="#2e7d32"; fontcolor="#2e7d32"; style=rounded;
+       hg   [label="hg\nall hydrogen units", fillcolor="#c8e6c9", color="#2e7d32"];
+       hgs  [label="hgs  hydrogen stores (storage > 0)"];
+       e2h  [label="e2h  electrolysers (production function > 0)"];
+       hgc  [label="hgc  candidates (investment cost > 0)"];
+       hg -> {e2h hgs hgc};
+     }
+     subgraph cluster_c {
+       label="Compressors"; color="#616161"; fontcolor="#616161"; style=rounded;
+       hc   [label="hc\nunits with a DischargeNode,\nkept out of hg", fillcolor="#eeeeee", color="#616161"];
+     }
+     subgraph cluster_u {
+       label="Unions used by the constraints"; color="#ef6c00"; fontcolor="#ef6c00"; style=rounded;
+       eh   [label="eh = egs ∪ e2h\nunits that consume electricity", fillcolor="#fff3e0", color="#ef6c00"];
+       he   [label="he = hgs ∪ h2e\nunits that consume hydrogen", fillcolor="#fff3e0", color="#ef6c00"];
+       fcr  [label="ege2h = eg ∪ e2h\nunits that can bid FCR", fillcolor="#fff3e0", color="#ef6c00"];
+     }
+     egv -> eh [style=invis];
+     {rank=same; eh; he; fcr;}
+   }
+
+Technology and asset sets
 -------------------------
 
 The model uses a rich set of indices to differentiate between various types of technologies and assets. There is a clear separation between the electricity and hydrogen systems.
 
-General Technology Subsets
+General technology subsets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -391,7 +439,7 @@ Indices
        and ``hr`` (hydrogen); there is no bare ``r`` set in the code.
      - :code:`er` / :code:`hr`
 
-Demand and Retail
+Demand and retail
 ~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -434,7 +482,7 @@ Indices
      - Retailer (retailer index letter; sets are ``er`` / ``hr``)
      - :code:`r`
 
-Inverse-Index Mapping Sets
+Inverse-index mapping sets
 --------------------------
 
 The model uses mapping sets to link specific assets to their location, zone, technology
@@ -470,7 +518,7 @@ combining temporal, spatial, and technological sets, the model can create highly
 variables, such as ``vEleTotalOutput[p,sc,n,eg]``, which represents the electricity output
 of generator ``eg`` at a specific time ``(p,sc,n)``.
 
-Calendar Time Sets
+Calendar time sets
 ------------------
 
 On top of the operational time step ``n``, the model derives a calendar from the model

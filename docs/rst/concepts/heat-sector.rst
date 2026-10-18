@@ -8,12 +8,12 @@ carry no heat data, so electricity/hydrogen-only cases are unchanged.
 Scope
 -----
 
-The heat sector is **nodal** (one heat balance per node) and behind-the-meter -- there
+The heat sector is **nodal** (one heat balance per node) and behind-the-meter: there
 is no heat network with pipe flows or losses yet (that is the next setting). A node's
 heat is supplied by:
 
 - a **heat pump** (``htp``): electricity to heat, ``heat = COP x electricity``. This is
-  the cross-sector coupling -- the heat-pump electricity draw is a load on the
+  the cross-sector coupling: the heat-pump electricity draw is a load on the
   electricity balance.
 - a **boiler** (a heat generator that burns fuel),
 - a **thermal store** (``hts``): shifts heat in time, with a charge/discharge
@@ -40,7 +40,7 @@ draw), ``vHeatCharge`` / ``vHeatDischarge`` / ``vHeatInventory`` (thermal store)
 Constraints
 -----------
 
-``eHeatBalance`` -- nodal heat balance, supply == demand at each node. The supply side
+``eHeatBalance``: nodal heat balance, supply == demand at each node. The supply side
 is the sum of ``vHeatOutput`` over all heat generators ``htg`` (which already include
 the heat pumps, so heat-pump output is not a separate term), plus the net store flow
 ``vHeatDischarge - vHeatCharge`` over thermal stores, plus ``vHeatNotServed`` (a ``+``
@@ -56,7 +56,7 @@ heat drawn by the heat-to-power units:
    + \sum_{\genindex \in htw_{\busindex}} \vheatconsumed_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
 
-``eHeatPumpCOP`` -- heat-pump coupling, heat out = COP x electricity in (the
+``eHeatPumpCOP``: heat-pump coupling, heat out = COP x electricity in (the
 electricity draw is what couples the heat sector to the electricity balance):
 
 .. math::
@@ -64,14 +64,14 @@ electricity draw is what couples the heat sector to the electricity balance):
    \pheatpumpcop_{\genindex} \, \vheatpumpelec_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in htp
 
-``eHeatToEle`` -- heat-to-power, electricity out = efficiency x heat in:
+``eHeatToEle``: heat-to-power, electricity out = efficiency x heat in:
 
 .. math::
    \vheattoele_{\periodindex,\scenarioindex,\timeindex,\genindex} =
    \pheattoeleeff_{\genindex} \, \vheatconsumed_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in htw
 
-``eHeatInventory`` -- thermal-store inventory dynamics. The charge and discharge are
+``eHeatInventory``: thermal-store inventory dynamics. The charge and discharge are
 powers, so they are weighted by the load-level duration to accumulate energy, matching
 the electricity and hydrogen inventory balances (the heat balance above stays a power
 balance, with no duration, like ``eEleBalance``):
@@ -104,12 +104,35 @@ the electricity side, so it is not charged again here.
 Loop topology
 -------------
 
+.. graphviz::
+   :align: center
+   :alt: Electricity, heat and hydrogen joined by their converters: heat pump and heat-to-power for heat, electrolyser and fuel cell for hydrogen, and a fuel-burning boiler.
+
+   digraph loops {
+     graph [rankdir=LR, nodesep=0.35, ranksep=0.7, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     ele  [label="Electricity", shape=ellipse, fillcolor="#bbdefb", color="#1565c0", fontsize=11];
+     heat [label="Heat", shape=ellipse, fillcolor="#ffcdd2", color="#c62828", fontsize=11];
+     hyd  [label="Hydrogen", shape=ellipse, fillcolor="#c8e6c9", color="#2e7d32", fontsize=11];
+     hp   [label="Heat pump (COP)\neHeatPumpCOP"];
+     h2p  [label="Heat-to-power (htw)\neHeatToEle\ncloses the heat loop", style="rounded,filled,dashed"];
+     boil [label="Boiler\nburns fuel"];
+     ely  [label="Electrolyser (e2h)\neAllEnergy2Hyd"];
+     fc   [label="Fuel cell (h2e)\neAllEnergy2Ele\ncloses the hydrogen loop", style="rounded,filled,dashed"];
+     ele -> hp -> heat; heat -> h2p -> ele;
+     boil -> heat;
+     ele -> ely -> hyd; hyd -> fc -> ele;
+   }
+
+The dashed units close a loop back to electricity; a case without them has an open loop.
+
 - **Power to heat** is an open loop by default (heat pump / boiler; heat is a terminal
   demand). Adding a heat-to-power unit (``htw``) closes the power-heat loop.
 - **Hydrogen** is already closed-loop when a case includes both the electrolyser
   (``e2h``) and the fuel cell (``h2e``).
 
-Which loops are active is selected by the conversion units a case includes.
+The conversion units a case includes select the loops that are active.
 
 Input tables
 ------------
