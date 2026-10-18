@@ -188,3 +188,39 @@ def test_hourly_flows_at_quarter_hours_reproduce_the_hourly_ramps(tmp_path, dete
     hourly = _cost(_solve(_case(tmp_path / "h")))
     quarter = _cost(_solve(_quarter_case(tmp_path / "q", _declare_hourly)))
     assert quarter == pytest.approx(hourly, rel=SAME)
+
+
+# --- storage reset (Parameter StorageResetHours) ---------------------------------------------
+
+def _reset_levels(m, unit="BESS_01"):
+    """Ordinal positions of the levels where the store's inventory is fixed."""
+    lv = list(m.n)
+    return [lv.index(n) + 1 for (p, sc, n, g) in m.vEleInventory if g == unit and m.vEleInventory[p, sc, n, g].fixed]
+
+
+@pytest.mark.parametrize("hours, quarters, expected", [
+    (None, False, []),             # default 744 h: no reset inside 48 h
+    (24, False, [24, 48]),
+    (0, False, []),
+    (24, True, [96, 192]),         # 24 h is 96 quarter-hour levels
+])
+def test_storage_reset_hours(tmp_path, hours, quarters, expected):
+    """An Hourly store is set back to its initial inventory every StorageResetHours."""
+    edit = (lambda f: _set_parameter(f, "StorageResetHours", hours)) if hours is not None else None
+    d = _quarter_case(tmp_path, edit) if quarters else _case(tmp_path)
+    if hours is not None and not quarters:
+        edit(d / CASE)
+    m = build_model(str(d), CASE, DATE)
+    assert m.Par["pEleGenStorageType"]["BESS_01"] == "Hourly"
+    assert _reset_levels(m) == expected
+    for n in expected:
+        assert m.vEleInventory["period1", "sc01", list(m.n)[n - 1], "BESS_01"].value == pytest.approx(
+            m.Par["pEleInitialInventory"]["BESS_01"]["period1", "sc01", m.n.first()])
+
+
+@pytest.mark.parametrize("hours", [-1, 0.5])
+def test_storage_reset_hours_must_be_zero_or_a_level(tmp_path, hours):
+    d = _case(tmp_path)
+    _set_parameter(d / CASE, "StorageResetHours", hours)
+    with pytest.raises(ValueError, match="StorageResetHours"):
+        build_structure(str(d), CASE, DATE)
