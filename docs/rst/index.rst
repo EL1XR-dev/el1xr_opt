@@ -40,9 +40,11 @@ Index
    getting-started/Installation
    getting-started/HowItWorks
    getting-started/Quickstart
+   getting-started/FirstRun
    getting-started/Projects
    getting-started/Papers
    getting-started/ContactUs
+   getting-started/Glossary
 
 
 .. toctree::
