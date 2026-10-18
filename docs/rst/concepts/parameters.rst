@@ -102,15 +102,15 @@ These parameters define the economic environment, including energy prices, tarif
      - Value-added tax (moms) multiplier for electricity
      - -
      - ``pEleRetMoms``
-   * - :math:`\pelemarketnetfee_{\eletraderindex}`
+   * - :math:`\pelemarketvarnetfee_{\eletraderindex}`
      - Per-kWh network transfer fee (överföringsavgift)
      - €/kWh
      - ``pEleRetOverforingsavgift``
-   * - :math:`\pelemarketnetfee_{\eletraderindex}`
+   * - :math:`\pelemarketfixnetfee_{\eletraderindex}`
      - Fixed monthly network connection fee (fast avgift)
      - €/month
      - ``pEleRetFastavgift``
-   * - :math:`\pelemarketnetfee_{\eletraderindex}`
+   * - :math:`\pelemarketenergytax_{\eletraderindex}`
      - Per-kWh electricity energy tax
      - €/kWh
      - ``pEleRetEnergyTax``

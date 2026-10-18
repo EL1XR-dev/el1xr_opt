@@ -87,7 +87,7 @@ These high-level variables are used to structure the objective function, represe
      - Total electricity peak cost
      - €
      - ``vTotalElePeakCost``
-   * - :math:`\elenetusecost_{\periodindex,\scenarioindex}`
+   * - :math:`\elenetvarusecost_{\periodindex,\scenarioindex}`
      - Total electricity network usage cost (per-kWh överföringsavgift)
      - €
      - ``vTotalEleNetUseVarCost``

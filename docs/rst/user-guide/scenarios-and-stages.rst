@@ -53,7 +53,7 @@ A single-year case with two equally likely scenarios and an hourly horizon:
 - **Scenarios:** ``sc01`` (50%), ``sc02`` (50%)
 - **Load levels:** 24 hourly steps, each with duration 1.
 
-The model solves for the optimal hourly dispatch under both scenarios, weighted by
-their probabilities, to find the best overall strategy for the year. For a sizing study
+The model solves for the hourly dispatch of that day under both scenarios, weighted by
+their probabilities. For a sizing study
 the load levels should represent a full year (via durations) so the annualised
 investment trades off against a full year of operation.

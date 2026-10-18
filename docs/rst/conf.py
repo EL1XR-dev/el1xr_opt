@@ -27,10 +27,31 @@ project = ''
 copyright = '2025, EL1XR-dev'
 author = 'EL1XR-dev Team'
 
-# The short X.Y version
-version = 'version 1.0.1'
-# The full version, including alpha/beta/rc tags
-release = ''
+# The version is read from the installed package, so it follows pyproject.toml
+try:
+    from importlib.metadata import version as _pkg_version
+    release = _pkg_version('el1xr_opt')
+except Exception:
+    _m = re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / 'pyproject.toml').read_text(), re.M)
+    release = _m.group(1) if _m else ''
+version = '.'.join(release.split('.')[:2])
+
+# The option-flag table on the features page is written from the code at every build
+def _write_flag_table():
+    out = pathlib.Path(__file__).parent / 'concepts' / 'flags.inc'
+    try:
+        from el1xr_opt.Modules.oM_Features import FEATURES
+    except Exception as exc:
+        out.write_text(f'.. note:: The flag table could not be built: {exc}\n')
+        return
+    rows = ['.. list-table::', '   :widths: 30 10 60', '   :header-rows: 1', '',
+            '   * - Flag', '     - Default', '     - Effect']
+    for f in FEATURES:
+        rows += [f'   * - ``{f.flag}``', f'     - {f.default}', f'     - {f.doc}']
+    out.write_text('\n'.join(rows) + '\n')
+
+
+_write_flag_table()
 
 
 # -- General configuration ---------------------------------------------------
@@ -186,6 +207,9 @@ mathjax3_config = {
             "nGER": r"\mathcal{G}^{e,res}",                     # All renewable electrical generators
             "nGVRE": r"\mathcal{G}^{e,vres}",                   # All variable renewable electrical generators
             "nGENR": r"\mathcal{G}^{e,nonres}",                 # All non-renewable electrical generators
+            "nGR": r"\mathcal{G}^{e,res}",                      # Renewable (RES) electrical generators
+            "nGT": r"\mathcal{G}^{e,th}",                       # Thermal (committable) electrical generators
+            "nGV": r"\mathcal{G}^{e,ev}",                       # Electric-vehicle units
             "nGET": r"\mathcal{G}^{e,th}",                      # All thermal electrical generators
             "nGEH": r"\mathcal{G}^{e,h}",                       # All electrical generators consuming hydrogen
             "nGH": r"\mathcal{G}^{h}",                          # All hydrogen generators
@@ -479,8 +503,8 @@ mathjax3_config = {
             "pelemarketcertrevenue": r"M^{cert,e}",             # Electrical certificate fee revenue
             "pelemarketpassthrough": r"M^{pass,e}",             # Electrical pass-through fee
             "pelemarketmoms": r"M^{moms,e}",                    # Electrical tax (moms)
-            "pelemarketfixnetfee": r"M^{net,e}",                # Electrical fix network fee
-            "pelemarketvarnetfee": r"M^{net,e}",                # Electrical var network fee
+            "pelemarketfixnetfee": r"M^{fix,net,e}",            # Electrical fix network fee
+            "pelemarketvarnetfee": r"M^{var,net,e}",            # Electrical var network fee
             "pelemarketenergytax": r"M^{tax,e}",                # Electrical energy tax
             "pelemarkettariff": r"M^{tariff,e}",                # Electrical tariff
             "pmaxmarketbuy": r"\overline{MB}",                  # Max market buying

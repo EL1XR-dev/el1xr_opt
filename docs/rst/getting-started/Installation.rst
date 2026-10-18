@@ -4,11 +4,16 @@ Installation
 Requirements
 ------------
 - Python >= 3.11
-- A MILP/MINLP solver (e.g., Gurobi, HiGHS, CBC)
+- An LP/MILP solver: HiGHS (installed on the first run), Gurobi, CBC or CPLEX
 
-Install from PyPI::
+Install the latest release from PyPI::
 
     pip install el1xr_opt
+
+This documentation follows the ``main`` branch on GitHub, which can be ahead of the latest
+release. A feature described here may need the version from GitHub, installed as below.
+HiGHS is installed on the first run; see :doc:`../user-guide/solvers-and-settings` for the
+other solvers.
 
 Alternatively, install (editable) with the recommended `el1xr_opt/` layout::
 

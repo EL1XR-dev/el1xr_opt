@@ -115,102 +115,132 @@ the elements of that set.
 oM_Data Files
 """""""""""""
 
-These files contain the numerical data for the model's parameters. This includes
-time series data, costs, efficiencies, and other parameters that define the
-behavior of the model.
+These files hold the numbers. There are three layouts:
 
-.. list-table:: oM_Data Files
+- **Unit tables**, one row per unit, demand, retailer or line, and one column per attribute
+  (for example ``Node``, ``MaximumPower``, ``StorageType``).
+- **Time series**, one row per period, scenario and load level, and one column per unit,
+  demand or retailer.
+- **Single-row tables** (``Option`` and ``Parameter``), one column per setting.
+
+Unit tables
+"""""""""""
+
+.. list-table::
    :widths: 35 65
    :header-rows: 1
 
    * - File
-     - Description
-   * - ``oM_Data_Duration_Home1.csv``
-     - Specifies the duration of each time step.
-   * - ``oM_Data_ElectricityDemand_Home1.csv``
-     - Time series data for electricity demand. Columns: ``Period``, ``Scenario``, ``LoadLevel``, value.
-   * - ``oM_Data_ElectricityGeneration_Home1.csv``
-     - Parameters for electricity generation technologies (e.g., capacity). Columns: ``Technology``, parameter values.
-   * - ``oM_Data_ElectricityNetwork_Home1.csv``
-     - Data for the electricity network, like line capacities.
-   * - ``oM_Data_ElectricityRetail_Home1.csv``
-     - Data related to electricity retail.
-   * - ``oM_Data_HydrogenDemand_Home1.csv``
-     - Time series data for hydrogen demand.
-   * - ``oM_Data_HydrogenGeneration_Home1.csv``
-     - Parameters for hydrogen generation technologies.
-   * - ``oM_Data_HydrogenNetwork_Home1.csv``
-     - Data for the hydrogen network.
-   * - ``oM_Data_HydrogenRetail_Home1.csv``
-     - Data related to hydrogen retail.
-   * - ``oM_Data_NodeLocation_Home1.csv``
-     - Defines the geographical location (e.g., latitude, longitude) of nodes.
-   * - ``oM_Data_OperatingReserveActivation_Home1.csv``
-     - Cost or activation data for operating reserves.
-   * - ``oM_Data_OperatingReservePrice_Home1.csv``
-     - Prices for operating reserves.
-   * - ``oM_Data_OperatingReserveRequire_Home1.csv``
-     - Requirements for operating reserves.
-   * - ``oM_Data_Option_Home1.csv``
-     - Contains various modeling options and flags.
-   * - ``oM_Data_Parameter_Home1.csv``
-     - Defines global parameters like costs, discount rates, and time steps.
-   * - ``oM_Data_Period_Home1.csv``
-     - Defines the characteristics of each period, like duration.
-   * - ``oM_Data_Scenario_Home1.csv``
-     - Provides scenario-specific data, such as probabilities.
-   * - ``oM_Data_Tariff_Home1.csv``
-     - Contains electricity tariff data.
-   * - ``oM_Data_VarEnergyCost_Home1.csv``
-     - Variable costs associated with energy.
-   * - ``oM_Data_VarEnergyPrice_Home1.csv``
-     - Variable prices for energy.
-   * - ``oM_Data_VarMaxConsumption_Home1.csv``
-     - Upper bounds for consumption variables.
-   * - ``oM_Data_VarMaxDemand_Home1.csv``
-     - Upper bounds for demand variables.
-   * - ``oM_Data_VarMaxEmissionCost_Home1.csv``
-     - Upper bounds for emission cost variables.
-   * - ``oM_Data_VarMaxEnergy_Home1.csv``
-     - Upper bounds for energy variables.
-   * - ``oM_Data_VarMaxFuelCost_Home1.csv``
-     - Upper bounds for fuel cost variables.
-   * - ``oM_Data_VarMaxGeneration_Home1.csv``
-     - Upper bounds for generation variables.
-   * - ``oM_Data_VarMaxInflows_Home1.csv``
-     - Upper bounds for inflow variables.
-   * - ``oM_Data_VarMaxOutflows_Home1.csv``
-     - Upper bounds for outflow variables.
-   * - ``oM_Data_VarMaxStorage_Home1.csv``
-     - Upper bounds for storage variables (e.g., max capacity). Columns: ``Storage``, ``Node``, value.
-   * - ``oM_Data_VarMinConsumption_Home1.csv``
-     - Lower bounds for consumption variables.
-   * - ``oM_Data_VarMinDemand_Home1.csv``
-     - Lower bounds for demand variables.
-   * - ``oM_Data_VarMinEmissionCost_Home1.csv``
-     - Lower bounds for emission cost variables.
-   * - ``oM_Data_VarMinEnergy_Home1.csv``
-     - Lower bounds for energy variables.
-   * - ``oM_Data_VarMinFuelCost_Home1.csv``
-     - Lower bounds for fuel cost variables.
-   * - ``oM_Data_VarMinGeneration_Home1.csv``
-     - Lower bounds for generation variables.
-   * - ``oM_Data_VarMinInflows_Home1.csv``
-     - Lower bounds for inflow variables.
-   * - ``oM_Data_VarMinOutflows_Home1.csv``
-     - Lower bounds for outflow variables.
-   * - ``oM_Data_VarMinStorage_Home1.csv``
-     - Lower bounds for storage variables.
-   * - ``oM_Data_VarPositionConsumption_Home1.csv``
-     - Position data for consumption variables.
-   * - ``oM_Data_VarPositionGeneration_Home1.csv``
-     - Position data for generation variables.
-   * - ``oM_Data_VarPositionOutflows_Home1.csv``
-     - Position data for outflow variables.
-   * - ``oM_Data_VarShutDown_Home1.csv``
-     - Costs or parameters for shutting down units.
-   * - ``oM_Data_VarStartUp_Home1.csv``
-     - Costs or parameters for starting up units.
+     - Content
+   * - ``oM_Data_ElectricityGeneration``
+     - One row per electricity unit (generator, battery, EV, fuel cell): node, retailer,
+       technology, capacities, efficiencies, storage type, costs, investment and FCR settings.
+   * - ``oM_Data_HydrogenGeneration``
+     - One row per hydrogen unit (electrolyser, hydrogen store, compressor). A compressor row
+       names its outlet node in ``DischargeNode``.
+   * - ``oM_Data_ElectricityDemand`` / ``oM_Data_HydrogenDemand``
+     - One row per demand: node, retailer, whether it is flexible, and its period window.
+   * - ``oM_Data_ElectricityRetail`` / ``oM_Data_HydrogenRetail``
+     - One row per retailer: node, whether it buys or sells, energy limits, and the tariff
+       terms.
+   * - ``oM_Data_ElectricityNetwork`` / ``oM_Data_HydrogenNetwork``
+     - One row per line or pipe, indexed by from-node, to-node and circuit: capacity, length,
+       losses, reactance and investment data.
+   * - ``oM_Data_NodeLocation``
+     - Latitude and longitude of each node, used to compute line lengths.
+   * - ``oM_Data_Period``
+     - The weight of each period.
+   * - ``oM_Data_Scenario``
+     - The probability of each scenario in each period.
+
+Time series
+"""""""""""
+
+Every time series has one row per period, scenario and load level. In the per-unit series
+(``VarMin*`` and ``VarMax*``), a zero or blank cell falls back to the unit's constant value in
+its unit table.
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - File
+     - Content
+   * - ``oM_Data_Duration``
+     - The duration of each load level in hours. A load level with a zero or blank duration
+       is left out of the model.
+   * - ``oM_Data_VarMaxDemand`` / ``oM_Data_VarMinDemand``
+     - The demand of each electricity and hydrogen demand, per load level.
+   * - ``oM_Data_VarMaxGeneration`` / ``oM_Data_VarMinGeneration``
+     - The maximum and minimum output of each unit (for example a solar profile).
+   * - ``oM_Data_VarMaxConsumption`` / ``oM_Data_VarMinConsumption``
+     - The maximum and minimum charge or consumption of each unit.
+   * - ``oM_Data_VarMaxStorage`` / ``oM_Data_VarMinStorage``
+     - The maximum and minimum stored energy of each store.
+   * - ``oM_Data_VarMaxInflows`` / ``oM_Data_VarMinInflows``
+     - Energy flowing into a store from outside the model, such as natural inflows.
+   * - ``oM_Data_VarMaxOutflows`` / ``oM_Data_VarMinOutflows``
+     - Energy leaving a store outside the model, such as the driving use of an EV.
+   * - ``oM_Data_VarMaxFuelCost`` / ``oM_Data_VarMinFuelCost``
+     - The variable cost of each unit, per load level.
+   * - ``oM_Data_VarMaxEmissionCost`` / ``oM_Data_VarMinEmissionCost``
+     - The emission cost of each unit, per load level.
+   * - ``oM_Data_VarFixedAvailability``
+     - The availability of a store (1 available, 0 not), used only for units with
+       ``FixedAvailability`` set. At 0 the store can neither charge nor discharge, as for an
+       EV that is not plugged in.
+   * - ``oM_Data_VarEnergyCost`` / ``oM_Data_VarEnergyPrice``
+     - The buying and selling price of each retailer, per load level.
+   * - ``oM_Data_OperatingReservePrice``
+     - The FCR-D and FCR-N capacity prices, per product (``FCRD_Up``, ``FCRD_Down``,
+       ``FCRN_Up``, ``FCRN_Down``).
+   * - ``oM_Data_OperatingReserveRequire``
+     - The FCR volume the market buys, per product. The bids of all units together stay
+       below it.
+   * - ``oM_Data_OperatingReserveActivation``
+     - The expected share of each FCR product that is activated, per load level.
+   * - ``oM_Data_VarMaxEnergy`` / ``oM_Data_VarMinEnergy``,
+       ``oM_Data_VarPositionGeneration`` / ``oM_Data_VarPositionConsumption`` /
+       ``oM_Data_VarPositionOutflows``, ``oM_Data_Tariff``
+     - Read but not used by the current formulation. The ``VarMaxEnergy``, ``VarMinEnergy``
+       and two ``VarPosition*`` series must still be present, and may be empty.
+
+Single-row tables
+"""""""""""""""""
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - File
+     - Content
+   * - ``oM_Data_Option``
+     - The option flags, for example unit commitment, ramps or investment. The flags and
+       their defaults are listed in :doc:`../concepts/features-and-modes`.
+   * - ``oM_Data_Parameter``
+     - The global settings: costs of energy not served, discount rate, reference nodes, time
+       step, load-level length (``LoadLevelMinutes``), unit scale (``Factor1``), money scale
+       (``MoneyBase``) and others.
+
+Optional tables
+"""""""""""""""
+
+These are read only when present, so a case without them is unchanged.
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - File
+     - Content
+   * - ``oM_Data_SeriesResolution``
+     - The resolution of a time-series file that is given at its own resolution, for example
+       ``OperatingReservePrice,uniform 1h``. See :doc:`../concepts/time-structure`.
+   * - ``oM_Data_Resolution``
+     - A declared resolution per unit, flow or inventory (time blocks). See
+       :doc:`../concepts/time-structure`.
+   * - ``oM_Data_HeatGeneration``, ``oM_Data_HeatDemand``, ``oM_Data_VarMaxHeatDemand``
+     - The heat sector. See :doc:`../concepts/heat-sector`.
 
 Loaders
 -------

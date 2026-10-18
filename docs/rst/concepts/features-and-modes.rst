@@ -8,15 +8,16 @@ choosing the solver and (for a future migration) the model-building library.
 Option-flag catalogue
 ---------------------
 
-The ``FEATURES`` catalogue holds twelve ``IndBin*`` option flags, each with a safe
-default. ``apply_flag_defaults`` seeds those defaults so a case whose ``oM_Data_Option``
-file predates a flag still runs instead of raising a ``KeyError``. The flags cover
-unit-commitment binaries, network commitment, minimum up/down time, ramps, generation
-investment and retirement, electricity- and hydrogen-network investment, line
-commitment, network losses, single-node operation, and the energy community. The same
-helper also seeds the balance mode (``pParBalanceMode``); that mode is not a ``Feature``
-in the catalogue. Green-hydrogen matching is likewise not an ``oM_Features`` flag -- it
-is handled in ``oM_GreenHydrogen.py``.
+The ``FEATURES`` catalogue lists the option flags of the ``oM_Data_Option`` table, each
+with a safe default. ``apply_flag_defaults`` seeds those defaults, so a case whose option
+file predates a flag still runs instead of raising a ``KeyError``. The same helper also
+seeds the balance mode (``pParBalanceMode``), which is not a flag in the catalogue.
+Green-hydrogen matching is not a catalogue flag either; ``oM_GreenHydrogen.py`` handles it.
+
+The table below is written from the catalogue at every docs build, so it always lists the
+flags of the current code. A flag set to 1 turns the feature on.
+
+.. include:: flags.inc
 
 Problem classes
 ---------------
