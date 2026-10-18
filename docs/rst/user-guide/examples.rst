@@ -20,8 +20,8 @@ load levels and one electricity retailer.
    * - ``Home1``
      - Two nodes, joined by two electricity lines and one hydrogen pipe. One electricity unit
        (``EV_01``), one electricity demand (``EleD_01``), an electrolyser (``AEL_01``) and a
-       hydrogen store (``PEMEL_01``) with one hydrogen demand (``HydD1``). A copy is in
-       ``data/Home1``, which is the case the command line runs by default.
+       hydrogen store (``PEMEL_01``) with one hydrogen demand (``HydD1``). It is the case the
+       command line runs by default. A copy is in ``data/Home1``.
    * - ``Grid1``
      - Home1 with a third node on a third line. Three electricity units (``EV_01``,
        ``BESS_02``, ``Solar_02``), two electricity demands, the same electrolyser and hydrogen
@@ -56,7 +56,7 @@ Running an example
 
 Run a case by its folder and name. ``--dir`` is the folder that holds the case folder::
 
-    el1xr-run --dir data --case Home1 --solver highs
+    el1xr-run --dir src/el1xr_opt --case Home1 --solver highs
     el1xr-run --dir src/el1xr_opt --case Grid1 --solver highs
     el1xr-run --dir data/H2VPP --case Home1 --solver highs
 
