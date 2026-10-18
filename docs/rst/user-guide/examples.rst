@@ -1,37 +1,65 @@
 Examples
 ========
 
-The framework includes pre-configured example cases that demonstrate how to structure input data for different energy system scales and configurations. These cases can be found in the ``src/el1xr_opt/`` directory and can be run using the main script.
+The repository ships two kinds of example cases: two small cases inside the package, and the
+case studies in the ``data/`` folder that the tests and the papers use. Each case is a folder
+of CSV files (or one ``.duckdb`` file) named after the case; see :doc:`data-and-io`.
 
-Grid-Scale System: ``Grid1``
------------------------------
-
-The ``Grid1`` case represents a simplified, grid-scale hybrid energy system. It is designed to model the interactions between electricity and hydrogen networks, including various generation, storage, and demand technologies.
-
-**Key Features:**
-
-*   **Integrated Networks**: Includes data for both electricity and hydrogen grids (``oM_Data_ElectricityNetwork_Grid1.csv``, ``oM_Data_HydrogenNetwork_Grid1.csv``).
-*   **Multiple Technologies**: Models a mix of generation assets, such as conventional power plants, renewables, and electrolyzers.
-*   **Demand Profiles**: Contains sample data for electricity and hydrogen demand (``oM_Data_ElectricityDemand_Grid1.csv``, ``oM_Data_HydrogenDemand_Grid1.csv``).
-*   **Operational Constraints**: The model is configured to consider operational details like generator ramping limits and minimum uptime/downtime, as specified in ``oM_Data_Option_Grid1.csv``.
-
-This case is useful for users interested in transmission-level analysis, sector coupling, and large-scale renewable integration.
-
-Residential Microgrid: ``Home1``
---------------------------------
-
-The ``Home1`` case models a small-scale residential microgrid or a single "energy-prosumer" home. It is suitable for analyzing behind-the-meter assets and local energy optimization.
-
-**Key Features:**
-
-*   **Local Assets**: Focuses on typical residential technologies like rooftop solar PV, battery storage, and a home charger for an electric vehicle.
-*   **Retail Tariffs**: Incorporates data for electricity retail prices and tariffs (``oM_Data_ElectricityRetail_Home1.csv``, ``oM_Data_Tariff_Home1.csv``), which are key drivers for residential optimization.
-*   **Simplified Network**: Assumes a single-node or a very simple local network structure.
-*   **Operational Logic**: Like the grid-scale case, it uses an options file (``oM_Data_Option_Home1.csv``) to define the active model constraints.
-
-This case serves as a good starting point for users focused on distributed energy resources (DERs), demand response, and home energy management systems.
-
-Running the Examples
+Cases in the package
 --------------------
 
-To run an example, you typically need to point the main execution script (e.g., ``el1xr_Main.py``) to the desired case directory. This is usually done by modifying a configuration file or a command-line argument that specifies the ``CaseName`` (e.g., "Grid1" or "Home1").
+These two cases are installed with the package, in ``src/el1xr_opt/``. Both have 8736 hourly
+load levels and one electricity retailer.
+
+.. list-table::
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Case
+     - Content
+   * - ``Home1``
+     - Two nodes, joined by two electricity lines and one hydrogen pipe. One electricity unit
+       (``EV_01``), one electricity demand (``EleD_01``), an electrolyser (``AEL_01``) and a
+       hydrogen store (``PEMEL_01``) with one hydrogen demand (``HydD1``). It is the case the
+       command line runs by default. A copy is in ``data/Home1``.
+   * - ``Grid1``
+     - Home1 with a third node on a third line. Three electricity units (``EV_01``,
+       ``BESS_02``, ``Solar_02``), two electricity demands, the same electrolyser and hydrogen
+       store, and one hydrogen demand.
+
+Case studies in ``data/``
+-------------------------
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Folder
+     - Content
+   * - ``data/H2VPP/Home1``
+     - A small hydrogen virtual-power-plant case: ten EVs, a battery, ten solar units, an
+       electrolyser and a hydrogen store, with candidate units for sizing. It solves in about
+       one second, and many solve tests use it. See ``data/H2VPP/README.md``.
+   * - ``data/sizing``
+     - Small variants of H2VPP (battery sizing, electrolyser, hydrogen tank, compressor,
+       tariff and FCR on or off), written by ``make_sizing_cases.py`` and used by the test
+       suite. See ``data/sizing/README.md``.
+   * - ``data/EEM26``
+     - The base microgrid of the EEM26 study, with the scripts that create and run its cases.
+   * - ``data/H2VPPFCR``
+     - The wind, battery, electrolyser and tank plant of the hydrogen-VPP FCR paper, in SE3
+       with 2025 prices. ``build_case.py`` writes the case and ``run_year.py`` solves it. See
+       ``data/H2VPPFCR/README.md``.
+
+Running an example
+------------------
+
+Run a case by its folder and name. ``--dir`` is the folder that holds the case folder::
+
+    el1xr-run --dir src/el1xr_opt --case Home1 --solver highs
+    el1xr-run --dir src/el1xr_opt --case Grid1 --solver highs
+    el1xr-run --dir data/H2VPP --case Home1 --solver highs
+
+The results are written to ``results.duckdb`` in the case folder; see
+:doc:`../concepts/results-and-postprocessing`. The same runs from Python are shown in
+:doc:`../getting-started/Quickstart`.

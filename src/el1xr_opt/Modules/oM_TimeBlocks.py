@@ -221,10 +221,10 @@ def read_declarations(model, data_frames, parameters_dict):
 def apply_capacity_rule(model, parameters_dict):
     """Apply BlockLimit to the lower and upper limits of each declared output and charge.
 
-    Level: each limit becomes constant over the block, at its tightest value inside the block
-           (highest lower limit, lowest upper limit). A block whose highest lower limit exceeds its
-           lowest upper limit (a must-take profile that changes inside the block) is refused.
-    Mean:  both limits become their duration-weighted mean over the block.
+    - Level: each limit becomes constant over the block, at its tightest value inside the block
+      (highest lower limit, lowest upper limit). A block whose highest lower limit exceeds its
+      lowest upper limit (a must-take profile that changes inside the block) is refused.
+    - Mean: both limits become their duration-weighted mean over the block.
 
     The storage limits of a declared inventory become those of the last level of each block,
     whatever BlockLimit is: the inventory is the stored energy at that level. A declared

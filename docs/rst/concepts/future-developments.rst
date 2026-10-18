@@ -78,10 +78,11 @@ This category includes improvements that add new features, constraints, or more 
         *   Modify the objective function in `oM_ModelFormulation.py` to include this revenue component.
         *   Add a new parameter for the PPA strike price (:math:`pPPA_{strike}`) and a variable for the PPA volume (:math:`vPPA_{volume,t}`).
 
-4.  **Multiple Timescales Modeling**:
+4.  **Multiple Timescales Modeling** (partially implemented):
 
     *   **Challenge**: The model needs to handle both high-resolution frequency regulation signals (second/minute-level) and energy market data (hour-level) simultaneously.
-    *   **To-Do**: Investigate and implement the best time resolution to handle both frequency and energy markets, potentially using time-aggregation techniques.
+    *   **Done**: Load levels shorter than an hour (``LoadLevelMinutes``), time series at their own resolution and resolutions per unit and flow (see :doc:`time-structure`).
+    *   **To-Do**: Signals below one load level, such as second-level frequency deviations, are still represented only through activation shares.
     *   **Prototype Equation**: This is primarily a structural change. Equations would need to be defined over different time sets, for example energy balance over hourly steps :math:`t` and FCR provision over minute-steps :math:`\tau`:
 
         .. math::

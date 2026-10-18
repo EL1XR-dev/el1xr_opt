@@ -15,6 +15,7 @@ This project follows a `src/` layout:
     │     ├─ __main__.py            # CLI entry point (python -m el1xr_opt)
     │     ├─ el1xr_Main.py          # argument parsing / el1xr-run
     │     ├─ Grid1/  Home1/         # sample cases
+    │     ├─ sweep/                 # parameter sweeps over a case
     │     └─ Modules/
     │        ├─ oM_Sequence.py            # build_model / routine: orchestrates the run
     │        ├─ oM_LoadCase.py            # builds the argument dict
@@ -24,6 +25,8 @@ This project follows a `src/` layout:
     │        ├─ oM_InputSchema.py         #   table/column schema
     │        ├─ oM_CsvToDuckDB.py         # el1xr-csv2duckdb converter
     │        ├─ oM_InputData.py           # data_processing: sets and parameters
+    │        ├─ oM_Time.py                # timelines, resolutions and resampling
+    │        ├─ oM_TimeBlocks.py          # load-level length, series resolutions, time blocks
     │        ├─ oM_ModelFormulation.py    # core constraints and objective
     │        ├─ oM_Investment.py          # capacity-sizing layer
     │        ├─ oM_GreenHydrogen.py       # RFNBO matching + PPA
@@ -35,7 +38,7 @@ This project follows a `src/` layout:
     │        ├─ oM_ProblemSolving.py oM_SolverSetup.py  # solve + solver setup
     │        ├─ oM_OutputData.py oM_OutputData_duckdb.py  # CSV / DuckDB results
     │        └─ utils/
-    ├─ data/   # case studies (H2VPP, EEM26, sizing variants)
+    ├─ data/   # case studies (Home1, H2VPP, H2VPPFCR, EEM26, sizing variants)
     ├─ tests/
     └─ docs/
 

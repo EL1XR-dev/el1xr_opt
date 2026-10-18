@@ -184,3 +184,6 @@ data/sizing/*/
 
 # Local working draft, not for the repo
 docs/paper_related_work_novelty_draft.md
+
+# Option-flag table written by docs/rst/conf.py at every build
+docs/rst/concepts/flags.inc

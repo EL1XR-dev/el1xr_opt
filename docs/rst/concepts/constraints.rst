@@ -15,7 +15,7 @@ The optimization model is governed by a series of constraints that ensure the so
 
 Market and Commercial Constraints
 ------------------------------------
-These constraints model the rules for interacting with external markets. And the economic trading is shown in the next figure.
+These constraints model the rules for interacting with external markets. The figure shows the payments between an end user and the network operator (fees and the peak tariff), the retailer or market (energy at the spot price, flexibility services) and the state (energy tax, tax reduction on export, VAT).
 
 .. image:: /../img/Market_interaction.png
    :scale: 30%
@@ -26,7 +26,7 @@ Day-ahead Electricity Market Participation
 
 Participation in the day-ahead electricity market is modeled through constraints ensuring that energy bought or sold doesn't exceed predefined limits for each time step and retailer.
 
-Electricity bought from the market is enabled if :math:`\pelemaxmarketbuy_{\eltraderindex} >= 0.0`. The upper bound is defined by («``eEleRetMaxBuy``»):
+The electricity bought through a retailer is bounded by its maximum purchase (``pEleRetMaxBuy``) when that is positive; a zero or blank value leaves the purchase unbounded («``eEleRetMaxBuy``»):
 
 .. math::
    \velebuy_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} \le \peleretmaxbuy_{\eltraderindex}
@@ -44,7 +44,7 @@ The composition of electricity bought from the market is defined by («``eEleBuy
    ``eEleBuyComposition`` is currently disabled in the model (commented out in
    ``oM_ModelFormulation.py``). The relation above documents its intended form.
 
-Electricity sold to the market is enabled if :math:`\pelemaxmarketsell_{\eltraderindex} >= 0.0`. The upper bound is defined by («``eEleRetMaxSell``»):
+The electricity sold through a retailer is bounded by its maximum sale (``pEleRetMaxSell``) when that is positive; a zero or blank value leaves the sale unbounded («``eEleRetMaxSell``»):
 
 .. math::
    \velesell_{\periodindex,\scenarioindex,\timeindex,\eltraderindex} \le \peleretmaxsell_{\eltraderindex}
