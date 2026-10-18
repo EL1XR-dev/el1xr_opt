@@ -93,6 +93,11 @@ If you make changes to the documentation, you should build it locally to ensure 
 
       pip install -r requirements.txt
 
+   The diagrams are drawn by Graphviz, which is a program, not a Python package. Install it
+   with your system's package manager, for example ``brew install graphviz`` on macOS,
+   ``sudo apt-get install graphviz`` on Debian or Ubuntu, or ``conda install graphviz``.
+   Without it the build warns on every diagram and fails with warnings treated as errors.
+
 3. **Build the HTML Documentation**:
 
    .. code-block:: bash

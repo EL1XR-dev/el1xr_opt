@@ -72,7 +72,8 @@ caught locally instead of in CI. Enable it once per clone::
 
    git config core.hooksPath .githooks
 
-It uses the project virtualenv (``.venv``) if present. Skip it for a single push with
+It uses the project virtualenv (``.venv``) if present. The docs build needs Graphviz (the
+``dot`` program) installed; see :doc:`contributing`. Skip it for a single push with
 ``git push --no-verify``.
 
 Continuous integration

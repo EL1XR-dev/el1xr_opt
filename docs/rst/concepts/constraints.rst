@@ -13,6 +13,61 @@ The optimization model is governed by a series of constraints that ensure the so
    injection when a heat case is active, and the retail balance carries the community
    share terms.
 
+Map of the balances
+-------------------
+
+The model has one energy balance per carrier at every node and load level: «``eEleBalance``»
+for electricity, «``eHydBalance``» for hydrogen and «``eHeatBalance``» for heat. Every unit,
+store, line and market enters one or two of them. The map shows which, and names the
+constraint that links each pair. Reserve bids (FCR) are not energy flows; they are limited by
+the headroom of each unit, in the reserve constraints below.
+
+.. graphviz::
+   :align: center
+   :alt: Map of the electricity, hydrogen and heat balances and the units, stores, lines and markets that enter them.
+
+   digraph balances {
+     graph [rankdir=LR, nodesep=0.18, ranksep=0.45, fontname="Helvetica", splines=true];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888", margin="0.12,0.05"];
+     edge  [color="#666666", arrowsize=0.6];
+
+     emkt  [label="Electricity market, via a retailer\neEleRetNodeBalance", fillcolor="#fff3e0", color="#ef6c00"];
+     gen   [label="Generators, solar, wind", fillcolor="#e3f2fd", color="#1565c0"];
+     bess  [label="Batteries, EVs\neEleInventory", fillcolor="#e3f2fd", color="#1565c0"];
+     line  [label="Lines to other nodes\neKirchhoff2ndLaw", fillcolor="#e3f2fd", color="#1565c0"];
+     edem  [label="Electricity demand", fillcolor="#e3f2fd", color="#1565c0"];
+
+     ebal  [label="Electricity balance\neEleBalance", shape=ellipse, fillcolor="#bbdefb", color="#1565c0", fontsize=11];
+
+     ely   [label="Electrolyser\neAllEnergy2Hyd"];
+     fc    [label="Fuel cell\neAllEnergy2Ele"];
+     comp  [label="Compressor\ndraws power here,\nmoves H2 to its discharge node"];
+     hp    [label="Heat pump\neHeatPumpCOP"];
+     h2p   [label="Heat-to-power\neHeatToEle"];
+
+     hbal  [label="Hydrogen balance\neHydBalance", shape=ellipse, fillcolor="#c8e6c9", color="#2e7d32", fontsize=11];
+     tbal  [label="Heat balance\neHeatBalance", shape=ellipse, fillcolor="#ffcdd2", color="#c62828", fontsize=11];
+
+     hst   [label="Hydrogen stores\neHydInventory", fillcolor="#e8f5e9", color="#2e7d32"];
+     pipe  [label="Pipes to other nodes", fillcolor="#e8f5e9", color="#2e7d32"];
+     hdem  [label="Hydrogen demand", fillcolor="#e8f5e9", color="#2e7d32"];
+     hmkt  [label="Hydrogen market, via a retailer\neHydBuyComposition, eHydSellComposition", fillcolor="#fff3e0", color="#ef6c00"];
+     tst   [label="Heat stores\neHeatInventory", fillcolor="#fdecea", color="#c62828"];
+     boil  [label="Boiler (burns fuel)", fillcolor="#fdecea", color="#c62828"];
+     tdem  [label="Heat demand", fillcolor="#fdecea", color="#c62828"];
+
+     emkt -> ebal [dir=both]; gen -> ebal; bess -> ebal [dir=both]; line -> ebal [dir=both]; ebal -> edem [dir=back, arrowtail=normal, constraint=true];
+     ebal -> ely -> hbal;
+     hbal -> fc -> ebal [constraint=false];
+     ebal -> comp; comp -> hbal;
+     ebal -> hp -> tbal;
+     tbal -> h2p -> ebal [constraint=false];
+     hbal -> hst [dir=both]; hbal -> pipe [dir=both]; hbal -> hdem; hbal -> hmkt [dir=both];
+     tbal -> tst [dir=both]; tbal -> boil [dir=back]; tbal -> tdem;
+     {rank=same; ely; fc; comp; hp; h2p;}
+     {rank=same; hbal; tbal;}
+   }
+
 Market and Commercial Constraints
 ------------------------------------
 These constraints model the rules for interacting with external markets. The figure shows the payments between an end user and the network operator (fees and the peak tariff), the retailer or market (energy at the spot price, flexibility services) and the state (energy tax, tax reduction on export, VAT).

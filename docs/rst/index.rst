@@ -38,6 +38,7 @@ Index
    :caption: Get started
 
    getting-started/Installation
+   getting-started/HowItWorks
    getting-started/Quickstart
    getting-started/Projects
    getting-started/Papers
