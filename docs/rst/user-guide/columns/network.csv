@@ -1,0 +1,18 @@
+Column,Table,Meaning,Unit or values
+Type,electricity,Kind of line: ``AC`` (DC power flow with angles) or ``DC``.,"AC, DC"
+Switching,electricity,The line is switchable: its on and off state is a decision of the model.,Yes / No
+InitialPeriod,both,First year in which the line or pipe exists.,year
+FinalPeriod,both,Last year in which the line or pipe exists.,year
+Length,both,"Length of the line or pipe. When zero, it is computed from the node coordinates (``oM_Data_NodeLocation``).",km
+Reactance,electricity,"Reactance of the line, used by the DC power flow; also read by the AC OPF analysis.",per unit
+Resistance,electricity,"Resistance of the line, read by the AC OPF analysis only.",per unit
+TTC,both,Transfer capacity in the forward direction.,"power, or kg per hour"
+TTCBck,both,Transfer capacity in the backward direction.,"power, or kg per hour"
+SecurityFactor,both,Share of the transfer capacity that may be used; it multiplies ``TTC`` and ``TTCBck``.,share (0 to 1)
+FixedInvestmentCost,both,Investment cost of a candidate line or pipe; a positive value makes it a candidate.,money
+FixedChargeRate,both,Annualisation factor of the investment cost.,per year
+BinaryInvestment,both,The build of a candidate line or pipe is all or nothing.,Yes / No
+InvestmentLo,both,Lower bound of the build fraction of a candidate.,share (0 to 1)
+InvestmentUp,both,Upper bound of the build fraction of a candidate.,share (0 to 1)
+SwOnTime,electricity,Minimum time a switchable line stays on.,hours
+SwOffTime,electricity,Minimum time a switchable line stays off.,hours

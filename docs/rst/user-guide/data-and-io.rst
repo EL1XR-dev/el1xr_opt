@@ -146,6 +146,8 @@ These files hold the numbers. There are three layouts:
 Unit tables
 """""""""""
 
+The columns of each table are listed in :doc:`input-columns`.
+
 .. list-table::
    :widths: 35 65
    :header-rows: 1

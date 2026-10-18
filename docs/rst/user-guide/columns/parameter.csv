@@ -1,0 +1,17 @@
+Column,Table,Meaning,Unit or values
+ENSCost,Parameter,Cost of electricity demand not served.,money per energy
+HNSCost,Parameter,Cost of hydrogen demand not served.,money per kg
+CO2Cost,Parameter,Price of CO2 emissions.,money per t CO2
+TimeStep,Parameter,Number of hours each load level stands for; it multiplies the durations.,hours
+AnnualDiscountRate,Parameter,Discount rate used to weigh the periods.,share per year
+EconomicBaseYear,Parameter,"Year solved; units, demands and lines exist when it lies between their initial and final periods.",year
+EleReferenceNode,Parameter,Reference node of the electricity network (angle zero).,node name
+HydReferenceNode,Parameter,Reference node of the hydrogen network.,node name
+NumberPowerPeaks,Parameter,Number of monthly peaks whose mean sets the power tariff.,count
+GreenH2Matching,Parameter,Turns on the renewable-hydrogen matching.,0 or 1
+EleConnInvestCost,Parameter,Investment cost per unit of grid-connection capacity; a positive value makes the connection a sized decision.,money per power
+LoadLevelMinutes,Parameter,Length of a load level. Blank means 60.,minutes
+StorageResetHours,Parameter,Time between resets of an Hourly store to its initial level; 0 turns the reset off. Blank means 744.,hours
+Factor1,Parameter,Unit scale: quantities are multiplied by it and prices divided by it. Blank means 1.,factor
+MoneyBase,Parameter,Money scale: money values are divided by it. Blank means 1.,factor
+Currency,Parameter,"Label of the currency, used in the printed objective and the results. Blank means SEK.",text

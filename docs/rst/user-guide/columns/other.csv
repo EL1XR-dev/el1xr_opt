@@ -1,0 +1,6 @@
+Column,Table,Meaning,Unit or values
+Weight,oM_Data_Period,Weight of the period in the objective.,factor
+Probability,oM_Data_Scenario,Probability of the scenario within its period.,share (0 to 1)
+Latitude,oM_Data_NodeLocation,"Latitude of the node, used for line lengths.",degrees
+Longitude,oM_Data_NodeLocation,"Longitude of the node, used for line lengths.",degrees
+Duration,oM_Data_Duration,Duration of each load level; zero or blank leaves the level out.,hours

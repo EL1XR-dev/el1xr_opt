@@ -53,6 +53,7 @@ Index
 
    user-guide/project-structure
    user-guide/data-and-io
+   user-guide/input-columns
    user-guide/scenarios-and-stages
    user-guide/solvers-and-settings
    user-guide/decomposition

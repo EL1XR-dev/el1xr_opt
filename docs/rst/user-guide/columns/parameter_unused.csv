@@ -1,0 +1,8 @@
+Column,Table
+UpReserveActivation,Parameter
+DwReserveActivation,Parameter
+MinRatioDwUp,Parameter
+MaxRatioDwUp,Parameter
+TargetDemand,Parameter
+RampDemand,Parameter
+DemandType,Parameter

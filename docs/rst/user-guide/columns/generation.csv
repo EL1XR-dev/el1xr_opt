@@ -1,0 +1,71 @@
+Column,Table,Meaning,Unit or values
+Node,both,Node the unit is connected to.,node name
+Retailer,both,Retailer through which the unit trades.,retailer name
+Technology,both,"Label of the technology, used in the result tables. In the hydrogen table, ``Compressor`` marks a compressor row.",text
+RES,electricity,"The unit is renewable. When no unit has ``PPA`` set, the renewables form the pool of the renewable-hydrogen matching.",Yes / No
+ESS,electricity,The unit is a store with its own inventory.,Yes / No
+EV,electricity,The unit is an electric vehicle: a store that can be unavailable (``VarFixedAvailability``) and must leave with a minimum charge.,Yes / No
+V2G,electricity,The EV can feed electricity back to the grid.,Yes / No
+StorageType,both,"How often the inventory balance is written: ``Hourly`` and ``Daily`` every load level, ``Weekly`` every 24 h, ``Monthly`` and ``Yearly`` every 168 h. An Hourly store is reset to its initial level every ``StorageResetHours``.","Hourly, Daily, Weekly, Monthly, Yearly"
+OutflowsType,both,"Period over which the energy outflows (``VarMinOutflows``, ``VarMaxOutflows``) are summed.","Hourly, Daily, Weekly, Monthly, Yearly"
+NoDayAhead,electricity,The unit does not trade in the day-ahead market.,Yes / No
+NoFCRD,both,The unit does not bid FCR-D. A blank cell means it does not bid.,Yes / No
+NoFCRN,both,The unit does not bid FCR-N. A blank cell means it does not bid.,Yes / No
+BinaryCommitment,both,"The commitment, start-up and shut-down of the unit are binary. With No, they are relaxed to values between 0 and 1.",Yes / No
+BinaryInvestment,both,The build of a candidate is all or nothing.,Yes / No
+StandByStatus,hydrogen,"The electrolyser has a standby state (warm, fixed draw, no hydrogen). A blank cell means no standby.",Yes / No
+StandByPower,hydrogen,Electricity drawn in standby.,power
+FixedAvailability,both,The store follows the availability series ``VarFixedAvailability`` (for example an EV that is plugged in or not).,Yes / No
+InitialPeriod,both,First year in which the unit exists. A unit is in the model when the base year (``EconomicBaseYear``) lies between ``InitialPeriod`` and ``FinalPeriod``.,year
+FinalPeriod,both,Last year in which the unit exists.,year
+MaximumPower,both,Maximum output.,power
+MinimumPower,both,Minimum output when committed.,power
+MaximumCharge,both,"Maximum charge or consumption. For an electrolyser, its maximum electricity input; for a compressor, its maximum throughput.",power
+MinimumCharge,both,Minimum charge or consumption when committed.,power
+InitialStorage,both,Stored energy at the start of the horizon.,energy
+MaximumStorage,both,Storage capacity.,energy
+MinimumStorage,both,Lowest allowed stored energy.,energy
+Efficiency,hydrogen,"Charging efficiency of a hydrogen store; for a compressor, the share of the hydrogen that reaches the discharge node.",share (0 to 1)
+Efficiency_charge,electricity,Charging efficiency of a store.,share (0 to 1)
+Efficiency_discharge,electricity,Discharging efficiency of a store.,share (0 to 1)
+ProductionFunction,both,"For an electrolyser, the electricity used per unit of hydrogen; for a fuel cell, the electricity produced per unit of hydrogen.",energy per kg
+MaxCompressorConsumption,hydrogen,"Electricity drawn per unit of hydrogen charged into a store, or per unit moved by a compressor.",energy per kg
+CompressorNameplate,hydrogen,Rated throughput of a compressor that is an investment candidate.,kg per hour
+CompressorInvestCost,hydrogen,Annualised investment cost of that compressor; a positive value makes it a candidate.,money
+DischargeNode,hydrogen,"For a compressor row, the node it delivers the compressed hydrogen to.",node name
+RampUp,both,Largest increase of output per hour (with ``IndBinGenRamps``).,power per hour
+RampDown,both,Largest decrease of output per hour (with ``IndBinGenRamps``).,power per hour
+UpTime,both,Minimum time on after a start-up (with ``IndBinGenMinTime``).,hours
+DownTime,both,Minimum time off after a shut-down (with ``IndBinGenMinTime``).,hours
+UpTimeZero,both,Time the unit has already been on at the start of the horizon.,hours
+DownTimeZero,both,Time the unit has already been off at the start of the horizon.,hours
+EnduranceFCRD,both,Time for which a store or electrolyser must sustain its FCR-D bid.,minutes
+EnduranceFCRN,both,Time for which a store or electrolyser must sustain its FCR-N bid.,minutes
+CO2EmissionRate,both,"Emissions per unit of output, priced at ``CO2Cost`` (Parameter table).",t CO2 per energy
+FuelCost,both,Price of the fuel. It multiplies ``LinearTerm`` and ``ConstantTerm``.,money per fuel unit
+LinearTerm,both,"For a generating unit, the fuel used per unit of output; for a store, the cost per unit charged.","fuel per energy, or money per energy"
+ConstantTerm,both,Fuel used per hour while committed. A unit whose ``ConstantTerm`` times ``FuelCost`` is positive is a committable (thermal) unit.,fuel per hour
+OMVariableCost,both,Operation and maintenance cost per unit of output.,money per energy
+StartUpCost,both,"Cost of a start-up; for an electrolyser, a cold start from off.",money
+ShutDownCost,both,Cost of a shut-down.,money
+DegradationCost,both,"Wear cost per unit of throughput: discharge of a store, productive electricity of an electrolyser.",money per energy
+DegradationCost2ndBlock,both,Extra wear cost on the output (store) or input (electrolyser) above the minimum.,money per energy
+RampDegradationCost,hydrogen,Wear cost per unit of change of an electrolyser's productive consumption.,money per power
+ByproductCredit,hydrogen,"Revenue per unit of hydrogen for byproducts (oxygen, waste heat), credited against the cost.",money per kg
+DoDS1,electricity,Share of the storage capacity in the first depth-of-discharge segment; the three shares sum to 1.,share (0 to 1)
+DoDS2,electricity,Share in the second segment.,share (0 to 1)
+DoDS3,electricity,Share in the third segment.,share (0 to 1)
+DoDC1,electricity,Degradation cost per unit of daily depth of discharge in the first segment.,money per energy
+DoDC2,electricity,"Same, second segment.",money per energy
+DoDC3,electricity,"Same, third segment.",money per energy
+MinSoCDepart,electricity,Stored energy an EV must hold at the last level before its availability drops (its departure).,energy
+PPA,electricity,The renewable unit is contracted through a power purchase agreement: its available output is bought at ``PPAPrice``.,Yes / No
+PPAPrice,electricity,Price of the PPA.,money per energy
+FixedChargeRate,both,Annualisation factor: ``FixedInvestmentCost`` times it gives the annual investment cost.,per year
+FixedInvestmentCost,both,Investment cost of the whole unit; a positive value makes the unit a candidate.,money
+InvestmentLo,both,Lower bound of the build fraction of a candidate.,share (0 to 1)
+InvestmentUp,both,Upper bound of the build fraction of a candidate.,share (0 to 1)
+MaxInflowsCons,both,"Constant maximum inflow, used where ``VarMaxInflows`` is zero.",power
+MinInflowsCons,both,"Constant minimum inflow, used where ``VarMinInflows`` is zero.",power
+MaxOutflowsProd,both,"Constant maximum outflow, used where ``VarMaxOutflows`` is zero.",power
+MinOutflowsProd,both,"Constant minimum outflow, used where ``VarMinOutflows`` is zero.",power

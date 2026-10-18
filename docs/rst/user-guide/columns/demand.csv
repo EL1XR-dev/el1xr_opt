@@ -1,0 +1,11 @@
+Column,Table,Meaning,Unit or values
+Node,both,Node the demand is connected to.,node name
+Retailer,both,Retailer that supplies the demand.,retailer name
+Flexible,both,"The demand can be shifted in time, within ``ShiftedSteps`` and ``FlexPercent``.",Yes / No
+MaximumPower,electricity,The electricity demand is in the model when this is positive. The demand itself comes from ``VarMaxDemand``.,power
+InitialPeriod,both,First year in which the demand exists.,year
+FinalPeriod,both,Last year in which the demand exists.,year
+FlexPercent,both,Share of the demand that can be shifted.,share (0 to 1)
+ShiftedSteps,both,"Length, in load levels, of the blocks within which the total of a flexible demand is kept; the demand can move inside each block.",load levels
+Price,hydrogen,"Sale price of the hydrogen served to this demand, credited as revenue. Blank or missing means 0.",money per kg
+MaxCompressorConsumption,hydrogen,"Electricity drawn per unit of hydrogen served, for example to compress it to the dispensing pressure. Blank or missing means 0.",energy per kg
