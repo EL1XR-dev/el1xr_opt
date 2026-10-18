@@ -6,6 +6,39 @@ The main objective function is defined by the Pyomo constraint «``eTotalSCost``
 
 Total System Cost
 -----------------
+The objective at a glance:
+
+.. graphviz::
+   :align: center
+   :alt: The terms of the objective: investment, heat-sector operation, and the discounted costs minus revenues of each period and scenario, with the cost and revenue variables.
+
+   digraph objective {
+     graph [rankdir=LR, nodesep=0.1, ranksep=0.35, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888", margin="0.1,0.04"];
+     edge  [color="#888888", arrowhead=none];
+     obj  [label="Objective\nvTotalSCost", fillcolor="#e1bee7", color="#6a1b9a", fontsize=11];
+     inv  [label="Investment\nvTotalICost"];
+     heat [label="Heat-sector operation"];
+     op   [label="Σ periods: discount factor ×\nΣ scenarios: (costs − revenues)"];
+     C    [label="Costs", fillcolor="#ffcdd2", color="#c62828"];
+     R    [label="Revenues", fillcolor="#c8e6c9", color="#2e7d32"];
+     net  [label="Network: peak tariff, transfer fee,\nfixed fee  (vTotalEleNCost)"];
+     tax  [label="Energy tax  (vTotalEleXCost)"];
+     su   [label="Start-ups  (vTotalEleSUCost, vTotalHydSUCost)"];
+     mkt  [label="Market purchases: day-ahead, PPA, reserve activation\n(activation with IndReserveDeliverySettlement)  (vTotalEleMCost, vTotalHydMCost)"];
+     om   [label="Operation: production, emissions,\nconsumption, energy not served  (vTotalEleOCost, vTotalHydOCost)"];
+     deg  [label="Degradation  (vTotalEleDCost, vTotalHydDCost)"];
+     inc  [label="Export incentive  (vTotalEleXRev)"];
+     sale [label="Electricity sales: day-ahead, PPA, FCR-D up,\nFCR-D down, FCR-N, reserve activation  (vTotalEleMRev)"];
+     hsale[label="Hydrogen sales and PPA  (vTotalHydMRev)"];
+     obj -> {inv heat op};
+     op -> {C R};
+     C -> {net tax su mkt om deg};
+     R -> {inc sale hsale};
+   }
+
+The sections below define each term.
+
 The total system cost is the sum of all discounted costs across every period (:math:`\periodindex`) and scenario (:math:`\scenarioindex`) in the model horizon. The objective function can be expressed conceptually as:
 
 Total system cost («``eTotalSCost``»)

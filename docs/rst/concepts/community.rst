@@ -12,6 +12,28 @@ It is **off by default** and enabled with the option flag ``IndBinCommunity``
 How it works
 ------------
 
+.. graphviz::
+   :align: center
+   :alt: Members of one zone share electricity through a pool in which what is shared out equals what is shared in, and each member still trades with the grid through its retailer.
+
+   digraph community {
+     graph [rankdir=LR, nodesep=0.3, ranksep=0.8, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     grid [label="Grid, through each\nmember's retailer", fillcolor="#fff3e0", color="#ef6c00"];
+     subgraph cluster_z {
+       label="One zone"; color="#6a1b9a"; fontcolor="#6a1b9a"; style=rounded;
+       a    [label="Member A\nsurplus (e.g. solar)"];
+       b    [label="Member B\ndemand"];
+       c    [label="Member C"];
+       pool [label="Sharing pool\nshared out = shared in\neEleCommunityPool", shape=ellipse, fillcolor="#e1bee7", color="#6a1b9a"];
+     }
+     a -> pool [label="vEleShareOut"];
+     pool -> b [label="vEleShareIn"];
+     c -> pool [dir=both, label="in or out"];
+     grid -> {a b c} [dir=both, color="#ef6c00"];
+   }
+
 - Two per-member variables, ``vEleShareIn`` and ``vEleShareOut``, carry electricity
   shared into and out of a member.
 - A per-zone pool-conservation constraint (``eEleCommunityPool``) requires that, within

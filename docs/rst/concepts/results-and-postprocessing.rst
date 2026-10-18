@@ -8,6 +8,22 @@ parameter, variable and constraint dual, plus an ``oM_Result_RunMetadata`` table
 result tables (``saving_results`` in ``oM_OutputData``), each prefixed ``oM_Result_``, and
 ``--plots True`` for the HTML figures.
 
+.. graphviz::
+   :align: center
+   :alt: A solved model is written to results.duckdb by default, and to CSV result files and HTML plots on request.
+
+   digraph results {
+     graph [rankdir=LR, nodesep=0.2, ranksep=0.5, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     model [label="Solved model", fillcolor="#e1bee7", color="#6a1b9a"];
+     db    [label="results.duckdb (default)\none table per set (eg, n, ...), parameter (p...),\nvariable (v...) and constraint dual (<name>_dual),\nplus oM_Result_RunMetadata", fillcolor="#fdecea", color="#c62828"];
+     csv   [label="oM_Result_*.csv\ncost breakdown, balances, state of\nenergy, summaries (--rawresults True)"];
+     plot  [label="oM_Plot_*.html\nbalance, demand, state of energy,\nSankey, duration curves (--plots True)"];
+     model -> db [label="--duckdbresults True"];
+     model -> csv; model -> plot;
+   }
+
 .. note::
 
    When a case uses the heat sector, the investment layer or the energy community, their

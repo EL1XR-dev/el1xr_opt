@@ -88,3 +88,20 @@ GitHub Actions runs two jobs on every pull request (``.github/workflows/ci.yml``
 
 A separate workflow builds the documentation with warnings treated as errors, so a
 broken cross-reference or a stale API entry fails the build.
+
+.. graphviz::
+   :align: center
+   :alt: Every push or pull request runs the fast job, the solve job, the docs build and Codacy; all green means ready to merge.
+
+   digraph ci {
+     graph [rankdir=LR, nodesep=0.2, ranksep=0.5, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7];
+     pr    [label="Push or pull request", fillcolor="#e1bee7", color="#6a1b9a"];
+     fast  [label="fast\nflake8 syntax check + pytest -m \"not solve\"\nLinux, macOS, Windows × Python 3.11, 3.12, 3.13"];
+     solve [label="solve\npytest -m solve: validation cases from CSV\nand DuckDB against golden costs\nLinux, macOS, Windows × Python 3.12"];
+     docs  [label="build-docs\nsphinx -W (warnings are errors), with Graphviz"];
+     cod   [label="Codacy static analysis"];
+     ok    [label="All green: ready to merge", fillcolor="#c8e6c9", color="#2e7d32"];
+     pr -> {fast solve docs cod} -> ok;
+   }

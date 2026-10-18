@@ -24,6 +24,22 @@ or nothing; left blank, the build is continuous, which keeps the problem an LP.
 Capacity coupling
 -----------------
 
+.. graphviz::
+   :align: center
+   :alt: The build fraction of a candidate scales its maximum output, charge and storage, and its investment cost.
+
+   digraph invest {
+     graph [rankdir=LR, nodesep=0.2, ranksep=0.5, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     x   [label="Build fraction x\n(vEleGenInvest, vHydGenInvest)\nbetween InvestmentLo and InvestmentUp", fillcolor="#e1bee7", color="#6a1b9a"];
+     out [label="output ≤ x × maximum output\n(eEleInvestMaxOutput, eHydInvestMaxOutput)"];
+     cha [label="charge ≤ x × maximum charge\n(eEleInvestMaxCharge, eHydInvestMaxCharge)"];
+     sto [label="stored energy ≤ x × maximum storage\n(eEleInvestMaxInventory, eHydInvestMaxInventory)"];
+     cost[label="investment cost = x × annualised cost\n(vTotalICost)", fillcolor="#ffcdd2", color="#c62828"];
+     x -> {out cha sto cost};
+   }
+
 The build fraction scales every nameplate rating of the candidate, so an unbuilt
 candidate can do nothing and a half-built one has half of every capability
 («``eEleInvestMaxOutput``» / «``eHydInvestMaxOutput``», «``eEleInvestMaxCharge``» /

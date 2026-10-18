@@ -208,6 +208,54 @@ Indices
      - Zone or region in the network
      - :code:`zn`
 
+Unit sets at a glance
+---------------------
+
+Each unit of a case falls into one or more sets, chosen by the columns of its unit table. The
+figure shows the main sets and the rule that puts a unit in each; the tables below list them all.
+
+.. graphviz::
+   :align: center
+   :alt: The electricity, hydrogen and compressor unit sets, with the rule for each subset, and the unions the constraints use.
+
+   digraph sets {
+     graph [rankdir=LR, nodesep=0.1, ranksep=0.4, fontname="Helvetica", fontsize=10, newrank=true];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888", margin="0.1,0.04"];
+     edge  [color="#888888", arrowhead=none];
+     subgraph cluster_e {
+       label="Electricity units"; color="#1565c0"; fontcolor="#1565c0"; style=rounded;
+       eg   [label="eg\nall electricity units", fillcolor="#bbdefb", color="#1565c0"];
+       egr  [label="egr  renewables (RES = 1)"];
+       egnr [label="egnr  all but renewables"];
+       egt  [label="egt  thermal (constant cost > 0)"];
+       egs  [label="egs  stores (ESS = 1, or EV)"];
+       egv  [label="egv  EVs"];
+       egc  [label="egc  candidates (investment cost > 0)"];
+       h2e  [label="h2e  fuel cells (production function > 0)"];
+       eg -> {egr egnr egt egs egc h2e}; egs -> egv;
+     }
+     subgraph cluster_h {
+       label="Hydrogen units"; color="#2e7d32"; fontcolor="#2e7d32"; style=rounded;
+       hg   [label="hg\nall hydrogen units", fillcolor="#c8e6c9", color="#2e7d32"];
+       hgs  [label="hgs  hydrogen stores (storage > 0)"];
+       e2h  [label="e2h  electrolysers (production function > 0)"];
+       hgc  [label="hgc  candidates (investment cost > 0)"];
+       hg -> {e2h hgs hgc};
+     }
+     subgraph cluster_c {
+       label="Compressors"; color="#616161"; fontcolor="#616161"; style=rounded;
+       hc   [label="hc\nrows with a DischargeNode,\nkept out of hg", fillcolor="#eeeeee", color="#616161"];
+     }
+     subgraph cluster_u {
+       label="Unions used by the constraints"; color="#ef6c00"; fontcolor="#ef6c00"; style=rounded;
+       eh   [label="eh = egs ∪ e2h\nunits that consume electricity", fillcolor="#fff3e0", color="#ef6c00"];
+       he   [label="he = hgs ∪ h2e\nunits that consume hydrogen", fillcolor="#fff3e0", color="#ef6c00"];
+       fcr  [label="ege2h = eg ∪ e2h\nunits that can bid FCR", fillcolor="#fff3e0", color="#ef6c00"];
+     }
+     egv -> eh [style=invis];
+     {rank=same; eh; he; fcr;}
+   }
+
 Technology and Asset Sets
 -------------------------
 

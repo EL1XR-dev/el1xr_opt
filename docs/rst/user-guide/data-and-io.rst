@@ -14,6 +14,26 @@ Convert a CSV case to DuckDB with::
 The tables define the model's sets (periods, technologies, nodes, ...) and parameters
 (costs, capacities, efficiencies, ...).
 
+.. graphviz::
+   :align: center
+   :alt: A case holds oM_Dict lists, oM_Data unit tables, time series and single-row tables; the lists and unit tables give the sets, and the data tables give the parameters.
+
+   digraph files {
+     graph [rankdir=LR, nodesep=0.2, ranksep=0.5, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7];
+     case  [label="Case\nCSV folder or one .duckdb file", fillcolor="#e8f5e9", color="#2e7d32"];
+     dict  [label="oM_Dict_*\nlists: nodes, units, periods,\nscenarios, load levels, mappings"];
+     unit  [label="oM_Data_* unit tables\none row per unit, demand,\nretailer or line"];
+     ts    [label="oM_Data_* time series\none row per period, scenario\nand load level"];
+     one   [label="oM_Data_Option, oM_Data_Parameter\none row of settings"];
+     sets  [label="Sets\n(model.eg, model.n, ...)", fillcolor="#e1bee7", color="#6a1b9a"];
+     par   [label="Parameters\n(model.Par)", fillcolor="#e1bee7", color="#6a1b9a"];
+     case -> {dict unit ts one};
+     dict -> sets; unit -> sets [style=dashed, label=" columns decide\n the unit sets", fontsize=8, fontname="Helvetica"];
+     {unit ts one} -> par;
+   }
+
 Outputs
 ~~~~~~~
 

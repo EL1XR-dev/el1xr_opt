@@ -104,6 +104,29 @@ the electricity side, so it is not charged again here.
 Loop topology
 -------------
 
+.. graphviz::
+   :align: center
+   :alt: Electricity, heat and hydrogen joined by their converters: heat pump and heat-to-power for heat, electrolyser and fuel cell for hydrogen, and a fuel-burning boiler.
+
+   digraph loops {
+     graph [rankdir=LR, nodesep=0.35, ranksep=0.7, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     ele  [label="Electricity", shape=ellipse, fillcolor="#bbdefb", color="#1565c0", fontsize=11];
+     heat [label="Heat", shape=ellipse, fillcolor="#ffcdd2", color="#c62828", fontsize=11];
+     hyd  [label="Hydrogen", shape=ellipse, fillcolor="#c8e6c9", color="#2e7d32", fontsize=11];
+     hp   [label="Heat pump (COP)\neHeatPumpCOP"];
+     h2p  [label="Heat-to-power (htw)\neHeatToEle\ncloses the heat loop", style="rounded,filled,dashed"];
+     boil [label="Boiler\nburns fuel"];
+     ely  [label="Electrolyser (e2h)\neAllEnergy2Hyd"];
+     fc   [label="Fuel cell (h2e)\neAllEnergy2Ele\ncloses the hydrogen loop", style="rounded,filled,dashed"];
+     ele -> hp -> heat; heat -> h2p -> ele;
+     boil -> heat;
+     ele -> ely -> hyd; hyd -> fc -> ele;
+   }
+
+The dashed units close a loop back to electricity; a case without them has an open loop.
+
 - **Power to heat** is an open loop by default (heat pump / boiler; heat is a terminal
   demand). Adding a heat-to-power unit (``htw``) closes the power-heat loop.
 - **Hydrogen** is already closed-loop when a case includes both the electrolyser

@@ -239,6 +239,13 @@ And for an electric ESS («``eEleRelationFreqDisUpBid2Stor``», «``eEleRelation
 
 Combined headroom for FCR-D and FCR-N provision from an electric ESS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. figure:: /../img/concept_fcr_headroom.svg
+   :width: 95%
+   :align: center
+   :alt: A battery discharging at 3 of 5 kW, with its up reserve above and down reserve below the operating point, and its stored energy and free room backing the bids.
+
+   Illustration with made-up numbers. (a) A battery discharging at 3 kW of its 5 kW can offer up reserve up to the remaining 2 kW and down reserve up to the 3 kW it discharges; the charging leg works the same way from the charge side. (b) The stored energy must back the up bids, and the free room the down bids, for the endurance time.
+
 The headroom constraints limit the **sum** of the FCR-D and FCR-N provision in each
 direction and operating mode to the remaining capacity. The upward headroom is
 defined by («``eEleFreqUpDischargeHeadroom``», «``eEleFreqUpChargeHeadroom``»):
@@ -323,11 +330,9 @@ The upward and downward endurance are defined by («``eEleStorageEnduranceUp``»
    \quad \forall \periodindex,\scenarioindex,\timeindex,\storageindex \in \nEES
 
 .. note::
-   An earlier activation-based version of the headroom constraints (named
-   ``eEleFreqDis...Headroom``) appeared here; those constraint names are not present
-   in the current code. The constraints above match the implemented
-   ``eEleFreq...Headroom`` family, which bound the combined FCR-D and FCR-N
-   provision. Please review the formulation against ``oM_ModelFormulation.py``.
+   For a candidate unit, the maximum discharge and the maximum charge in the upward
+   discharge and downward charge headroom are multiplied by its build fraction
+   (``vEleGenInvest``), so an unbuilt unit offers no reserve.
 
 FCR provision from an electrolyser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -422,6 +427,13 @@ the same FCR-D and FCR-N revenues as the other providers (see the
 Peak Power Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~
 A set of constraints identify the highest power peaks within a billing period for tariff calculations, supporting both 'Hourly' and 'Daily' tariff types.
+
+.. figure:: /../img/concept_peak_tariff.svg
+   :width: 95%
+   :align: center
+   :alt: A month of hourly grid import with its three largest values marked and their mean drawn as a line.
+
+   Illustration with made-up numbers, for an Hourly tariff with ``NumberPowerPeaks = 3``. The three largest hourly imports of the month are found, and their mean times the power tariff is the month's peak charge.
 
 Hourly Tariff Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -596,6 +608,13 @@ Art. 6 (it is taken to be grid-powered):
    \leq \sum_{\genindex \in \mathcal{G}^{PPA}} \veleresalloc_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex
 
+.. figure:: /../img/concept_green_h2_matching.svg
+   :width: 95%
+   :align: center
+   :alt: Over a day, the electrolyser's productive draw stays within the PPA renewable output; the standby draw in the evening is not matched.
+
+   Illustration with made-up numbers. Each hour, the electrolysers' productive draw must be covered by renewable output allocated to them. The standby draw, which makes no hydrogen, is left out. At load levels shorter than an hour, the energy of each clock hour is compared.
+
 The matching pool :math:`\mathcal{G}^{PPA}` is the PPA-flagged renewables
 (``pEleGenPPA``), so the matching carries an additionality meaning; if no unit is
 flagged, the pool is all renewables. Each unit's allocation is capped by its actual
@@ -724,6 +743,27 @@ on/off/standby scheduling of Qiu et al. (2022) [#qiu2022]_:
   standby draw :math:`\phydgenstandbypower` and produces no hydrogen.
 * **OFF**: consumes nothing; restarting from off is a cold start.
 
+.. graphviz::
+   :align: center
+   :alt: The three states of an electrolyser and the moves between them: a cold start from off costs, a warm start from standby is free, and off cannot go straight to standby.
+
+   digraph states {
+     graph [rankdir=LR, nodesep=0.5, ranksep=1.0, fontname="Helvetica"];
+     node  [shape=ellipse, style=filled, fontname="Helvetica", fontsize=11, width=1.2];
+     edge  [fontname="Helvetica", fontsize=9, color="#555555", arrowsize=0.7];
+     OFF     [fillcolor="#eeeeee", color="#616161", label="OFF\nno draw"];
+     STANDBY [fillcolor="#fff3e0", color="#ef6c00", label="STANDBY\nwarm, fixed draw,\nno hydrogen"];
+     ON      [fillcolor="#c8e6c9", color="#2e7d32", label="ON\nmin. to max. charge,\nmakes hydrogen"];
+     OFF -> ON [label="cold start:\nstart-up cost\n(eHydElectrolyserColdStart)", color="#c62828", fontcolor="#c62828"];
+     ON -> OFF [label="stop"];
+     ON -> STANDBY [label="idle, stay warm"];
+     STANDBY -> ON [label="warm start: free", color="#2e7d32", fontcolor="#2e7d32"];
+     STANDBY -> OFF [label="stop"];
+     ON -> ON; STANDBY -> STANDBY; OFF -> OFF;
+   }
+
+OFF cannot move straight to STANDBY: standby is reachable only from ON or STANDBY.
+
 ON and STANDBY are mutually exclusive, and OFF is the remainder
 («``eHydElectrolyserStandBy``»):
 
@@ -834,6 +874,22 @@ Maximum ramp-up and ramp-down for a hydrogen unit («``eHydMaxRampUpOutput``», 
 Unit Commitment Logic
 ~~~~~~~~~~~~~~~~~~~~~
 For dispatchable assets, these constraints model the on/off decisions.
+
+.. graphviz::
+   :align: center
+   :alt: The on and off states of a committable unit, with start-up and shut-down, and the minimum up and down times.
+
+   digraph uc {
+     graph [rankdir=LR, nodesep=0.5, ranksep=1.4, fontname="Helvetica"];
+     node  [shape=ellipse, style=filled, fontname="Helvetica", fontsize=11, width=1.3];
+     edge  [fontname="Helvetica", fontsize=9, color="#555555", arrowsize=0.7];
+     OFF [fillcolor="#eeeeee", color="#616161", label="OFF\nu = 0"];
+     ON  [fillcolor="#c8e6c9", color="#2e7d32", label="ON\nu = 1\nmin. to max. output"];
+     OFF -> ON [label="start-up: su = 1\n(start-up cost)"];
+     ON -> OFF [label="shut-down: sd = 1\n(shut-down cost)"];
+     ON -> ON [label="stays on at least the minimum\nup time (IndBinGenMinTime)"];
+     OFF -> OFF [label="stays off at least the minimum\ndown time (IndBinGenMinTime)"];
+   }
 
 Logical relation between commitment, startup, and shutdown status of an electricity unit («``eEleCommitmentStartupShutdown``»):
 
@@ -966,6 +1022,13 @@ These constraints specifically model the behavior of energy storage systems.
 Inventory Balance (State-of-Charge)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electricity and ``eHydInventory`` for hydrogen, tracks the stored energy level over time.
+
+.. figure:: /../img/concept_storage_balance.svg
+   :width: 95%
+   :align: center
+   :alt: Charge and discharge bars over 24 hours and the stored energy rising and falling between its minimum and maximum.
+
+   Illustration with made-up numbers. At each load level the stored energy changes by the charge times its efficiency, minus the discharge divided by its efficiency, and stays between the minimum and maximum.
 
 State-of-Charge balance for electricity storage systems:
 
@@ -1264,6 +1327,22 @@ These constraints model the physics and limits of the energy transmission and di
 DC Power Flow
 ~~~~~~~~~~~~~
 For the electricity grid, ``eKirchhoff2ndLaw`` implements a DC power flow model, relating the power flow on a line to the voltage angles at its connecting nodes.
+
+.. graphviz::
+   :align: center
+   :alt: Three nodes joined by lines; the flow on a line is the angle difference between its nodes divided by its reactance, within its capacity; the reference node has angle zero.
+
+   graph dcflow {
+     graph [layout=neato, start=3, fontname="Helvetica"];
+     node  [shape=circle, style=filled, fontname="Helvetica", fontsize=10, fillcolor="#e3f2fd", color="#1565c0", width=0.95, fixedsize=true];
+     edge  [color="#1565c0", fontname="Helvetica", fontsize=9, len=2.2];
+     n1 [label="Node 1\nreference\nθ1 = 0", fillcolor="#bbdefb"];
+     n2 [label="Node 2\nθ2"];
+     n3 [label="Node 3\nθ3"];
+     n1 -- n2 [label="flow = (θ1 − θ2) / reactance\n|flow| ≤ capacity"];
+     n1 -- n3;
+     n3 -- n2;
+   }
 
 .. math::
    \frac{\vflow_{\periodindex,\scenarioindex,\timeindex,\busindexa,\busindexb,\circuitindex}}{\pnettc_{\busindexa,\busindexb,\circuitindex}} -

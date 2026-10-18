@@ -10,6 +10,26 @@ Contribution Workflow
 
 To contribute to the project, please follow these steps:
 
+.. graphviz::
+   :align: center
+   :alt: The path of a contribution: issue, fork and branch, change, tests, docs and changelog, pre-push hook, pull request, CI, review and merge.
+
+   digraph contrib {
+     graph [rankdir=TB, nodesep=0.25, ranksep=0.22, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#eef3fb", color="#4a6fa5"];
+     edge  [color="#4a6fa5", arrowsize=0.7];
+     issue  [label="Open an issue"];
+     branch [label="Fork and\ncreate a branch"];
+     change [label="Change the code;\na new option goes in\nthe FEATURES catalogue,\na new cost in the registry"];
+     test   [label="Add tests:\nfast tier, and solve tier\nif it solves a model"];
+     docs   [label="Update the docs\nand the changelog"];
+     hook   [label="Pre-push hook:\nflake8 + strict docs build"];
+     pr     [label="Pull request to main", fillcolor="#e1bee7", color="#6a1b9a"];
+     ci     [label="CI: fast, solve\nand docs jobs"];
+     merge  [label="Review and merge", fillcolor="#c8e6c9", color="#2e7d32"];
+     issue -> branch -> change -> test -> docs -> hook -> pr -> ci -> merge;
+   }
+
 1. **Open an Issue**: Before starting any work, please `open an issue <https://github.com/EL1XR-dev/el1xr_opt/issues>`_ on GitHub. This allows for discussion of the proposed changes and ensures that your work aligns with the project's goals.
 
 2. **Fork the Repository**: Create a fork of the `main repository <https://github.com/EL1XR-dev/el1xr_opt>`_ to your own GitHub account.

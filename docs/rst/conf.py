@@ -62,6 +62,23 @@ def _write_flag_table():
         rows += [f'   * - ``{f.flag}``', f'     - {f.default}', f'     - {f.doc}']
     out.write_text('\n'.join(rows) + '\n')
 
+    # which solver handles which problem class, and the network modes
+    try:
+        classes = ['LP', 'MILP', 'QP', 'MIQP', 'SOCP', 'MISOCP', 'NLP', 'SDP']
+        rows = ['.. list-table::', '   :header-rows: 1', '', '   * - Solver'] + [f'     - {c}' for c in classes]
+        for solver, caps in _mod.SOLVER_CAPABILITIES.items():
+            rows += [f'   * - {solver}'] + [f'     - {"yes" if c in caps else ""}' for c in classes]
+        (out.parent / 'solvers.inc').write_text('\n'.join(rows) + '\n')
+        rows = ['.. list-table::', '   :widths: 20 12 18 50', '   :header-rows: 1', '',
+                '   * - Mode', '     - Class', '     - Where', '     - What it is']
+        for name, mode in _mod.NETWORK_MODES.items():
+            where = 'in the model' if mode['in_core'] else 'separate analysis'
+            rows += [f'   * - ``{name}``', f"     - {mode['problem_class']}", f'     - {where}', f"     - {mode['doc']}"]
+        (out.parent / 'network_modes.inc').write_text('\n'.join(rows) + '\n')
+    except Exception as exc:
+        for name in ('solvers.inc', 'network_modes.inc'):
+            (out.parent / name).write_text(f'.. note:: This table could not be built: {exc}\n')
+
 
 _write_flag_table()
 

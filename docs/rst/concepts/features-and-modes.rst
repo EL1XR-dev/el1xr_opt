@@ -32,6 +32,10 @@ in the solver and builder capability matrices.) The class drives two choices:
 - **Build library**: the same class selects which model-building libraries are viable
   (for example a MISOCP rules out the linopy backend).
 
+The solver matrix below is written from ``SOLVER_CAPABILITIES`` at every docs build:
+
+.. include:: solvers.inc
+
 Cost/revenue registry
 ---------------------
 
@@ -79,3 +83,7 @@ Two orthogonal axes describe how power conservation is written:
   reaches the same optimum but is rejected in-core for now with a clear message.
 
 The two are independent -- every balance expresses every network mode.
+
+The network modes, written from ``NETWORK_MODES`` at every docs build:
+
+.. include:: network_modes.inc

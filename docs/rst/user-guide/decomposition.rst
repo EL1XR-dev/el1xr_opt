@@ -23,6 +23,47 @@ The problem is block-angular:
   replaces the window's first-level store balance, and the outgoing boundary ties the
   window's last level to the master copy.
 
+The Benders loop:
+
+.. graphviz::
+   :align: center
+   :alt: The Benders loop: the master proposes the investment, the subproblems are solved with it fixed, their duals give cuts, and the loop stops when the gap is below the tolerance.
+
+   digraph benders {
+     graph [rankdir=TB, nodesep=0.4, ranksep=0.35, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#eef3fb", color="#4a6fa5"];
+     edge  [color="#4a6fa5", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     master [label="Master: investment build fractions\n(and, in time windows, the boundary storage)\nplus an estimate of the operating cost", fillcolor="#e1bee7", color="#6a1b9a"];
+     fix    [label="Fix the master decisions"];
+     sub    [label="Operating subproblems, solved in parallel:\none per (period, scenario), or one per time window"];
+     cut    [label="Add an optimality cut per subproblem,\nfrom the duals of the fixing constraints"];
+     test   [label="Gap between the upper and lower bounds\nbelow the tolerance (default 0.1 %)?", shape=diamond, fillcolor="#fff3e0", color="#ef6c00", fontsize=9];
+     done   [label="Stop: optimal plan", fillcolor="#c8e6c9", color="#2e7d32"];
+     master -> fix -> sub -> cut -> test;
+     test -> done [label=" yes"];
+     test -> master [label=" no", constraint=false];
+   }
+
+With time windows, the windows are linked through the stored energy at their boundaries, which the master holds:
+
+.. graphviz::
+   :align: center
+   :alt: The master holds the build fractions, the boundary storage and the horizon charges, and fixes them in each time window; consecutive windows are linked by the stored energy at their boundary.
+
+   digraph windows {
+     graph [rankdir=TB, nodesep=0.5, ranksep=0.6, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#888888"];
+     edge  [color="#555555", arrowsize=0.7, fontname="Helvetica", fontsize=9];
+     m [label="Master: build fractions, boundary storage Se / Sh / St,\nmonthly peak thresholds, charges fixed over the horizon", fillcolor="#e1bee7", color="#6a1b9a"];
+     w1 [label="Window 1\nload levels 1 to k"];
+     w2 [label="Window 2\nload levels k+1 to 2k"];
+     w3 [label="Window 3\n…"];
+     w1 -> w2 [label="stored energy\nat the boundary"];
+     w2 -> w3 [label="stored energy\nat the boundary"];
+     m -> {w1 w2 w3} [style=dashed, label="fixes"];
+     {rank=same; w1; w2; w3;}
+   }
+
 Solve entry points
 ------------------
 
