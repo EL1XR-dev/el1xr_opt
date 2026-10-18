@@ -1,13 +1,13 @@
-"""Heat sector -- a third energy carrier alongside electricity and hydrogen.
+"""Heat sector: a third energy carrier alongside electricity and hydrogen.
 
 ``create_heat_sector`` is wired into ``oM_Sequence.build_model`` (after the
 green-hydrogen step) and builds a behind-the-meter heat sector when the case
 carries heat data; it is a no-op otherwise, so electricity/hydrogen-only cases
 are unchanged.
 
-Scope today -- **home / residential heat**: a building-level, nodal heat demand
+Scope today: **home and residential heat**, a building-level, nodal heat demand
 met by a heat pump or boiler plus a thermal store, produced and used at the same
-node (no heat network yet -- district heating with pipe flows and losses is the
+node (no heat network yet; district heating with pipe flows and losses is the
 planned next setting). The power-heat loop is open with a heat pump alone and
 closed by adding a heat-to-power unit.
 
@@ -53,11 +53,11 @@ def load_heat_data(model, dir_name, case_name):
     model. No-op (returns False) when the case carries no heat tables, so the four
     validation cases are unaffected. The minimal schema:
 
-      * oM_Data_HeatGeneration -- index = unit; columns Node, Type
+      * oM_Data_HeatGeneration: index = unit; columns Node, Type
         (HeatPump | Boiler | Heat2Ele | Storage), MaximumPower, Cost, COP,
         Efficiency, MaxStorage, StoEff, InitialStorage.
-      * oM_Data_HeatDemand -- index = demand unit; column Node.
-      * oM_Data_VarMaxHeatDemand -- (period, scenario, load level) index; one
+      * oM_Data_HeatDemand: index = demand unit; column Node.
+      * oM_Data_VarMaxHeatDemand: (period, scenario, load level) index; one
         column per heat-demand unit, the heat demand at that step.
 
     Heat-not-served cost is taken from the Parameter table (pParHeatNSCost) or a
@@ -140,7 +140,7 @@ def create_heat_sector(model, optmodel, indlog='False', dir_name=None, case_name
                ``pHeatStoInitial[hts]``, ``pHeatNSCost``, ``pDuration[n]``.
 
     It creates, on ``optmodel``: ``vHeatOutput`` (per generator), ``vHeatPumpElec``
-    (electricity drawn by each heat pump -- the cross-sector coupling), ``vHeatCharge``
+    (electricity drawn by each heat pump, the cross-sector coupling), ``vHeatCharge``
     / ``vHeatInventory`` (thermal store), ``vHeatNotServed``; and the constraints
     ``eHeatBalance`` (nodal), ``eHeatPumpCOP`` (heat = COP x electricity),
     ``eHeatInventory`` (store dynamics). The heat operating cost (heat-not-served
@@ -331,7 +331,7 @@ def heat_electricity_load(optmodel, node_units, p, sc, n):
 
 def heat_to_power_output(optmodel, node_units, p, sc, n):
     """Electricity produced by the heat-to-power units at a node in (period,
-    scenario, load level) -- the analogue of the hydrogen fuel cell's electricity
+    scenario, load level), the analogue of the hydrogen fuel cell's electricity
     output. The electricity balance adds this as generation, closing the
     power<->heat loop. Returns 0 when the model has no heat-to-power units."""
     v = getattr(optmodel, "vHeatToEle", None)

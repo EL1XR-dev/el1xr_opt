@@ -276,7 +276,7 @@ def run_acopf_sweep(network_df, snapshots, slack, formulation="socp",
 
     Returns a list of per-snapshot dicts: label, loss, vmin, vmax, violations,
     status. A snapshot that fails to solve (e.g. voltage collapse at high load) is
-    recorded with status 'infeasible/error' rather than aborting the sweep.
+    recorded with status 'infeasible/error', and the sweep goes on.
     """
     rows = []
     for label, Pd, Qd in snapshots:

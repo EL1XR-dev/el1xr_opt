@@ -37,7 +37,7 @@ def save_to_csv(df, path, filename, index=False):
         df (pd.DataFrame): DataFrame to save
         path (str): Directory path
         filename (str): Filename including extension
-        index (bool): Whether to include index in CSV
+        index (bool): If True, write the index to the CSV file
     """
     filepath = os.path.join(path, filename)
     df.to_csv(filepath, index=index, sep=',')
@@ -121,7 +121,7 @@ def create_duration_curve(df, value_col, date_col, title, y_label, path, filenam
     Create and save a duration curve plot.
     
     Args:
-        df (pd.DataFrame): Input dataframe
+        df (pd.DataFrame): Input data
         value_col (str): Column name containing values to plot
         date_col (str): Column name containing dates
         title (str): Chart title
@@ -179,7 +179,7 @@ def create_and_save_duration_curve(series_data, index_tuples, value_col_name, Da
         y_label (str): Y-axis label
     
     Returns:
-        pd.DataFrame: Processed dataframe with counter
+        pd.DataFrame: The data, with a counter column
     """
     # Create series and sort
     df = pd.Series(series_data, index=pd.MultiIndex.from_tuples(index_tuples))
@@ -490,7 +490,7 @@ def saving_results(DirName, CaseName, Date, model, optmodel, indlog):
             model: Pyomo model with parameter sets
             var_name (str): Name of the variable (string)
             set_name (str): Name of the index set ('ps' or 'psn')
-            multiplier (bool): Whether to multiply by duration
+            multiplier (bool): If True, multiply by the load-level duration
             revenue (bool): If True, multiply values by -1
             component_name (str): Label for the output DataFrame
 

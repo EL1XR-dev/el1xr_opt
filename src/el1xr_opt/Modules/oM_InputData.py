@@ -27,6 +27,24 @@ from  .utils.oM_Utils    import log_time, _update_parameters, _psdn_init, _psmd_
 FACTOR1 = 1.0
 
 def data_processing(DirName, CaseName, DateModel, model, indlog):
+    """Read a case and build the sets and parameters of the model.
+
+    Reads every table of the case (a CSV folder or a ``.duckdb`` file), resamples the
+    time series given at their own resolution onto the load levels, applies the money
+    scale (``MoneyBase``) and the unit scale (``Factor1``), and builds the sets (periods,
+    scenarios, load levels, nodes, units) and the parameters in ``model.Par``. The
+    steps are described on the Data and I/O page of the documentation.
+
+    Args:
+        DirName (str): Folder that holds the case.
+        CaseName (str): Name of the case.
+        DateModel (datetime.datetime): Run date; its year places the load levels in time.
+        model (pyomo.environ.ConcreteModel): The model to fill.
+        indlog (str): ``"True"`` to log the time of each step.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The model, with its sets and ``model.Par``.
+    """
     # %% Read the input data
     print('-- Reading the input data')
     # Defining the path
@@ -1309,6 +1327,22 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
     return model
 
 def create_variables(model, optmodel, indlog):
+    """Declare the decision variables of the model, with their bounds.
+
+    Declares one variable per decision and load level (market trades, output, charge,
+    inventory, reserve bids, commitment, network flows and the cost terms), sets their
+    bounds from ``model.Par``, and fixes the variables that a case leaves no freedom
+    for, such as a store reset to its initial level every ``StorageResetHours``.
+
+    Args:
+        model (pyomo.environ.ConcreteModel): The model with its sets and parameters.
+        optmodel (pyomo.environ.ConcreteModel): The model that receives the variables
+            (the same object as ``model`` in a normal build).
+        indlog (str): ``"True"`` to log the time of each step.
+
+    Returns:
+        pyomo.environ.ConcreteModel: ``optmodel`` with its variables.
+    """
 
     #
     print('-- Defining the variables')

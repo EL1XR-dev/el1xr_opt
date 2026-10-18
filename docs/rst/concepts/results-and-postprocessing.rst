@@ -1,7 +1,7 @@
 Results and post-processing
 ===========================
 
-After a successful optimization run, the model post-processes the solution and saves the
+After a successful solve, the model post-processes the solution and saves the
 results. By default they go to ``<dir>/<case>/results.duckdb`` (one table per set,
 parameter, variable and constraint dual, plus an ``oM_Result_RunMetadata`` table), via
 ``oM_OutputData_duckdb.save_to_duckdb``. Pass ``--rawresults True`` to also write the CSV

@@ -27,6 +27,17 @@
 #    hint; the true class is detected from the built model below).
 # --------------------------------------------------------------------------- #
 class Feature:
+    """One option indicator of the ``oM_Data_Option`` table.
+
+    Args:
+        name (str): Short name of the feature.
+        flag (str): Column name in the Option table; the model reads it as ``pOpt<flag>``.
+        default (int): Value used when a case does not have the column.
+        makes_integer (bool): True when the feature adds binary or integer variables.
+        makes_cone (bool): True when the feature adds second-order cone constraints.
+        module (str, optional): Module that builds the feature, when it has one of its own.
+        doc (str): One-line description, shown in the indicator table of the documentation.
+    """
     def __init__(self, name, flag, default=0, makes_integer=False,
                  makes_cone=False, module=None, doc=""):
         self.name = name
@@ -108,8 +119,8 @@ FLAG_DEFAULTS = {f.flag: f.default for f in FEATURES}
 
 
 def apply_flag_defaults(parameters_dict):
-    """Give every catalogue flag a default so a case whose Option file predates the
-    flag still runs (no KeyError). Existing values are left untouched."""
+    """Give every catalogue indicator a default so a case whose Option file predates the
+    indicator still solves (no KeyError). Existing values are left untouched."""
     for flag, default in FLAG_DEFAULTS.items():
         parameters_dict.setdefault(f"pOpt{flag}", default)
     # balance formulation (nodal / arc); orthogonal to the network mode
@@ -179,7 +190,7 @@ BALANCE_MODES = {
 
 def select_balance_mode(model):
     """Read and validate the balance formulation for a model. Defaults to 'nodal'
-    when the case predates the flag (apply_flag_defaults seeds it)."""
+    when the case predates the indicator (apply_flag_defaults seeds it)."""
     par = getattr(model, "Par", {})
     mode = str(par.get("pParBalanceMode", "nodal")).strip().lower()
     if mode not in BALANCE_MODES:
@@ -188,7 +199,7 @@ def select_balance_mode(model):
 
 
 def balance_compatible_with_network(balance_mode, network_mode):
-    """Whether a balance formulation can express a network mode. Always True --
+    """Check that a balance formulation can express a network mode. Always True:
     balance (bookkeeping) and network mode (physics) are orthogonal axes. The helper
     exists to validate the names and to make the orthogonality explicit: arc works
     with the AC and three-phase modes too (carrying active+reactive power and both
@@ -202,7 +213,7 @@ def balance_compatible_with_network(balance_mode, network_mode):
 
 def require_balance_mode_implemented(model):
     """Guard for the in-core build: only 'nodal' is wired into the main model.
-    Selecting 'arc' raises with a pointer to the modernization plan, rather than
+    Selecting 'arc' raises with a pointer to the modernization plan, instead of
     silently building a nodal model. Returns the validated mode ('nodal')."""
     mode = select_balance_mode(model)
     if not BALANCE_MODES[mode]["in_core"]:
@@ -232,7 +243,7 @@ def _class_from_traits(integer, quad_obj, quad_con, nonlinear):
 def detect_problem_class(model):
     """Classify the built model by inspecting its variables, constraints and
     objective. Robust and feature-agnostic: it reflects what was actually built,
-    not what flags claim. Returns one of LP/MILP/QP/MIQP/SOCP/MISOCP/NLP/MINLP."""
+    not what the option indicators claim. Returns one of LP/MILP/QP/MIQP/SOCP/MISOCP/NLP/MINLP."""
     from pyomo.environ import Var, Constraint, Objective
 
     integer = False
@@ -428,7 +439,7 @@ def seed_horizon_coupling(model):
     (``oM_Sequence.build_structure``). The electricity fixed network charge is a
     constant; the peak demand charge is the sum of the N largest grid imports per month
     per retailer (a threshold). A Daily-tariff peak charge is not yet supported by the
-    reformulation, so it is marked unsupported rather than mis-handled. A new sector
+    reformulation, so it is marked unsupported instead of mis-handled. A new sector
     with such a charge appends its own descriptor here."""
     model._horizon_coupling = []
     Par = model.Par
@@ -472,14 +483,21 @@ def seed_horizon_coupling(model):
 
 
 def solvers_for(problem_class):
+    """Return the solvers that handle ``problem_class`` (for example ``"MILP"``), sorted by name."""
     return sorted(s for s, cap in SOLVER_CAPABILITIES.items() if problem_class in cap)
 
 
 def builders_for(problem_class):
+    """Return the model-building libraries that handle ``problem_class``, sorted by name."""
     return sorted(b for b, cap in BUILDER_CAPABILITIES.items() if problem_class in cap)
 
 
 def solver_supports(solver, problem_class):
+    """Return True when ``solver`` handles ``problem_class``.
+
+    The solver is matched by name against ``SOLVER_CAPABILITIES``. An unknown solver
+    returns True: the check does not block a solver it has no record of.
+    """
     name = str(solver).lower()
     for key, cap in SOLVER_CAPABILITIES.items():
         if key in name:

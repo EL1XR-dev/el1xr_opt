@@ -77,8 +77,8 @@ def _unit_signature(Par, g, pd):
     """A unit's signature = every per-unit parameter value it carries, in name order.
     Two units with equal signatures are interchangeable (identical in every parameter
     the model reads), so ordering their build is valid symmetry-breaking. Computed
-    warm-start states (see _WARMSTART_PARAMS) are excluded -- they are merit-order
-    artifacts, not inputs, and identical units may differ there."""
+    warm-start states (see _WARMSTART_PARAMS) are excluded: they are merit-order
+    by-products, not inputs, and identical units may differ there."""
     sig = []
     for name in sorted(Par):
         if name in _WARMSTART_PARAMS:

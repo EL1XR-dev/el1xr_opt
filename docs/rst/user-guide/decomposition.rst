@@ -23,7 +23,7 @@ The problem is block-angular:
   replaces the window's first-level store balance, and the outgoing boundary ties the
   window's last level to the master copy.
 
-The Benders loop:
+The Benders iteration:
 
 .. graphviz::
    :align: center

@@ -1,20 +1,20 @@
 """Benders decomposition and parallel block solving.
 
 See ``docs/decomposition.md`` for the design and ``docs/rst/user-guide/decomposition.rst``
-for the user-facing overview. The model is block-angular -- investment is the first
-stage, the operating problem separates by ``(period, scenario)`` and (for long horizons)
-by time window, with storage coupling the time windows -- so it can be solved by Benders
+for the user-facing overview. The model is block-angular (investment is the first
+stage, the operating problem separates by ``(period, scenario)`` and, for long horizons,
+by time window, with storage coupling the time windows), so it can be solved by Benders
 instead of monolithically, reaching the same optimum.
 
 Implemented and validated against the monolith:
-  * ``benders_solve`` -- the generic multi-cut L-shaped method (optimality cuts only,
+  * ``benders_solve``: the generic multi-cut L-shaped method (optimality cuts only,
     with an elastic penalty making every block feasible for any first-stage decision).
-  * ``el1xr_benders`` -- the el1xr investment/operating split, with optional
+  * ``el1xr_benders``: the el1xr investment/operating split, with optional
     process-parallel subproblem solves (``BendersConfig.n_workers``).
-  * ``el1xr_temporal_benders`` -- splits one operating horizon into time windows coupled
+  * ``el1xr_temporal_benders``: splits one operating horizon into time windows coupled
     by the storage inventory at each boundary, with the fixed network charge counted once
     in the master and the peak-demand charge handled as a threshold-LP linking variable.
-  * ``partition_blocks`` / ``first_stage_components`` -- the block partition and the
+  * ``partition_blocks`` / ``first_stage_components``: the block partition and the
     complicating / linking variable names.
 
 The only stub is ``solve_benders(model, ...)``, a deprecated alias kept for the original
@@ -74,9 +74,9 @@ def partition_blocks(periods, scenarios, load_levels, n_time_blocks: int = 1) ->
 def first_stage_components() -> dict:
     """Names of the variables that couple the blocks.
 
-    * ``complicating`` — first-stage decisions shared by every block (the Benders
+    * ``complicating``: first-stage decisions shared by every block (the Benders
       master variables): the investment / sizing build fractions.
-    * ``linking`` — variables shared only between consecutive time blocks when the
+    * ``linking``: variables shared only between consecutive time blocks when the
       time axis is split: the storage inventory at each block boundary, plus the
       trailing FCR reserve bids that a reserve-endurance constraint reads one step
       back across the boundary (the augmented boundary state).
@@ -108,7 +108,7 @@ def _solve_model(opt, mdl):
 
     Robustness: HiGHS occasionally returns a spurious solver-ERROR status (a
     presolve/solve internal error, distinct from a real infeasible/unbounded result)
-    on an otherwise solvable master MILP. It is platform/version dependent -- seen on
+    on an otherwise solvable master MILP. It depends on the platform and version: it was seen on
     the CI runner for the heat-storage temporal-Benders master, never locally. When the
     strict load fails on such a status, retry the solve with fallback option sets that
     take different algorithmic paths and clear the spurious error without changing the
@@ -552,9 +552,9 @@ def benders_solve(make_master, make_subproblem, blocks, config=None,
 def _build_block(dir_name, case_name, date, keep_scenario):
     """Build the el1xr model restricted to one scenario.
 
-    Produces a clean single-scenario copy of the case -- the kept scenario is the
+    Produces a clean single-scenario copy of the case (the kept scenario is the
     only one in the scenario dimension dict, and every other scenario's rows are
-    dropped from the data files -- then builds the model from it. This reads and
+    dropped from the data files), then builds the model from it. This reads and
     builds only the kept scenario instead of reading the whole multi-scenario
     dataset and filtering it down, which is the bulk of a block build. The kept
     scenario's own data (including its probability, read unnormalised) is left
@@ -657,7 +657,7 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
     counted once in the master and removed from each block's recourse. The peak
     demand charge (the per-month sum of the N largest grid imports) is the other
     horizon-coupling cost; it is reformulated as a threshold-LP whose scalar
-    threshold per (month, retailer) is a master linking variable -- the master holds
+    threshold per (month, retailer) is a master linking variable: the master holds
     N*t and the peak coefficient, each window adds its own sum_n (import_n - t)_+.
     With the grid import chosen by the optimiser (not pinned), the battery shaves the
     import peak across the window boundaries, so the storage-boundary coupling and
@@ -666,12 +666,12 @@ def el1xr_temporal_benders(dir_name, case_name, date, n_time_blocks=2,
 
     Transversality. The split couples the windows only through storage inventory and
     the registered aggregate costs, so it is transversal to the network
-    representation (single-node / DC / linear three-phase -- the network mode changes
+    representation (single-node, DC or linear three-phase: the network mode changes
     a window's own constraints, not the coupling) and to the hydrogen sector (no
     horizon-coupling aggregate cost). The heat sector is handled too: its operating
     cost decomposes per window and is added to the recourse, and its thermal store is
     coupled by a boundary inventory (the St master variable, the analogue of Se / Sh
-    for electricity / hydrogen storage). Still refused rather than mis-solved: any new
+    for electricity / hydrogen storage). Still refused, not mis-solved: any new
     sector aggregate charge that is not a plain sum over load levels and is not in the
     horizon-coupling registry (a constant or threshold charge must be registered, like
     the fixed network charge and the peak). This MVP also assumes hourly storage

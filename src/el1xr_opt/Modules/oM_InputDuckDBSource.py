@@ -1,4 +1,4 @@
-"""el1xr_opt DuckDB backend — reads a single ``<case>.duckdb`` file.
+"""el1xr_opt DuckDB backend: reads a single ``<case>.duckdb`` file.
 
 The file is produced by ``oM_CsvToDuckDB`` and holds one table per input
 table plus a small metadata table. Data tables store their (originally unnamed)
@@ -30,6 +30,17 @@ except ImportError:  # pragma: no cover - exercised only in duckdb-free trees
 
 
 class DuckDBSource(InputSource):
+    """Input source for a case stored as one ``.duckdb`` file.
+
+    The file is opened read-only. Its tables hold the same data as the CSV files of
+    the case, and its metadata table gives the case name.
+
+    Args:
+        db_path: Path of the ``.duckdb`` file.
+
+    Raises:
+        ValueError: When the metadata table does not name the case.
+    """
     def __init__(self, db_path) -> None:
         # duckdb is imported at module level (guarded by _HAS_DUCKDB); this class
         # is only instantiated when that import succeeded.

@@ -1,10 +1,10 @@
-"""el1xr_opt input source — the ``InputSource`` interface and ``open_source`` factory.
+"""el1xr_opt input source: the ``InputSource`` interface and ``open_source`` factory.
 
 The model reads its input through one of two backends:
 
-  * ``CSVSource``    — a directory of ``oM_Dict_*`` / ``oM_Data_*`` CSV files
+  * ``CSVSource``: a directory of ``oM_Dict_*`` / ``oM_Data_*`` CSV files
                        (the historical layout).
-  * ``DuckDBSource`` — a single ``<case>.duckdb`` file holding the same tables.
+  * ``DuckDBSource``: a single ``<case>.duckdb`` file holding the same tables.
 
 ``open_source(path)`` looks at the path and returns the right backend: a
 directory gives a ``CSVSource``, a ``.duckdb`` file gives a ``DuckDBSource``.

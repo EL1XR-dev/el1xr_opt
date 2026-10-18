@@ -91,8 +91,8 @@ def ensure_ampl_solvers(
         quiet: If True, suppress warnings about failed installations.
 
     Returns:
-        A dictionary mapping each solver name to a boolean indicating its availability
-        after the check/installation process.
+        A dictionary mapping each solver name to True when it is available after
+        the check and installation, and to False otherwise.
     """
     try:
         printable = ", ".join(list(targets))

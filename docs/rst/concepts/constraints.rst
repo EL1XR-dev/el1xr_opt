@@ -244,7 +244,7 @@ Combined headroom for FCR-D and FCR-N provision from an electric ESS
    :align: center
    :alt: A battery discharging at 3 of 5 kW, with its up reserve above and down reserve below the operating point, and its stored energy and free room backing the bids.
 
-   Illustration with made-up numbers. (a) A battery discharging at 3 kW of its 5 kW can offer up reserve up to the remaining 2 kW and down reserve up to the 3 kW it discharges; the charging leg works the same way from the charge side. (b) The stored energy must back the up bids, and the free room the down bids, for the endurance time.
+   FCR headroom and endurance of a battery, with illustrative values. (a) A battery discharging at 3 kW of its 5 kW can offer up reserve up to the remaining 2 kW and down reserve up to the 3 kW it discharges; the charging leg works the same way from the charge side. (b) The stored energy must back the up bids, and the free room the down bids, for the endurance time.
 
 The headroom constraints limit the **sum** of the FCR-D and FCR-N provision in each
 direction and operating mode to the remaining capacity. The upward headroom is
@@ -433,7 +433,7 @@ A set of constraints identify the highest power peaks within a billing period fo
    :align: center
    :alt: A month of hourly grid import with its three largest values marked and their mean drawn as a line.
 
-   Illustration with made-up numbers, for an Hourly tariff with ``NumberPowerPeaks = 3``. The three largest hourly imports of the month are found, and their mean times the power tariff is the month's peak charge.
+   Monthly peak charge of an Hourly tariff with ``NumberPowerPeaks = 3``, with illustrative values. The three largest hourly imports of the month are found, and their mean times the power tariff is the month's peak charge.
 
 Hourly tariff constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -613,7 +613,7 @@ Art. 6 (it is taken to be grid-powered):
    :align: center
    :alt: Over a day, the electrolyser's productive draw stays within the PPA renewable output; the standby draw in the evening is not matched.
 
-   Illustration with made-up numbers. Each hour, the electrolysers' productive draw must be covered by renewable output allocated to them. The standby draw, which makes no hydrogen, is left out. At load levels shorter than an hour, the energy of each clock hour is compared.
+   Renewable-hydrogen matching over one day, with illustrative values. Each hour, the electrolysers' productive draw must be covered by renewable output allocated to them. The standby draw, which makes no hydrogen, is left out. At load levels shorter than an hour, the energy of each clock hour is compared.
 
 The matching pool :math:`\mathcal{G}^{PPA}` is the PPA-flagged renewables
 (``pEleGenPPA``), so the matching carries an additionality meaning; if no unit is
@@ -1020,7 +1020,7 @@ The core state-of-charge (SoC) balancing equation, ``eEleInventory`` for electri
    :align: center
    :alt: Charge and discharge bars over 24 hours and the stored energy rising and falling between its minimum and maximum.
 
-   Illustration with made-up numbers. At each load level the stored energy changes by the charge times its efficiency, minus the discharge divided by its efficiency, and stays between the minimum and maximum.
+   Storage balance over one day, with illustrative values. At each load level the stored energy changes by the charge times its efficiency, minus the discharge divided by its efficiency, and stays between the minimum and maximum.
 
 State-of-Charge balance for electricity storage systems:
 

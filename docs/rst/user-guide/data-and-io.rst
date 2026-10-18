@@ -265,9 +265,8 @@ These are read only when present, so a case without them is unchanged.
 From an input file to a model parameter
 ---------------------------------------
 
-``data_processing`` turns the tables into the parameters of the model (``model.Par``) in a
-fixed order. Knowing it explains two things that surprise new users: a blank cell in a time
-series is not zero, and the numbers in ``model.Par`` are not always the numbers in the files.
+``data_processing`` turns the tables into the parameters of the model (``model.Par``) in a fixed order. The order explains two rules: a blank cell in a time
+series is not zero, and the numbers in ``model.Par`` can differ from those in the files.
 
 .. graphviz::
    :align: center
