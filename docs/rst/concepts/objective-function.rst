@@ -6,7 +6,7 @@ The main objective function is defined by the Pyomo constraint «``eTotalSCost``
 
 Total system cost
 -----------------
-The objective at a glance:
+The objective is composed of the terms below.
 
 .. graphviz::
    :align: center

@@ -36,6 +36,14 @@ default_plots      = 'False'
 default_indlog     = 'False'
 
 def main():
+    """Read the command-line arguments, asking for any that are left out, and solve the case.
+
+    An argument given as an empty value takes its default without asking. This is
+    the function behind ``el1xr-run`` (through :func:`cli`) and ``python -m el1xr_opt``.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The solved model.
+    """
     args = parser.parse_args()
 
     if args.dir == "":

@@ -1,4 +1,4 @@
-"""el1xr_opt CSV backend — reads a directory of ``oM_Dict_*`` / ``oM_Data_*`` files.
+"""el1xr_opt CSV backend: reads a directory of ``oM_Dict_*`` / ``oM_Data_*`` files.
 
 This preserves the model's historical reading behaviour exactly: each data
 table is read with ``pd.read_csv`` and its leading unnamed columns are set as a
@@ -15,6 +15,15 @@ from .oM_InputSource import InputSource, finalize_data_index
 
 
 class CSVSource(InputSource):
+    """Input source for a case stored as a folder of CSV files.
+
+    Args:
+        case_dir: The case folder, holding the ``oM_Dict_*`` and ``oM_Data_*`` files. The
+            case name is taken from its ``oM_Data_Parameter_<case>.csv`` file.
+
+    Raises:
+        ValueError: When the folder has no ``oM_Data_Parameter_*.csv`` file.
+    """
     def __init__(self, case_dir) -> None:
         self.case_dir = Path(case_dir)
         cn = self._detect_case_name(self.case_dir)

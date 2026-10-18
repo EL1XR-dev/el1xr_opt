@@ -15,6 +15,21 @@ from  .oM_HeatSector     import heat_electricity_load, heat_to_power_output
 from  .oM_TimeBlocks     import ramp_hours
 
 def create_objective_function(model, optmodel, indlog):
+    """Declare the objective: the total cost to minimise.
+
+    Declares the objective ``eTotalSCost`` and its total ``eTotalTCost`` (investment,
+    heat-sector operation, and the discounted costs minus revenues of each period and
+    scenario). The cost and revenue terms are summed from the registry in
+    ``oM_Features`` (``eTotalCComponent`` and ``eTotalRComponent``).
+
+    Args:
+        model (pyomo.environ.ConcreteModel): The model with its sets and parameters.
+        optmodel (pyomo.environ.ConcreteModel): The model that receives the objective.
+        indlog (str): ``"True"`` to log the time of each step.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The model with its objective.
+    """
     # this function declares constraints
     StartTime = time.time() # to compute elapsed time
 
@@ -65,6 +80,21 @@ def create_objective_function(model, optmodel, indlog):
     return model
 
 def create_objective_function_components(model, optmodel, indlog):
+    """Declare the constraints that define each cost and revenue term of the objective.
+
+    Defines the network costs (peak tariff, transfer fee, fixed fee), the taxes, the
+    market costs and revenues (day-ahead, PPA, FCR, reserve activation), the operation,
+    emission and energy-not-served costs and the degradation costs, one constraint each.
+    The Objective function page of the documentation gives their equations.
+
+    Args:
+        model (pyomo.environ.ConcreteModel): The model with its sets and parameters.
+        optmodel (pyomo.environ.ConcreteModel): The model that receives the constraints.
+        indlog (str): ``"True"`` to log the time of each step.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The model with the cost and revenue constraints.
+    """
     #
     StartTime = time.time() # to compute elapsed time
 
@@ -426,6 +456,26 @@ def create_objective_function_components(model, optmodel, indlog):
     return model
 
 def create_constraints(model, optmodel, indlog):
+    """Declare the operating constraints of the model.
+
+    Declares the market and retail limits, the energy balances of electricity and
+    hydrogen, the conversions between them, the unit limits (output, charge, ramps,
+    commitment, electrolyser states), the storage inventories, the FCR reserve rules,
+    the peak-tariff selection, the network flows and the demand constraints. The
+    Constraints page of the documentation gives their equations.
+
+    Args:
+        model (pyomo.environ.ConcreteModel): The model with its sets and parameters.
+        optmodel (pyomo.environ.ConcreteModel): The model that receives the constraints.
+        indlog (str): ``"True"`` to log the time of each step.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The model with its constraints.
+
+    Raises:
+        ValueError: When the case selects a balance mode other than ``nodal``, which
+            the main model does not support yet.
+    """
     # this function declares constraints
     StartTime = time.time()  # to compute elapsed time
 

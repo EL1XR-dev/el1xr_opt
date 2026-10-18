@@ -31,10 +31,10 @@ def build_structure(dir_name, case, date, indlog='False'):
     constraints or objective), returning the model.
 
     This is ``data_processing`` on its own. It is enough to read the problem
-    structure -- the unit and candidate sets (``eg``, ``egc``, ``hg``, ``hgc``),
+    structure: the unit and candidate sets (``eg``, ``egc``, ``hg``, ``hgc``),
     the period/scenario blocks (``p``, ``ps``), the unit scale ``factor1`` and the
     ``Par`` dictionary (investment costs, discount factors, binary-investment
-    flags). The Benders entry point uses it to set up the master and the block list
+    indicators). The Benders entry point uses it to set up the master and the block list
     without paying for a full operating-model build it would only throw away.
     """
     oModel = ConcreteModel('el1xr_opt  - Optimisation Model')
@@ -68,6 +68,25 @@ def build_model(dir_name, case, date, indlog='False'):
 
 
 def routine(dir, case, solver, date, rawresults, plots, indlog, duckdbresults='True'):
+    """Build a case, solve it and write its results.
+
+    Makes sure HiGHS is installed, builds the model with :func:`build_model`, solves it,
+    and writes the results: ``results.duckdb`` in the case folder by default, the CSV
+    result files when ``rawresults`` is ``"True"`` and the plots when ``plots`` is ``"True"``.
+
+    Args:
+        dir (str): Folder that holds the case.
+        case (str): Name of the case.
+        solver (str): Solver name, for example ``"highs"`` or ``"gurobi"``.
+        date (datetime.datetime): Run date.
+        rawresults (str): ``"True"`` to write the CSV result files.
+        plots (str): ``"True"`` to write the plots.
+        indlog (str): ``"True"`` to log the time of each step.
+        duckdbresults (str): ``"True"`` (the default) to write ``results.duckdb``.
+
+    Returns:
+        pyomo.environ.ConcreteModel: The solved model.
+    """
     initial_time = time.time()
 
     # Try to ensure HiGHS AMPL module is installed; do nothing if it already is.

@@ -5,7 +5,7 @@ model in place of the folder. Use it from the command line:
 
     el1xr-csv2duckdb --dir data/EEM26 --case Home1
 
-which writes ``data/EEM26/Home1.duckdb``. Reading it back through the model
+This writes ``data/EEM26/Home1.duckdb``. Reading it back through the model
 produces the same results as reading the CSV folder.
 """
 from __future__ import annotations
@@ -69,6 +69,14 @@ def csv_case_to_duckdb(dir_name: str, case_name: str, db_path: str | None = None
 
 
 def main(argv=None) -> None:
+    """Command-line entry point of ``el1xr-csv2duckdb``.
+
+    Converts the CSV case ``--case`` in the folder ``--dir`` into one ``.duckdb`` file,
+    written to ``--out`` or to ``<dir>/<case>.duckdb``, and prints its path.
+
+    Args:
+        argv (list of str, optional): The arguments. ``None`` reads them from the command line.
+    """
     parser = argparse.ArgumentParser(description="Convert a CSV case folder to a .duckdb file.")
     parser.add_argument("--dir", required=True, help="Parent directory holding the case folder.")
     parser.add_argument("--case", required=True, help="Case name (the folder inside --dir).")

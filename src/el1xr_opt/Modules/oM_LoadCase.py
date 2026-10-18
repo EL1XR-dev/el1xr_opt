@@ -23,9 +23,9 @@ def load_case(
                                           If string, it should follow "%Y-%m-%d %H:%M".
                                           Defaults to current datetime (rounded to minute).
         solver (str, optional): Solver to be used. Defaults to "highs".
-        rawresults (bool, optional): Whether to save raw results. Defaults to False.
-        plots (bool, optional): Whether to generate plots. Defaults to False.
-        indlog (bool, optional): Whether to enable individual logging. Defaults to False.
+        rawresults (bool, optional): If True, save the raw results. Defaults to False.
+        plots (bool, optional): If True, generate the plots. Defaults to False.
+        indlog (bool, optional): If True, log the time of each step. Defaults to False.
 
     Returns:
         dict: A dictionary containing the case configuration.

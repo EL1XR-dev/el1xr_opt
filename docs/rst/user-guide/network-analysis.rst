@@ -2,7 +2,7 @@ Network analysis (AC OPF and LinDist3Flow)
 ==========================================
 
 Besides the single-node and DC power-flow representations used in the main solve,
-el1xr_opt ships two **decoupled** network-analysis tools that solve a network snapshot
+el1xr_opt provides two **decoupled** network-analysis tools that solve a network snapshot
 outside the planning model, so they stay tractable.
 
 .. graphviz::

@@ -208,8 +208,8 @@ Indices
      - Zone or region in the network
      - :code:`zn`
 
-Unit sets at a glance
----------------------
+Overview of the unit sets
+-------------------------
 
 Each unit of a case falls into one or more sets, chosen by the columns of its unit table. The
 figure shows the main sets and the rule that puts a unit in each; the tables below list them all.

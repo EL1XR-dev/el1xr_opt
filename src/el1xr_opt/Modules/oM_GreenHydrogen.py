@@ -20,7 +20,7 @@ from  .utils.oM_Utils import log_time
 
 
 def _option(model, key, default=0):
-    """Return an options-table flag, or a default if it is not present."""
+    """Return an option indicator of the Option table, or a default if it is not present."""
     try:
         return int(model.Par[key])
     except (KeyError, TypeError, ValueError):
@@ -28,7 +28,7 @@ def _option(model, key, default=0):
 
 
 def _gen_flag(model, key, unit, default=0):
-    """Return a per-unit flag, or a default if the parameter/unit is absent."""
+    """Return a per-unit indicator, or a default if the parameter or unit is absent."""
     try:
         return int(model.Par[key][unit])
     except (KeyError, TypeError, ValueError):

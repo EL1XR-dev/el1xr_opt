@@ -1,12 +1,12 @@
-"""el1xr_opt input schema — the naming rules shared by every input backend.
+"""el1xr_opt input schema: the naming rules shared by every input backend.
 
 A case is a set of CSV files (or one ``.duckdb`` file) that follow two simple
 naming rules:
 
-  * ``oM_Dict_<Stem>_<Case>.csv``  — a dimension list. One column is a plain set
+  * ``oM_Dict_<Stem>_<Case>.csv``: a dimension list. One column is a plain set
     (e.g. the list of periods); two or more columns are a relation / membership
     table (e.g. node-to-zone).
-  * ``oM_Data_<Stem>_<Case>.csv``  — a data table. The first one or more columns
+  * ``oM_Data_<Stem>_<Case>.csv``: a data table. The first one or more columns
     are an unnamed index (period, scenario, load level, or an entity name) and
     the remaining columns carry the values.
 
@@ -16,8 +16,8 @@ columns to a reserved prefix, ``__idx0``, ``__idx1``, ... . On read, any column
 with that prefix is moved back into the index and its name is cleared again, so
 the DataFrame is identical to the one the CSV backend produces.
 
-Because the index handling is generic, a new data table — including the heat
-sector tables listed below — is picked up automatically with no schema change.
+Because the index handling is generic, a new data table (including the heat
+sector tables listed below) is picked up automatically with no schema change.
 Adding a new *set* still needs one line in ``set_definitions`` inside
 ``oM_InputData.data_processing`` (that map is model-specific and stays there).
 """
