@@ -18,6 +18,10 @@ sys.path.insert(0, str(ROOT / "src"))               # src/ layout
 try:
     sys.modules["Modules"] = importlib.import_module("el1xr_opt.Modules")
 except Exception:
+    # Without the heavy libraries the import fails part way; drop the half-loaded modules so
+    # that autodoc imports the package afresh under its mocks
+    for _name in [n for n in sys.modules if n == "el1xr_opt" or n.startswith("el1xr_opt.")]:
+        del sys.modules[_name]
     sys.modules.setdefault("Modules", types.ModuleType("Modules"))
 
 
@@ -39,8 +43,16 @@ version = '.'.join(release.split('.')[:2])
 # The option-flag table on the features page is written from the code at every build
 def _write_flag_table():
     out = pathlib.Path(__file__).parent / 'concepts' / 'flags.inc'
+    # Load oM_Features.py on its own: importing it through the package would run el1xr_opt's
+    # __init__ before the autodoc mocks exist and leave a half-loaded package behind
     try:
-        from el1xr_opt.Modules.oM_Features import FEATURES
+        import importlib.util
+        _spec = importlib.util.spec_from_file_location(
+            '_el1xr_features_for_docs', ROOT / 'src' / 'el1xr_opt' / 'Modules' / 'oM_Features.py')
+        _mod = importlib.util.module_from_spec(_spec)
+        sys.modules[_spec.name] = _mod
+        _spec.loader.exec_module(_mod)
+        FEATURES = _mod.FEATURES
     except Exception as exc:
         out.write_text(f'.. note:: The flag table could not be built: {exc}\n')
         return
@@ -68,6 +80,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
+    "sphinx.ext.graphviz",
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
 ]
@@ -136,6 +149,9 @@ master_doc = 'index'
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+# Diagrams written in the dot language (.. graphviz::) are drawn as SVG
+graphviz_output_format = 'svg'
 
 # Automatic numbering. Section numbers come from the ``:numbered:`` option on the
 # Concepts toctree (index.rst) -- no heading carries a manual number. Equations

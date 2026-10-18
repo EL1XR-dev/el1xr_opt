@@ -242,6 +242,42 @@ These are read only when present, so a case without them is unchanged.
    * - ``oM_Data_HeatGeneration``, ``oM_Data_HeatDemand``, ``oM_Data_VarMaxHeatDemand``
      - The heat sector. See :doc:`../concepts/heat-sector`.
 
+From an input file to a model parameter
+---------------------------------------
+
+``data_processing`` turns the tables into the parameters of the model (``model.Par``) in a
+fixed order. Knowing it explains two things that surprise new users: a blank cell in a time
+series is not zero, and the numbers in ``model.Par`` are not always the numbers in the files.
+
+.. graphviz::
+   :align: center
+   :alt: The steps from the input tables to the model parameters.
+
+   digraph inputs {
+     graph [rankdir=TB, nodesep=0.3, ranksep=0.25, fontname="Helvetica"];
+     node  [shape=box, style="rounded,filled", fillcolor="#eef3fb", color="#4a6fa5",
+            fontname="Helvetica", fontsize=11, width=4.6];
+     edge  [color="#4a6fa5", arrowsize=0.7];
+     read  [label="Read every oM_Dict and oM_Data table\n(blank numbers become 0)", fillcolor="#e8f5e9", color="#2e7d32"];
+     res   [label="Resample time series given at their own resolution\nonto the load levels (oM_Data_SeriesResolution)"];
+     money [label="Divide money values by MoneyBase"];
+     f1    [label="Scale by Factor1: quantities times Factor1,\nprices divided by Factor1"];
+     keep  [label="Keep the load levels with a positive duration"];
+     fill  [label="A zero time-series cell takes the unit's constant\nfrom its unit table"];
+     par   [label="model.Par: the parameters the constraints use", fillcolor="#f3e5f5", color="#6a1b9a"];
+     read -> res -> money -> f1 -> keep -> fill -> par;
+   }
+
+- **Zero and blank cells.** A blank number is read as 0, and a zero in a per-unit time series
+  (``VarMax*`` and ``VarMin*``) is replaced by the unit's constant value. So a zero cell does not
+  switch a unit off; give a small positive value, or set the unit's constant, to do that.
+- **Scaling.** ``Factor1`` and ``MoneyBase`` are set in ``oM_Data_Parameter`` and are 1 by
+  default. They change the size of the numbers the solver sees, for better numerical
+  conditioning, and leave the optimal decisions unchanged. ``results.duckdb`` holds the values
+  as the solver sees them: when the two are not 1, divide quantities by ``Factor1`` and multiply
+  money by ``MoneyBase`` to get back to the units of the input files. The CSV result tables
+  divide quantities by ``Factor1`` already.
+
 Loaders
 -------
 .. autofunction:: el1xr_opt.Modules.oM_LoadCase.load_case
