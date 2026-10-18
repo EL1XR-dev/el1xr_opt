@@ -52,7 +52,7 @@ def fcr_headroom():
     bx.spines["bottom"].set_visible(False)
     bx.set_title("(b) Endurance", loc="left", fontsize=10)
     fig.tight_layout()
-    fig.savefig(OUT / "concept_fcr_headroom.svg")
+    fig.savefig(OUT / "concept_fcr_headroom.svg", metadata={"Date": None})
     plt.close(fig)
 
 
@@ -63,7 +63,8 @@ def storage_balance():
     discharge = np.where((hours >= 17) & (hours <= 21), 2.4, 0.0) + np.where((hours >= 7) & (hours <= 8), 1.0, 0.0)
     eta_c, eta_d, start = 0.95, 0.95, 3.0
     level = start + np.cumsum(eta_c * charge - discharge / eta_d)
-    assert 0.5 <= level.min() and level.max() <= 14.5, "the illustrated schedule must respect the limits"
+    if level.min() < 0.5 or level.max() > 14.5:
+        raise ValueError("the illustrated schedule must respect the storage limits")
     fig, ax = plt.subplots(figsize=(8.4, 3.2))
     ax.bar(hours, charge, color=GREEN, width=0.8, label="charge")
     ax.bar(hours, -discharge, color=ORANGE, width=0.8, label="discharge")
@@ -79,7 +80,7 @@ def storage_balance():
     ax.legend(lines, ["charge", "discharge", "stored energy"], loc="lower left", bbox_to_anchor=(0, 1.0), frameon=False, fontsize=9, ncol=3)
     ax.set_ylim(-3.2, 3.8)
     fig.tight_layout()
-    fig.savefig(OUT / "concept_storage_balance.svg")
+    fig.savefig(OUT / "concept_storage_balance.svg", metadata={"Date": None})
     plt.close(fig)
 
 
@@ -102,7 +103,7 @@ def peak_tariff():
     ax.set_xlim(0, days); ax.set_xlabel("day of the month"); ax.set_ylabel("grid import (kW)")
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), frameon=False, fontsize=9)
     fig.tight_layout()
-    fig.savefig(OUT / "concept_peak_tariff.svg")
+    fig.savefig(OUT / "concept_peak_tariff.svg", metadata={"Date": None})
     plt.close(fig)
 
 
@@ -116,7 +117,8 @@ def green_h2_matching():
     off = (hours >= 20) & (hours <= 22)
     draw[off] = 0.0
     standby[off] = 0.25
-    assert np.all(draw <= wind + 1e-9), "the productive draw must stay within the renewable output"
+    if np.any(draw > wind + 1e-9):
+        raise ValueError("the productive draw must stay within the renewable output")
     fig, ax = plt.subplots(figsize=(8.4, 3.0))
     ax.fill_between(hours, wind, step="mid", color=GREEN, alpha=0.18, label="PPA renewable output: the most that can be allocated")
     ax.step(hours, wind, where="mid", color=GREEN, lw=1.5)
@@ -126,7 +128,7 @@ def green_h2_matching():
     ax.set_ylabel("power (MW)")
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), frameon=False, fontsize=9, ncol=2)
     fig.tight_layout()
-    fig.savefig(OUT / "concept_green_h2_matching.svg")
+    fig.savefig(OUT / "concept_green_h2_matching.svg", metadata={"Date": None})
     plt.close(fig)
 
 

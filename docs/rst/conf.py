@@ -40,6 +40,7 @@ except Exception:
     release = _m.group(1) if _m else ''
 version = '.'.join(release.split('.')[:2])
 
+
 # The option-indicator table on the features page is written from the code at every build
 def _write_flag_table():
     out = pathlib.Path(__file__).parent / 'concepts' / 'flags.inc'
