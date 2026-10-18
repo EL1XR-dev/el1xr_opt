@@ -51,7 +51,7 @@ The optimization model is built upon a series of indexed sets that define its di
 
 The core sets are defined in the ``model`` object and are accessible throughout the formulation scripts (e.g., in ``oM_ModelFormulation.py``).
 
-Temporal Hierarchy
+Temporal hierarchy
 ------------------
 
 The model uses a nested temporal structure to represent time, from long-term planning periods down to hourly operational timesteps.
@@ -102,7 +102,7 @@ Indices
      - Combination of period, scenario, and time step
      - :code:`model.psn`
 
-Spatial Representation
+Spatial representation
 ----------------------
 
 The spatial dimension defines the physical layout and regional aggregation of the energy system.
@@ -121,7 +121,7 @@ Sets
      - Node or bus bar in the network
      - :code:`model.nd`
    * - :math:`\nLE`
-     - Electricity arcs -- all input lines (from node, to node, circuit)
+     - Electricity arcs: all input lines (from node, to node, circuit)
      - :code:`model.eln`
    * - :math:`\nLE'`
      - Electricity lines actually modelled (the subset of ``eln`` that passes the
@@ -244,7 +244,7 @@ figure shows the main sets and the rule that puts a unit in each; the tables bel
      }
      subgraph cluster_c {
        label="Compressors"; color="#616161"; fontcolor="#616161"; style=rounded;
-       hc   [label="hc\nrows with a DischargeNode,\nkept out of hg", fillcolor="#eeeeee", color="#616161"];
+       hc   [label="hc\nunits with a DischargeNode,\nkept out of hg", fillcolor="#eeeeee", color="#616161"];
      }
      subgraph cluster_u {
        label="Unions used by the constraints"; color="#ef6c00"; fontcolor="#ef6c00"; style=rounded;
@@ -256,12 +256,12 @@ figure shows the main sets and the rule that puts a unit in each; the tables bel
      {rank=same; eh; he; fcr;}
    }
 
-Technology and Asset Sets
+Technology and asset sets
 -------------------------
 
 The model uses a rich set of indices to differentiate between various types of technologies and assets. There is a clear separation between the electricity and hydrogen systems.
 
-General Technology Subsets
+General technology subsets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -439,7 +439,7 @@ Indices
        and ``hr`` (hydrogen); there is no bare ``r`` set in the code.
      - :code:`er` / :code:`hr`
 
-Demand and Retail
+Demand and retail
 ~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -482,7 +482,7 @@ Indices
      - Retailer (retailer index letter; sets are ``er`` / ``hr``)
      - :code:`r`
 
-Inverse-Index Mapping Sets
+Inverse-index mapping sets
 --------------------------
 
 The model uses mapping sets to link specific assets to their location, zone, technology
@@ -518,7 +518,7 @@ combining temporal, spatial, and technological sets, the model can create highly
 variables, such as ``vEleTotalOutput[p,sc,n,eg]``, which represents the electricity output
 of generator ``eg`` at a specific time ``(p,sc,n)``.
 
-Calendar Time Sets
+Calendar time sets
 ------------------
 
 On top of the operational time step ``n``, the model derives a calendar from the model

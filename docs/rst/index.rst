@@ -2,11 +2,11 @@ el1xr_opt
 =============
 **Simplicity and Transparency:** *A modular optimization model for power‑system planning & operations*
 
-What is it?
------------
+Purpose
+-------
 **el1xr_opt** is a Python library for optimization studies in power-system
-**planning** and **operations**. It builds a multi-vector model -- **electricity,
-hydrogen and heat** with storage and demand-side flexibility -- over a
+**planning** and **operations**. It builds a multi-vector model (**electricity,
+hydrogen and heat**, with storage and demand-side flexibility) over a
 period/scenario/load-level horizon, and solves it with Pyomo.
 
 Key features

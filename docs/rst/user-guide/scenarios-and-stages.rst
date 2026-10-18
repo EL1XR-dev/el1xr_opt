@@ -10,20 +10,20 @@ Each level plays a distinct role in the simulation's scope and resolution.
 Hierarchy levels
 ----------------
 
-*   **Periods** (``model.p``) -- the longest time frame, such as a year or a step of a
+*   **Periods** (``model.p``): the longest time frame, such as a year or a step of a
     multi-year planning horizon. Each period carries a discount factor, so investment and
     operation are weighted onto a common discounted footing.
 
-*   **Scenarios** (``model.sc``) -- within each period, the possible futures or operating
+*   **Scenarios** (``model.sc``): within each period, the possible futures or operating
     conditions (weather, demand, prices). Each scenario has a probability, so the model
     weighs its contribution to the expected cost. The active ``(period, scenario)`` pairs
     are the set ``model.ps``.
 
-*   **Load levels** (``model.n`` -- the active subset of ``model.nn``) -- the individual
+*   **Load levels** (``model.n``, the active subset of ``model.nn``): the individual
     time steps within a ``(period, scenario)``: hours, or representative periods standing
     in for several hours. Each load level has a **duration** (``pDuration``); a level with
     a blank duration is dropped, which is how a case truncates its horizon. Operating
-    decisions -- dispatch, storage, conversion -- are made at this level.
+    decisions (dispatch, storage, conversion) are made at this level.
 
 For convenience the model derives groupings of the load levels: representative **days**
 (``doy``, used by the depth-of-discharge and daily-peak logic) and **months** (``moy``,

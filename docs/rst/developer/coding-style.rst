@@ -1,15 +1,15 @@
 .. _coding-style:
 
-Coding Style
+Coding style
 ============
 
 To maintain consistency and readability across the codebase, we follow a standardized coding style. All contributions should adhere to these guidelines.
 
-Code Formatting
+Code formatting
 ---------------
 
 ``black`` (code formatting) and ``isort`` (import sorting) are **recommended** for new
-code, but they are not enforced -- the only lint the CI runs is a flake8 syntax check
+code, but they are not enforced: the only lint the CI runs is a flake8 syntax check
 (``flake8 --select=E9,F63,F7,F82``), which catches syntax errors and undefined names,
 not style. So a contribution can pass locally and still fail CI on an E9/F-class error;
 run that flake8 check before pushing.
@@ -59,7 +59,7 @@ Here is an example of a well-documented function:
        # Function logic here
        return True
 
-Type Hints
+Type hints
 ----------
 
 `Type hints <https://docs.python.org/3/library/typing.html>`_ are encouraged for new
@@ -86,16 +86,16 @@ Example with type hints:
        """
        return f"Hello, {name}!"
 
-Pyomo Model Naming Conventions
-------------------------------
+Pyomo naming conventions
+------------------------
 
 Model components use a single-letter prefix and CamelCase (no underscore), with the
 energy vector in the name:
 
-- **Parameters** start with ``p`` -- for example ``pEleMaxPower``, ``pParNumberPowerPeaks``.
-- **Variables** start with ``v`` -- for example ``vEleTotalOutput``, ``vHydInventory``.
-- **Constraints** start with ``e`` -- for example ``eEleBalance``, ``eHydInventory``.
-- **Sets** are short lowercase names -- for example ``psn`` (period, scenario, load level),
+- **Parameters** start with ``p``, for example ``pEleMaxPower``, ``pParNumberPowerPeaks``.
+- **Variables** start with ``v``, for example ``vEleTotalOutput``, ``vHydInventory``.
+- **Constraints** start with ``e``, for example ``eEleBalance``, ``eHydInventory``.
+- **Sets** are short lowercase names, for example ``psn`` (period, scenario, load level),
   ``egs`` (electricity storage), ``e2h`` (electrolysers).
 
 This convention makes it easier to identify the type of a model component just by its name.

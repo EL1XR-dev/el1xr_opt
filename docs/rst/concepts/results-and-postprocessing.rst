@@ -1,5 +1,5 @@
-Results & Post-Processing
-=========================
+Results and post-processing
+===========================
 
 After a successful optimization run, the model post-processes the solution and saves the
 results. By default they go to ``<dir>/<case>/results.duckdb`` (one table per set,
@@ -34,7 +34,7 @@ result tables (``saving_results`` in ``oM_OutputData``), each prefixed ``oM_Resu
 With ``--rawresults True`` the model also writes CSV files, each prefixed with
 ``oM_Result_``. The main ones are listed below; the DuckDB file holds the same results and more.
 
-Key Output Files
+Key output files
 ----------------
 
 The main CSV files are:

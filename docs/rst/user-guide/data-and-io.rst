@@ -1,5 +1,5 @@
-Data & I/O
-==========
+Data and I/O
+============
 
 Data formats
 ------------
@@ -37,7 +37,7 @@ The tables define the model's sets (periods, technologies, nodes, ...) and param
 Outputs
 ~~~~~~~
 
-Results are written to ``<dir>/<case>/results.duckdb`` by default -- one table per set,
+Results are written to ``<dir>/<case>/results.duckdb`` by default: one table per set,
 parameter, variable and constraint dual, plus an ``oM_Result_RunMetadata`` table. Pass
 ``--rawresults True`` to also write the CSV result tables, and ``--plots True`` for the
 figures. Turn the DuckDB output off with ``--duckdbresults False``.
@@ -46,11 +46,11 @@ Heat tables
 ~~~~~~~~~~~
 
 A heat-bearing case adds ``oM_Dict_HeatGeneration`` / ``oM_Data_HeatGeneration`` (with a
-``Type`` column -- HeatPump / Boiler / Heat2Ele / Storage), ``oM_Data_HeatDemand`` and
+``Type`` column: HeatPump, Boiler, Heat2Ele or Storage), ``oM_Data_HeatDemand`` and
 ``oM_Data_VarMaxHeatDemand``. They are read only when present, so electricity/hydrogen
 cases are unaffected. See :doc:`../concepts/heat-sector`.
 
-CSV File Naming Conventions
+CSV file naming conventions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The input CSV files follow a specific naming convention to distinguish between
@@ -66,13 +66,13 @@ different types of data:
 This convention helps in organizing the input data and is used by the data loading
 functions to correctly process the files.
 
-CSV File Descriptions
+CSV file descriptions
 ~~~~~~~~~~~~~~~~~~~~~
 
 The following sections provide a more detailed description of the ``oM_Dict...``
 and ``oM_Data...`` CSV files.
 
-oM_Dict Files
+oM_Dict files
 """""""""""""
 
 These files define the sets and dictionaries used in the optimization model.
@@ -132,7 +132,7 @@ the elements of that set.
    * - ``oM_Dict_NodeToZone_Home1.csv``
      - Maps nodes to zones. The relevant columns are ``Node`` and ``Zone``.
 
-oM_Data Files
+oM_Data files
 """""""""""""
 
 These files hold the numbers. There are three layouts:
@@ -235,8 +235,8 @@ Single-row tables
    * - File
      - Content
    * - ``oM_Data_Option``
-     - The option flags, for example unit commitment, ramps or investment. The flags and
-       their defaults are listed in :doc:`../concepts/features-and-modes`.
+     - The option indicators, for example unit commitment, ramps or investment. The
+       indicators and their defaults are listed in :doc:`../concepts/features-and-modes`.
    * - ``oM_Data_Parameter``
      - The global settings: costs of energy not served, discount rate, reference nodes, time
        step, load-level length (``LoadLevelMinutes``), unit scale (``Factor1``), money scale

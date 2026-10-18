@@ -8,12 +8,12 @@ carry no heat data, so electricity/hydrogen-only cases are unchanged.
 Scope
 -----
 
-The heat sector is **nodal** (one heat balance per node) and behind-the-meter -- there
+The heat sector is **nodal** (one heat balance per node) and behind-the-meter: there
 is no heat network with pipe flows or losses yet (that is the next setting). A node's
 heat is supplied by:
 
 - a **heat pump** (``htp``): electricity to heat, ``heat = COP x electricity``. This is
-  the cross-sector coupling -- the heat-pump electricity draw is a load on the
+  the cross-sector coupling: the heat-pump electricity draw is a load on the
   electricity balance.
 - a **boiler** (a heat generator that burns fuel),
 - a **thermal store** (``hts``): shifts heat in time, with a charge/discharge
@@ -40,7 +40,7 @@ draw), ``vHeatCharge`` / ``vHeatDischarge`` / ``vHeatInventory`` (thermal store)
 Constraints
 -----------
 
-``eHeatBalance`` -- nodal heat balance, supply == demand at each node. The supply side
+``eHeatBalance``: nodal heat balance, supply == demand at each node. The supply side
 is the sum of ``vHeatOutput`` over all heat generators ``htg`` (which already include
 the heat pumps, so heat-pump output is not a separate term), plus the net store flow
 ``vHeatDischarge - vHeatCharge`` over thermal stores, plus ``vHeatNotServed`` (a ``+``
@@ -56,7 +56,7 @@ heat drawn by the heat-to-power units:
    + \sum_{\genindex \in htw_{\busindex}} \vheatconsumed_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\busindex
 
-``eHeatPumpCOP`` -- heat-pump coupling, heat out = COP x electricity in (the
+``eHeatPumpCOP``: heat-pump coupling, heat out = COP x electricity in (the
 electricity draw is what couples the heat sector to the electricity balance):
 
 .. math::
@@ -64,14 +64,14 @@ electricity draw is what couples the heat sector to the electricity balance):
    \pheatpumpcop_{\genindex} \, \vheatpumpelec_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in htp
 
-``eHeatToEle`` -- heat-to-power, electricity out = efficiency x heat in:
+``eHeatToEle``: heat-to-power, electricity out = efficiency x heat in:
 
 .. math::
    \vheattoele_{\periodindex,\scenarioindex,\timeindex,\genindex} =
    \pheattoeleeff_{\genindex} \, \vheatconsumed_{\periodindex,\scenarioindex,\timeindex,\genindex}
    \quad \forall \periodindex,\scenarioindex,\timeindex,\genindex \in htw
 
-``eHeatInventory`` -- thermal-store inventory dynamics. The charge and discharge are
+``eHeatInventory``: thermal-store inventory dynamics. The charge and discharge are
 powers, so they are weighted by the load-level duration to accumulate energy, matching
 the electricity and hydrogen inventory balances (the heat balance above stays a power
 balance, with no duration, like ``eEleBalance``):
@@ -132,7 +132,7 @@ The dashed units close a loop back to electricity; a case without them has an op
 - **Hydrogen** is already closed-loop when a case includes both the electrolyser
   (``e2h``) and the fuel cell (``h2e``).
 
-Which loops are active is selected by the conversion units a case includes.
+The conversion units a case includes select the loops that are active.
 
 Input tables
 ------------

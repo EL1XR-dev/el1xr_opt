@@ -40,7 +40,7 @@ except Exception:
     release = _m.group(1) if _m else ''
 version = '.'.join(release.split('.')[:2])
 
-# The option-flag table on the features page is written from the code at every build
+# The option-indicator table on the features page is written from the code at every build
 def _write_flag_table():
     out = pathlib.Path(__file__).parent / 'concepts' / 'flags.inc'
     # Load oM_Features.py on its own: importing it through the package would run el1xr_opt's
@@ -54,10 +54,10 @@ def _write_flag_table():
         _spec.loader.exec_module(_mod)
         FEATURES = _mod.FEATURES
     except Exception as exc:
-        out.write_text(f'.. note:: The flag table could not be built: {exc}\n')
+        out.write_text(f'.. note:: The option-indicator table could not be built: {exc}\n')
         return
     rows = ['.. list-table::', '   :widths: 30 10 60', '   :header-rows: 1', '',
-            '   * - Flag', '     - Default', '     - Effect']
+            '   * - Indicator', '     - Default', '     - Effect']
     for f in FEATURES:
         rows += [f'   * - ``{f.flag}``', f'     - {f.default}', f'     - {f.doc}']
     out.write_text('\n'.join(rows) + '\n')

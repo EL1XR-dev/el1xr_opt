@@ -2,8 +2,8 @@ Network analysis (AC OPF and LinDist3Flow)
 ==========================================
 
 Besides the single-node and DC power-flow representations used in the main solve,
-el1xr_opt ships two **decoupled** network-analysis tools that run on a network snapshot
-rather than inside the planning model, so they stay tractable.
+el1xr_opt ships two **decoupled** network-analysis tools that solve a network snapshot
+outside the planning model, so they stay tractable.
 
 .. graphviz::
    :align: center
@@ -50,10 +50,10 @@ LinDist3Flow
 ``oM_LinDist3Flow.py`` is the linearised three-phase branch-flow model: per-phase
 squared voltages and flows on a radial feeder with a linear voltage-drop law that keeps
 the 3x3 phase coupling to first order. Because it is an **LP**, it is the linear,
-in-Python option for unbalanced feeders -- distinct from the exact unbalanced AC OPF.
+in-Python option for unbalanced feeders, distinct from the exact unbalanced AC OPF.
 It reduces phase by phase to the single-phase LinDistFlow on a balanced feeder, and
 spreads per-phase voltages under unbalanced loading, as expected.
 
 These tools are analysis modules: they do not change the main optimisation model. The
 network mode used *inside* the planning solve (single node / DC / AC / three-phase) is
-selected through the feature catalogue -- see :doc:`../concepts/features-and-modes`.
+selected through the feature catalogue; see :doc:`../concepts/features-and-modes`.

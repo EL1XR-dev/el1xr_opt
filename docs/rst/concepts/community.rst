@@ -6,11 +6,11 @@ zone share locally generated electricity with each other before importing from o
 exporting to the grid. Sharing avoids the retail buy/sell spread, so it lowers the
 total community cost without changing what each member physically does.
 
-It is **off by default** and enabled with the option flag ``IndBinCommunity``
+It is **off by default** and enabled with the option indicator ``IndBinCommunity``
 (``pOptIndBinCommunity``); cases that do not set it are unchanged.
 
-How it works
-------------
+Formulation
+-----------
 
 .. graphviz::
    :align: center
@@ -37,7 +37,7 @@ How it works
 - Two per-member variables, ``vEleShareIn`` and ``vEleShareOut``, carry electricity
   shared into and out of a member.
 - A per-zone pool-conservation constraint (``eEleCommunityPool``) requires that, within
-  a zone, what is shared in equals what is shared out -- sharing is internal and
+  a zone, what is shared in equals what is shared out: sharing is internal and
   lossless, it neither creates nor destroys energy:
 
   .. math::

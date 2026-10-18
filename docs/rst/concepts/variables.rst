@@ -14,8 +14,8 @@ The optimization model determines the values of numerous decision variables to m
 
 The main variables are indexed by the :doc:`sets <sets>`, primarily by period (:math:`\periodindex`), scenario (:math:`\scenarioindex`), and timestep (:math:`\timeindex`), and are written in **lowercase** letters.
 
-Costs & Objective
------------------
+Costs and objective
+-------------------
 
 These high-level variables are used to structure the objective function, representing the total costs and revenues over the entire optimization horizon.
 
@@ -172,8 +172,8 @@ These high-level variables are used to structure the objective function, represe
      - €
      - ``vTotalHydRCost``
 
-Market & Trading
-----------------
+Market and trading
+------------------
 
 These variables represent the interactions with external energy markets.
 
@@ -234,7 +234,7 @@ These variables represent the interactions with external energy markets.
      - kgH2
      - ``vHydDemPeakDay``
 
-Asset Operations (Generation, Storage, and Demand)
+Asset operations (generation, storage, and demand)
 --------------------------------------------------
 
 These variables control the physical operation of all assets in the system.
@@ -383,7 +383,7 @@ These variables control the physical operation of all assets in the system.
      - kgH2
      - ``vHydSpillage``
 
-Ancillary Services
+Ancillary services
 ------------------
 
 .. list-table::
@@ -445,7 +445,7 @@ Network
      - rad
      - ``vEleNetTheta``
 
-Commitment, Storage-Operation and Peak Indicators
+Commitment, storage-operation and peak indicators
 -------------------------------------------------
 
 These variables model on/off decisions, operational states, and peak-selection
@@ -453,11 +453,11 @@ logic.
 
 .. important::
 
-   Their domain depends on a feature flag, **not** on the variable itself. By
-   default every ``pOptIndBin*`` flag is ``0``, so all of these variables are
+   Their domain depends on an option indicator, **not** on the variable itself. By
+   default every ``pOptIndBin*`` indicator is ``0``, so all of these variables are
    created as ``UnitInterval`` (continuous on :math:`[0,1]`). The shipped default
    model is therefore a **linear program (LP)**, not a MILP. A variable becomes a
-   true ``Binary`` :math:`\{0,1\}` only when its corresponding flag is set to ``1``:
+   true ``Binary`` :math:`\{0,1\}` only when its corresponding indicator is set to ``1``:
 
    * commitment / start-up / shut-down: ``pOptIndBinGenOperat``
    * storage charge / discharge / operation: ``pOptIndBinGenOperat``
@@ -584,7 +584,7 @@ Heat, investment and community
 
 See :doc:`heat-sector`, :doc:`features-and-modes` and :doc:`community`.
 
-Variable Bounding and Fixing
+Variable bounding and fixing
 ----------------------------
 
 To improve performance and ensure physical realism, the model applies tight bounds to variables and, in some cases, fixes them entirely during a pre-processing step within the ``create_variables`` function.

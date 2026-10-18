@@ -18,8 +18,8 @@ variable
    \subseteq [0, 1]
 
 (``vEleGenInvest`` / ``vHydGenInvest``, bounded by ``InvestmentLo`` /
-``InvestmentUp``). With ``BinaryInvestment`` set, the variable is binary -- build all
-or nothing; left blank, the build is continuous, which keeps the problem an LP.
+``InvestmentUp``). With ``BinaryInvestment`` set, the variable is binary (build all
+or nothing). Left blank, the build is continuous, which keeps the problem an LP.
 
 Capacity coupling
 -----------------
@@ -59,7 +59,7 @@ candidate can do nothing and a half-built one has half of every capability
 
 where :math:`\overline{P}`, :math:`\overline{C}` and :math:`\overline{S}` are the
 ``MaximumPower``, ``MaximumCharge`` and ``MaximumStorage`` ratings. The charge cap
-applies both to storage charging and to an electrolyser's electricity input -- for an
+applies both to storage charging and to an electrolyser's electricity input; for an
 electrolyser the input is the real design variable, since its hydrogen output is the
 input divided by the production function.
 

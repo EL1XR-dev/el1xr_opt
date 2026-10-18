@@ -1,4 +1,4 @@
-Research Projects
+Research projects
 =================
 
 The model has been used in this research project:

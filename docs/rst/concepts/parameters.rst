@@ -11,12 +11,12 @@ The "Key" column below gives the exact ``model.Par`` dictionary key.
 
    This page covers the core electricity/hydrogen parameters. The heat sector
    (``pHeat*``), the investment layer (``pEleGenInvestCost`` / ``pHydGenInvestCost``,
-   ``pDiscountFactor``, ...) and the option/feature flags (``pOptInd*``,
+   ``pDiscountFactor``, ...) and the option indicators (``pOptInd*``,
    ``pParGreenH2Matching``, ``pParBalanceMode``, ...) add their own. See
    :doc:`heat-sector` and :doc:`features-and-modes`.
 
-General & Time
---------------
+General and time
+----------------
 
 These parameters define the temporal structure and general constants for the model.
 
@@ -53,8 +53,8 @@ These parameters define the temporal structure and general constants for the mod
      - %
      - ``pParAnnualDiscountRate``
 
-Market & Costs
---------------
+Market and costs
+----------------
 
 These parameters define the economic environment, including energy prices, tariffs, and other costs.
 
@@ -150,11 +150,11 @@ These parameters define the economic environment, including energy prices, tarif
    with the optional columns ``PeakNightBuyFactor``, ``PeakDayBuyFactor``,
    ``PeakNightAddend`` and ``PeakDayAddend`` in the electricity-retail data (read as
    ``pEleRetPeakNightBuyFactor`` and so on). If a column is absent the factor falls
-   back to a default that depends on the tariff type -- Hourly uses ``1, 1, 1, 1``
-   and Daily uses ``0.5, 1, 2, 5`` -- so a case without these columns is unchanged.
+   back to a default that depends on the tariff type (Hourly uses ``1, 1, 1, 1``
+   and Daily uses ``0.5, 1, 2, 5``), so a case without these columns is unchanged.
 
-Asset Performance & Limits
---------------------------
+Asset performance and limits
+----------------------------
 
 These parameters define the operational characteristics, capacities, and limitations of generation and storage assets.
 
@@ -308,10 +308,10 @@ These parameters define the operational characteristics, capacities, and limitat
      - kWh
      - ``pEleGenMaxCompressorConsumption``
 
-Ancillary Services
+Ancillary services
 ~~~~~~~~~~~~~~~~~~
 
-Parameters related to grid support services.
+Parameters related to ancillary services.
 
 .. list-table::
    :widths: 30 50 10 30
@@ -398,7 +398,7 @@ Parameters related to energy demand.
      - **Unit**
      - **Key**
    * - :math:`\peledemflexible`
-     - Flag for flexible electricity demand
+     - Indicator of flexible electricity demand
      - -
      - ``pEleDemFlexible``
    * - :math:`\alpha^{e,flex}`
@@ -410,7 +410,7 @@ Parameters related to energy demand.
      - h
      - ``pEleDemShiftedSteps``
 
-EV Specific
+EV specific
 ~~~~~~~~~~~
 
 Parameters specific to Electric Vehicle (EV) modeling.
@@ -483,7 +483,7 @@ Investment and options
    * - Period discount factor
      - -
      - ``pDiscountFactor``
-   * - Feature flags (unit commitment, ramps, single node, community, green-H2 matching, balance mode, ...)
+   * - Option indicators (unit commitment, ramps, single node, community, renewable-hydrogen matching, balance mode, ...)
      - 0/1 / text
      - ``pOptIndBin*``, ``pParGreenH2Matching``, ``pParBalanceMode``
 
