@@ -1,0 +1,26 @@
+Column,Table,Meaning,Unit or values
+Node,both,Node at which the retailer trades and at which the network tariffs are metered.,node name
+Buy,both,The retailer can buy from the market.,Yes / No
+Sell,both,The retailer can sell to the market.,Yes / No
+InitialPeriod,electricity,First year in which the retailer exists.,year
+FinalPeriod,electricity,Last year in which the retailer exists.,year
+MaximumEnergyBuy,both,A retailer is in the model when one of the four energy limits is positive.,energy
+MinimumEnergyBuy,both,See ``MaximumEnergyBuy``.,energy
+MaximumEnergySell,both,See ``MaximumEnergyBuy``. Also bounds the peak selection of the power tariff.,energy
+MinimumEnergySell,both,See ``MaximumEnergyBuy``.,energy
+MaxBuy,both,Largest purchase in a load level; zero or blank means no limit.,power
+MaxSell,both,Largest sale in a load level; zero or blank means no limit.,power
+TariffType,electricity,How the power-tariff peaks are counted: ``Hourly`` (the largest hourly imports of each month) or ``Daily``.,"Hourly, Daily"
+BuyingRatio,electricity,Multiplier on the buying price (``VarEnergyCost``).,factor
+SellingRatio,electricity,Multiplier on the selling price (``VarEnergyPrice``).,factor
+Paslag,electricity,Retailer's markup per unit bought.,money per energy
+Moms,electricity,"Value-added tax rate, applied to the tariffs and fees.",share (0 to 1)
+EnergyTax,electricity,Energy tax per unit imported.,money per energy
+Incentive,electricity,Payment per unit exported.,money per energy
+Overforingsavgift,electricity,Network transfer fee per unit imported (outside the high-load hours when ``OverforingHigh`` is given).,money per energy
+OverforingHigh,electricity,Network transfer fee per unit imported in the high-load hours.,money per energy
+Fastavgift,electricity,Fixed network fee per month.,money per month
+PowerTariff,electricity,"Power tariff per unit of the monthly peak (the mean of the ``NumberPowerPeaks`` largest hourly imports), charged each month. With ``NumberPowerPeaks = 0`` it is a fixed amount.",money per power and month
+HighLoadTariff,electricity,Tariff per unit of the peak import in the high-load hours.,money per power
+StartNightTime,electricity,Hour at which the night window of the peak tariff starts.,hour of day
+EndNightTime,electricity,Hour at which the night window ends.,hour of day
