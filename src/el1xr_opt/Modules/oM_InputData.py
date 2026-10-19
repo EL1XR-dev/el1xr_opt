@@ -995,6 +995,14 @@ def data_processing(DirName, CaseName, DateModel, model, indlog):
         parameters_dict[f'p{sector}MinCO2Cost' ] = parameters_dict['pVarMinEmissionCost'][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenCO2EmissionCost'])
         parameters_dict[f'p{sector}MaxCO2Cost' ] = parameters_dict['pVarMaxEmissionCost'][dict_sector[sector]].replace(0.0, parameters_dict[f'p{sector}GenCO2EmissionCost'])
 
+    # A fuel cell burns at most MaximumCharge kg of hydrogen per hour. With no MaximumCharge and no
+    # VarMaxConsumption series, that limit is zero and the fuel cell cannot produce.
+    for h2e in model.h2e:
+        if parameters_dict['pEleMaxCharge'][h2e].max() <= 0.0:
+            print(f"WARNING: fuel cell '{h2e}' has no MaximumCharge, so its hydrogen intake limit is "
+                  f"zero and it cannot produce. Set MaximumCharge (kgH2/h) to "
+                  f"MaximumPower / ProductionFunction to let it run at its full rating.")
+
     # parameters_dict['pMaxEnergyBuy' ] = parameters_dict['pVarEnergyCost' ].replace(0.0, parameters_dict['pEleRetMaximumEnergyBuy' ])
     # parameters_dict['pMinEnergyBuy' ] = parameters_dict['pVarEnergyCost' ].replace(0.0, parameters_dict['pEleRetMinimumEnergyBuy' ])
     # parameters_dict['pMaxEnergySell'] = parameters_dict['pVarEnergyPrice'].replace(0.0, parameters_dict['pEleRetMaximumEnergySell'])

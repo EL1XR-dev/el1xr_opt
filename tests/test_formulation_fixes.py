@@ -1492,6 +1492,31 @@ def test_fuel_cell_fcr_builds_and_binds(tmp_path):
             f"up endurance violated at {n}: burns {burned} kgH2 but only {stored} stored"
 
 
+def test_fuel_cell_without_intake_limit_warns(tmp_path, capsys):
+    """A fuel cell burns at most MaximumCharge kg of hydrogen per hour. Left blank, the limit is
+    zero and the fuel cell cannot produce, so the build warns. With MaximumCharge set, there is no
+    warning and the limit is the value given."""
+    import duckdb
+
+    work = str(tmp_path)
+    case, unit = _make_fuel_cell_case(work)
+    date = datetime.datetime(2026, 1, 1)
+    m = build_model(work, case, date)
+    p, sc = list(m.ps)[0]
+    n = m.n.first()
+    assert f"WARNING: fuel cell '{unit}' has no MaximumCharge" in capsys.readouterr().out
+    assert m.vHydTotalCharge[p, sc, n, unit].ub == 0.0
+
+    con = duckdb.connect(os.path.join(work, f"{case}.duckdb"))
+    first = con.execute("select * from data_ElectricityGeneration limit 0").df().columns[0]
+    con.execute(f'UPDATE data_ElectricityGeneration SET MaximumCharge = 0.25 WHERE "{first}" = \'{unit}\'')
+    con.close()
+    m = build_model(work, case, date)
+    assert "has no MaximumCharge" not in capsys.readouterr().out
+    ub = m.vHydTotalCharge[p, sc, n, unit].ub
+    assert ub > 0.0 and ub == pytest.approx(m.Par['pEleMaxCharge'][unit][p, sc, n])
+
+
 @pytest.mark.solve
 def test_retail_balance_carries_the_activated_reserve_energy(tmp_path, deterministic_highs):
     """The retailer balance counts each unit's total output and charge, as the physical balance
