@@ -131,7 +131,7 @@ the year (from 2025-01-01; `HORIZON_START_HOUR` shifts the window). All cited in
 
 | Series | File | Source | Range (full year, min/mean/max) |
 |---|---|---|---|
-| Day-ahead spot price | `year/spot_se3.csv` | ENTSO-E Transparency Platform (via elptools `fetch_day_ahead`) | -25 / 46 / 413 EUR/MWh |
+| Day-ahead spot price | `year/spot_se3.csv` | ENTSO-E Transparency Platform (via elptools `fetch_day_ahead`) | -25 / 46 / 486 EUR/MWh |
 | FCR capacity prices | `year/fcr_se.csv` | Svenska kraftnät Mimer (via elptools `fetch_fcr_prices`) | FCR-N mean ~27, FCR-D up ~6, FCR-D down ~6 EUR/MW |
 | Site wind capacity factor | `year/wind_se3.csv` | ERA5 (Copernicus) via atlite, Vestas V112 3 MW at 57.5N, 12.1E | mean CF 0.305 (Swedish onshore ~30-35%); 1.9% h at rated, 9.8% h near zero |
 

@@ -84,10 +84,12 @@ Two switches of `build_case.py` use them, for a horizon that starts on 1 October
 H2VPP_HORIZON=week H2VPP_START_HOUR=6552 H2VPP_LEVEL_MINUTES=15 python build_case.py
 ```
 
-From 1 October 2025, the hourly spot in `spot_se3.csv` is the mean of the four quarter-hour prices.
-An earlier version of the file held the first quarter of each hour instead, which differed from the
-mean by 5.8 EUR/MWh on average and by up to 132.6 EUR/MWh. The frozen case `inputs/H2VPPFCR` was
-corrected in the same hours.
+From 1 October 2025, the hourly spot in `spot_se3.csv` is the first quarter-hour price of each hour,
+not the mean of the four. It differs from the mean by 5.8 EUR/MWh on average and by up to
+132.6 EUR/MWh. The file is kept as it is because the paper's results were computed with it; the
+frozen case `inputs/H2VPPFCR` and the release `v1.0.1-h2vppfcr` hold the same prices. elptools now
+returns the hourly mean, so running `build_prices_year.py` again writes the corrected prices. A
+comparison of hourly and 15-min levels should use `H2VPP_SPOT=15min` at both.
 
 ## Run the campaign
 
